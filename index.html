@@ -127,7 +127,7 @@
 <p>A slider release in Hazel is a <em>program edit</em>. The new model is written back into the program text, and everything that depends on the text runs again. In Dress Up, a release changes one field of one object and redraws.</p>
 
 <div class="card scroll">
-<svg class="pipe" viewBox="0 0 920 360" width="100%" role="img" aria-label="Timeline of one slider release, to scale: main-thread stages, the worker evaluating the whole program while the main thread waits, then decoding results and redrawing.">
+<svg class="pipe" viewBox="0 0 920 360" width="100%" role="img" aria-label="Timeline of one slider release, to scale: main-thread stages, the eval worker checking what it can reuse and re-evaluating while the main thread waits, then decoding results and redrawing.">
   <defs>
     <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
   </defs>
@@ -144,8 +144,8 @@
     <rect x="416" y="0" width="37" height="34" rx="3" fill="var(--s6)"><title>decode and merge the worker's results, up to 383 KB (55 ms)</title></rect>
     <rect x="454" y="0" width="114" height="34" rx="3" fill="var(--s7)"><title>redraw: evaluate livelit views (167 ms; now cached for unchanged models)</title></rect>
     <rect x="567" y="0" width="211" height="34" rx="3" fill="var(--s8)"><title>redraw: layout and DOM, and frame callbacks (~310 ms)</title></rect>
-    <rect x="137" y="72" width="279" height="34" rx="3" fill="var(--worker)"><title>evaluate the whole program (~410 ms)</title></rect>
-    <text x="277" y="94" text-anchor="middle" fill="#fff" font-weight="600">evaluate the whole program ≈ 410 ms</text>
+    <rect x="137" y="72" width="279" height="34" rx="3" fill="var(--worker)"><title>the worker, incremental: decide what to reuse (~280 ms, mostly structural comparisons), evaluate what changed (~180 ms), overlapping; plus unpacking the request (~110 ms)</title></rect>
+    <text x="277" y="94" text-anchor="middle" fill="#fff" font-weight="600">reuse check + eval ≈ 410 ms</text>
     <line x1="137" y1="36" x2="137" y2="70" stroke="currentColor" marker-end="url(#arr)" color="var(--muted)"/>
     <line x1="416" y1="70" x2="416" y2="36" stroke="currentColor" marker-end="url(#arr)" color="var(--muted)"/>
     <text x="131" y="60" text-anchor="end" class="muted">478 KB →</text>
@@ -177,7 +177,7 @@
 
 <p>Two things stand out:</p>
 <ul>
-  <li><b>The worker evaluates the whole program for every release</b>: about 410 ms profiled, close to half the release, while the main thread waits. Every slider, toggle and helper is re-evaluated to redraw one face.</li>
+  <li><b>The worker takes about 410 ms per release</b> (profiled), close to half the release, while the main thread waits. It evaluates incrementally: it keeps the last run's results and reuses what it can (<a href="https://github.com/hazelgrove/hazel/pull/2606">#2606</a>). But <b>deciding what to reuse costs more than re-evaluating what changed</b>: about 280 ms of reuse checking, about 200 ms of it comparing expressions structurally (<code>equal_provenance</code>), against about 180 ms of evaluation. Unpacking the 478 KB request adds about 110 ms.</li>
   <li><b>Everything else is many medium costs</b>, each touching the whole program somewhere: re-building terms, encoding a 478 KB request, decoding a 383 KB response, redrawing the editor.</li>
 </ul>
 <p>Statics, which a "skip statics" toggle would remove, is now 16 ms of it.</p>
@@ -243,13 +243,13 @@
 <h2 id="next">What limits a slider now, and what it would take</h2>
 <p>Ranked by how much of a release each would remove. Profiled times; real time is about 1.7× smaller.</p>
 <ol class="ranked">
-  <li><b>Evaluate only what the change affects (~410 ms, the worker).</b> One slider's value feeds one face. Re-evaluating the whole program for it is the largest single cost. The worker already keeps an incremental cache (<a href="https://github.com/hazelgrove/hazel/pull/2606">#2606</a>); a release should reuse everything that doesn't depend on the changed binding. That needs to know what depends on what, which statics already computes per item.</li>
+  <li><b>Make the worker's reuse check cheap (~280 of its ~410 ms).</b> Evaluation is already incremental (<a href="https://github.com/hazelgrove/hazel/pull/2606">#2606</a>), but each request is checked against the cache by comparing expressions structurally, which is O(program) every time. Merkle hashes on expressions, as <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a> added for types, would make each comparison O(1). Better still, the request could say what changed, which statics already knows per item, so nothing needs comparing at all.</li>
   <li><b>Redraw only what changed (~310 ms, layout and DOM).</b> A release redraws the whole editor. Only the changed livelit, and the livelits reading it, have anything new to show.</li>
   <li><b>Keep a livelit's change out of the text path (~190 ms: re-build terms, statics, request).</b> A livelit's <code>update</code> returns a value of its declared Model type, so its result is well-typed by construction. A model change could patch the elaborated program at the model's id and skip printing, re-parsing and re-checking. This is the "skip statics" toggle, grown into a fast path, and it is now worth more than statics alone.</li>
   <li><b>Send the worker a diff, not the program (62 + 55 ms; 478 KB out, 383 KB back).</b> Cyrus's suggestion. Once (1) and (3) exist, a release's real change is one model value, a few hundred bytes.</li>
   <li><b>A faster evaluator for the views that do change (~170 ms).</b> The face's view must run. The wasm spike (<a href="https://github.com/hazelgrove/hazel/pull/2490">#2490</a>) measured the evaluator about 4× faster under <code>wasm_of_ocaml</code> on fixed-precision work.</li>
 </ol>
-<p>With (1)–(3), a release would be the livelit's own update (16 ms), a model patch, re-evaluating the face, and redrawing the face: tens of milliseconds, the same shape as Dress Up's path. Dragging is already there: while the finger moves, a livelit runs its own update and view on the page without any of this, which is why the slider itself follows the pointer.</p>
+<p>With (1)–(3), a release would be the livelit's own update (16 ms), a model patch, a cheap reuse check, re-evaluating the face, and redrawing the face: tens of milliseconds, the same shape as Dress Up's path. Dragging is already there: while the finger moves, a livelit runs its own update and view on the page without any of this, which is why the slider itself follows the pointer.</p>
 
 <h2 id="method">How these were measured</h2>
 <ul>
@@ -268,7 +268,7 @@
 // unprofiled median.
 const STAGES = [
   ["event", 16, "var(--s1)"], ["re-build terms", 108, "var(--s2)"], ["statics", 16, "var(--s3)"],
-  ["request", 62, "var(--s4)"], ["worker evaluates", 410, "var(--worker)"], ["results", 55, "var(--s6)"],
+  ["request", 62, "var(--s4)"], ["worker: reuse check + eval", 410, "var(--worker)"], ["results", 55, "var(--s6)"],
   ["views", 167, "var(--s7)"], ["layout, DOM", 310, "var(--s8)"],
 ];
 const RUNS = {
