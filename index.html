@@ -177,7 +177,7 @@
     <rect x="290" y="88" width="209" height="22" rx="4" fill="var(--warn)"/><text x="507" y="104">1.6 (1.5–1.7)</text>
     <text x="280" y="142" text-anchor="end">+ MapPiece keeps identity</text>
     <rect x="290" y="128" width="104" height="22" rx="4" fill="var(--warn)"/><text x="402" y="144">0.80 (0.72–0.88)</text>
-    <text x="280" y="182" text-anchor="end">+ views cached per model (uncommitted)</text>
+    <text x="280" y="182" text-anchor="end">+ views cached per model</text>
     <rect x="290" y="168" width="69" height="22" rx="4" fill="var(--accent)"/><text x="367" y="184">0.53 (0.45–0.61)</text>
     <text x="280" y="222" text-anchor="end">Dress Up, plain JS</text>
     <rect x="290" y="208" width="2" height="22" fill="var(--plain)"/><text x="300" y="224">&lt; 0.001</text>
@@ -209,11 +209,11 @@
     <tr><td>The evaluator compared two copies of the Html sum type, a full meet, at every node of a view</td><td><span class="tag t-repeat">repeated work</span></td><td>#2661 (Merkle-hashed types)</td><td><span class="st st-open">open</span></td><td>Polygons click 15–17 → 2.0–2.2 s (profiled)</td></tr>
     <tr><td>Livelit definitions and views were "finished": every helper copied into every closure, per event and per redraw</td><td><span class="tag t-copy">unshared copy</span></td><td>#2635 <code>d706d4d1ec</code></td><td><span class="st st-branch">livelits</span></td><td>Kids' Choice 4.6 → 1.6 s; Polygons → 0.17–0.19 s</td></tr>
     <tr><td>A projector update re-made every piece of the program, so per-item parsing re-parsed all of it</td><td><span class="tag t-ident">identity lost</span></td><td>#2671; #2635 <code>cefa5c2c5c</code></td><td><span class="st st-open">open</span></td><td>Kids' Choice 1.6 → 0.8 s</td></tr>
-    <tr><td>Every redraw evaluated every livelit's view, changed or not</td><td><span class="tag t-repeat">repeated work</span></td><td>view cache per model (this report)</td><td><span class="st st-todo">uncommitted</span></td><td>Kids' Choice 0.8 → 0.53 s</td></tr>
+    <tr><td>Every redraw evaluated every livelit's view, changed or not</td><td><span class="tag t-repeat">repeated work</span></td><td>#2635 <code>4239ecf04f</code></td><td><span class="st st-branch">livelits</span></td><td>Kids' Choice 0.8 → 0.53 s</td></tr>
   </tbody>
 </table>
 </div>
-<p>Still open from #2609, without a fix: paste in the middle of a program falls back to the quadratic parser; long modules make <code>MakeTerm</code> worse than linear; the CLI hangs after an error report; a long paste can hang the page; and Shirt and Pants sometimes loses a click right after load (3 of 8 runs one morning, 0 of 32 since).</p>
+<p>Still open from #2609, without a fix: paste in the middle of a program falls back to the quadratic parser; long modules make <code>MakeTerm</code> worse than linear; the CLI hangs after an error report; a long paste can hang the page; and Shirt and Pants drops a click that arrives the instant its outfit is first drawn: the shirt editor never sees it (7–8 of 8 such clicks; clicks a few tens of milliseconds later always land).</p>
 
 <h2 id="patterns">What the list has in common</h2>
 <h3>Work on the whole thing, inside a loop over its parts</h3>
