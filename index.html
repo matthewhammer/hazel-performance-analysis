@@ -30,6 +30,7 @@
   h3 { font-size: 1.05em; margin: 22px 0 6px; }
   p, li { max-width: 72ch; }
   .sub { color: var(--muted); margin: 0 0 24px; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
   .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
   a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
   a code { color: var(--link); }
@@ -76,6 +77,9 @@
   .packet { offset-rotate: 0deg; }
   @media (prefers-reduced-motion: reduce) { .packet { display: none; } }
   .note { color: var(--muted); font-size: 0.9em; }
+  .finding { border: 2px solid var(--accent); }
+  .finding h3 { margin-top: 2px; font-size: 1.2em; }
+  .kicker { margin: 0; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8em; }
   ol.ranked > li { margin: 10px 0; }
 </style>
 </head>
@@ -92,6 +96,8 @@
   <div class="kpi"><div class="v bad">4.6 s</div><div class="l">the same release, 2026-10-09 afternoon</div></div>
   <div class="kpi"><div class="v good">0.17–0.19 s</div><div class="l">Polygons: a click adding a point (was ~11 s)</div></div>
 </div>
+
+<p class="headline"><b>Newest finding:</b> the eval worker is incremental, but <a href="#reuse-check">deciding what to reuse costs more than re-evaluating</a>. Its structural comparisons are O(program) per request; Merkle hashes on expressions would make them O(1).</p>
 
 <p>A slider change is the simplest thing a livelit can be asked to do: one number in one model changes, and something that depends on it redraws. In the Dress Up app it costs under a millisecond. In Hazel it now costs about half a second, down from 4.6 s yesterday afternoon and from tens of seconds a few weeks ago. This report collects every performance problem we've found and fixed this fall, then looks at where the remaining half second goes and what it would take to get to "immediate".</p>
 
@@ -181,6 +187,14 @@
   <li><b>Everything else is many medium costs</b>, each touching the whole program somewhere: re-building terms, encoding a 478 KB request, decoding a 383 KB response, redrawing the editor.</li>
 </ul>
 <p>Statics, which a "skip statics" toggle would remove, is now 16 ms of it.</p>
+<div class="card finding" id="reuse-check">
+<p class="kicker">Finding</p>
+<h3>Incremental evaluation's reuse check costs more than it saves</h3>
+<p>The eval worker does evaluate incrementally: it keeps the last run's results and reuses them (<a href="https://github.com/hazelgrove/hazel/pull/2606">#2606</a>). But before each run it decides what it can reuse by comparing each cached entry's expression with the new program <em>structurally</em>, which is O(program) on every request. On a slider release that checking costs more than the re-evaluation it avoids:</p>
+<svg viewBox="0 0 600 226" width="100%" style="max-width:640px" role="img" aria-label="The eval worker's time per slider release: about 280 ms deciding what to reuse, 200 ms of it structural comparison, against about 180 ms of evaluation and 110 ms unpacking the request."><text x="0" y="16" font-weight="700" font-size="15" fill="var(--ink)">The eval worker, per Kids' Choice slider release (CPU profile)</text><text x="0" y="40" font-size="15" fill="var(--ink)">deciding what to reuse</text><rect x="0" y="47" width="364" height="16" rx="3" fill="var(--worker)"/><text x="372" y="61" font-size="15" font-weight="700" fill="var(--ink)">≈280 ms</text><text x="0" y="86" font-size="15" fill="var(--ink)">…comparing expressions structurally</text><rect x="0" y="93" width="260" height="16" rx="3" fill="var(--bad)"/><text x="268" y="107" font-size="15" font-weight="700" fill="var(--ink)">≈200 ms</text><text x="0" y="132" font-size="15" fill="var(--ink)">evaluating what changed</text><rect x="0" y="139" width="234" height="16" rx="3" fill="var(--good)"/><text x="242" y="153" font-size="15" font-weight="700" fill="var(--ink)">≈180 ms</text><text x="0" y="178" font-size="15" fill="var(--ink)">unpacking the 478 KB request</text><rect x="0" y="185" width="143" height="16" rx="3" fill="var(--s4)"/><text x="151" y="199" font-size="15" font-weight="700" fill="var(--ink)">≈110 ms</text></svg>
+<p>This is the same shape as the problem <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a> fixed for types, where the evaluator compared two copies of the Html type at every node. It has the same fix: <b>Merkle hashes on expressions</b>, so that recognizing an unchanged expression is O(1). Better still, the main thread could tell the worker what changed, since statics already knows that per item, and nothing would need comparing.</p>
+</div>
+
 
 <h2 id="progress">How we got here</h2>
 <div class="card">
@@ -230,7 +244,7 @@
   </tbody>
 </table>
 </div>
-<p>Still open from <a href="https://github.com/hazelgrove/hazel/issues/2609">#2609</a>, without a fix: paste in the middle of a program falls back to the quadratic parser; long modules make <code>MakeTerm</code> worse than linear; the CLI hangs after an error report; a long paste can hang the page; and Shirt and Pants could lose a click. That one is now explained: each time the app re-measures its font (at load, when web fonts settle, on zoom), <code>SetFontMetrics</code> asks the editor to scroll the caret into view, and on a fresh slide the caret is at the top. A late re-measure jumps the editor about 10,000 px while you are scrolled down to the shirt, so the click lands on text. The fix, not yet applied, is for a font re-measure to keep the scroll position.</p>
+<p>Still open from <a href="https://github.com/hazelgrove/hazel/issues/2609">#2609</a>, without a fix: paste in the middle of a program falls back to the quadratic parser; long modules make <code>MakeTerm</code> worse than linear; the CLI hangs after an error report; a long paste can hang the page; and Shirt and Pants could lose a click. That one is now explained: each time the app re-measures its font (at load, when web fonts settle, on zoom), <code>SetFontMetrics</code> asks the editor to scroll the caret into view, and on a fresh slide the caret is at the top. A late re-measure jumps the editor about 10,000 px while you are scrolled down to the shirt, so the click lands on text. Fixed in <a href="https://github.com/hazelgrove/hazel/commit/47f7f48397"><code>47f7f48397</code></a> (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>): a font re-measure now keeps the scroll position.</p>
 
 <h2 id="patterns">What the list has in common</h2>
 <h3>Work on the whole thing, inside a loop over its parts</h3>
