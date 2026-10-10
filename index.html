@@ -98,16 +98,17 @@
   <div class="kpi"><div class="v good">0.17–0.19 s</div><div class="l">Polygons: a click adding a point (was ~11 s)</div></div>
 </div>
 
-<p class="headline"><b>Newest fix:</b> <a href="#reuse-check">the eval worker's reuse check</a> now recognizes unchanged code by a Merkle hash and remembers each comparison: the worker went from ~410 to ~145 ms per release, and on <code>dev</code> a 400-definition program re-evaluates in 0.41 s instead of 2.7 s (<a href="https://github.com/hazelgrove/hazel/pull/2673">#2673</a>). Hashing alone was not enough; see why below.</p>
+<p class="headline"><b>Newest finding:</b> <a href="#branch-gap">the full livelits branch, <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, is about 10× slower than <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> on these slides</a> (3.8 s against 0.35 s a release), because it doesn't have <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>’s per-item statics. Every number in this report is <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>’s.</p>
+<p class="headline"><b>Earlier fix:</b> <a href="#reuse-check">the eval worker's reuse check</a> now recognizes unchanged code by a Merkle hash and remembers each comparison: the worker went from ~410 to ~145 ms per release, and on <code>dev</code> a 400-definition program re-evaluates in 0.41 s instead of 2.7 s (<a href="https://github.com/hazelgrove/hazel/pull/2673">#2673</a>). Hashing alone was not enough; see why below.</p>
 
 <p>A slider change is the simplest thing a livelit can be asked to do: one number in one model changes, and something that depends on it redraws. In the Dress Up app it costs under a millisecond. In Hazel it now costs about 0.4 s, down from 4.6 s yesterday afternoon and from tens of seconds a few weeks ago. This report collects every performance problem we've found and fixed this fall, then looks at where the remaining 0.4 s goes and what it would take to get to "immediate".</p>
 
 <div class="card try">
 <b>Try it</b>
 <ul>
-  <li><a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-emotion-kids-choice">Kids' Choice</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-polygons">Polygons</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-shirt-and-pants">Shirt and Pants</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-shoes-and-hair">Shoes and Hair</a> on the live build of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), deployed from <a href="https://github.com/hazelgrove/hazel/commit/97c910f69c"><code>97c910f69c</code></a>, which has every fix below.</li>
-  <li>The same slides on <a href="https://hazel.org/build/integration/livelits-splicerefs-full/?slide=livelit-playground-emotion-kids-choice">#2597's live build</a> (the full livelits branch), deployed from <a href="https://github.com/hazelgrove/hazel/commit/aebd5e5fbb"><code>aebd5e5fbb</code></a>.</li>
-  <li><a href="http://matthewhammer.org/kids-choice-games/dress-up/">Dress Up</a>, the plain HTML/JS app this report compares against.</li>
+  <li><a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-emotion-kids-choice">Kids' Choice</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-polygons">Polygons</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-shirt-and-pants">Shirt and Pants</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-shoes-and-hair">Shoes and Hair</a> on the live build of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), deployed from <a href="https://github.com/hazelgrove/hazel/commit/b481a876e1"><code>b481a876e1</code></a>, which has every fix below. All the numbers here are from this branch.</li>
+  <li>The same slides on <a href="https://hazel.org/build/integration/livelits-splicerefs-full/?slide=livelit-playground-emotion-kids-choice">#2597's live build</a> (the full livelits branch), deployed from <a href="https://github.com/hazelgrove/hazel/commit/d92f446112"><code>d92f446112</code></a>. It has these fixes too, but not <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>’s, so a Kids' Choice release there takes about 3.8 s (<a href="#branch-gap">below</a>).</li>
+  <li><a href="http://matthewhammer.org/kids-choice-games/dress-up/">Dress Up</a>, the plain HTML/JS app this report compares against (now called Messed Up Dress Up, by its players).</li>
 </ul>
 <p class="note">The live builds take several seconds to load a slide. The numbers here were measured on local dev builds of the same commits, in headless Firefox.</p>
 </div>
@@ -151,7 +152,7 @@
     <text x="187" y="22" text-anchor="middle" class="muted">waiting</text>
     <rect x="236" y="0" width="37" height="34" rx="3" fill="var(--s6)"><title>decode and merge the worker's results, up to 383 KB (55 ms)</title></rect>
     <rect x="274" y="0" width="114" height="34" rx="3" fill="var(--s7)"><title>redraw: evaluate livelit views (167 ms; now cached for unchanged models)</title></rect>
-    <rect x="387" y="0" width="211" height="34" rx="3" fill="var(--s8)"><title>redraw: layout and DOM, and frame callbacks (~310 ms)</title></rect>
+    <rect x="387" y="0" width="211" height="34" rx="3" fill="var(--s8)"><title>redraw: Hazel rebuilding its view in JavaScript, over several redraws, and frame callbacks (~310 ms); the browser's own layout and DOM work is ~30 ms of it</title></rect>
     <rect x="137" y="72" width="99" height="34" rx="3" fill="var(--worker)"><title>the worker, incremental: decide what to reuse (~26 ms, by Merkle hash; was ~280), evaluate what changed (~70 ms); ~145 ms in all, was ~410</title></rect>
     <text x="186" y="94" text-anchor="middle" fill="#fff" font-weight="600">≈ 145 ms</text>
     <rect x="137" y="72" width="279" height="34" rx="3" fill="none" stroke="var(--muted)" stroke-dasharray="4 3"><title>before the reuse-check fix, the worker took ~410 ms</title></rect>
@@ -179,7 +180,7 @@
     <rect x="484" y="0" width="13" height="13" fill="var(--worker)"/><text x="503" y="11">worker ≈145</text>
     <rect x="606" y="0" width="13" height="13" fill="var(--s6)"/><text x="625" y="11">results 55</text>
     <rect x="712" y="0" width="13" height="13" fill="var(--s7)"/><text x="731" y="11">views 167</text>
-    <rect x="0" y="26" width="13" height="13" fill="var(--s8)"/><text x="19" y="37">layout, DOM, frame callbacks ≈310</text>
+    <rect x="0" y="26" width="13" height="13" fill="var(--s8)"/><text x="19" y="37">redraws: view building (JS), frame callbacks ≈310</text>
     <text x="0" y="66" class="muted">Hover a stage for details. The dot follows one release: main thread, across to the worker, back, redraw.</text>
   </g>
 </svg>
@@ -187,7 +188,7 @@
 
 <p>Two things stand out:</p>
 <ul>
-  <li><b>The worker now takes about 145 ms per release</b> (profiled), down from about 410 ms. Deciding what to reuse took about 280 ms of that; it now takes about 26 ms (<a href="#reuse-check">below</a>). <b>Redrawing is now the largest cost</b>: layout and DOM, about 310 ms profiled.</li>
+  <li><b>The worker now takes about 145 ms per release</b> (profiled), down from about 410 ms. Deciding what to reuse took about 280 ms of that; it now takes about 26 ms (<a href="#reuse-check">below</a>). <b>Redrawing is now the largest cost</b>, about 310 ms profiled. It isn't the browser's layout or DOM work (about 30 ms): it is Hazel rebuilding its view in JavaScript, once per redraw, and a release redrew six times (<a href="#next">now four</a>).</li>
   <li><b>Everything else is many medium costs</b>, each touching the whole program somewhere: re-building terms, encoding a 478 KB request, decoding a 383 KB response, redrawing the editor.</li>
 </ul>
 <p>Statics, which a "skip statics" toggle would remove, is now 16 ms of it.</p>
@@ -213,6 +214,25 @@
 <p>The fix is <a href="https://github.com/hazelgrove/hazel/pull/2673">#2673</a> to <code>dev</code>, and on the livelits branches <a href="https://github.com/hazelgrove/hazel/commit/5237161017"><code>5237161017</code></a> + <a href="https://github.com/hazelgrove/hazel/commit/97c910f69c"><code>97c910f69c</code></a> (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>). Still possible: the main thread could tell the worker what changed, since statics already knows that per item, and then nothing would need comparing.</p>
 </div>
 
+
+<div class="card finding" id="branch-gap">
+<p class="kicker">Finding</p>
+<h3>The full livelits branch is about 10× slower: it doesn't have #2469</h3>
+<p>The same Kids' Choice slider release, same machine, headless Firefox, median of 12: <b>3.76 s on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a></b>, <b>about 0.35 s on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a></b>. Both redraw about as often per release. The difference is one step: after a livelit commits its new model, <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> spends 2.3–2.7 s on the main thread before it can redraw, where <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> spends about 60 ms. A CPU profile of one <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> release (5.8 s profiled):</p>
+<div class="scroll"><table>
+  <thead><tr><th>part of a release on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a></th><th>profiled</th><th>on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a></th></tr></thead>
+  <tbody>
+    <tr><td>statics, from scratch, on the whole program (<code>CachedStatics.init</code>)</td><td><b class="bad">3.5 s</b></td><td>per item, only what changed: ~16 ms</td></tr>
+    <tr><td>rebuilding the view</td><td>1.6 s</td><td>~0.37 s</td></tr>
+    <tr><td>… livelit view samples run again (<code>live_html</code>)</td><td>0.57 s</td><td>not in the profile (unexplained: the code is the same)</td></tr>
+    <tr><td>… the code view, with no cache</td><td>0.41 s</td><td>cached</td></tr>
+    <tr><td>… the incremental-eval overlay, drawn though it is off</td><td>0.39 s</td><td>skipped when off</td></tr>
+    <tr><td>parsing the whole program again</td><td>0.2 s</td><td>per item</td></tr>
+  </tbody>
+</table></div>
+<p><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> is <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> plus <code>dev</code> plus <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> (Modular editors, by Andrew Blinn), and it is <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> that brings per-item statics (<a href="https://github.com/hazelgrove/hazel/commit/5e99ad8a4d"><code>5e99ad8a4d</code></a>), statics projection (<a href="https://github.com/hazelgrove/hazel/commit/64aeb86349"><code>64aeb86349</code></a>), the code-view cache, the worker's stream throttle and slimmed responses (<a href="https://github.com/hazelgrove/hazel/commit/a05f8e5791"><code>a05f8e5791</code></a>), and the gates that keep idle frames and the pending sweep quiet (<a href="https://github.com/hazelgrove/hazel/commit/101757e1ed"><code>101757e1ed</code></a>). None of these is on <code>dev</code> or on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>.</p>
+<p>So the fixes this report lists are on both branches, but a slider release is only fast where <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> is too. The ways forward: measure and demo on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>; port the smaller pieces of <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> (the overlay gate, the code-view cache) to <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> (per-item statics is the core of <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>, and porting it is the merge <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> already is); or keep a livelit's change out of the text path (step 3 below), which would skip whole-program statics on both.</p>
+</div>
 
 <h2 id="progress">How we got here</h2>
 <div class="card">
@@ -262,6 +282,9 @@
     <tr><td>A projector update re-made every piece of the program, so per-item parsing re-parsed all of it</td><td><span class="tag t-ident">identity lost</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2671">#2671</a>; <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/cefa5c2c5c"><code>cefa5c2c5c</code></a></td><td><span class="st st-open">open</span></td><td>Kids' Choice 1.6 → 0.8 s</td></tr>
     <tr><td>Every redraw evaluated every livelit's view, changed or not</td><td><span class="tag t-repeat">repeated work</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/4239ecf04f"><code>4239ecf04f</code></a></td><td><span class="st st-branch">livelits</span></td><td>Kids' Choice 0.8 → 0.53 s</td></tr>
     <tr><td>The worker's reuse check compared every cached expression with the new one structurally; an edit inside many <code>let</code>s was walked to once per enclosing <code>let</code></td><td><span class="tag t-nonlin">super-linear</span> <span class="tag t-repeat">repeated work</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2673">#2673</a>; <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/5237161017"><code>5237161017</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/97c910f69c"><code>97c910f69c</code></a></td><td><span class="st st-open">open</span></td><td>worker 410 → ~145 ms per release (profiled); <code>dev</code> benchmark 2.7 → 0.41 s</td></tr>
+    <tr><td>Each message from the eval worker was its own action, and the page rebuilds its view after every action: six redraws per slider release</td><td><span class="tag t-repeat">repeated work</span> <span class="tag t-sched">scheduling</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/b481a876e1"><code>b481a876e1</code></a>; <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> <a href="https://github.com/hazelgrove/hazel/commit/d92f446112"><code>d92f446112</code></a></td><td><span class="st st-branch">livelits</span></td><td>6 → 4 redraws; main-thread work per release −15–30%</td></tr>
+    <tr><td>Cursor info rebuilt the program's source and compared it structurally on every redraw</td><td><span class="tag t-repeat">repeated work</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/4d591fc2bc"><code>4d591fc2bc</code></a> (Merkle hash, last answer kept)</td><td><span class="st st-branch">livelits</span></td><td>~40 ms profiled per release</td></tr>
+    <tr><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> re-analyzes the whole program after every livelit commit; it doesn't have <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>’s per-item statics</td><td><span class="tag t-repeat">repeated work</span></td><td>in <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> and <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, not in <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a></td><td><span class="st st-todo">not fixed</span></td><td>3.5 s of a 5.8 s release (profiled)</td></tr>
   </tbody>
 </table>
 </div>
@@ -279,7 +302,7 @@
 <p>Ranked by how much of a release each would remove. Profiled times; real time is about 1.7× smaller.</p>
 <ol class="ranked">
   <li><b>Done: make the worker's reuse check cheap (~280 → ~26 ms).</b> Merkle hashes on expressions plus remembered comparisons (<a href="#reuse-check">above</a>, <a href="https://github.com/hazelgrove/hazel/pull/2673">#2673</a>). Still open: the request could say what changed, which statics already knows per item, so nothing needs comparing at all.</li>
-  <li><b>Redraw only what changed (~310 ms, layout and DOM).</b> A release redraws the whole editor. Only the changed livelit, and the livelits reading it, have anything new to show.</li>
+  <li><b>Started: redraw less, and only what changed (~310 ms of view building).</b> The page rebuilds its whole view after every action, and each message from the worker was its own action: a release redrew six times, though only one of the worker's four messages had anything new to show. Now the reuse plan and the final stream ride with other messages, and a release redraws four times (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/b481a876e1"><code>b481a876e1</code></a>, <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> <a href="https://github.com/hazelgrove/hazel/commit/d92f446112"><code>d92f446112</code></a>). Main-thread work per release went from 1,141–1,427 to 935–1,051 ms (profiled, two profiles each); the time until the face redraws barely moved, because the redraws removed were off that path. Still open: each redraw that shows nothing new still costs ~33 ms profiled, rebuilding sub-views from unchanged inputs (livelit Html into virtual DOM 5.8 ms, probe values 3.3, code rendering ~12). Caching each on its inputs is next.</li>
   <li><b>Keep a livelit's change out of the text path (~190 ms: re-build terms, statics, request).</b> A livelit's <code>update</code> returns a value of its declared Model type, so its result is well-typed by construction. A model change could patch the elaborated program at the model's id and skip printing, re-parsing and re-checking. This is the "skip statics" toggle, grown into a fast path, and it is now worth more than statics alone.</li>
   <li><b>Send the worker a diff, not the program (62 + 55 ms; 478 KB out, 383 KB back).</b> Cyrus's suggestion. Once (1) and (3) exist, a release's real change is one model value, a few hundred bytes.</li>
   <li><b>A faster evaluator for the views that do change (~170 ms).</b> The face's view must run. The wasm spike (<a href="https://github.com/hazelgrove/hazel/pull/2490">#2490</a>) measured the evaluator about 4× faster under <code>wasm_of_ocaml</code> on fixed-precision work.</li>
@@ -293,6 +316,7 @@
   <li>Message sizes: <code>Worker.prototype.postMessage</code> wrapped after load, with a listener for the worker's responses (<code>scripts/worker_sizes.py</code>).</li>
   <li>Dress Up: sixty <code>input</code> events on its eye-size slider in the same headless Firefox; Firefox timers have 1 ms resolution, and the median was 0 ms, the worst 2 ms.</li>
   <li>The <code>dev</code> reuse-check benchmark: a 400-definition program, evaluated, then its last literal edited with every id kept; only the incremental re-evaluation is timed, seven runs per build, under node.</li>
+  <li>Release-to-face timing without the debug panel (<code>scripts/release_timing.py</code>): twelve releases per build, cycling values, the median reported. Redraws were counted with a temporary probe logging each action and each view.</li>
   <li>Scripts are in <code>~/hazel-livelits-modular/scripts</code>, untracked. Details and discussion: hazelgrove/hazel#2609, findings 10 and 11.</li>
 </ul>
 
@@ -305,7 +329,7 @@
 const STAGES = [
   ["event", 16, "var(--s1)"], ["re-build terms", 108, "var(--s2)"], ["statics", 16, "var(--s3)"],
   ["request", 62, "var(--s4)"], ["worker: reuse check + eval", 410, "var(--worker)"], ["results", 55, "var(--s6)"],
-  ["views", 167, "var(--s7)"], ["layout, DOM", 310, "var(--s8)"],
+  ["views", 167, "var(--s7)"], ["redraws (view building)", 310, "var(--s8)"],
 ];
 const RUNS = {
   now: {total: 430, stages: STAGES.map(st => st[0].startsWith("worker") ? ["worker: reuse check + eval", 145, st[2]] : st)},
