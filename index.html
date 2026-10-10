@@ -27,6 +27,9 @@
   h3 { font-size: 1.05em; margin: 22px 0 6px; }
   p, li { max-width: 72ch; }
   .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  a { color: var(--accent); }
+  .try li { margin: 4px 0; }
   .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
   .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
   .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
@@ -75,8 +78,9 @@
 <body>
 <main>
 
+<p class="series"><a href="../">Hazel performance analysis</a> · Issue 001 · 2026-10-10</p>
 <h1>Why a slider isn't instant yet</h1>
-<p class="sub">Hazel livelits, on the playground slides, measured 2026-10-09 and 10. Branch #2635 (livelits × modular editors), dev builds, headless Firefox.</p>
+<p class="sub">Hazel livelits, on the playground slides, measured 2026-10-09 and 10. Branch <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), dev builds, headless Firefox.</p>
 
 <div class="kpis">
   <div class="kpi"><div class="v good">&lt; 1 ms</div><div class="l">Dress Up (plain JS): one slider change, update and re-render</div></div>
@@ -87,6 +91,15 @@
 
 <p>A slider change is the simplest thing a livelit can be asked to do: one number in one model changes, and something that depends on it redraws. In the Dress Up app it costs under a millisecond. In Hazel it now costs about half a second, down from 4.6 s yesterday afternoon and from tens of seconds a few weeks ago. This report collects every performance problem we've found and fixed this fall, then looks at where the remaining half second goes and what it would take to get to "immediate".</p>
 
+<div class="card try">
+<b>Try it</b>
+<ul>
+  <li><a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-emotion-kids-choice">Kids' Choice</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-polygons">Polygons</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-shirt-and-pants">Shirt and Pants</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-shoes-and-hair">Shoes and Hair</a> on the live build of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), deployed from <a href="https://github.com/hazelgrove/hazel/commit/4239ecf04f"><code>4239ecf04f</code></a>, which has every fix below.</li>
+  <li>The same slides on <a href="https://hazel.org/build/integration/livelits-splicerefs-full/?slide=livelit-playground-emotion-kids-choice">#2597's live build</a> (the full livelits branch), deployed from <a href="https://github.com/hazelgrove/hazel/commit/0ef8a6a3c5"><code>0ef8a6a3c5</code></a>.</li>
+  <li><a href="http://matthewhammer.org/kids-choice-games/dress-up/">Dress Up</a>, the plain HTML/JS app this report compares against.</li>
+</ul>
+<p class="note">The live builds take several seconds to load a slide. The numbers here were measured on local dev builds of the same commits, in headless Firefox.</p>
+</div>
 <div class="shots">
   <figure><img src="img/kids-choice.png" alt="The Kids' Choice slide in Hazel: a column of slider and toggle livelits above the face livelit, which reads happy."><figcaption>Kids' Choice in Hazel: each slider is a livelit whose value is a let-bound variable; the face reads them through its splices.</figcaption></figure>
   <figure><img src="img/dress-up.png" alt="The Dress Up app: a cartoon friend and a panel of eye controls."><figcaption>Dress Up, plain HTML/JS: the same kind of face and sliders, one model and one render function.</figcaption></figure>
@@ -185,7 +198,7 @@
     <rect x="290" y="248" width="13" height="22" rx="2" fill="none" stroke="var(--good)" stroke-dasharray="3 2"/><text x="311" y="264" fill="var(--muted)">the usual threshold for an action to feel instant</text>
   </g>
 </svg>
-<p class="note">The TypHash fix (#2661) doesn't show on this slide; it was the Polygons click's big fix (15–17 s → 2.0–2.2 s profiled).</p>
+<p class="note">The TypHash fix (<a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>) doesn't show on this slide; it was the Polygons click's big fix (15–17 s → 2.0–2.2 s profiled).</p>
 </div>
 
 <h2 id="issues">Every problem found this fall, and its fix</h2>
@@ -194,26 +207,26 @@
 <table>
   <thead><tr><th>Problem</th><th>Kind</th><th>Fix</th><th>Status</th><th>Measured</th></tr></thead>
   <tbody>
-    <tr><td>Every let-bound function took the recursive path; passes multiplied with nesting, 4<sup>depth</sup></td><td><span class="tag t-nonlin">super-linear</span></td><td>#2603</td><td><span class="st st-open">open</span></td><td>nested lets 400 s → 0.6 s; statics 20–30% faster</td></tr>
-    <tr><td>Jump to a projector walked the caret token by token</td><td><span class="tag t-nonlin">super-linear</span></td><td>#2602</td><td><span class="st st-merged">merged</span></td><td>~190 ms per projector click → direct</td></tr>
-    <tr><td>Loading text the fast parser rejects: quadratic fallback parser (finding 1)</td><td><span class="tag t-nonlin">super-linear</span></td><td>#2610, #2614</td><td><span class="st st-open">open</span></td><td>corpus 1,242 s → 433 s (both); Kids' Choice 227 → 93 s</td></tr>
-    <tr><td>Each run shipped the whole incremental cache to and from the worker</td><td><span class="tag t-size">data size</span></td><td>#2606</td><td><span class="st st-open">open</span></td><td>responses 86–98% smaller</td></tr>
-    <tr><td>Elaborations carried the source's whitespace and comments</td><td><span class="tag t-size">data size</span></td><td>#2608</td><td><span class="st st-open">open</span></td><td>requests 12–49% smaller</td></tr>
-    <tr><td>A module's definition analyzed twice</td><td><span class="tag t-repeat">repeated work</span></td><td>#2651</td><td><span class="st st-open">open</span></td><td>1.8 s of a slide's 4.2 s statics</td></tr>
-    <tr><td>A livelit definition analyzed twice (synthesis, then analysis)</td><td><span class="tag t-repeat">repeated work</span></td><td>#2635 <code>76ecb91394</code></td><td><span class="st st-branch">livelits</span></td><td>Shirt and Pants statics 4.3 → 2.8 s</td></tr>
-    <tr><td>Firefox: worker couldn't start while the page was busy; late timers killed it</td><td><span class="tag t-sched">scheduling</span></td><td>#2652</td><td><span class="st st-open">open</span></td><td>"Evaluation timed out" slides now draw</td></tr>
-    <tr><td>Statics re-ran 3× per edit (probe pins compared to the wrong keys)</td><td><span class="tag t-repeat">repeated work</span></td><td>#2635 <code>d42ae8193d</code></td><td><span class="st st-branch">livelits</span></td><td>head-colour slider 20.6 s → ~2 s (10-01)</td></tr>
-    <tr><td>The builtin Html type written out in every ascription; Macro uses closed over all builtins</td><td><span class="tag t-size">data size</span></td><td>#2597 <code>4eeebeaff3</code>, <code>6b42a0e09a</code></td><td><span class="st st-branch">livelits</span></td><td>a slide's request 609 → 224 KB</td></tr>
-    <tr><td>Every livelit use evaluated the whole livelit definition, then copied it unshared</td><td><span class="tag t-copy">unshared copy</span></td><td>#2635 <code>54543edc6b</code></td><td><span class="st st-branch">livelits</span></td><td>Shoes and Hair analyze 4.3 → 2.0 s</td></tr>
+    <tr><td>Every let-bound function took the recursive path; passes multiplied with nesting, 4<sup>depth</sup></td><td><span class="tag t-nonlin">super-linear</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2603">#2603</a></td><td><span class="st st-open">open</span></td><td>nested lets 400 s → 0.6 s; statics 20–30% faster</td></tr>
+    <tr><td>Jump to a projector walked the caret token by token</td><td><span class="tag t-nonlin">super-linear</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2602">#2602</a></td><td><span class="st st-merged">merged</span></td><td>~190 ms per projector click → direct</td></tr>
+    <tr><td>Loading text the fast parser rejects: quadratic fallback parser (finding 1)</td><td><span class="tag t-nonlin">super-linear</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2610">#2610</a>, <a href="https://github.com/hazelgrove/hazel/pull/2614">#2614</a></td><td><span class="st st-open">open</span></td><td>corpus 1,242 s → 433 s (both); Kids' Choice 227 → 93 s</td></tr>
+    <tr><td>Each run shipped the whole incremental cache to and from the worker</td><td><span class="tag t-size">data size</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2606">#2606</a></td><td><span class="st st-open">open</span></td><td>responses 86–98% smaller</td></tr>
+    <tr><td>Elaborations carried the source's whitespace and comments</td><td><span class="tag t-size">data size</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a></td><td><span class="st st-open">open</span></td><td>requests 12–49% smaller</td></tr>
+    <tr><td>A module's definition analyzed twice</td><td><span class="tag t-repeat">repeated work</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a></td><td><span class="st st-open">open</span></td><td>1.8 s of a slide's 4.2 s statics</td></tr>
+    <tr><td>A livelit definition analyzed twice (synthesis, then analysis)</td><td><span class="tag t-repeat">repeated work</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/76ecb91394"><code>76ecb91394</code></a></td><td><span class="st st-branch">livelits</span></td><td>Shirt and Pants statics 4.3 → 2.8 s</td></tr>
+    <tr><td>Firefox: worker couldn't start while the page was busy; late timers killed it</td><td><span class="tag t-sched">scheduling</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2652">#2652</a></td><td><span class="st st-open">open</span></td><td>"Evaluation timed out" slides now draw</td></tr>
+    <tr><td>Statics re-ran 3× per edit (probe pins compared to the wrong keys)</td><td><span class="tag t-repeat">repeated work</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/d42ae8193d"><code>d42ae8193d</code></a></td><td><span class="st st-branch">livelits</span></td><td>head-colour slider 20.6 s → ~2 s (10-01)</td></tr>
+    <tr><td>The builtin Html type written out in every ascription; Macro uses closed over all builtins</td><td><span class="tag t-size">data size</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> <a href="https://github.com/hazelgrove/hazel/commit/4eeebeaff3"><code>4eeebeaff3</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/6b42a0e09a"><code>6b42a0e09a</code></a></td><td><span class="st st-branch">livelits</span></td><td>a slide's request 609 → 224 KB</td></tr>
+    <tr><td>Every livelit use evaluated the whole livelit definition, then copied it unshared</td><td><span class="tag t-copy">unshared copy</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/54543edc6b"><code>54543edc6b</code></a></td><td><span class="st st-branch">livelits</span></td><td>Shoes and Hair analyze 4.3 → 2.0 s</td></tr>
     <tr><td>Statics analyzes some expressions 3× per multiplier: recursive lets, shadowing a builtin, a label on an unannotated parameter (finding 10)</td><td><span class="tag t-nonlin">super-linear</span></td><td>counted: <code>--count-passes</code>, CI group <code>StaticsPasses</code></td><td><span class="st st-todo">not fixed</span></td><td>B2T2 programs up to 12× per expression; 3<sup>d</sup> for nested recursion</td></tr>
-    <tr><td>The evaluator compared two copies of the Html sum type, a full meet, at every node of a view</td><td><span class="tag t-repeat">repeated work</span></td><td>#2661 (Merkle-hashed types)</td><td><span class="st st-open">open</span></td><td>Polygons click 15–17 → 2.0–2.2 s (profiled)</td></tr>
-    <tr><td>Livelit definitions and views were "finished": every helper copied into every closure, per event and per redraw</td><td><span class="tag t-copy">unshared copy</span></td><td>#2635 <code>d706d4d1ec</code></td><td><span class="st st-branch">livelits</span></td><td>Kids' Choice 4.6 → 1.6 s; Polygons → 0.17–0.19 s</td></tr>
-    <tr><td>A projector update re-made every piece of the program, so per-item parsing re-parsed all of it</td><td><span class="tag t-ident">identity lost</span></td><td>#2671; #2635 <code>cefa5c2c5c</code></td><td><span class="st st-open">open</span></td><td>Kids' Choice 1.6 → 0.8 s</td></tr>
-    <tr><td>Every redraw evaluated every livelit's view, changed or not</td><td><span class="tag t-repeat">repeated work</span></td><td>#2635 <code>4239ecf04f</code></td><td><span class="st st-branch">livelits</span></td><td>Kids' Choice 0.8 → 0.53 s</td></tr>
+    <tr><td>The evaluator compared two copies of the Html sum type, a full meet, at every node of a view</td><td><span class="tag t-repeat">repeated work</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a> (Merkle-hashed types)</td><td><span class="st st-open">open</span></td><td>Polygons click 15–17 → 2.0–2.2 s (profiled)</td></tr>
+    <tr><td>Livelit definitions and views were "finished": every helper copied into every closure, per event and per redraw</td><td><span class="tag t-copy">unshared copy</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/d706d4d1ec"><code>d706d4d1ec</code></a></td><td><span class="st st-branch">livelits</span></td><td>Kids' Choice 4.6 → 1.6 s; Polygons → 0.17–0.19 s</td></tr>
+    <tr><td>A projector update re-made every piece of the program, so per-item parsing re-parsed all of it</td><td><span class="tag t-ident">identity lost</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2671">#2671</a>; <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/cefa5c2c5c"><code>cefa5c2c5c</code></a></td><td><span class="st st-open">open</span></td><td>Kids' Choice 1.6 → 0.8 s</td></tr>
+    <tr><td>Every redraw evaluated every livelit's view, changed or not</td><td><span class="tag t-repeat">repeated work</span></td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/4239ecf04f"><code>4239ecf04f</code></a></td><td><span class="st st-branch">livelits</span></td><td>Kids' Choice 0.8 → 0.53 s</td></tr>
   </tbody>
 </table>
 </div>
-<p>Still open from #2609, without a fix: paste in the middle of a program falls back to the quadratic parser; long modules make <code>MakeTerm</code> worse than linear; the CLI hangs after an error report; a long paste can hang the page; and Shirt and Pants drops a click that arrives the instant its outfit is first drawn: the shirt editor never sees it (7–8 of 8 such clicks; clicks a few tens of milliseconds later always land).</p>
+<p>Still open from <a href="https://github.com/hazelgrove/hazel/issues/2609">#2609</a>, without a fix: paste in the middle of a program falls back to the quadratic parser; long modules make <code>MakeTerm</code> worse than linear; the CLI hangs after an error report; a long paste can hang the page; and Shirt and Pants could lose a click. That one is now explained: each time the app re-measures its font (at load, when web fonts settle, on zoom), <code>SetFontMetrics</code> asks the editor to scroll the caret into view, and on a fresh slide the caret is at the top. A late re-measure jumps the editor about 10,000 px while you are scrolled down to the shirt, so the click lands on text. The fix, not yet applied, is for a font re-measure to keep the scroll position.</p>
 
 <h2 id="patterns">What the list has in common</h2>
 <h3>Work on the whole thing, inside a loop over its parts</h3>
@@ -226,17 +239,17 @@
 <h2 id="next">What limits a slider now, and what it would take</h2>
 <p>Ranked by how much of a release each would remove. Profiled times; real time is about 1.7× smaller.</p>
 <ol class="ranked">
-  <li><b>Evaluate only what the change affects (~410 ms, the worker).</b> One slider's value feeds one face. Re-evaluating the whole program for it is the largest single cost. The worker already keeps an incremental cache (#2606); a release should reuse everything that doesn't depend on the changed binding. That needs to know what depends on what, which statics already computes per item.</li>
+  <li><b>Evaluate only what the change affects (~410 ms, the worker).</b> One slider's value feeds one face. Re-evaluating the whole program for it is the largest single cost. The worker already keeps an incremental cache (<a href="https://github.com/hazelgrove/hazel/pull/2606">#2606</a>); a release should reuse everything that doesn't depend on the changed binding. That needs to know what depends on what, which statics already computes per item.</li>
   <li><b>Redraw only what changed (~310 ms, layout and DOM).</b> A release redraws the whole editor. Only the changed livelit, and the livelits reading it, have anything new to show.</li>
   <li><b>Keep a livelit's change out of the text path (~190 ms: re-build terms, statics, request).</b> A livelit's <code>update</code> returns a value of its declared Model type, so its result is well-typed by construction. A model change could patch the elaborated program at the model's id and skip printing, re-parsing and re-checking. This is the "skip statics" toggle, grown into a fast path, and it is now worth more than statics alone.</li>
   <li><b>Send the worker a diff, not the program (62 + 55 ms; 478 KB out, 383 KB back).</b> Cyrus's suggestion. Once (1) and (3) exist, a release's real change is one model value, a few hundred bytes.</li>
-  <li><b>A faster evaluator for the views that do change (~170 ms).</b> The face's view must run. The wasm spike (#2490) measured the evaluator about 4× faster under <code>wasm_of_ocaml</code> on fixed-precision work.</li>
+  <li><b>A faster evaluator for the views that do change (~170 ms).</b> The face's view must run. The wasm spike (<a href="https://github.com/hazelgrove/hazel/pull/2490">#2490</a>) measured the evaluator about 4× faster under <code>wasm_of_ocaml</code> on fixed-precision work.</li>
 </ol>
 <p>With (1)–(3), a release would be the livelit's own update (16 ms), a model patch, re-evaluating the face, and redrawing the face: tens of milliseconds, the same shape as Dress Up's path. Dragging is already there: while the finger moves, a livelit runs its own update and view on the page without any of this, which is why the slider itself follows the pointer.</p>
 
 <h2 id="method">How these were measured</h2>
 <ul>
-  <li>Headless Firefox over WebDriver, a fresh profile per run, dev builds of #2635, on Matthew's laptop. Wall times are from the slider's <code>change</code> event until the face's eyes redraw at the new size (<code>scripts/slider_timing.py</code>), four runs per build.</li>
+  <li>Headless Firefox over WebDriver, a fresh profile per run, dev builds of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, on Matthew's laptop. Wall times are from the slider's <code>change</code> event until the face's eyes redraw at the new size (<code>scripts/slider_timing.py</code>), four runs per build.</li>
   <li>Stage times come from the Gecko profiler, started from Firefox's privileged context after load and bracketed with <code>performance.mark</code> (<code>scripts/profile_interaction.py</code>). Profiled runs take about 1.7× longer than unprofiled ones.</li>
   <li>Message sizes: <code>Worker.prototype.postMessage</code> wrapped after load, with a listener for the worker's responses (<code>scripts/worker_sizes.py</code>).</li>
   <li>Dress Up: sixty <code>input</code> events on its eye-size slider in the same headless Firefox; Firefox timers have 1 ms resolution, and the median was 0 ms, the worst 2 ms.</li>
