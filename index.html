@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slider Responsiveness</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c;
+    --main: #2563eb; --worker: #d97706; --idle: #cbd5e1; --plain: #16a34a;
+    --s1: #2563eb; --s2: #7c3aed; --s3: #0891b2; --s4: #0d9488; --s5: #d97706; --s6: #db2777; --s7: #dc2626; --s8: #9333ea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --idle: #475569;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d; --idle: #475569; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+  .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi .v { font-size: 1.7em; font-weight: 700; }
+  .kpi .l { color: var(--muted); font-size: 0.9em; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure { margin: 18px 0; }
+  figure img { width: 100%; border: 1px solid var(--line); border-radius: 10px; display: block; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 720px) { .shots { grid-template-columns: 1fr; } }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .tag { display: inline-block; font-size: 0.78em; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); white-space: nowrap; }
+  .t-nonlin { background: #fee2e2; color: #7f1d1d; border-color: #fecaca; }
+  .t-repeat { background: #ede9fe; color: #4c1d95; border-color: #ddd6fe; }
+  .t-copy { background: #fef3c7; color: #78350f; border-color: #fde68a; }
+  .t-ident { background: #dbeafe; color: #1e3a8a; border-color: #bfdbfe; }
+  .t-size { background: #e0f2fe; color: #0c4a6e; border-color: #bae6fd; }
+  .t-sched { background: #dcfce7; color: #14532d; border-color: #bbf7d0; }
+  .st { font-size: 0.82em; font-weight: 600; }
+  .st-merged { color: var(--good); } .st-open { color: var(--warn); } .st-branch { color: var(--accent); } .st-todo { color: var(--bad); }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; }
+  .race-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .race-controls button { font: inherit; border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+    padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+  .race-controls button[aria-pressed=true] { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .lane { display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; gap: 10px; margin: 10px 0; }
+  @media (max-width: 600px) { .lane { grid-template-columns: 90px 1fr 70px; font-size: 0.85em; } }
+  .track { position: relative; height: 34px; background: color-mix(in srgb, var(--line) 60%, transparent); border-radius: 8px; overflow: hidden; }
+  .fill { position: absolute; inset: 0 auto 0 0; width: 0; display: flex; }
+  .fill span { height: 100%; }
+  .clock { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: 0.85em; color: var(--muted); margin-top: 8px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .pipe text { fill: var(--ink); font-size: 12px; }
+  .pipe .muted { fill: var(--muted); }
+  .packet { offset-rotate: 0deg; }
+  @media (prefers-reduced-motion: reduce) { .packet { display: none; } }
+  .note { color: var(--muted); font-size: 0.9em; }
+  ol.ranked > li { margin: 10px 0; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Why a slider isn't instant yet</h1>
+<p class="sub">Hazel livelits, on the playground slides, measured 2026-10-09 and 10. Branch #2635 (livelits × modular editors), dev builds, headless Firefox.</p>
+
+<div class="kpis">
+  <div class="kpi"><div class="v good">&lt; 1 ms</div><div class="l">Dress Up (plain JS): one slider change, update and re-render</div></div>
+  <div class="kpi"><div class="v warn">0.45–0.61 s</div><div class="l">Kids' Choice: a slider release until the face redraws (now)</div></div>
+  <div class="kpi"><div class="v bad">4.6 s</div><div class="l">the same release, 2026-10-09 afternoon</div></div>
+  <div class="kpi"><div class="v good">0.17–0.19 s</div><div class="l">Polygons: a click adding a point (was ~11 s)</div></div>
+</div>
+
+<p>A slider change is the simplest thing a livelit can be asked to do: one number in one model changes, and something that depends on it redraws. In the Dress Up app it costs under a millisecond. In Hazel it now costs about half a second, down from 4.6 s yesterday afternoon and from tens of seconds a few weeks ago. This report collects every performance problem we've found and fixed this fall, then looks at where the remaining half second goes and what it would take to get to "immediate".</p>
+
+<div class="shots">
+  <figure><img src="img/kids-choice.png" alt="The Kids' Choice slide in Hazel: a column of slider and toggle livelits above the face livelit, which reads happy."><figcaption>Kids' Choice in Hazel: each slider is a livelit whose value is a let-bound variable; the face reads them through its splices.</figcaption></figure>
+  <figure><img src="img/dress-up.png" alt="The Dress Up app: a cartoon friend and a panel of eye controls."><figcaption>Dress Up, plain HTML/JS: the same kind of face and sliders, one model and one render function.</figcaption></figure>
+</div>
+
+<h2 id="race">The same slider, at real speed</h2>
+<p>Both lanes start when the slider is released and finish when the picture shows the new value. They run in real time. The Dress Up lane finishes before you can see it move.</p>
+<div class="card">
+  <div class="race-controls" role="group" aria-label="Which Hazel build">
+    <button type="button" data-run="now" aria-pressed="true">Hazel now (0.53 s)</button>
+    <button type="button" data-run="before" aria-pressed="false">Hazel, 10-09 afternoon (4.6 s)</button>
+    <button type="button" id="replay">▶ Replay</button>
+  </div>
+  <div class="lane"><b>Dress Up</b><div class="track"><div class="fill" id="lane-plain"><span style="width:100%;background:var(--plain)"></span></div></div><div class="clock" id="clock-plain">0 ms</div></div>
+  <div class="lane"><b>Hazel</b><div class="track"><div class="fill" id="lane-hazel"></div></div><div class="clock" id="clock-hazel">0 ms</div></div>
+  <div class="legend" id="race-legend"></div>
+  <p class="note">The Hazel lane's colours are its stages, in proportion to the CPU profile of the same release (see the next section); the total is the median wall time without the profiler. The 10-09 run is one colour: its stages were not split out the same way.</p>
+</div>
+
+<h2 id="pipeline">Where the half second goes now</h2>
+<p>A slider release in Hazel is a <em>program edit</em>. The new model is written back into the program text, and everything that depends on the text runs again. In Dress Up, a release changes one field of one object and redraws.</p>
+
+<div class="card scroll">
+<svg class="pipe" viewBox="0 0 920 330" width="100%" role="img" aria-label="Timeline of one slider release: main-thread stages, the worker evaluating the whole program, then decoding and redrawing on the main thread.">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
+  </defs>
+  <text x="0" y="22" font-weight="700">Hazel, one slider release (CPU profile, ms per release; ≈1.7× real time)</text>
+  <text x="0" y="62" class="muted">main thread</text>
+  <text x="0" y="132" class="muted">eval worker</text>
+  <!-- scale: 1 px = 1 ms, offset 110 -->
+  <g transform="translate(110 44)">
+    <rect x="0" y="0" width="16" height="30" rx="3" fill="var(--s1)"><title>handle the event: the livelit's update (16 ms)</title></rect>
+    <rect x="16" y="0" width="108" height="30" rx="3" fill="var(--s2)"><title>re-build terms for the changed item (MakeTerm, 108 ms)</title></rect>
+    <rect x="124" y="0" width="16" height="30" rx="3" fill="var(--s3)"><title>statics, per item (16 ms)</title></rect>
+    <rect x="140" y="0" width="62" height="30" rx="3" fill="var(--s4)"><title>build and encode the worker request: the whole program, 478 KB (62 ms)</title></rect>
+    <rect x="202" y="0" width="410" height="30" rx="3" fill="var(--idle)"><title>main thread waits for the worker</title></rect>
+    <text x="407" y="20" text-anchor="middle" class="muted">waiting</text>
+    <rect x="612" y="0" width="55" height="30" rx="3" fill="var(--s6)"><title>decode and merge the worker's results, up to 383 KB (55 ms)</title></rect>
+    <rect x="667" y="0" width="80" height="30" rx="3" fill="var(--s7)"><title>redraw: evaluate livelit views (167 ms; cached now for unchanged models)</title></rect>
+    <rect x="747" y="0" width="60" height="30" rx="3" fill="var(--s8)"><title>redraw: layout and DOM (~310 ms across the release)</title></rect>
+    <rect x="202" y="70" width="410" height="30" rx="3" fill="var(--worker)"><title>evaluate the whole program (~410 ms)</title></rect>
+    <text x="407" y="90" text-anchor="middle" fill="#fff" font-weight="600">evaluate the whole program ≈ 410</text>
+    <line x1="202" y1="32" x2="202" y2="68" stroke="currentColor" marker-end="url(#arr)" color="var(--muted)"/>
+    <line x1="612" y1="68" x2="612" y2="32" stroke="currentColor" marker-end="url(#arr)" color="var(--muted)"/>
+    <text x="196" y="56" text-anchor="end" class="muted" font-size="11">478 KB →</text>
+    <text x="618" y="56" class="muted" font-size="11">← 383 KB</text>
+    <circle class="packet" r="7" fill="var(--accent)">
+      <animateMotion dur="5.3s" repeatCount="indefinite" keyPoints="0;0.17;0.17;0.62;0.62;1" keyTimes="0;0.2;0.25;0.7;0.75;1" calcMode="linear"
+        path="M0 15 L202 15 L202 85 L612 85 L612 15 L807 15"/>
+    </circle>
+  </g>
+  <g transform="translate(110 186)">
+    <text x="-110" y="20" class="muted">Dress Up</text>
+    <rect x="0" y="0" width="2" height="30" rx="1" fill="var(--plain)"><title>update the model and re-render: under 1 ms</title></rect>
+    <text x="10" y="20">input → update one field → re-render the SVG: under 1 ms, start to finish</text>
+  </g>
+  <g transform="translate(110 250)" font-size="12">
+    <rect x="0" y="0" width="12" height="12" fill="var(--s1)"/><text x="17" y="10">event 16</text>
+    <rect x="90" y="0" width="12" height="12" fill="var(--s2)"/><text x="107" y="10">re-build terms 108</text>
+    <rect x="232" y="0" width="12" height="12" fill="var(--s3)"/><text x="249" y="10">statics 16</text>
+    <rect x="320" y="0" width="12" height="12" fill="var(--s4)"/><text x="337" y="10">request 62</text>
+    <rect x="420" y="0" width="12" height="12" fill="var(--worker)"/><text x="437" y="10">worker eval ≈410</text>
+    <rect x="560" y="0" width="12" height="12" fill="var(--s6)"/><text x="577" y="10">results 55</text>
+    <rect x="660" y="0" width="12" height="12" fill="var(--s7)"/><text x="677" y="10">views</text>
+    <rect x="730" y="0" width="12" height="12" fill="var(--s8)"/><text x="747" y="10">layout, DOM</text>
+    <text x="0" y="40" class="muted">Hover a stage for details. The dot follows one release: main thread, across to the worker, back, redraw.</text>
+  </g>
+</svg>
+</div>
+
+<p>Two things stand out:</p>
+<ul>
+  <li><b>The worker evaluates the whole program for every release</b>: about 410 ms profiled, close to half the release, while the main thread waits. Every slider, toggle and helper is re-evaluated to redraw one face.</li>
+  <li><b>Everything else is many medium costs</b>, each touching the whole program somewhere: re-building terms, encoding a 478 KB request, decoding a 383 KB response, redrawing the editor.</li>
+</ul>
+<p>Statics, which a "skip statics" toggle would remove, is now 16 ms of it.</p>
+
+<h2 id="progress">How we got here</h2>
+<div class="card">
+<svg viewBox="0 0 920 300" width="100%" role="img" aria-label="Bar chart of a Kids' Choice slider release after each fix: 4.6 seconds, 1.6, 0.8, 0.53, against Dress Up under 1 millisecond.">
+  <text x="0" y="20" font-weight="700" fill="var(--ink)">Kids' Choice slider release, seconds (headless Firefox, no profiler, median of 4)</text>
+  <g font-size="13" fill="var(--ink)">
+    <!-- scale: 4.6 s = 600 px; x0 = 290 -->
+    <text x="280" y="62" text-anchor="end">10-09 afternoon, after the fall's fixes</text>
+    <rect x="290" y="48" width="600" height="22" rx="4" fill="var(--bad)"/><text x="884" y="64" text-anchor="end" fill="#fff" font-weight="700">4.6</text>
+    <text x="280" y="102" text-anchor="end">+ livelits evaluated unfinished</text>
+    <rect x="290" y="88" width="209" height="22" rx="4" fill="var(--warn)"/><text x="507" y="104">1.6 (1.5–1.7)</text>
+    <text x="280" y="142" text-anchor="end">+ MapPiece keeps identity</text>
+    <rect x="290" y="128" width="104" height="22" rx="4" fill="var(--warn)"/><text x="402" y="144">0.80 (0.72–0.88)</text>
+    <text x="280" y="182" text-anchor="end">+ views cached per model (uncommitted)</text>
+    <rect x="290" y="168" width="69" height="22" rx="4" fill="var(--accent)"/><text x="367" y="184">0.53 (0.45–0.61)</text>
+    <text x="280" y="222" text-anchor="end">Dress Up, plain JS</text>
+    <rect x="290" y="208" width="2" height="22" fill="var(--plain)"/><text x="300" y="224">&lt; 0.001</text>
+    <text x="280" y="262" text-anchor="end" fill="var(--muted)">"immediate": 0.1</text>
+    <rect x="290" y="248" width="13" height="22" rx="2" fill="none" stroke="var(--good)" stroke-dasharray="3 2"/><text x="311" y="264" fill="var(--muted)">the usual threshold for an action to feel instant</text>
+  </g>
+</svg>
+<p class="note">The TypHash fix (#2661) doesn't show on this slide; it was the Polygons click's big fix (15–17 s → 2.0–2.2 s profiled).</p>
+</div>
+
+<h2 id="issues">Every problem found this fall, and its fix</h2>
+<p>Tags: <span class="tag t-nonlin">super-linear</span> grows faster than the program; <span class="tag t-repeat">repeated work</span> the same answer computed again; <span class="tag t-copy">unshared copy</span> a copy where a reference would do; <span class="tag t-ident">identity lost</span> a cache missing because objects were re-made; <span class="tag t-size">data size</span>; <span class="tag t-sched">scheduling</span>.</p>
+<div class="card scroll">
+<table>
+  <thead><tr><th>Problem</th><th>Kind</th><th>Fix</th><th>Status</th><th>Measured</th></tr></thead>
+  <tbody>
+    <tr><td>Every let-bound function took the recursive path; passes multiplied with nesting, 4<sup>depth</sup></td><td><span class="tag t-nonlin">super-linear</span></td><td>#2603</td><td><span class="st st-open">open</span></td><td>nested lets 400 s → 0.6 s; statics 20–30% faster</td></tr>
+    <tr><td>Jump to a projector walked the caret token by token</td><td><span class="tag t-nonlin">super-linear</span></td><td>#2602</td><td><span class="st st-merged">merged</span></td><td>~190 ms per projector click → direct</td></tr>
+    <tr><td>Loading text the fast parser rejects: quadratic fallback parser (finding 1)</td><td><span class="tag t-nonlin">super-linear</span></td><td>#2610, #2614</td><td><span class="st st-open">open</span></td><td>corpus 1,242 s → 433 s (both); Kids' Choice 227 → 93 s</td></tr>
+    <tr><td>Each run shipped the whole incremental cache to and from the worker</td><td><span class="tag t-size">data size</span></td><td>#2606</td><td><span class="st st-open">open</span></td><td>responses 86–98% smaller</td></tr>
+    <tr><td>Elaborations carried the source's whitespace and comments</td><td><span class="tag t-size">data size</span></td><td>#2608</td><td><span class="st st-open">open</span></td><td>requests 12–49% smaller</td></tr>
+    <tr><td>A module's definition analyzed twice</td><td><span class="tag t-repeat">repeated work</span></td><td>#2651</td><td><span class="st st-open">open</span></td><td>1.8 s of a slide's 4.2 s statics</td></tr>
+    <tr><td>A livelit definition analyzed twice (synthesis, then analysis)</td><td><span class="tag t-repeat">repeated work</span></td><td>#2635 <code>76ecb91394</code></td><td><span class="st st-branch">livelits</span></td><td>Shirt and Pants statics 4.3 → 2.8 s</td></tr>
+    <tr><td>Firefox: worker couldn't start while the page was busy; late timers killed it</td><td><span class="tag t-sched">scheduling</span></td><td>#2652</td><td><span class="st st-open">open</span></td><td>"Evaluation timed out" slides now draw</td></tr>
+    <tr><td>Statics re-ran 3× per edit (probe pins compared to the wrong keys)</td><td><span class="tag t-repeat">repeated work</span></td><td>#2635 <code>d42ae8193d</code></td><td><span class="st st-branch">livelits</span></td><td>head-colour slider 20.6 s → ~2 s (10-01)</td></tr>
+    <tr><td>The builtin Html type written out in every ascription; Macro uses closed over all builtins</td><td><span class="tag t-size">data size</span></td><td>#2597 <code>4eeebeaff3</code>, <code>6b42a0e09a</code></td><td><span class="st st-branch">livelits</span></td><td>a slide's request 609 → 224 KB</td></tr>
+    <tr><td>Every livelit use evaluated the whole livelit definition, then copied it unshared</td><td><span class="tag t-copy">unshared copy</span></td><td>#2635 <code>54543edc6b</code></td><td><span class="st st-branch">livelits</span></td><td>Shoes and Hair analyze 4.3 → 2.0 s</td></tr>
+    <tr><td>Statics analyzes some expressions 3× per multiplier: recursive lets, shadowing a builtin, a label on an unannotated parameter (finding 10)</td><td><span class="tag t-nonlin">super-linear</span></td><td>counted: <code>--count-passes</code>, CI group <code>StaticsPasses</code></td><td><span class="st st-todo">not fixed</span></td><td>B2T2 programs up to 12× per expression; 3<sup>d</sup> for nested recursion</td></tr>
+    <tr><td>The evaluator compared two copies of the Html sum type, a full meet, at every node of a view</td><td><span class="tag t-repeat">repeated work</span></td><td>#2661 (Merkle-hashed types)</td><td><span class="st st-open">open</span></td><td>Polygons click 15–17 → 2.0–2.2 s (profiled)</td></tr>
+    <tr><td>Livelit definitions and views were "finished": every helper copied into every closure, per event and per redraw</td><td><span class="tag t-copy">unshared copy</span></td><td>#2635 <code>d706d4d1ec</code></td><td><span class="st st-branch">livelits</span></td><td>Kids' Choice 4.6 → 1.6 s; Polygons → 0.17–0.19 s</td></tr>
+    <tr><td>A projector update re-made every piece of the program, so per-item parsing re-parsed all of it</td><td><span class="tag t-ident">identity lost</span></td><td>#2671; #2635 <code>cefa5c2c5c</code></td><td><span class="st st-open">open</span></td><td>Kids' Choice 1.6 → 0.8 s</td></tr>
+    <tr><td>Every redraw evaluated every livelit's view, changed or not</td><td><span class="tag t-repeat">repeated work</span></td><td>view cache per model (this report)</td><td><span class="st st-todo">uncommitted</span></td><td>Kids' Choice 0.8 → 0.53 s</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Still open from #2609, without a fix: paste in the middle of a program falls back to the quadratic parser; long modules make <code>MakeTerm</code> worse than linear; the CLI hangs after an error report; a long paste can hang the page; and Shirt and Pants sometimes loses a click right after load (3 of 8 runs one morning, 0 of 32 since).</p>
+
+<h2 id="patterns">What the list has in common</h2>
+<h3>Work on the whole thing, inside a loop over its parts</h3>
+<p>Per character, re-process the whole run. Per <code>let</code>, re-analyze the whole definition. Per click, walk the whole program. Per use, evaluate the whole definition. Per variable, copy in its whole value. Per redraw, evaluate every view. Each is linear on its own; inside a loop it becomes quadratic, and nested it becomes exponential.</p>
+<h3>Caches that key on object identity break silently</h3>
+<p>Per-item parsing, the layout cache and the statics cache reuse work when they see the same objects as last time. One helper that re-made every object (MapPiece) turned all of them off at once, with no error, just slowness. A hash of the content (TypHash) survives copies. Identity is cheaper when it holds; a hash is safer when something upstream might copy.</p>
+<h3>Measure where the user is</h3>
+<p>Node said statics took 4 s on slides that froze Firefox for 30–108 s. The fixes that mattered most were found by profiling Firefox itself, one interaction at a time (<code>scripts/profile_interaction.py</code>), and by counting work instead of timing it (<code>--count-passes</code>).</p>
+
+<h2 id="next">What limits a slider now, and what it would take</h2>
+<p>Ranked by how much of a release each would remove. Profiled times; real time is about 1.7× smaller.</p>
+<ol class="ranked">
+  <li><b>Evaluate only what the change affects (~410 ms, the worker).</b> One slider's value feeds one face. Re-evaluating the whole program for it is the largest single cost. The worker already keeps an incremental cache (#2606); a release should reuse everything that doesn't depend on the changed binding. That needs to know what depends on what, which statics already computes per item.</li>
+  <li><b>Redraw only what changed (~310 ms, layout and DOM).</b> A release redraws the whole editor. Only the changed livelit, and the livelits reading it, have anything new to show.</li>
+  <li><b>Keep a livelit's change out of the text path (~190 ms: re-build terms, statics, request).</b> A livelit's <code>update</code> returns a value of its declared Model type, so its result is well-typed by construction. A model change could patch the elaborated program at the model's id and skip printing, re-parsing and re-checking. This is the "skip statics" toggle, grown into a fast path, and it is now worth more than statics alone.</li>
+  <li><b>Send the worker a diff, not the program (62 + 55 ms; 478 KB out, 383 KB back).</b> Cyrus's suggestion. Once (1) and (3) exist, a release's real change is one model value, a few hundred bytes.</li>
+  <li><b>A faster evaluator for the views that do change (~170 ms).</b> The face's view must run. The wasm spike (#2490) measured the evaluator about 4× faster under <code>wasm_of_ocaml</code> on fixed-precision work.</li>
+</ol>
+<p>With (1)–(3), a release would be the livelit's own update (16 ms), a model patch, re-evaluating the face, and redrawing the face: tens of milliseconds, the same shape as Dress Up's path. Dragging is already there: while the finger moves, a livelit runs its own update and view on the page without any of this, which is why the slider itself follows the pointer.</p>
+
+<h2 id="method">How these were measured</h2>
+<ul>
+  <li>Headless Firefox over WebDriver, a fresh profile per run, dev builds of #2635, on Matthew's laptop. Wall times are from the slider's <code>change</code> event until the face's eyes redraw at the new size (<code>scripts/slider_timing.py</code>), four runs per build.</li>
+  <li>Stage times come from the Gecko profiler, started from Firefox's privileged context after load and bracketed with <code>performance.mark</code> (<code>scripts/profile_interaction.py</code>). Profiled runs take about 1.7× longer than unprofiled ones.</li>
+  <li>Message sizes: <code>Worker.prototype.postMessage</code> wrapped after load, with a listener for the worker's responses (<code>scripts/worker_sizes.py</code>).</li>
+  <li>Dress Up: sixty <code>input</code> events on its eye-size slider in the same headless Firefox; Firefox timers have 1 ms resolution, and the median was 0 ms, the worst 2 ms.</li>
+  <li>Scripts are in <code>~/hazel-livelits-modular/scripts</code>, untracked. Details and discussion: hazelgrove/hazel#2609, findings 10 and 11.</li>
+</ul>
+
+</main>
+<script>
+"use strict";
+// The race: each lane fills in real time. Stage proportions for "now" follow
+// the CPU profile of one release (ms, profiled), scaled to the measured
+// unprofiled median.
+const STAGES = [
+  ["event", 16, "var(--s1)"], ["re-build terms", 108, "var(--s2)"], ["statics", 16, "var(--s3)"],
+  ["request", 62, "var(--s4)"], ["worker evaluates", 410, "var(--worker)"], ["results", 55, "var(--s6)"],
+  ["views", 167, "var(--s7)"], ["layout, DOM", 310, "var(--s8)"],
+];
+const RUNS = {
+  now: {total: 530, stages: STAGES},
+  before: {total: 4600, stages: [["one release, 10-09", 1, "var(--bad)"]]},
+};
+let run = "now", raf = 0;
+const lane = document.getElementById("lane-hazel");
+const legend = document.getElementById("race-legend");
+function build() {
+  const {stages} = RUNS[run];
+  const sum = stages.reduce((a, s) => a + s[1], 0);
+  lane.innerHTML = stages.map(([n, ms, c]) => `<span title="${n}" style="width:${(100 * ms / sum).toFixed(2)}%;background:${c}"></span>`).join("");
+  legend.innerHTML = stages.map(([n, , c]) => `<span><i style="background:${c}"></i>${n}</span>`).join("");
+}
+function play() {
+  cancelAnimationFrame(raf);
+  build();
+  const total = RUNS[run].total, plainMs = 1;
+  const plain = document.getElementById("lane-plain");
+  const cP = document.getElementById("clock-plain"), cH = document.getElementById("clock-hazel");
+  plain.style.width = "0"; lane.style.width = "0";
+  const t0 = performance.now();
+  const tick = now => {
+    const t = now - t0;
+    plain.style.width = Math.min(100, 100 * t / plainMs) + "%";
+    cP.textContent = (t >= plainMs ? "< 1" : Math.round(t)) + " ms";
+    lane.style.width = Math.min(100, 100 * t / total) + "%";
+    cH.textContent = Math.min(Math.round(t), total) + " ms";
+    if (t < total) raf = requestAnimationFrame(tick);
+    else raf = setTimeout(() => play(), 1500);
+  };
+  raf = requestAnimationFrame(tick);
+}
+document.querySelectorAll("[data-run]").forEach(b => b.addEventListener("click", () => {
+  run = b.dataset.run;
+  document.querySelectorAll("[data-run]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  clearTimeout(raf); play();
+}));
+document.getElementById("replay").addEventListener("click", () => { clearTimeout(raf); play(); });
+play();
+</script>
+</body>
+</html>
