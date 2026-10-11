@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Requests from M and N</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+  .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi .v { font-size: 1.7em; font-weight: 700; }
+  .kpi .l { color: var(--muted); font-size: 0.9em; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure { margin: 18px 0; }
+  figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 10px; display: block; background: #ffffff; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 72ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .step { border-left: 3px solid var(--line); padding-left: 14px; }
+  .kicker { margin: 0; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8em; }
+  ol.ranked > li { margin: 10px 0; }
+  .dedicated { margin: 0 0 18px; font-style: italic; color: var(--muted); }
+  .dedication { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px; }
+  .dedication p { font-size: 1.05em; }
+</style>
+</head>
+<body>
+<main>
+
+<p class="series"><a href="../">Hazel performance analysis</a> · Issue 003 · 2026-10-11</p>
+<h1>A day of requests from M and N</h1>
+<p class="sub">Two players asked for features in Messed Up Dress Up today: M (my daughter) and N (my son). As in <a href="../002/">issue 002</a>, each one went first into the game, a single HTML/JS file they play with, and only then toward the Hazel slides. This issue is what they asked for, what it looks like, which parts reached Hazel today, and what those parts cost there.</p>
+
+<figure><img src="img/hero.png" alt="Three scenes: a green witch with a hooked nose, a tuxedo cat on her shoulder and a broom, on a beach with palms and sand castles; a tiger costume with wrapped stripes in a forest meadow under sunshafts; a deer costume under water beside a shipwreck and two sharks at a picnic table.">
+<figcaption>Today's game: a witch at the beach, a tiger in the forest, a deer under the sea.</figcaption></figure>
+
+<div class="kpis">
+  <div class="kpi"><div class="v">14</div><div class="l">deploys of the game between 14:39 and 16:10, each feature live as soon as it was ready</div></div>
+  <div class="kpi"><div class="v good">1–5 ms</div><div class="l">the game redrawing its heaviest pictures (100 claws, 99 alien fingers, a scene)</div></div>
+  <div class="kpi"><div class="v warn">0.4–32 s</div><div class="l">a Hazel slide redrawing after one of today's hand sliders</div></div>
+  <div class="kpi"><div class="v">hands, mouth</div><div class="l">the features already formulated in the Hazel slides; costumes, stripes and backgrounds are next</div></div>
+</div>
+
+<h2 id="n">From N</h2>
+
+<h3>How many claws, how many star points: 1 to 100</h3>
+<p>The human and alien hands already had a slider for their fingers. N wanted the same for claws and for a star's points, and every count to go to 100, not 99. Up to four, claws keep their usual spacing. More of them fan out, nearly all the way round at 100, and get thinner, outline and all, so each one still shows. One star point is a teardrop, two a lens.</p>
+<figure><img src="img/n-claws.png" alt="A raised claw hand with 4, 20 and 100 claws."><figcaption>4 claws (the default, unchanged), 20, and 100.</figcaption></figure>
+<p>A star then got an angle: 0 to 2π/n radians, the turn to its next point, where it looks as it began. The other hands have no such symmetry, so each of them got an angle all the way round, 0 to 2π. Every default looks exactly as before.</p>
+<figure><img src="img/n-stars.png" alt="A one-pointed star hand (a teardrop), an eight-pointed star turned halfway to its next point, and a human hand turned a quarter turn."><figcaption>A 1-point star; 8 points, turned halfway to the next; a human hand turned 90°.</figcaption></figure>
+
+<h3>Longer arms and claws, "so we can see our face with 100 claws on each hand"</h3>
+<p>Arms now reach 600 (they stopped at 300) and claws 900% of their usual length (300% before). The picture's frame grows to take everything in.</p>
+<figure><img src="img/n-arms600.png" alt="A figure with arms 600 long, a ball of 100 claws on each hand; then the same with the claws at 900%."><figcaption>Arms at 600, 100 claws each side; then the claws at 900%.</figcaption></figure>
+
+<h3>Backgrounds</h3>
+<p>Four to start: none, a forest with a meadow and sunshafts, under the sea with a shipwreck and sharks at a picnic table, and a beach with umbrellas, chairs, blankets, palms, sand castles, the sun, and the ocean next to the sand. A scene is drawn behind everything, its ground at the figure's feet. With a background on, the picture turns landscape, with room at the sides for the scenery and in front of the feet for flowers, castles and blankets.</p>
+<figure><img src="img/n-backgrounds.png" alt="The default figure in the forest, under water, and at the beach."><figcaption>Forest, underwater, beach.</figcaption></figure>
+
+<h2 id="m">From M</h2>
+
+<h3>Tiger stripes, as Daniel Tiger wears them</h3>
+<p>The tiger's stripes were a pattern tiled over everything. M wanted them to wrap round from the back, over each part's side, and stop before its middle. Now each part gets its own stripes: the body (its belly hides their tips), each arm (a shallow V from both edges), each leg (from its outer edge and, below the crotch, its inner one), and the hood's sides.</p>
+<figure><img src="img/m-tiger.png" alt="The tiger costume before and after, arms down and arms out: tiled stripes, then stripes that come in from each part's edges."><figcaption>Before and after, arms down; before and after, arms out.</figcaption></figure>
+
+<h3>Witch, wolf and deer</h3>
+<p>The wolf and the deer are suits, like the tiger. The wolf has tall pointed ears, a bushy tail with a dark tip, and claws. The deer is spotted like a fawn, with antlers, long ears, a short white tail, and hooves on its hands and feet. The witch is the first costume that isn't an animal:</p>
+<ul>
+  <li>Her own face and hair show.</li>
+  <li>Her colors start purple, green and orange, and all three can be changed. She wears a pointed hat and a long dress with a spider-web pattern and a ragged hem, plus striped stockings, a belt and buckled boots.</li>
+  <li>A cat on her shoulder and a broom in her hand both start off. The cat is a tuxedo cat: a white blaze, chest and paws, with every color adjustable, and "off" leaves it all one color. Each of them has a size slider from 10% to 1000%.</li>
+  <li>The hand holding the broom closes round it.</li>
+</ul>
+<figure><img src="img/m-costumes.png" alt="A wolf suit, a deer suit, a green witch with a hooked nose, a tuxedo cat and a broom, a witch in black with a white web and an orange cat, and a close-up of the tuxedo cat."><figcaption>Wolf; deer; the witch with her cat and broom; the same witch in other colors; the tuxedo cat up close.</figcaption></figure>
+<figure><img src="img/m-sizes.png" alt="The witch's cat and broom at 30%, 100%, 500% and 1000%, the picture growing to hold them."><figcaption>Cat and broom at 30%, 100% (the default), 400–500%, and 1000%.</figcaption></figure>
+
+<h2 id="played">And while they played</h2>
+<p>These came up while they played. They are smaller fixes and additions, most of them found by just looking at a picture.</p>
+<h3>Raised arms go in front of the face</h3>
+<p>Hands had moved in front of the face, but the forearms still went behind the head. Now the arms are drawn again after the face, wherever they are outside the body.</p>
+<figure><img src="img/p-arms.png" alt="Arms raised to cover the eyes: before, the forearms vanish behind the head; after, they cross in front of the face."><figcaption>Before and after.</figcaption></figure>
+<h3>The mouth moves down, out of the way of big eyes</h3>
+<p>The game measures, along the mouth's top curve as it is drawn, how far each eye reaches down right above it, and moves the mouth until it is 8 below. A plain eye's edge is an oval. A star, a heart or an X is a box tilted with the eye, because their points reach its corners. Measured in Firefox, a star or heart emoji reaches 1.97 eye-radii below its middle, not the 1.5 the game had assumed. The usual eyes never move the mouth, so the default face is pixel for pixel the same.</p>
+<figure><img src="img/p-mouth.png" alt="A face with very big plain eyes, before and after (the smile moves below them); a face with big star eyes, before and after."><figcaption>Plain eyes at 300, before and after; star eyes at 250, before and after.</figcaption></figure>
+<h3>A wide nose stays between the eyes; a witch's nose</h3>
+<p>A side nose used to widen from a fixed point, so a wide one ended up under one eye. Now it widens from the top of its bridge, which stays between the eyes. The witch's nose is a kind of nose of its own: filled, with warts, pointing left, straight out (C), or right, at any length. A long one pushes the mouth down. The witch's green skin has its own row of feelings: witchy, cackling, spooked, hexed, never sick. The skin swatches that mean something now say so: 😀 😡 🤢 👽 🧙.</p>
+<figure><img src="img/p-nose.png" alt="A wide backwards-L nose before (its top under the left eye) and after (its top between the eyes); a long witch nose pointing straight out, and one pointing right, both on green skin."><figcaption>A wide nose, before and after; witch noses, C and R.</figcaption></figure>
+<h3>Hands that differ; full screen</h3>
+<p>The hand on the left can wear a style of its own ("same" by default; Surprise me makes them differ about one time in four). A button at the picture's top right makes it fill the screen, the controls hidden. An X or Escape brings them back.</p>
+<figure><img src="img/p-hands.png" alt="A figure with a human hand on the right and a claw hand on the left." style="max-width:260px"><figcaption>Human on the right, claws on the left.</figcaption></figure>
+<figure><img src="img/fullscreen.png" alt="The picture filling the window, an X at its top right."><figcaption>Full screen.</figcaption></figure>
+
+<h2 id="hazel">In Hazel so far</h2>
+<p>Two groups of these reached the Livelit Playground slides today, on both livelits branches (#2635 and #2597):</p>
+<ul>
+  <li><b>The hands</b> (Hands and Full Body slides). How many claws, 1–100. How many star points, 1–100, and a star's turn toward its next point, as a percent. Hazel's sliders are whole numbers, and a percent of the way is exactly the game's 0 to 2π/n. One hand angle in degrees, where the game keeps one per style. Alien fingers up to 100. Arms up to 600, claws up to 900%. Raised arms in front of the face.</li>
+  <li><b>The mouth clearing big eyes</b> (Full Body). Hazel draws its eyes as polygons, not emoji, so the slide measures each eye's own outline right above each point of the mouth. No estimate is needed.</li>
+</ul>
+<figure><img src="img/hz-hands-1.png" alt="The Hands slide's torso with claw hands: 4 claws, 20, 100 claws at 900%, and an 8-point star turned halfway."><figcaption>The Hands slide in Hazel: 4 claws, 20, 100 at 900%, an 8-point star turned 50%.</figcaption></figure>
+<figure><img src="img/hz-hands-2.png" alt="The Hands slide: a one-point star, human hands turned 90°, alien hands with 30 fingers turned 180°, and arms 600 long."><figcaption>A 1-point star; human hands at 90°; 30 alien fingers at 180°; arms at 600.</figcaption></figure>
+<figure><img src="img/hz-mouth.png" alt="Full Body slide heads: the default; plain eyes at 300 with a smile, then open; iris and whites; star eyes; heart eyes; X eyes. The mouth sits below the eyes in each."><figcaption>Full Body in Hazel: the default face, then big eyes of each style, the mouth below them.</figcaption></figure>
+<p>A new test checks that every playground slide comes out of statics with no error marks. The port also turned up a stale cap: Hazel's alien hand still stopped at 99 fingers, so 100 drew the same picture as 99.</p>
+<p>Not yet in Hazel: the wrapped stripes, the witch, wolf and deer, the backgrounds, full screen, the left hand's own style, the noses, and the cat.</p>
+
+<h2 id="cost">What it costs</h2>
+<p>The game redraws the heaviest of today's pictures in a few milliseconds. The Hazel slides take from under half a second to half a minute, and the cost grows with how many shapes a hand has.</p>
+<div class="scroll"><table>
+<tr><th>Change</th><th>Hazel slide redraw</th><th>Game <code>draw()</code></th></tr>
+<tr><td>Star points 5 → 8, star turn 0 → 50%</td><td class="n">0.65 s, 0.46 s</td><td class="n" rowspan="2">1–2 ms</td></tr>
+<tr><td>Hand angle 0 → 90° (human); arm length 95 → 600</td><td class="n">1.36 s; 1.39 s</td></tr>
+<tr><td>Claws 4 → 20</td><td class="n">2.11 s</td><td class="n" rowspan="2">3 ms at 100</td></tr>
+<tr><td>Claws 20 → 100; then claw length 100 → 900%</td><td class="n">8.19 s; 7.52 s</td></tr>
+<tr><td>Alien fingers 3 → 20</td><td class="n">6.21 s</td><td class="n">2 ms</td></tr>
+<tr><td>Alien fingers 20 → 50</td><td class="n">14.06 s</td><td class="n"></td></tr>
+<tr><td>Alien fingers 50 → 99</td><td class="n bad">32.30 s</td><td class="n">5 ms</td></tr>
+<tr><td>Full Body: eye size 50 → 300, smile, mouth open</td><td class="n">3.2–3.9 s</td><td class="n">1–3 ms</td></tr>
+</table></div>
+<p>The alien hand is the clearest case. Each finger is a capsule and a round pad, built point by point and drawn twice, outline and fill, on each of two hands. The redraw grows with the finger count, about 0.3 s per finger. 100 claws cost about a quarter of that per claw. This hasn't been profiled yet, so where that time goes is the next question. Issue 002 found the heaviest slide spending its time printing points; whether that holds here is what a profile would tell.</p>
+<p class="note">These are single runs, one per change, so read them as sizes rather than precise numbers. Earlier issues saw a few tenths of a second between runs of the same change.</p>
+
+<h2 id="next">What next</h2>
+<ul>
+  <li><b>A heads-up display in full screen.</b> The figure gets its own size and place in a scene, dragged along the ground. A 📌 by any slider pins it to a see-through strip along the bottom, for playing with the figure against the background.</li>
+  <li><b>The rest of today's features into the slides</b>, the costumes and backgrounds first.</li>
+  <li><b>A profile of the per-finger cost</b> on the Hands slide.</li>
+</ul>
+
+<h2 id="measured">How these were measured</h2>
+<ul>
+  <li><b>Hazel:</b> the #2635 build, served locally, in headless Firefox over WebDriver with a fresh profile. A script changes a slider (input and change events) or presses a button, then waits until the picture's SVG changes, up to 15–120 seconds.
+    <ul>
+      <li>It first gave up after 2 s, when nothing was pending, but a Full Body slider shows nothing pending for most of its 2.4 s, so some early pictures were stale.</li>
+      <li>A change that draws the same picture never "redraws". That is how the 99-finger cap turned up.</li>
+    </ul></li>
+  <li><b>Game:</b> <code>draw()</code> plus a layout read (<code>getBBox</code>), the median of 30 runs per setting in the same Firefox. Firefox rounds its timer to 1 ms, so these are to the nearest millisecond.</li>
+  <li><b>Pictures:</b> the game's own SVG, from today's version and from earlier commits for the "before" pictures, rasterized in headless Firefox.
+    <ul>
+      <li>Several SVGs on one page share ids such as <code>leg-stripes</code>, so the rasterizer gives each its own. Before that, one picture drew with another's clip paths, and the tiger's arm stripes seemed to vanish.</li>
+    </ul></li>
+</ul>
+
+</main>
+</body>
+</html>
