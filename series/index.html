@@ -17,7 +17,10 @@
   .sub { color: var(--muted); margin: 0 0 28px; }
   a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
   ol.issues { list-style: none; padding: 0; margin: 0; }
-  ol.issues li { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin: 12px 0; }
+  ol.issues li { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin: 12px 0;
+                 display: grid; grid-template-columns: 220px 1fr; gap: 18px; align-items: start; }
+  .thumb img { display: block; width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #ffffff; }
+  @media (max-width: 600px) { ol.issues li { grid-template-columns: 1fr; } .thumb { max-width: 320px; } }
   .num { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.9em; }
   .title { font-size: 1.15em; font-weight: 700; }
   .blurb { color: var(--muted); margin: 6px 0 0; }
@@ -29,14 +32,20 @@
   <p class="sub">Notes on making <a href="https://hazel.org">Hazel</a> responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed. Matthew Hammer.</p>
   <ol class="issues" reversed>
     <li>
+      <a class="thumb" href="002/"><img src="002/img/thumb.png" alt="Pictures from the Livelit Playground slides: a whole figure, a torso with hands, hair, pants and shoes, and two heads grown wide for big eyes."></a>
+      <div>
       <div class="num">Issue 002 · 2026-10-11</div>
       <div class="title"><a href="002/">From a game to a slide deck: Messed Up Dress Up in Hazel</a></div>
       <p class="blurb">With slider releases down to about 0.13 s, the playground slides could carry more. Each feature was tried first in a one-file HTML/JS game, by its players, then formulated in Hazel: hair on the head, a neck, arms with a shirt that is a system of polygons, hands, eyes and a mouth, and two outline modes for building and for playing. What each cost, and why the heaviest slide now spends its time printing points.</p>
+      </div>
     </li>
     <li>
+      <a class="thumb" href="001/"><img src="001/img/release-timeline.svg" alt="An animated timeline of one slider release: the main thread's stages, the eval worker, and the redraw, against Dress Up's under-a-millisecond update."></a>
+      <div>
       <div class="num">Issue 001 · 2026-10-10</div>
       <div class="title"><a href="001/">Why a slider isn't instant yet</a></div>
       <p class="blurb">A livelit slider release took 4.6 s in the afternoon of 2026-10-09 and takes about 0.4 s now, against under a millisecond in a plain HTML/JS app. Every performance problem found this fall, its fix, where the remaining 0.4 s goes, and what it would take to get to "immediate".</p>
+      </div>
     </li>
   </ol>
 </main>

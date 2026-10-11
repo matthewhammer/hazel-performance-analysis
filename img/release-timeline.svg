@@ -1,0 +1,57 @@
+<svg class="pipe" viewBox="0 0 920 360" width="920" height="360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Timeline of one slider release, to scale: main-thread stages, the eval worker checking what it can reuse and re-evaluating while the main thread waits, then decoding results and redrawing.">
+<style>
+  svg { --bg: #fbfaf7; --ink: #1f2328; --muted: #5b6470; --accent: #6d28d9; --worker: #d97706; --idle: #cbd5e1; --plain: #16a34a;
+    --s1: #2563eb; --s2: #7c3aed; --s3: #0891b2; --s4: #0d9488; --s5: #d97706; --s6: #db2777; --s7: #dc2626; --s8: #9333ea;
+    font-family: system-ui, "Segoe UI", Roboto, sans-serif; }
+  .pipe text { fill: var(--ink); font-size: 14px; }
+  .pipe .muted { fill: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { .packet { display: none; } }
+</style>
+<rect x="-20" y="-20" width="960" height="400" fill="#fbfaf7"/>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
+  </defs>
+  <text x="0" y="22" font-weight="700" font-size="15">Hazel, one slider release, to scale (CPU profile; real time is about 1.7× shorter)</text>
+  <text x="0" y="68" class="muted">main thread</text>
+  <text x="0" y="140" class="muted">eval worker</text>
+  <g transform="translate(110 46)">
+        <rect x="0" y="0" width="11" height="34" rx="3" fill="var(--s1)"><title>handle the event: the livelit's update (16 ms)</title></rect>
+    <rect x="11" y="0" width="73" height="34" rx="3" fill="var(--s2)"><title>re-build terms for the changed item (MakeTerm, 108 ms)</title></rect>
+    <rect x="84" y="0" width="11" height="34" rx="3" fill="var(--s3)"><title>statics, per item (16 ms)</title></rect>
+    <rect x="95" y="0" width="42" height="34" rx="3" fill="var(--s4)"><title>build and encode the worker request: the whole program, 478 KB (62 ms)</title></rect>
+    <rect x="137" y="0" width="99" height="34" rx="3" fill="var(--idle)"><title>the main thread waits for the worker</title></rect>
+    <text x="187" y="22" text-anchor="middle" class="muted">waiting</text>
+    <rect x="236" y="0" width="37" height="34" rx="3" fill="var(--s6)"><title>decode and merge the worker's results, up to 383 KB (55 ms)</title></rect>
+    <rect x="274" y="0" width="114" height="34" rx="3" fill="var(--s7)"><title>redraw: evaluate livelit views (167 ms; now cached for unchanged models)</title></rect>
+    <rect x="387" y="0" width="211" height="34" rx="3" fill="var(--s8)"><title>redraw: Hazel rebuilding its view in JavaScript, over several redraws, and frame callbacks (~310 ms); the browser's own layout and DOM work is ~30 ms of it</title></rect>
+    <rect x="137" y="72" width="99" height="34" rx="3" fill="var(--worker)"><title>the worker, incremental: decide what to reuse (~26 ms, by Merkle hash; was ~280), evaluate what changed (~70 ms); ~145 ms in all, was ~410</title></rect>
+    <text x="186" y="94" text-anchor="middle" fill="#fff" font-weight="600">≈ 145 ms</text>
+    <rect x="137" y="72" width="279" height="34" rx="3" fill="none" stroke="var(--muted)" stroke-dasharray="4 3"><title>before the reuse-check fix, the worker took ~410 ms</title></rect>
+    <text x="326" y="94" text-anchor="middle" class="muted">was ≈ 410 ms</text>
+    <line x1="137" y1="36" x2="137" y2="70" stroke="currentColor" marker-end="url(#arr)" color="var(--muted)"/>
+    <line x1="236" y1="70" x2="236" y2="36" stroke="currentColor" marker-end="url(#arr)" color="var(--muted)"/>
+    <text x="131" y="60" text-anchor="end" class="muted">478 KB →</text>
+    <text x="242" y="60" class="muted">← 383 KB</text>
+    <circle class="packet" r="8" fill="var(--accent)" stroke="#fff" stroke-width="2">
+      <animateMotion dur="6s" repeatCount="indefinite" calcMode="linear"
+        keyPoints="0.000;0.185;0.282;0.415;0.512;1.000" keyTimes="0.000;0.229;0.239;0.395;0.405;1.000"
+        path="M0 17 L137 17 L137 89 L236 89 L236 17 L598 17"/>
+    </circle>
+  </g>
+  <g transform="translate(110 190)">
+    <text x="-110" y="22" class="muted">Dress Up</text>
+    <rect x="0" y="0" width="2" height="34" rx="1" fill="var(--plain)"><title>update the model and re-render: under 1 ms</title></rect>
+    <text x="12" y="22">input → update one field → re-render the SVG: under 1 ms, start to finish</text>
+  </g>
+  <g transform="translate(0 262)" font-size="14">
+    <rect x="0" y="0" width="13" height="13" fill="var(--s1)"/><text x="19" y="11">event 16</text>
+    <rect x="100" y="0" width="13" height="13" fill="var(--s2)"/><text x="119" y="11">re-build terms 108</text>
+    <rect x="270" y="0" width="13" height="13" fill="var(--s3)"/><text x="289" y="11">statics 16</text>
+    <rect x="372" y="0" width="13" height="13" fill="var(--s4)"/><text x="391" y="11">request 62</text>
+    <rect x="484" y="0" width="13" height="13" fill="var(--worker)"/><text x="503" y="11">worker ≈145</text>
+    <rect x="606" y="0" width="13" height="13" fill="var(--s6)"/><text x="625" y="11">results 55</text>
+    <rect x="712" y="0" width="13" height="13" fill="var(--s7)"/><text x="731" y="11">views 167</text>
+    <rect x="0" y="26" width="13" height="13" fill="var(--s8)"/><text x="19" y="37">redraws: view building (JS), frame callbacks ≈310</text>
+    <text x="0" y="66" class="muted">Hover a stage for details. The dot follows one release: main thread, across to the worker, back, redraw.</text>
+  </g>
+</svg>

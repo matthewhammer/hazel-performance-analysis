@@ -49,6 +49,9 @@
   .step { border-left: 3px solid var(--line); padding-left: 14px; }
   .kicker { margin: 0; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8em; }
   ol.ranked > li { margin: 10px 0; }
+  .dedicated { margin: 0 0 18px; font-style: italic; color: var(--muted); }
+  .dedication { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px; }
+  .dedication p { font-size: 1.05em; }
 </style>
 </head>
 <body>
@@ -56,6 +59,7 @@
 
 <p class="series"><a href="../">Hazel performance analysis</a> · Issue 002 · 2026-10-11</p>
 <h1>From a game to a slide deck: Messed Up Dress Up in Hazel</h1>
+<p class="dedicated">Dedicated to a resonance between research and play &mdash; <a href="#dedication">see the dedication at the end</a>.</p>
 <p class="sub">How a plain HTML/JS prototype, played by real players, became Hazel slides you can use: hair on the head, a neck, arms, a shirt with a style and a size, hands, eyes and a mouth. Branch <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), with the slides kept in step on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>. Measured 2026-10-11 on dev builds, in headless Firefox.</p>
 
 <div class="kpis">
@@ -156,7 +160,7 @@
 
 <h2 id="try">Try it</h2>
 <ul>
-  <li>The Livelit Playground slides on the live build of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-shoes-and-hair">Shoes and Hair</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-arms">Arms</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-hands">Hands</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-eyes">Eyes</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-mouth">Mouth</a>. Switch the outline to 🖼️ to see only the GUIs.</li>
+  <li>The Livelit Playground slides on the live build of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-hair">Hair</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-shoes">Shoes</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-arms">Arms</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-hands">Hands</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-eyes">Eyes</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-mouth">Mouth</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-full-body">Full Body</a>. Switch the outline to 🖼️ to see only the GUIs.</li>
   <li>A slide you opened before keeps your copy of it: the hazel menu's <em>Reset Editor</em> restores the shipped one, for that slide only.</li>
 </ul>
 
@@ -166,6 +170,13 @@
   <li>The Hands profile: the Gecko profiler, four alien-finger changes, the main thread and the eval worker read apart.</li>
   <li>Every slide was checked with the CLI (no static errors; the anchors where expected), and the figures are the pictures' own SVG, saved after each change.</li>
 </ul>
+
+<h2 id="dedication">Dedication</h2>
+<div class="dedication">
+<p>We dedicate this issue to a resonance: a recurring set of good feelings and thoughts that comes from helping Hazel while being playful and creative with kids.</p>
+<p>It involves people, Matthew's kids most of all. Messed Up Dress Up is theirs: they play it, they named it, and much of what is in it, and so in these slides, began as something they asked for. Here the research and the play turned out to be one activity, and it has been, in Matthew's words, a very rewarding experience.</p>
+<p>We hope others can find it too, if it is their desire.</p>
+</div>
 
 </main>
 </body>
