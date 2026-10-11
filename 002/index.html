@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dress Up in Hazel</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+  .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi .v { font-size: 1.7em; font-weight: 700; }
+  .kpi .l { color: var(--muted); font-size: 0.9em; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure { margin: 18px 0; }
+  figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 10px; display: block; background: #ffffff; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 72ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .step { border-left: 3px solid var(--line); padding-left: 14px; }
+  .kicker { margin: 0; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8em; }
+  ol.ranked > li { margin: 10px 0; }
+</style>
+</head>
+<body>
+<main>
+
+<p class="series"><a href="../">Hazel performance analysis</a> · Issue 002 · 2026-10-11</p>
+<h1>From a game to a slide deck: Messed Up Dress Up in Hazel</h1>
+<p class="sub">How a plain HTML/JS prototype, played by real players, became Hazel slides you can use: hair on the head, a neck, arms, a shirt with a style and a size, hands, eyes and a mouth. Branch <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), with the slides kept in step on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>. Measured 2026-10-11 on dev builds, in headless Firefox.</p>
+
+<div class="kpis">
+  <div class="kpi"><div class="v good">4 + 1</div><div class="l">new playground slides (Arms, Hands, Eyes, Mouth), and Shoes and Hair grown</div></div>
+  <div class="kpi"><div class="v good">0.3–0.9 s</div><div class="l">a change on Shoes and Hair or Arms, until the picture redraws</div></div>
+  <div class="kpi"><div class="v warn">0.5–1.7 s</div><div class="l">a change on Eyes or Mouth</div></div>
+  <div class="kpi"><div class="v bad">1–2.5 s</div><div class="l">a change on Hands, the heaviest: 1 s for round hands, 2.5 s for seven alien fingers</div></div>
+</div>
+
+<p class="headline"><b>In short:</b> <a href="../001/">Issue 001</a> took a livelit slider release from 4.6 s to about 0.13 s. That made the slides worth building out, so we did: each feature was tried first in Messed Up Dress Up, a one-file HTML/JS game, by its players, and then formulated in Hazel, on the Livelit Playground slides. The formulations work and look like the game. They also show the next performance problem plainly: a slide's cost now grows with the number of points it draws, because the picture is computed, and then turned into SVG text, by Hazel code, one point at a time.</p>
+
+<h2 id="method">The method: prototype in HTML/JS, formulate in Hazel</h2>
+<p>Messed Up Dress Up is one HTML file: a friend to dress, and tabs of controls for the face, the eyes, the hair, the neck, arms and legs, the shirt, the hands, the pants, swimwear, the feet and costumes. It is quick to change, and it has players, who say what they want next and what is confusing. HTML/JS is still the lighter-weight place to prototype, in a lot of ways.</p>
+<p>The Hazel side is the Livelit Playground deck. Its pictures are lists of polygons, each drawn in its own <code>^polygons</code> editor, with named <em>anchors</em> on their corners, and set into one picture by matching anchors: the shirt's neck to the head's chin, the head's crown to the hair's. A <code>^picture</code> livelit shows the result, <code>^slider</code>s and <code>^choice</code>s set the numbers and styles. So each of the game's features, already tried by players, was rewritten in that vocabulary: polygons, anchors, and functions from the controls' values to polygons.</p>
+<figure><img src="img/dress-up.png" alt="Messed Up Dress Up: a cartoon friend and a panel of controls." style="max-width: 480px"><figcaption>The prototype: one model, one render function, a tab of controls per part.</figcaption></figure>
+
+<h2 id="steps">The features, one at a time</h2>
+
+<div class="step">
+<p class="kicker">Shoes and Hair</p>
+<h3 id="hair">Hair on the head, not behind it</h3>
+<p>The slide drew the hair behind the head, so short hair showed as a cap peeking out around it. Drawing it on top instead ran into the anchors: a hairdo is placed by its crown, and an anchor is a corner of its polygon, so every hairdo's outline ran through the crown, and drawn over the head it would have cut a V from the crown down to the face.</p>
+<p>The game draws long hair in two layers, so the slide does that for every hairdo: the hairdo as it was, drawn behind the head (its crown still places it), and a <em>top</em>, the hair over the scalp down to a fringe, drawn on the head. The two are placed together by the crown, then split by name to stack: body, shoes, the hair's back, the head, the hair's top.</p>
+<figure><img src="img/hair.png" alt="Short, long and curly hair, each drawn over the top of the head down to a fringe."><figcaption>Each hairdo's top follows the head's outline and leaves the face open: a zigzag fringe, side-swept bangs, small curls. Pressing a hairdo redraws the picture in 0.3–0.4 s.</figcaption></figure>
+<p><a href="https://github.com/hazelgrove/hazel/commit/446dfbe74c"><code>446dfbe74c</code></a></p>
+
+<h3 id="neck">A neck, and a frame that fits</h3>
+<p>The head sat on the shirt's collar. Now a rectangle runs from the shirt's neck anchor to the chin, its length set by a slider. Its anchors sit in the middles of its edges, and it is 16 longer than what shows: placed, it moves 8 down under the collar and the head 8 down over its top, so no gap shows. As in the game, it is drawn first, behind the shirt, so it shows in the V of the collar.</p>
+<p>A long neck pushed the head out of the viewer's fixed frame. The viewer now frames what is drawn: the usual frame, grown to every point plus a margin and made the viewer's shape, so a taller picture is drawn smaller rather than cut off.</p>
+<figure><img src="img/neck.png" alt="The figure with neck lengths 0, 28 and 60; at 60 the whole figure is drawn smaller to fit."><figcaption>Neck 0, 28 (the start) and 60. The slider redraws in 0.4 s.</figcaption></figure>
+<p><a href="https://github.com/hazelgrove/hazel/commit/2b8b102429"><code>2b8b102429</code></a></p>
+</div>
+
+<div class="step">
+<p class="kicker">Arms (new slide)</p>
+<h3 id="arms">Arms, and a shirt that is a system of polygons</h3>
+<p>The game's three arm sliders, with its ranges and starting values: the angle out of the shoulders (0 straight out, 90 down, -90 up), the length and the width. An arm is a band from a point just inside the shoulder to the hand, and the hand a disc. The angle turned out to be the most useful control, as the players had found.</p>
+<p>Arms that move need sleeves that move, so the shirt is no longer one polygon. It is a system of them, with the arms' position as a parameter: the torso, drawn in its editor without sleeves, and a sleeve on each arm computed from its angle, length and width. Then three more of the game's shirt controls: the style (t-shirt, long sleeves, tank top; the sleeve covers 38%, 95% or none of the arm), and the width and height, which stretch the torso about the neck. The shoulders and hips are anchors, so the arms and pants follow, and the pants take the shirt's width too.</p>
+<figure><img src="img/arms.png" alt="The figure with its arms at 55, 0, -70 degrees, and long and wide at 80."><figcaption>Arms at 55 (the start), straight out, raised, and long and wide by the sides: the sleeves go with them. Each slider redraws in 0.5–0.7 s.</figcaption></figure>
+<figure><img src="img/shirts.png" alt="A t-shirt, long sleeves, a tank top, a wider and taller shirt, and a narrower and shorter one."><figcaption>The shirt's style, width and height. A change redraws in 0.6–0.9 s.</figcaption></figure>
+<p><a href="https://github.com/hazelgrove/hazel/commit/489e2db3f7"><code>489e2db3f7</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/2bbbc6d85d"><code>2bbbc6d85d</code></a></p>
+</div>
+
+<div class="step">
+<p class="kicker">Hands (new slide)</p>
+<h3 id="hands">Six kinds of hands</h3>
+<p>The game's six hand styles, chosen with buttons, and its sliders for the size, the fingers of a human hand (5 is a hand, 1 a thumbs-up, 100 a fringe) and of an alien hand, and the claws' length. A hand is made in its own frame, the arm along x, then turned to the arm's angle and mirrored on the left. The game draws hands with SVG ellipses, round-capped lines and curves; here they are polygons: ellipses of 20 sides, fingers as bands with round ends, talons as sampled curves. Human and alien hands are drawn as the game draws them, every part first a little bigger in the outline's color and then in skin, so palm and fingers make one shape with one outline.</p>
+<figure><img src="img/hands.png" alt="Human, round, mittens, star, claw, long claw, alien, seven-fingered alien and twelve-fingered human hands."><figcaption>All six styles, and the claws at 220%, seven alien fingers and twelve human ones.</figcaption></figure>
+<p>This is the heaviest slide, and the one that shows what comes next. A change takes about 1 s with round hands and 2.2–2.5 s with twelve human or seven alien fingers. A profile of alien-finger changes: about <b>1.7 s per change on the main thread, in <code>^picture</code>'s view</b>, which is Hazel code turning every point of the picture into SVG text, and about <b>1.5 s in the worker</b>, computing the points (profiled times; real ones are smaller). Both grow with the number of points: both hands, in two layers, with pads, come to over a thousand. Two cheap steps helped: fewer points per shape (a pad is a 12-gon, a fingertip arc 5 points), and making the hand once for both arms; together they took seven alien fingers from 4.7 to 2.5 s.</p>
+<p><a href="https://github.com/hazelgrove/hazel/commit/744f0e0ad5"><code>744f0e0ad5</code></a></p>
+</div>
+
+<div class="step">
+<p class="kicker">Eyes and Mouth (new slides)</p>
+<h3 id="face">A face, in the game's own units</h3>
+<p>The game's face comes from the Kids' Choice slide, in its own units: a head 160 high. The new slides work in those units and set the result on the head drawn here, by its crown and chin, so the face moves and grows with the head. They build on Shoes and Hair, not on Hands, so they stay quicker.</p>
+<p><b>Eyes:</b> plain, stars, hearts or x eyes, an iris color, and the game's sliders for size, shape (round to narrow), angle (the outer corners rising), iris, eye whites and shine. A plain eye is a pupil, an iris and whites when chosen, squashed and then slanted, with a shine toward the light in the picture's own frame.</p>
+<figure><img src="img/eyes.png" alt="Plain eyes, eyes with irises and whites, narrow slanted green eyes, star eyes, heart eyes, x eyes."><figcaption>A style redraws in 0.5–0.8 s, a slider in 1.0–1.3 s. (Finding the head's frame once, not per point, took the sliders from 1.5–1.8 s.)</figcaption></figure>
+<p><b>Mouth:</b> a smile from a frown to a grin that opens (a smile like a D, a frown the other way up), normal, spiky or no teeth, and a tongue that is in, sticks out, or is not there, of any length, width and color. Its lips are the game's quadratic curves. The game clips the inside of the mouth to the lips; there is no clipping in a list of polygons, so here the teeth and tongue are regions between the lip curves. A deep mouth stretches the head's lower half, as in the game, and the head rises on its neck.</p>
+<figure><img src="img/mouth.png" alt="A grin, a frown, an open mouth with teeth and tongue, spiky teeth, a tongue sticking out, a deep open grin stretching the head."><figcaption>A smile change redraws in 0.8 s, an opening, teeth or tongue change in 1.3–1.7 s.</figcaption></figure>
+<p><a href="https://github.com/hazelgrove/hazel/commit/658e850942"><code>658e850942</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/b78faab21a"><code>b78faab21a</code></a></p>
+</div>
+
+<h2 id="usable">Making it usable</h2>
+<p>Playing the slides, rather than reading them, turned up the rough edges between "it works" and "you can use it".</p>
+<h3>A probe in an eye's pane was cut off</h3>
+<p>A livelit's eye opens a pane under it with its syntax, and a probe there drew its samples past the end of the line, which in the pane is its right edge: they were clipped, and the pane's scroll bar covered the model's row. The pane's rows are rows the livelit keeps clear in the editor, so the samples now run on past the pane, as they do beside any other line (<a href="https://github.com/hazelgrove/hazel/commit/47afffcf10"><code>47afffcf10</code></a>).</p>
+<figure><img src="img/probe.png" alt="Before: the pane's row half covered by a scroll bar and the samples cut off. After: the row whole and the samples running on."></figure>
+<h3>Buttons were cut off</h3>
+<p>A choice's box was 27 columns, and the six hand styles and seven tongue colors did not fit. Making its width follow the buttons did not work: every choice came out the same width, because a livelit's shape is fixed for the livelit, not computed per use. So it is 36 columns (<a href="https://github.com/hazelgrove/hazel/commit/b580d84aa1"><code>b580d84aa1</code></a>).</p>
+<h3>One cell per control, its settings behind the eye</h3>
+<p>Each control was two cells: one naming the configured livelit (<code>let ^hand_size_dial = Drawing.^slider("hand size", 2, 80)</code>, code, no GUI) and one using it (<code>let hand_size = ^^livelit(^hand_size_dial(14))</code>, with the GUI), named differently, so it was not clear which cell had the GUI. Every slider is used once, so its settings now go in its use, and the eye shows them on demand: the cell shows the slider, and its eye the livelit's head (<code>Drawing.^slider("hand size", 2, 80)</code>) and the model. The choices could not follow yet: a direct use cannot have a type application in its head (<code>Drawing.^choice@&lt;Hand&gt;(cases)(Human)</code> reads as applying the livelit's module to <code>Human</code>), so their two cells stay, renamed to pair up: <code>^hand_style</code> and <code>hand_style</code> (<a href="https://github.com/hazelgrove/hazel/commit/7bb257be0e"><code>7bb257be0e</code></a>).</p>
+<h3>Two outline modes: 🏗️ dev and 🖼️ UX</h3>
+<p>With modular editors, the outline picks which parts of a program show as cells. For playing, you want the GUIs; for building, the code. So the outline has two modes, each with its own open cells, neither disturbing the other: 🏗️ dev, the architecture, shows what was picked; 🖼️ UX, the art made in it, shows every livelit's GUI to start. Either can show anything, and a GUI row has a 🖼️ chip saying whether UX mode shows it. On the Mouth slide, UX mode opens its 24 GUIs; the mode and its picks survive a reload (<a href="https://github.com/hazelgrove/hazel/commit/38a6df851e"><code>38a6df851e</code></a>).</p>
+<figure><img src="img/ux-mode.png" alt="The Mouth slide in UX mode: the outline's header with the dev and UX switch, GUI rows with chips, and a stack of slider and choice cells."><figcaption>UX mode on Mouth: only the GUIs, in the order the program has them.</figcaption></figure>
+
+<h2 id="cost">What a change costs, slide by slide</h2>
+<div class="card scroll"><table>
+  <thead><tr><th>slide</th><th>change</th><th>until the picture redraws</th></tr></thead>
+  <tbody>
+    <tr><td>Shoes and Hair</td><td>a hairdo; the neck</td><td class="n">0.3–0.4 s</td></tr>
+    <tr><td>Arms</td><td>an arm slider; the shirt's style or size</td><td class="n">0.5–0.9 s</td></tr>
+    <tr><td>Hands</td><td>round hands; a style</td><td class="n">0.9–2.1 s</td></tr>
+    <tr><td>Hands</td><td>twelve human or seven alien fingers</td><td class="n">2.2–2.5 s</td></tr>
+    <tr><td>Eyes</td><td>a style; a slider</td><td class="n">0.5–1.3 s</td></tr>
+    <tr><td>Mouth</td><td>the smile; opening, teeth, tongue</td><td class="n">0.8–1.7 s</td></tr>
+  </tbody>
+</table></div>
+<p>For comparison, a Kids' Choice release is about 0.13 s (<a href="../001/">issue 001</a>), and the game itself takes under a millisecond. The difference is in what is drawn: Kids' Choice's face is a hand-written view, while these slides compute their pictures, polygon by polygon and point by point, in Hazel, and then print every point.</p>
+
+<h2 id="next">What next</h2>
+<ol class="ranked">
+  <li><b>Draw the points without Hazel code per point.</b> <code>^picture</code>'s view spends about 1.7 s of a Hands change printing points. A view that reuses the drawing of unchanged shapes, or a builtin that prints a list of points, would take most of that away. To measure first: how much the view already reuses for shapes that did not change.</li>
+  <li><b>Let a direct use have a type application in its head</b>, <code>Lib.^f@&lt;T&gt;(args)(model)</code>, so choices can be one cell with their settings behind the eye, like sliders.</li>
+  <li><b>More of the game:</b> the shirt's collar, legs and pants styles, the feet, colors for everything, and in the end one slide with the whole friend.</li>
+  <li><b>Seeing big types</b>: the cursor inspector cuts off a long type with no way to see the rest (<a href="https://github.com/hazelgrove/hazel/issues/2674">#2674</a>, filed on <code>dev</code>).</li>
+</ol>
+
+<h2 id="try">Try it</h2>
+<ul>
+  <li>The Livelit Playground slides on the live build of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-shoes-and-hair">Shoes and Hair</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-arms">Arms</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-hands">Hands</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-eyes">Eyes</a>, <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-mouth">Mouth</a>. Switch the outline to 🖼️ to see only the GUIs.</li>
+  <li>A slide you opened before keeps your copy of it: the hazel menu's <em>Reset Editor</em> restores the shipped one, for that slide only.</li>
+</ul>
+
+<h2 id="measured">How these were measured</h2>
+<ul>
+  <li>Headless Firefox over WebDriver, a fresh profile per run, dev builds of #2635 on Matthew's laptop. A change is a slider set or a button pressed; its time runs until the <code>^picture</code>'s SVG changes, polled every 0.2 s, so the times are good to about 0.2 s, one run each.</li>
+  <li>The Hands profile: the Gecko profiler, four alien-finger changes, the main thread and the eval worker read apart.</li>
+  <li>Every slide was checked with the CLI (no static errors; the anchors where expected), and the figures are the pictures' own SVG, saved after each change.</li>
+</ul>
+
+</main>
+</body>
+</html>
