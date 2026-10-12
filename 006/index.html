@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Performance in CI</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+  .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi .v { font-size: 1.7em; font-weight: 700; }
+  .kpi .l { color: var(--muted); font-size: 0.9em; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure { margin: 18px 0; }
+  figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 10px; display: block; background: #ffffff; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 72ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .step { border-left: 3px solid var(--line); padding-left: 14px; }
+  .kicker { margin: 0; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8em; }
+  ol.ranked > li { margin: 10px 0; }
+  .dedicated { margin: 0 0 18px; font-style: italic; color: var(--muted); }
+  .dedication { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px; }
+  .dedication p { font-size: 1.05em; }
+</style>
+</head>
+
+<body>
+<main>
+
+<p class="series"><a href="../">Hazel performance analysis</a> · Issue 006 · 2026-10-12 · draft</p>
+<h1>Catching performance regressions in CI</h1>
+<p class="sub">The second question from a meeting with Cyrus: issues 001–005 found and fixed performance problems by hand, one profile at a time. What stops them coming back? This issue covers what Hazel's CI checks today and why its two benchmark workflows never worked. It explains why a time can't fail a build on GitHub's runners and a count can, and describes the first count-based check (<a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a>). It also weighs building on <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>, an earlier benchmarking PR, against starting fresh.</p>
+
+<div class="headline">
+<p><b>Short answers.</b></p>
+<ol>
+  <li><b>Nothing in CI catches a performance regression today.</b> No check is required to merge into <code>dev</code> at all; the tests run on every push, and a red run is a signal, not a gate.</li>
+  <li><b>The two benchmark workflows on <code>dev</code>, <code>/perf</code> and <code>/bench-compare</code>, never worked there.</b> They came from #2161 without the scripts they call. <code>/perf</code> also ran a pull request's own code for anyone who commented. <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a> turns them off.</li>
+  <li><b>A time can't fail a build on GitHub's shared runners; a count can.</b> The full test job's time varied by about 10% across the last five <code>dev</code> runs, and the quick job once ran 40% faster than usual. The same program does the same amount of work on every machine.</li>
+  <li><b>The first count-based check is in <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a>:</b> the evaluator's steps, held to budgets. A cold run takes 206,834 steps. A re-run after an edit takes 378, and must stay under 5% of a run. With reuse switched off, the re-run takes 206,834 steps and the test fails.</li>
+  <li><b>#2161 or fresh?</b> We started fresh for the check, because #2161 measures time. Its phase-by-phase timings would suit a later report that informs but does not fail the build (<a href="#pr2161">below</a>).</li>
+</ol>
+</div>
+
+<h2 id="today">What CI runs today</h2>
+<div class="scroll">
+<table>
+<tr><th>Workflow</th><th>When</th><th>What it does</th><th>Time</th></tr>
+<tr><td><code>ci.yml</code> → <code>checks.yml</code></td><td>Every push, to any branch</td><td><b>Fast checks:</b> formatting, a release build, the quick tests. <b>Full tests:</b> the whole suite with coverage.</td><td class="n">19–28 min</td></tr>
+<tr><td><code>fork-ci.yml</code></td><td>Pull requests from forks</td><td>The same checks, without coverage</td><td></td></tr>
+<tr><td><code>deploy.yml</code></td><td>Every push</td><td>A release build, published to hazel.org/build</td><td class="n">4 min</td></tr>
+<tr><td><code>extended-tests.yml</code></td><td>Sundays, or by hand</td><td>The property tests at 100 times their usual size</td><td class="n">2–3 h</td></tr>
+<tr><td><code>perf.yml</code></td><td>A <code>/perf</code> comment</td><td>Meant to benchmark a PR against its base</td><td>never worked on <code>dev</code></td></tr>
+<tr><td><code>bench-compare.yml</code></td><td>A <code>/bench-compare</code> comment</td><td>Meant to compare two commits' stored benchmarks</td><td>never succeeded</td></tr>
+<tr><td><code>update_deps.yml</code></td><td>Daily</td><td>Updates dependencies in a PR</td><td class="n">10–14 min</td></tr>
+</table>
+</div>
+<p><code>dev</code>'s branch protection lists no required checks. So even a failing test is information, not a block.</p>
+
+<h2 id="workflows">The two benchmark workflows</h2>
+<ul>
+  <li><b><code>/perf</code></b> builds the PR and its base and runs <code>bench/build-and-run.sh</code> on each. That script is only on #2161's branch, <code>perf-bench</code>. On <code>dev</code>, the workflow exits with "No such file or directory" on both sides; that was the last run, on 09-30. Its last two real successes were on #2161, on 2026-03-06. One on 08-12 "succeeded" with nothing to compare against: the base side had failed to build, so every row was new.</li>
+  <li><b><code>/bench-compare</code></b> looks for stored results named <code>bench-&lt;sha&gt;</code>. Only #2161's branch has the workflow that stores them, and none exist now. It has never succeeded.</li>
+  <li><b>Neither could fail a build.</b> The comparison script marks a change of more than 10% and 0.5 ms with an emoji, and always exits successfully.</li>
+  <li><b><code>/perf</code> ran a PR's own code</b> (<code>npm install</code> and the benchmark script) for any commenter, with a token that can write to the PR.</li>
+</ul>
+<p>A CI audit noted the missing scripts on #2161 in August. <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a> turns both workflows off: they now start only by hand, and then their job is skipped. A comment in each file says why, and what reviving it would need.</p>
+
+<h2 id="times">Why not times</h2>
+<p>A regression worth catching is often 10–20%. That is the size of the noise on GitHub's shared runners. For the last five <code>dev</code> runs, with nearly the same tests (4,699–4,704):</p>
+<ul>
+  <li>the full test job took 1,110–1,453 s: a mean of 1,323 s and a standard deviation of 127 s, about 10%;</li>
+  <li>the quick job took 145–147 s four times, and 87 s once.</li>
+</ul>
+<p>Each run was a different commit, so some of that spread is code. But a single timing per build cannot tell a 10% regression from a slow machine. Timing the base and the PR on the same runner, interleaved and repeated, narrows it. That costs a second build and a long job, and still gives a judgment, not a pass or fail. Times belong in a report.</p>
+
+<h2 id="counts">Counts that can fail a build</h2>
+<p>The same program, on the same code, does the same work on every machine. A count of that work can be held to a budget with no false alarms. These counts exist or are close:</p>
+<div class="scroll">
+<table>
+<tr><th>Count</th><th>What a rise means</th><th>Where</th></tr>
+<tr><td><b>Evaluator steps actually taken</b></td><td>more evaluation, or reuse that stopped working</td><td><code>dev</code>, with <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a></td></tr>
+<tr><td><b>Statics analyses per expression</b></td><td>an expression analyzed again, as module and livelit definitions were, twice each, until <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a></td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <code>Test_StaticsPasses</code>, with per-file budgets</td></tr>
+<tr><td><b>Work per edit:</b> pieces reparsed, items re-analyzed</td><td>an edit recomputing more than it touched</td><td>#2635: <code>Test_EditLocality</code>, <code>Test_BenchStatics</code></td></tr>
+<tr><td><b>Bytes:</b> an elaboration's size; the worker's messages</td><td>larger values crossing between the threads (issue 005)</td><td>#2635: <code>Test_ElabSize</code>; messages measured by hand so far</td></tr>
+</table>
+</div>
+<p><b>What counts miss:</b> a step that got slower, and the page's own costs (virtual DOM, layout), which need a browser. Those stay with timings.</p>
+<p><b>Budgets as a ratchet.</b> An exact count fails on improvements too. A count on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> fails now with "expected 2, received 1", although 1 is better. A budget with room above the count catches a rise. A floor a quarter below the budget catches an improvement, and the failure says to lower the budget, in the same change. So each budget stays close to the truth, and the history of the budgets is a history of the improvements.</p>
+
+<h2 id="gate">The first check: <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a></h2>
+<p><code>Evaluator.evaluate_counting_work</code> is <code>evaluate</code>, also returning the steps its trampoline actually took. A result taken from the cache counts as the one step that fetches it.</p>
+<p>The evaluator already had a step count, but it is the wrong one for this. To keep probe samples' step numbers in line, it counts a reused subtree's steps again, so it is the same whether anything was reused or not.</p>
+<p>A new test group, <code>PerfBudgets</code>, runs in the quick suite in under a second:</p>
+<div class="scroll">
+<table>
+<tr><th>Case</th><th class="n">Steps now</th><th class="n">Budget</th></tr>
+<tr><td>A cold run: recursion, list traversals and case matches (a smaller <code>bench/eval-bench.hz</code>)</td><td class="n">206,834</td><td class="n">227,000</td></tr>
+<tr><td>A re-run after an edit to a literal nothing else reads; also under 5% of a cold run, whatever the budgets</td><td class="n">378</td><td class="n">420</td></tr>
+</table>
+</div>
+<p><b>It catches what it is for.</b> With reuse switched off in <code>IncrEval.reuse_check</code>, the re-run takes 206,834 steps, and the test fails: "over its budget of 420. A performance regression". This is the failure issues 004 and 005 kept finding by hand, a change re-evaluating everything, invisible to tests that only check the answer. The counts are the same on every run.</p>
+
+<h2 id="pr2161"><a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>: build on it, or start fresh?</h2>
+<p>#2161, "Performance benchmarking", by David Moon, is a draft opened on 2026-03-05. Its last commit is from 2026-03-13, and it conflicts with <code>dev</code>. It has 48 commits: +2,376 and −323 lines in 30 files.</p>
+<p>Its harness, <code>bench/hazel_bench.re</code>, times the editor's syntax and statics phases: zipping, parsing (<code>MakeTerm</code>), layout (<code>Measured</code>), type checking, elaboration. It runs them on let-chains of 100 and 500 bindings, in four scenarios: cold, warm, after a cursor move, and after an edit. Each is the median of 10 runs. It posted result tables on its own PR in March and August. The PR also replaces structural memoization with memoization by pointer, in <code>MakeTerm</code>, <code>Measured</code>, highlighting and elsewhere. The two workflows on <code>dev</code> came from it.</p>
+<div class="scroll">
+<table>
+<tr><th></th><th>Build on #2161</th><th>Start fresh: counts in the test suite (#2678)</th></tr>
+<tr><td><b>Measures</b></td><td>Time per phase of the editor's syntax and statics</td><td>Work done: evaluator steps now; statics analyses and bytes next</td></tr>
+<tr><td><b>Can it fail a build?</b></td><td><span class="bad">No.</span> Its threshold (10% and 0.5 ms) is the size of the runners' noise, and its comparison never fails</td><td><span class="good">Yes,</span> with no false alarms: a count over budget fails the test</td></tr>
+<tr><td><b>Covers where 001–005 found the costs</b></td><td><span class="warn">Partly:</span> statics, yes; evaluation, reuse, the worker and the page, no</td><td><span class="warn">Partly:</span> evaluation and reuse now; statics once #2635's counts reach <code>dev</code>; the page, no</td></tr>
+<tr><td><b>Explains a regression</b></td><td><span class="good">Yes:</span> time by phase shows where it went</td><td><span class="warn">Partly:</span> a count shows that work grew, and which test, not where the time goes</td></tr>
+<tr><td><b>Sees a step getting slower</b></td><td><span class="good">Yes</span>, given enough repetitions</td><td><span class="bad">No</span></td></tr>
+<tr><td><b>Programs</b></td><td>Synthetic let-chains</td><td>Small programs in the test; slides can be added</td></tr>
+<tr><td><b>Cost per run</b></td><td>A separate job building base and head, about 11 minutes, on request</td><td>Under a second, inside the tests every push already runs</td></tr>
+<tr><td><b>Safety</b></td><td><span class="bad">Ran a PR's code for any commenter</span></td><td>Only the normal CI</td></tr>
+<tr><td><b>State</b></td><td>A conflicting draft that mixes the harness with unrelated memoization changes; it would need splitting first</td><td>One small commit on today's <code>dev</code></td></tr>
+<tr><td><b>Ownership</b></td><td>David's PR: reviving it is his call</td><td>Ours</td></tr>
+</table>
+</div>
+<p><b>The decision:</b> counts for the check that fails a build, so we started fresh. #2161's timings by phase are the right shape for the other half: a report on a PR that shows where time went, run on one runner for base and head, repeated, and read by a person. If David wants that, the harness could be split out of #2161 for it.</p>
+
+<h2 id="next">What next</h2>
+<ul>
+  <li><b>Statics counts on <code>dev</code>:</b> the analyses-per-expression counter and <code>Test_StaticsPasses</code>, from #2635. Its corpus case runs only in the full suite. A small subset could go in the quick one.</li>
+  <li><b>The slides:</b> a budget for the work after a figure move in the woods, where reuse failed before <a href="https://github.com/hazelgrove/hazel/pull/2675">#2675</a>.</li>
+  <li><b>Bytes:</b> elaboration sizes on <code>dev</code>, and the worker's message sizes for a fixed interaction.</li>
+  <li><b>Make the check count:</b> ask the maintainers to require the test jobs for merging into <code>dev</code>.</li>
+  <li><b>A timing report,</b> informing, not failing: base and head on one runner, repeated, phase by phase, perhaps from #2161's harness.</li>
+</ul>
+
+<h2 id="method">How this was put together</h2>
+<ul>
+  <li>The CI facts: the workflow files on <code>dev</code> (<code>e12145c69b</code>), <code>dev</code>'s branch protection, and the logs of the runs named above, read with the GitHub CLI.</li>
+  <li>The noise: the "Test Successful in N s" lines of the last ten green <code>dev</code> runs (2026-09-22 to 10-09), of which the last five have nearly the same suite.</li>
+  <li>#2161: its description, files, comments and branch.</li>
+  <li>The counts: #2678's test, run twice, and once with reuse switched off; on the laptop, under node.</li>
+</ul>
+
+</main>
+</body>
+</html>
