@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Witch in Hazel</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+  .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi .v { font-size: 1.7em; font-weight: 700; }
+  .kpi .l { color: var(--muted); font-size: 0.9em; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure { margin: 18px 0; }
+  figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 10px; display: block; background: #ffffff; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 72ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .step { border-left: 3px solid var(--line); padding-left: 14px; }
+  .kicker { margin: 0; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8em; }
+  ol.ranked > li { margin: 10px 0; }
+  .dedicated { margin: 0 0 18px; font-style: italic; color: var(--muted); }
+  .dedication { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px; }
+  .dedication p { font-size: 1.05em; }
+</style>
+</head>
+<body>
+<main>
+
+<p class="series"><a href="../">Hazel performance analysis</a> · Issue 004 · 2026-10-11</p>
+<h1>The witch, ported to Hazel</h1>
+<p class="sub">M's witch went into Messed Up Dress Up first (<a href="../003/">issue 003</a>). Now she is a slide in the Livelit Playground, on branch <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), kept in step on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> (user-defined livelits). This issue covers what the slide does, two layout bugs the port turned up, and what a redraw costs. The backgrounds are next.</p>
+
+<figure><img src="img/hz-witch.png" alt="The Witch slide's picture five ways: the default purple witch with green skin and a hooked nose; with a tuxedo cat on her shoulder and a broom in her hand; her nose pointing straight out at twice its length; in black with white webs, purple trim, red boots and a ginger cat; and with the cat at 400% and the broom at 300%.">
+<figcaption>The Witch slide, by its own livelits: the default; the cat and the broom turned on; the nose pointing out, at 200; other colors; the cat at 400% and the broom at 300%.</figcaption></figure>
+
+<div class="kpis">
+  <div class="kpi"><div class="v">15</div><div class="l">new controls, each a livelit: the witch's colors, nose, cat and broom, and a row of skin swatches shared with Full Body</div></div>
+  <div class="kpi"><div class="v">2</div><div class="l">layout bugs fixed on the way, both buttons that could not be pressed or read</div></div>
+  <div class="kpi"><div class="v warn">5.0–7.5 s</div><div class="l">the Witch slide redrawing after one change (14.5 s to load)</div></div>
+  <div class="kpi"><div class="v good">~1 ms</div><div class="l">the game drawing the same witch, cat and broom</div></div>
+</div>
+
+<h2 id="slide">The Witch slide</h2>
+<p>The slide starts from Full Body's figure: the same hair, head, eyes, mouth, arms and hands. It adds the witch's own controls and pieces. As in the game:</p>
+<ul>
+  <li><b>Her hat and dress</b> share one color, purple to start. The dress has long sleeves, a ragged hem and a spider web, in green to start. Seven dress colors and six web colors.</li>
+  <li><b>An orange trim</b> on the hat's band and in her striped stockings. Below are a belt with a gold buckle and pointed boots, each with a buckled strap.</li>
+  <li><b>The witch nose</b> points left, out or right, at any length from 30 to 400. It is filled a shade darker than her skin, and its warts grow with it. The mouth moves down to clear it.</li>
+  <li><b>A tuxedo cat</b> on her shoulder, off to start. Its fur, its white (or none), its eyes and its nose each have a color choice, and its size runs 10–1000%.</li>
+  <li><b>A broom</b> through her right hand, off to start, sized 10–1000%. The hand holding it closes round it.</li>
+  <li><b>The skin</b> starts at witch green (next section).</li>
+</ul>
+<p>Every piece is a polygon or a path, because those are the only shapes the slides' Drawing library has. Each piece is placed by the figure's own anchors: hips, feet, neck, the hand at the end of the arm. Two passes over the finished picture recolor it. One turns the shirt's blue into her dress color. The other turns the usual skin and its outline into the chosen skin. The pieces stack in the game's order, so a raised arm still crosses in front of her face and the broom hand goes on last.</p>
+<figure><img src="img/game-vs-hazel.png" alt="The game's witch and the slide's witch side by side, each with a tuxedo cat and a broom. The game's dress is covered in a repeating web pattern; the slide's has five separate webs." style="max-width:min(100%, 600px)">
+<figcaption>The game, and the slide. The game tiles its web over the whole dress, using an SVG pattern. The Drawing library has no patterns, so the slide draws five webs, each with eight threads and three rings.</figcaption></figure>
+<p>Try it: <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-witch">the Witch slide</a>. Switch the outline to 🖼️ to see only the GUIs.</p>
+
+<h2 id="skin">Skin, as swatches</h2>
+<p>The game's skin colors include five that mean something, each marked with a face: 😀 smiley yellow, 😡 mad red, 🤢 sick green, 👽 alien grey and 🧙 witch green. The Full Body slide gained a skin choice earlier today, one button per skin, as a <code>^choice</code>.</p>
+<p>Ten skins were too many for it. A <code>^choice</code>'s width is a number in its definition, sized for about seven short buttons, and that number cannot depend on the choices passed in. The row of ten spilled past both ends of its box, and the code drawn beside it covered the first button. Pressing "peach" pressed the code instead, and the picture never changed. The redraw script found this. Every other press redrew in 5–7 s, and "peach" never did, even after 60 s.</p>
+<p>The skin is now its own small livelit, <code>^skin</code>. It shows one swatch per skin, in that skin's color, as the game does, in a box wide enough for all ten. The faces became words: smiley, mad, sick, alien, witch.</p>
+<figure><img src="img/swatches.png" alt="The skin_colors line in the editor: ten small buttons, each in its own skin color, labelled peach, smiley, mad, sick, alien, witch, pale, tan, brown and dark; witch is outlined." style="max-width:min(100%, 730px)">
+<figcaption>The swatch row in the editor, witch green pressed.</figcaption></figure>
+<figure><img src="img/hz-skins.png" alt="The witch in peach, mad red and witch green skin." style="max-width:min(100%, 660px)">
+<figcaption>Peach, mad red, witch green: one press each, 6.2 s, 6.5 s and 5.0 s.</figcaption></figure>
+
+<h2 id="labels">Labels that fit</h2>
+<p>The witch's choices first had two-word labels: "green web", "orange trim", "nose points left". Each <code>^choice</code> is one line tall. The labels wrapped to two lines, and the box cut off the second, so "nose points left" read as "nose points". The labels are now one word each. The name on each line (<code>web_color</code>, <code>trim_color</code>, <code>nose_dir</code>) already says what the choice is for.</p>
+<figure><img src="img/controls-before.png" alt="The witch's controls before: buttons such as green web and nose points left wrapped onto two lines and cut off." style="max-width:min(100%, 690px)">
+<figcaption>Before: two-word labels, wrapped and cut off.</figcaption></figure>
+<figure><img src="img/controls-after.png" alt="The witch's controls after: every button a single word on one line, and the cat and broom toggles and size sliders below." style="max-width:min(100%, 690px)">
+<figcaption>After.</figcaption></figure>
+<p>Both bugs come from the same place. A livelit's box is a fixed width, one line tall, and nothing reports when its view overflows the box. A script now checks every button on these two slides: each sits inside its box, and nothing covers it. Full Body still has five shoe labels that wrap, such as "alien 4 toes". That fix is next.</p>
+
+<h2 id="cost">What it costs</h2>
+<div class="scroll"><table>
+<tr><th>Change</th><th>Witch slide</th><th>Full Body slide</th><th>Game <code>draw()</code></th></tr>
+<tr><td>Load, to the first picture</td><td class="n">14.5 s</td><td class="n">14.7 s</td><td class="n"></td></tr>
+<tr><td>Skin: mad red; peach; witch green</td><td class="n">6.5 s; 6.2 s; 5.0 s</td><td class="n">4.1 s; 3.3 s; 3.4 s</td><td class="n" rowspan="5">~1 ms, the witch with her cat and broom (3 ms on the beach)</td></tr>
+<tr><td>Cat on; broom on</td><td class="n">6.9 s; 6.6 s</td><td class="n"></td></tr>
+<tr><td>Nose out; nose length 100 → 200</td><td class="n">6.2 s; 6.2 s</td><td class="n"></td></tr>
+<tr><td>Dress, web, trim, boot and fur colors</td><td class="n">6.2–7.3 s</td><td class="n"></td></tr>
+<tr><td>Cat size 100 → 400; broom size 100 → 300</td><td class="n">6.1 s; 7.5 s</td><td class="n"></td></tr>
+</table></div>
+<p>Every change to the witch costs about the same, 5–7.5 s, whatever it changes. A skin press costs about 2–3 s more on the Witch slide than on Full Body, though the Witch slide is shorter (2,189 lines against 2,896). So the extra time comes from what the witch adds, not from the slide's length. Which part of it is not known yet: this slide hasn't been profiled.</p>
+<p class="note">These are single runs, one per change, so read them as sizes rather than precise numbers. Earlier issues saw a few tenths of a second between runs of the same change.</p>
+
+<h2 id="next">What next</h2>
+<ul>
+  <li><b>A Scenes slide</b> with four of the game's backgrounds: underwater, beach, forest and the witch's woods, with all their sliders.
+    <ul>
+      <li>For every background: the figure's size and place in the scene.</li>
+      <li>For the woods: chicken legs on the hut, off to start (M's call), with a size; how near the hut comes, always behind the fence; and the skulls' red eyes, how big and how fast they blink.</li>
+      <li>Circles and curves will be polygons. The eyes will be still red dots: the blink-rate slider will be there, but a slide's picture is a still picture, so nothing will blink yet.</li>
+    </ul></li>
+  <li><b>A profile of a Witch slide redraw</b>, to find where its extra 2–3 s goes.</li>
+  <li><b>Full Body's shoe labels</b>, so they fit their line.</li>
+</ul>
+
+<h2 id="measured">How these were measured</h2>
+<ul>
+  <li><b>Hazel:</b> dev builds of #2635 on Matthew's laptop, in headless Firefox over WebDriver with a fresh profile per run.
+    <ul>
+      <li>A script sets a slider (input and change events) or presses a button by its label. Repeated labels, such as "black", are pressed by their place in the slide.</li>
+      <li>It then waits until the <code>^picture</code>'s SVG changes, up to 60 s.</li>
+      <li>The script used to look only for <code>^choice</code> buttons, so it now finds any button inside a livelit, the swatches included.</li>
+    </ul></li>
+  <li><b>The layout check:</b> for every button inside a livelit, scrolled into view, its box against the livelit's box, and the element at its center.</li>
+  <li><b>Game:</b> <code>draw()</code> plus a layout read (<code>getBBox</code>), the median of 30 runs per setting in the same Firefox. Firefox rounds its timer to 1 ms, so these are to the nearest millisecond.</li>
+  <li><b>Pictures:</b> each slide's <code>^picture</code> SVG and the game's own SVG, rasterized in headless Firefox. The editor shots are of the same headless Firefox.</li>
+</ul>
+
+</main>
+</body>
+</html>
