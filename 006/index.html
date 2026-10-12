@@ -73,6 +73,10 @@
 </ol>
 </div>
 
+<div class="headline" style="border-left-color: var(--warn); margin-top: 14px">
+<p><b>Update, later on 2026-10-12: a count is not a time.</b> A count of evaluation steps has no noise, but it can disagree with the time, in either direction. In the woods, 26% fewer steps made the view only 6% faster. Turning the view's call memo off made a woods change about 25% faster, while a step count would have called it a regression. So a budget that fails is a reason to time the change, not a verdict on it. <a href="#update">The numbers</a>.</p>
+</div>
+
 <h2 id="today">What CI runs today</h2>
 <div class="scroll">
 <table>
@@ -107,6 +111,7 @@
 
 <h2 id="counts">Counts that can fail a build</h2>
 <p>The same program, on the same code, does the same work on every machine. A count of that work can be held to a budget with no false alarms. These counts exist or are close:</p>
+<p class="note"><b>Update, later on 2026-10-12:</b> no false alarms from noise, that is. A count can still disagree with the time, in either direction (<a href="#update">below</a>).</p>
 <div class="scroll">
 <table>
 <tr><th>Count</th><th>What a rise means</th><th>Where</th></tr>
@@ -151,6 +156,25 @@
 </table>
 </div>
 <p><b>The decision:</b> counts for the check that fails a build, so we started fresh. #2161's timings by phase are the right shape for the other half: a report on a PR that shows where time went, run on one runner for base and head, repeated, and read by a person. If David wants that, the harness could be split out of #2161 for it.</p>
+
+<h2 id="update">Update, later on 2026-10-12: a count is not a time</h2>
+<p>Later the same day, work on the woods' picture view (<a href="../005/">issue 005</a>) measured steps and time side by side. Times are of the view's own evaluation on the page: a timer around it, on one build, comparing variants in turn. Changes in the whole redraw were too noisy to see.</p>
+<div class="scroll">
+<table>
+<tr><th>Change</th><th class="n">Steps</th><th class="n">The view's time</th></tr>
+<tr><td>The points strings made more directly (a function call fewer per number, no check per point)</td><td class="n">99,621 → 74,055 (−26%)</td><td class="n">780 → 735, 726 ms (−6%)</td></tr>
+<tr><td>The view's call memo turned off, the woods, moving the figure to a new size</td><td class="n">more: every reuse lost</td><td class="n">about 700 → 555 ms (−25%)</td></tr>
+<tr><td>The memo turned off, the woods, back to a size drawn before</td><td class="n">more</td><td class="n">about 230 → 600 ms</td></tr>
+<tr><td>The memo turned off, Kids' Choice's face, an eye-size change</td><td class="n">more</td><td class="n">about 7–23 → 38–51 ms</td></tr>
+</table>
+</div>
+<p><b>Why they disagree.</b> Steps are not equal: a variable lookup is cheap, a pattern match or a cast through the recursive Html type is not. And some work is no step at all. The call memo builds a key for each call it might reuse, putting the call's inputs in a comparable form and hashing them. In the woods those keys copied the whole picture three times on every change, about a quarter of the view's time, and none of it counted as a step. Statics, the page's drawing, garbage collection and memory are no steps either.</p>
+<p><b>So a step budget can be wrong both ways.</b></p>
+<ul>
+  <li><b>A false improvement:</b> a memo whose hits remove steps, while its keys cost more time than the hits save. More garbage for the collector, fewer steps, is another.</li>
+  <li><b>A false regression:</b> removing such a memo, as in the woods above: more steps, less time. Splitting one expensive step into several cheap ones is another.</li>
+</ul>
+<p><b>What it means for <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a>:</b> the budgets stay, since they are deterministic and catch the failure they are for (reuse that stops working). But a budget that fails is a prompt to measure, not a verdict, which the failure message already says: find it, or raise the budget with the reason. Decisions are made on time, with a timer around the part that changed and the variants compared in turn on one build. Two counts would make the budgets harder to fool: the memo's own work (the nodes its keys put in form), and memory allocated, if js_of_ocaml can report it.</p>
 
 <h2 id="next">What next</h2>
 <ul>

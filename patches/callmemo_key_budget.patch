@@ -1,0 +1,151 @@
+diff --git a/src/language/dynamics/CallMemo.re b/src/language/dynamics/CallMemo.re
+index 37a3bd0685..238f1c57cf 100644
+--- a/src/language/dynamics/CallMemo.re
++++ b/src/language/dynamics/CallMemo.re
+@@ -28,6 +28,8 @@ open Util;
+ 
+ let min_steps = 40;
+ let max_entries = 8;
++/* the most new nodes a call's key may put in form (see [key]) */
++let max_key_nodes = 1000;
+ 
+ /* every name occurring in a body as a variable, sorted */
+ let vars_of: Exp.t => list(Var.t) =
+@@ -70,6 +72,8 @@ let anon_f:
+    once, not once per call. */
+ let forms: Lazy.t(IdentityTable.t(Exp.t, Exp.t)) =
+   lazy(IdentityTable.create());
++exception KeyTooBig;
++let key_budget = ref(max_int);
+ let rec norm = (e: Exp.t): Exp.t =>
+   Exp.map_term(
+     ~f_exp=norm_exp,
+@@ -88,6 +92,10 @@ and norm_exp = (continue, e: Exp.t): Exp.t => {
+   switch (IdentityTable.find_opt(forms, e)) {
+   | Some(form) => form
+   | None =>
++    decr(key_budget);
++    if (key_budget^ < 0) {
++      raise(KeyTooBig);
++    };
+     let form =
+       switch (e.term) {
+       | Closure(env, body) => closure(env, body)
+@@ -145,6 +153,8 @@ type t = {
+   entries: IdentityTable.t(Exp.t, list(entry)),
+   /* each costly body's lookups and hits, over the memo's life */
+   tries: IdentityTable.t(Exp.t, (int, int)),
++  /* bodies whose calls' keys are too big to be worth making */
++  too_big: IdentityTable.t(Exp.t, unit),
+   /* how many calls were looked up, and how many reused, for tests and
+      measuring */
+   lookups: ref(int),
+@@ -155,6 +165,7 @@ let create = (): t => {
+   costly: IdentityTable.create(),
+   entries: IdentityTable.create(),
+   tries: IdentityTable.create(),
++  too_big: IdentityTable.create(),
+   lookups: ref(0),
+   hits: ref(0),
+ };
+@@ -179,8 +190,25 @@ let worth_a_lookup = (memo: t, body: Exp.t): bool =>
+   | Some((lookups, hits)) => lookups < misses_per_hit * (hits + 1)
+   };
+ 
+-let key = (env: Environment.t(Exp.t), body: Exp.t): Exp.t =>
+-  values(env, body);
++let key = (memo: t, env: Environment.t(Exp.t), body: Exp.t): option(Exp.t) =>
++  if (IdentityTable.find_opt(memo.too_big, body) != None) {
++    None;
++  } else {
++    key_budget := max_key_nodes;
++    switch (values(env, body)) {
++    | k =>
++      key_budget := max_int;
++      Some(k);
++    | exception KeyTooBig =>
++      key_budget := max_int;
++      IdentityTable.replace(memo.too_big, body, ());
++      None;
++    };
++  };
++
++let worth_trying = (memo: t, body: Exp.t): bool =>
++  IdentityTable.find_opt(memo.too_big, body) == None
++  && (!is_costly(memo, body) || worth_a_lookup(memo, body));
+ 
+ /* the result of an earlier call of [body] with this key */
+ let find = (memo: t, body: Exp.t, key: Exp.t): option(Exp.t) => {
+@@ -225,26 +253,31 @@ let record =
+     IdentityTable.replace(memo.costly, body, ());
+     let k =
+       switch (k) {
+-      | Some(k) => k
+-      | None => key(env, body)
+-      };
+-    let old =
+-      switch (IdentityTable.find_opt(memo.entries, body)) {
+-      | Some(es) => List.filter((e: entry) => !ValueHash.same(e.key, k), es)
+-      | None => []
++      | Some(_) => k
++      | None => key(memo, env, body)
+       };
+-    IdentityTable.replace(
+-      memo.entries,
+-      body,
+-      ListUtil.take(
+-        max_entries,
+-        [
+-          {
+-            key: k,
+-            value,
+-          },
+-          ...old,
+-        ],
+-      ),
+-    );
++    switch (k) {
++    | None => ()
++    | Some(k) =>
++      let old =
++        switch (IdentityTable.find_opt(memo.entries, body)) {
++        | Some(es) =>
++          List.filter((e: entry) => !ValueHash.same(e.key, k), es)
++        | None => []
++        };
++      IdentityTable.replace(
++        memo.entries,
++        body,
++        ListUtil.take(
++          max_entries,
++          [
++            {
++              key: k,
++              value,
++            },
++            ...old,
++          ],
++        ),
++      );
++    };
+   };
+diff --git a/src/language/dynamics/Evaluator.re b/src/language/dynamics/Evaluator.re
+index 04d467acf6..8a0ebcf24f 100644
+--- a/src/language/dynamics/Evaluator.re
++++ b/src/language/dynamics/Evaluator.re
+@@ -316,13 +316,11 @@ let evaluate =
+         );
+       switch (call_memo, kind, next.term) {
+       | (Some(memo), Some(FunAp), Closure(call_env, body))
+-          when
+-            !CallMemo.is_costly(memo, body)
+-            || CallMemo.worth_a_lookup(memo, body) =>
++          when CallMemo.worth_trying(memo, body) =>
+         /* a call: the same call as before gives what it gave before */
+         let key =
+           CallMemo.is_costly(memo, body)
+-            ? Some(CallMemo.key(call_env, body)) : None;
++            ? CallMemo.key(memo, call_env, body) : None;
+         switch (Option.bind(key, key => CallMemo.find(memo, body, key))) {
+         | Some(value) => Trampoline.return(value)
+         | None =>

@@ -1,0 +1,39 @@
+diff --git a/src/haz3lcore/projectors/implementations/LivelitProj.re b/src/haz3lcore/projectors/implementations/LivelitProj.re
+index ae8a146cf6..a378b7ae6a 100644
+--- a/src/haz3lcore/projectors/implementations/LivelitProj.re
++++ b/src/haz3lcore/projectors/implementations/LivelitProj.re
+@@ -868,10 +868,30 @@ module M: Projector = {
+   let view_calls = lazy(CallMemo.create());
+   let eval_view = (e: DHExp.t): result(DHExp.t, string) => {
+     let call_memo = Lazy.force(view_calls);
+-    switch (MvuShape.safe_evaluate_open(~call_memo, e)) {
+-    | Error(_) as err => err
+-    | Ok(cmd) => ViewCmdRunner.run(~call_memo, cmd)
+-    };
++    /* MEASURING ONLY (uncommitted): each view evaluation's ms */
++    let now = (): float =>
++      Js_of_ocaml.Js.Unsafe.meth_call(
++        Js_of_ocaml.Js.Unsafe.global##.performance,
++        "now",
++        [||],
++      );
++    let t0 = now();
++    let result =
++      switch (MvuShape.safe_evaluate_open(~call_memo, e)) {
++      | Error(_) as err => err
++      | Ok(cmd) => ViewCmdRunner.run(~call_memo, cmd)
++      };
++    let push: Js_of_ocaml.Js.Unsafe.any =
++      Js_of_ocaml.Js.Unsafe.js_expr(
++        "(function (ms) { (window.__viewms = window.__viewms || []).push(ms); })",
++      );
++    ignore(
++      Js_of_ocaml.Js.Unsafe.fun_call(
++        push,
++        [|Js_of_ocaml.Js.Unsafe.inject(now() -. t0)|],
++      ),
++    );
++    result;
+   };
+ 
+   /* Dynamics on: the view fold-in (Statics' Projector case) samples the
