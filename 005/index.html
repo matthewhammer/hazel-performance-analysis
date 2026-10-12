@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Worker and Page</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+  .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi .v { font-size: 1.7em; font-weight: 700; }
+  .kpi .l { color: var(--muted); font-size: 0.9em; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure { margin: 18px 0; }
+  figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 10px; display: block; background: #ffffff; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 72ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .step { border-left: 3px solid var(--line); padding-left: 14px; }
+  .kicker { margin: 0; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8em; }
+  ol.ranked > li { margin: 10px 0; }
+  .dedicated { margin: 0 0 18px; font-style: italic; color: var(--muted); }
+  .dedication { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px; }
+  .dedication p { font-size: 1.05em; }
+</style>
+</head>
+
+<body>
+<main>
+
+<p class="series"><a href="../">Hazel performance analysis</a> · Issue 005 · 2026-10-12 · draft</p>
+<h1>Two threads, one picture: the worker, the page, and diffing the view</h1>
+<p class="sub">Hazel evaluates a program in a web worker and draws it on the page's main thread. A question from a meeting with Cyrus: how do our performance fixes so far compare with a more principled approach, where the worker builds a virtual DOM of each view, diffs it against the last one, and sends the page only the patches? Did we already do some of this, and how far does the idea go? Can a worker even build real DOM nodes? And is it expensive to keep several representations of the same DOM?</p>
+
+<div class="headline">
+<p><b>Short answers.</b></p>
+<ol>
+  <li><b>A worker cannot build real DOM nodes.</b> It has no <code>document</code>, and a DOM node cannot be posted from one thread to another. A worker can only build data, such as a virtual tree or a list of patches, for the main thread to apply.</li>
+  <li><b>Hazel's worker builds no views today.</b> It evaluates the program and sends back values. The page evaluates each livelit's view and turns the resulting Html value into a virtual DOM tree. The virtual DOM library diffs that tree against the last one and patches the page.</li>
+  <li><b>What crosses between the threads is already incremental.</b> Each side sends only the parts of a value the other side does not have yet, and a hash for the rest. This is a structural diff in all but name, and it cut a Kids' Choice release's messages from about 400 KB to about 16 KB.</li>
+  <li><b>What is still done whole, on every change, is on the page:</b> evaluating a changed view, converting all of its Html to virtual DOM, and the diff, which walks all of it. The principled version of the idea is to skip unchanged parts by their identity or hash, wherever the diff runs. On the page, that needs no new protocol, and it is the cheapest next step. Moving views into the worker would also take their evaluation off the main thread, but it would put a round trip between an interaction and its picture.</li>
+</ol>
+</div>
+
+<h2 id="today">Who does what today</h2>
+<p>The main thread is the page: it owns the DOM, takes the user's input, and keeps the editor running smoothly. The worker evaluates the program, so that a long evaluation does not freeze the page. Here is one change, such as a slider's release, in order. The links are to the code on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors) at <a href="https://github.com/hazelgrove/hazel/commit/b18cef1f5a"><code>b18cef1f5a</code></a>.</p>
+
+<figure>
+<div class="scroll"><svg viewBox="0 0 960 300" width="100%" role="img" aria-label="A diagram of two lanes. The main thread lane: the edit; statics and building the request, sending only what is new; then, after the worker's answer, decoding it, evaluating the changed views to Html, converting Html to virtual DOM, and virtual DOM's diff and patch of the page. The worker lane: decoding the request, evaluating incrementally with reuse by hash, and encoding the answer, sending only what is new." style="min-width:720px; font: 13px system-ui, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+  </defs>
+  <text x="10" y="22" fill="var(--muted)" font-weight="700">MAIN THREAD (the page)</text>
+  <text x="10" y="192" fill="var(--muted)" font-weight="700">EVAL WORKER</text>
+  <line x1="10" y1="150" x2="950" y2="150" stroke="var(--line)" stroke-dasharray="5 4"/>
+  <text x="950" y="142" text-anchor="end" fill="var(--muted)" font-size="12">postMessage: Marshal strings, shared by hash</text>
+  <g>
+    <rect x="10" y="36" width="96" height="78" rx="8" fill="var(--paper)" stroke="var(--accent)"/>
+    <text x="58" y="66" text-anchor="middle" fill="var(--ink)">1 edit or</text><text x="58" y="84" text-anchor="middle" fill="var(--ink)">release</text>
+    <rect x="124" y="36" width="130" height="78" rx="8" fill="var(--paper)" stroke="var(--accent)"/>
+    <text x="189" y="60" text-anchor="middle" fill="var(--ink)">2 statics;</text><text x="189" y="78" text-anchor="middle" fill="var(--ink)">request: only</text><text x="189" y="96" text-anchor="middle" fill="var(--ink)">what is new</text>
+    <rect x="560" y="36" width="108" height="78" rx="8" fill="var(--paper)" stroke="var(--accent)"/>
+    <text x="614" y="66" text-anchor="middle" fill="var(--ink)">5 decode,</text><text x="614" y="84" text-anchor="middle" fill="var(--ink)">apply</text>
+    <rect x="686" y="36" width="124" height="78" rx="8" fill="var(--paper)" stroke="var(--bad)" stroke-width="2"/>
+    <text x="748" y="60" text-anchor="middle" fill="var(--ink)">6 evaluate each</text><text x="748" y="78" text-anchor="middle" fill="var(--ink)">changed view</text><text x="748" y="96" text-anchor="middle" fill="var(--ink)">→ Html value</text>
+    <rect x="828" y="36" width="122" height="34" rx="8" fill="var(--paper)" stroke="var(--bad)" stroke-width="2"/>
+    <text x="889" y="58" text-anchor="middle" fill="var(--ink)">7 Html → vdom</text>
+    <rect x="828" y="80" width="122" height="34" rx="8" fill="var(--paper)" stroke="var(--bad)" stroke-width="2"/>
+    <text x="889" y="102" text-anchor="middle" fill="var(--ink)">8 diff, patch</text>
+    <rect x="290" y="206" width="104" height="78" rx="8" fill="var(--paper)" stroke="var(--good)"/>
+    <text x="342" y="242" text-anchor="middle" fill="var(--ink)">3 decode</text>
+    <rect x="410" y="206" width="132" height="78" rx="8" fill="var(--paper)" stroke="var(--good)"/>
+    <text x="476" y="230" text-anchor="middle" fill="var(--ink)">4 evaluate,</text><text x="476" y="248" text-anchor="middle" fill="var(--ink)">reusing by hash;</text><text x="476" y="266" text-anchor="middle" fill="var(--ink)">answer: only new</text>
+  </g>
+  <g stroke="var(--muted)" stroke-width="1.5" fill="none" marker-end="url(#ah)">
+    <path d="M106,75 L122,75"/>
+    <path d="M254,90 C290,120 300,170 330,204"/>
+    <path d="M394,245 L408,245"/>
+    <path d="M542,230 C575,190 585,150 600,116"/>
+    <path d="M668,75 L684,75"/>
+    <path d="M810,62 L826,55"/>
+    <path d="M889,70 L889,78"/>
+  </g>
+  <text x="950" y="290" text-anchor="end" fill="var(--bad)" font-size="12">red: done whole for every changed view</text>
+</svg></div>
+<figcaption>One change, in eight steps. The worker's steps (green) and the boundary already work only on what changed. Steps 6–8 (red) are done whole for every view that changed, all on the main thread.</figcaption>
+</figure>
+
+<ol>
+  <li><b>The page</b> takes the edit, or a livelit's update, and runs statics, per item, on the main thread.</li>
+  <li><b>The page builds a request:</b> the elaborated program and what the worker needs of statics. Before posting it, it replaces each part the worker already holds with that part's hash (<a href="https://github.com/hazelgrove/hazel/blob/b18cef1f5a/src/util/ShareCodec.re"><code>ShareCodec</code></a>; hashes from <a href="https://github.com/hazelgrove/hazel/blob/b18cef1f5a/src/util/ValueHash.re"><code>ValueHash</code></a>, a Merkle hash kept per object). Then it turns the request into a string with OCaml's <code>Marshal</code> and posts that.</li>
+  <li><b>The worker</b> reads the string and puts back the parts it kept.</li>
+  <li><b>The worker evaluates</b>, reusing its own cache of earlier results wherever an expression is unchanged, which it recognizes by hash. It sends back streams of partial results and then the result, trimmed and shared the same way: the page gets only what it does not have.</li>
+  <li><b>The page</b> reads the answer. Unchanged parts arrive as the very objects the page already holds.</li>
+  <li><b>The page evaluates each livelit's view</b>, if its definition or model changed: Hazel code, run by the page's own copy of the evaluator, giving an Html value (<code>LivelitProj</code>: <code>memo_view</code>, <code>eval_view</code>, <code>live_html</code>).</li>
+  <li><b>The page converts the Html value to a virtual DOM tree</b> (<a href="https://github.com/hazelgrove/hazel/blob/b18cef1f5a/src/haz3lcore/projectors/HazelDOM.re"><code>HazelDOM.go</code></a>), whole, each time the view is drawn. Event handlers become OCaml functions here.</li>
+  <li><b>The virtual DOM library</b> (Jane Street's <code>virtual_dom</code>) diffs the new tree against the last one and patches the real DOM. Its walk skips a subtree only when the old and new are the same object. Below that, it compares tag, key and properties, node by node. Then the browser lays out and paints.</li>
+</ol>
+
+<h2 id="dom">Can a worker build real DOM nodes?</h2>
+<p><b>No.</b> A web worker runs JavaScript without a page. Its global scope has no <code>window</code> and no <code>document</code>, so there is nothing to create an element with and nowhere to attach one. Messages between threads carry only data: strings, numbers, plain objects and arrays, and a few kinds of buffer. A DOM node is none of those.</p>
+<p>Hazel's code is built on this. The worker's program links only the <code>language</code> library (<a href="https://github.com/hazelgrove/hazel/blob/b18cef1f5a/src/web/dune"><code>src/web/dune</code></a>), and even calls <code>setTimeout</code> through the global object, since it has no <code>window</code> (<code>WorkerServer.re</code>). <code>HazelDOM</code>, which turns Html into virtual DOM, is in <code>haz3lcore</code> and is not in the worker at all.</p>
+<p>A worker <em>could</em> build virtual DOM: the library is plain OCaml data, and the worker already links its types. But it could not send that tree to the page. A virtual DOM node holds its event handlers as functions, and a function cannot cross from the worker's program to the page's. What can cross is a description of the DOM whose handlers are data. Hazel has one already: <b>an Html value is exactly that</b>, a Hazel value whose handlers are Hazel expressions. So a worker-side diff would diff Html values and send patches to Html, and the page would still build the virtual DOM, or the DOM, from them.</p>
+
+<h2 id="fixes">Each fix so far, by thread</h2>
+<p>The fixes from issues 001–004 and <a href="https://github.com/hazelgrove/hazel/issues/2609">#2609</a>, grouped by where they act. Commits are on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>; most also have a <code>dev</code> PR or a port on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>.</p>
+<div class="scroll">
+<table>
+<tr><th>Where</th><th>Fix</th><th>What it does</th></tr>
+<tr><td><b>Worker</b></td><td><a href="https://github.com/hazelgrove/hazel/commit/e0a5b16555"><code>e0a5b16555</code></a></td><td>The incremental cache stays in the worker, instead of crossing in every request and back in every answer: an answer of 332 KB became 0.9 KB.</td></tr>
+<tr><td>Worker</td><td><a href="https://github.com/hazelgrove/hazel/commit/5237161017"><code>5237161017</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/97c910f69c"><code>97c910f69c</code></a> (<code>dev</code>: <a href="https://github.com/hazelgrove/hazel/pull/2673">#2673</a>)</td><td>An unchanged expression is recognized by its Merkle hash, not by comparing it whole: about 410 → 145 ms per release.</td></tr>
+<tr><td>Worker</td><td><a href="https://github.com/hazelgrove/hazel/commit/9129cd2774"><code>9129cd2774</code></a></td><td>Reusing a result copies cache entries without walking function bodies: the worker's evaluation 47 → 25 ms.</td></tr>
+<tr><td>Worker</td><td><a href="https://github.com/hazelgrove/hazel/commit/25e515536d"><code>25e515536d</code></a></td><td>Evaluation slices run back to back for up to 30 ms, not one per timer tick: the worker's time per woods change, 10.0–10.7 → 2.1–2.6 s.</td></tr>
+<tr><td>Worker (found in statics)</td><td><a href="https://github.com/hazelgrove/hazel/commit/4b964e6660"><code>4b964e6660</code></a> (<code>dev</code>: <a href="https://github.com/hazelgrove/hazel/pull/2675">#2675</a>)</td><td>A recursive let's own names are not free in it, so the code around it is reused.</td></tr>
+<tr><td>Worker, for the page</td><td><a href="https://github.com/hazelgrove/hazel/commit/a05f8e5791"><code>a05f8e5791</code></a> (from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>)</td><td>Streams of partial results come at most every 100–1000 ms, by program size, so they do not swamp the page: opening a 2,000-item program, the page's busy time 46.7 → 10.2 s.</td></tr>
+<tr><td><b>Boundary</b></td><td><a href="https://github.com/hazelgrove/hazel/commit/993e3d5f91"><code>993e3d5f91</code></a></td><td>A request carries only what the worker does not have: 478 → 18.5 KB.</td></tr>
+<tr><td>Boundary</td><td><a href="https://github.com/hazelgrove/hazel/commit/90994d4443"><code>90994d4443</code></a></td><td>An answer carries only what the page does not have: 393 → 16 KB. The worker's encoding 44 → 5 ms, the page's decoding 14 → 1 ms. Unchanged parts arrive as objects the page already holds, so its caches keyed by identity hit.</td></tr>
+<tr><td>Boundary</td><td><a href="https://github.com/hazelgrove/hazel/commit/b481a876e1"><code>b481a876e1</code></a></td><td>A release's answers reach the page in two actions, not four, so it redraws less often.</td></tr>
+<tr><td>Boundary</td><td><a href="https://github.com/hazelgrove/hazel/commit/6b7d53b3e8"><code>6b7d53b3e8</code></a> (<code>dev</code>: <a href="https://github.com/hazelgrove/hazel/pull/2652">#2652</a>)</td><td>The page starts the worker at load, and does not time out an answer that is queued.</td></tr>
+<tr><td><b>Main thread</b>, views</td><td><a href="https://github.com/hazelgrove/hazel/commit/4239ecf04f"><code>4239ecf04f</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/c64c558e86"><code>c64c558e86</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/126f595ce9"><code>126f595ce9</code></a></td><td>A view is evaluated again only when its definition or model changed. Inside it, calls whose inputs did not change are reused, and a function whose calls never repeat stops being remembered.</td></tr>
+<tr><td>Main thread, views</td><td><a href="https://github.com/hazelgrove/hazel/commit/dd892bc331"><code>dd892bc331</code></a> (<code>dev</code>: <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>), <a href="https://github.com/hazelgrove/hazel/commit/efaaee244f"><code>efaaee244f</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/d706d4d1ec"><code>d706d4d1ec</code></a></td><td>The evaluator runs views faster: types are compared by hash, the recursive Html type is unrolled once, and views are not run to the very end. These help the worker too, since it runs the same evaluator.</td></tr>
+<tr><td>Main thread, redraws</td><td><a href="https://github.com/hazelgrove/hazel/commit/51df91d5d7"><code>51df91d5d7</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/cefa5c2c5c"><code>cefa5c2c5c</code></a> (<code>dev</code>: <a href="https://github.com/hazelgrove/hazel/pull/2671">#2671</a>)</td><td>Redraws that show nothing new reuse what they drew, and editing keeps unchanged pieces of the program as the same objects.</td></tr>
+<tr><td>Main thread, statics</td><td><a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>; <a href="https://github.com/hazelgrove/hazel/commit/8fbc86c644"><code>8fbc86c644</code></a></td><td>Statics per item, and the worker's share of it updated rather than rebuilt per change, which also leaves fewer new objects to hash.</td></tr>
+<tr><td>Main thread, scrolling</td><td><a href="https://github.com/hazelgrove/hazel/commit/47f7f48397"><code>47f7f48397</code></a> (<code>dev</code>: <a href="https://github.com/hazelgrove/hazel/pull/2672">#2672</a>)</td><td>Measuring the font no longer scrolls the editor to the caret, which had swallowed a click.</td></tr>
+</table>
+</div>
+<p><b>The pattern:</b> the worker and the boundary have had the most work, and now handle only what changed. The page's own work after the answer, steps 6–8, has had memos added in front of it, but each step that runs still runs whole.</p>
+
+<h2 id="where">Where a diff could go</h2>
+<p>Diffing two trees exactly is expensive in general: the best algorithms for the smallest edit between two trees take time cubic in their size. Virtual DOM libraries settle for something linear. They walk both trees together, keep a node when its tag and key match, and replace it otherwise. Hazel can do better than linear on the parts that did not change, because its values carry Merkle hashes and keep their identity when unchanged. An unchanged subtree can be recognized in one step and skipped. A diff then costs about the size of what changed, plus the path down to it, not the size of the tree. That is the principled version, and there are three places it could go.</p>
+
+<div class="scroll">
+<table>
+<tr><th></th><th>A. At the boundary (done)</th><th>B. In the worker: views, diffed there</th><th>C. On the page: skip what is the same</th></tr>
+<tr><td>What changes</td><td>Messages carry new parts only, with hashes for the rest (<code>ShareCodec</code>).</td><td>The worker evaluates each livelit's view, keeps the last Html it sent for it, and posts patches to that Html.</td><td>Converting Html to virtual DOM is remembered per Html subterm, by identity, so an unchanged part gives back the same virtual DOM node.</td></tr>
+<tr><td>Main-thread work saved</td><td>Decoding: 14 → 1 ms per answer.</td><td>Evaluating views (in the woods, about half the page's time), converting them, and the diff below unchanged parts.</td><td>Converting unchanged parts, and the diff below them, since the library skips an identical node at once.</td></tr>
+<tr><td>What it needs</td><td>—</td><td>The view runner (<code>ViewCmdRunner</code>) in the worker; a patch format; on the page, an element that owns each livelit's DOM and applies patches (a virtual DOM "widget": none today); handlers dispatched by id.</td><td>A memo keyed by Html identity, and handlers that do not close over the model, so that a part stays the same when only the model changed; keys for children, so that one insertion does not shift its siblings.</td></tr>
+<tr><td>Risks</td><td>The two sides' tables can drift (handled: the page asks again, and both start over).</td><td>An interaction redraws today on the page at once, from the page's own evaluation of the view. A view in the worker puts a round trip between the drag and the picture, unless the page keeps its own path for that, which means the view logic runs in two places.</td><td>Memory for the memo; handlers that capture the model would defeat it.</td></tr>
+</table>
+</div>
+<p><b>So far we have done A, and part of what B would bring:</b> the worker already does the evaluation that is not a view. <b>C is the cheapest next step.</b> It needs no protocol, and the boundary already keeps unchanged objects the same (<a href="https://github.com/hazelgrove/hazel/commit/90994d4443"><code>90994d4443</code></a>), which is what C keys on. <b>B is the bigger change,</b> and it is worth it only if evaluating views stays the page's largest cost after C. It probably will in the woods: there, the picture's view evaluates about 600 shapes on every change.</p>
+
+<h2 id="copies">Is it expensive to keep several representations?</h2>
+<p>A view exists in up to five forms at once: the Html value (in the view memo); in the worker's and the page's tables of shared values; the virtual DOM tree the page last drew, kept for the next diff; the new virtual DOM tree, during a diff; and the DOM itself.</p>
+<p><b>In memory, sharing makes most of these cheap.</b> The Html value and the tables hold references to the same objects, not copies: the boundary returns the page's own objects for anything unchanged. The two virtual DOM trees exist together only during a diff. The DOM is the only full copy that cannot be avoided. What memory these take has not been measured. The tables are capped at 200,000 entries each.</p>
+<p><b>In time, the cost is rebuilding, not holding.</b> Today, steps 7 and 8 rebuild a view's virtual DOM and walk all of it whenever the view is drawn. That is a cost per representation per change, and C is what removes it. On Kids' Choice it is small: converting the face's Html to the page took 8 ms of a 104 ms redraw (profiled, <a href="../#now">issue 001</a>), and in an earlier profile, the browser's own layout and DOM work was about 30 ms of a 310 ms redraw. In the woods, with about 600 shapes, the conversion and the diff are part of the half of the page's time that is not evaluating the view (<a href="../004/#cost">issue 004</a>). How large a part has not been measured.</p>
+
+<h2 id="next">What to measure next</h2>
+<ul>
+  <li><b>The woods' redraw, split:</b> evaluating the view, Html to virtual DOM, the diff and patch, and the browser's layout, for one figure move.</li>
+  <li><b>C, tried:</b> remember <code>HazelDOM</code>'s output per Html subterm, and measure a woods change and a Kids' Choice release.</li>
+  <li><b>The sizes of view samples on the wire:</b> they are not trimmed as the result is.</li>
+  <li><b>The memory of the shared-value tables</b> and of the per-object hashes.</li>
+</ul>
+
+<h2 id="method">How this was put together</h2>
+<ul>
+  <li>The pipeline and the code facts: read from <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <a href="https://github.com/hazelgrove/hazel/commit/b18cef1f5a"><code>b18cef1f5a</code></a>, and from <code>virtual_dom</code>'s compiled diff.</li>
+  <li>The numbers: from issues <a href="../">001</a> and <a href="../004/">004</a>, and from the commit messages linked above. Nothing new was measured for this issue.</li>
+</ul>
+
+</main>
+</body>
+</html>
