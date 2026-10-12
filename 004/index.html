@@ -67,7 +67,7 @@
 <div class="kpis">
   <div class="kpi"><div class="v">2</div><div class="l">new slides, Witch and Scenes, with 24 new controls between them; and 2 layout bugs fixed on the way</div></div>
   <div class="kpi"><div class="v warn">5.0–7.5 s</div><div class="l">the Witch slide redrawing after one change (14.5 s to load)</div></div>
-  <div class="kpi"><div class="v bad">10–21 s</div><div class="l">a redraw in the witch's woods, even when only the figure moves (3.5–5.5 s in the forest)</div></div>
+  <div class="kpi"><div class="v warn">3.6–9.4 s</div><div class="l">a redraw in the witch's woods since the worker fix below; it was 10–21 s, even when only the figure moved</div></div>
   <div class="kpi"><div class="v good">1–3 ms</div><div class="l">the game drawing the same witch, or a scene</div></div>
 </div>
 
@@ -180,9 +180,39 @@
 </ul>
 <p class="note">Profiled times run longer than real ones: these two changes took 14.8 and 19.7 s under the profiler, against 10–15.5 s without it. Read the split as shares, not times.</p>
 
+<h3 id="timeline">The worker's timeline, and a fix</h3>
+<p>A message timeline of the woods followed, as in issue 001. It covered the page's posts to the eval worker and the worker's replies, with their sizes and times. The worker logged, per request, how its time went and what it reused; that logging was temporary. Two figure-size changes, two eye-size changes, then the same in the forest:</p>
+<ul>
+  <li><b>The worker was idle more than half the time.</b> A woods change took the worker about 10 s from request to result. Only 3.9–4.4 s of that was evaluating; 5.8–6.2 s was between slices.
+    <ul>
+      <li>The worker evaluates in slices of 5,000 trampoline steps, about 3 ms each, so a change was 1,292 slices.</li>
+      <li>After every slice it yielded to its event loop with a <code>setTimeout</code>. Browsers clamp chained timeouts to about 4 ms each.</li>
+      <li>Loading the slide had the same shape: 5.7 s between slices in a 10.4 s evaluation.</li>
+    </ul></li>
+  <li><b>Nothing big was reused.</b> Every change in the woods took exactly 610,670 evaluation steps, the same count as the first load, whether it moved the figure or changed the woods. 130 nodes came from the cache, and they saved no steps. Of the failed reuse checks:
+    <ul>
+      <li>428 found no cached entry;</li>
+      <li>199 found a variable the code reads whose source had changed;</li>
+      <li>18–30 found a changed elaboration.</li>
+    </ul></li>
+  <li><b>Then the page.</b> The result was about 1 MB. After it arrived, the page took 5.7–6.6 s to redraw a picture it had not drawn before. Going back to one it had drawn took 0.6–1.1 s.</li>
+</ul>
+<p><b>Fixed: the worker now runs slices back to back for up to 30 ms before it yields</b> (#2635 <code>25e515536d</code>, #2597 <code>74f8056646</code>). A new request still gets in within those 30 ms.</p>
+<ul>
+  <li><b>The worker per woods change:</b> 10.0–10.7 s down to 2.1–2.6 s. Evaluating takes 1.8–2.1 s and the gaps between slices 0.23–0.26 s.</li>
+  <li><b>Loading the Scenes slide:</b> 23.5–26.3 s down to 17.2–17.4 s.</li>
+</ul>
+<div class="scroll"><table>
+<tr><th>Moving the figure, four runs</th><th>Before</th><th>With the fix</th></tr>
+<tr><td>Witch's woods</td><td class="n">15.5, 10.0, 12.0, 10.9 s</td><td class="n">9.4, 3.6, 4.2, 5.0 s</td></tr>
+<tr><td>Forest</td><td class="n">5.5, 3.5, 3.6, 3.7 s</td><td class="n">3.6, 1.6, 2.4, 2.0 s</td></tr>
+</table></div>
+<p>Kids' Choice, issue 001's slider, is unchanged: release to face has a median of 138 ms over 12 releases. On that slide the worker is not on the face's path.</p>
+<p class="note">On #2597, which lacks #2469's speedups, the Scenes slide takes about 5 minutes to draw its first picture, with or without the fix (297 and 301 s). The page is too busy even to answer a script. The Witch slide takes 172 s there. That is the main thread, not the worker.</p>
+
 <h3>Earlier lessons, checked against this slide</h3>
 <ul>
-  <li><b>The worker reuses what did not change (<a href="../001/">issue 001</a>).</b> Moving the figure leaves the scene's code and its inputs as they were, so the woods should come from the cache. But the worker spends about as long evaluating per change as a whole fresh evaluation of the slide takes in node (2.2–2.5 s). So it is probably evaluating the woods again. Why is open. The next step is a timeline of the worker's messages, as in issue 001.</li>
+  <li><b>The worker reuses what did not change (<a href="../001/">issue 001</a>).</b> Moving the figure leaves the scene's code and its inputs as they were, so the woods should come from the cache. The timeline above shows they don't: every change evaluates all 610,670 steps again. Which changed variable the reuse check sees is the next question.</li>
   <li><b>A view re-evaluates only the calls whose inputs changed (001).</b> This was made for Kids' Choice, whose face is a few helper calls, and it keeps the last 8 calls of each helper. The picture's view calls its shape helper about 600 times. Keeping 1,024 calls changed nothing measurable, so the view's cost is not only in those calls. Where the rest is, is open.</li>
   <li><b>Profiled times overstate code made of many small calls (001).</b> It held here too, as the note above shows.</li>
   <li><b>A trap in the measuring harness.</b> Timed in node, incremental evaluation came out 7–15 times slower than fresh on Hands and Eyes.
@@ -195,7 +225,8 @@
 
 <h2 id="next">What next</h2>
 <ul>
-  <li><b>Why the worker evaluates the unchanged woods again</b>, from a timeline of its messages. If it reused them, most of the worker's half of a woods change would go.</li>
+  <li><b>Why the worker evaluates the unchanged woods again.</b> The checks fail mostly on a changed variable (199) or a missing entry (428). Next is to find which variable it is. If the woods were reused, most of the worker's remaining 2 s per change would go.</li>
+  <li><b>The page's redraw of a new picture</b>, now the largest part of a woods change: 5.7–6.6 s.</li>
   <li><b>A cheaper <code>^picture</code> view:</b> less work per shape, or an unchanged shape's SVG element reused.</li>
   <li><b>A profile of a Witch slide redraw</b>, to find where its extra 2–3 s over Full Body goes.</li>
   <li><b>Full Body's shoe labels</b>, so they fit their line.</li>
