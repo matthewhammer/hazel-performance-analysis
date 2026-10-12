@@ -264,6 +264,21 @@
 </ul>
 <p>Where the view's remaining second or so goes is the next question. In a profile, computing keys was about a sixth of the page's time and evaluating about a third.</p>
 
+<h3 id="casts">The view's casts, and a fix</h3>
+<p>A new profile of the picture's view showed type work that has nothing to do with drawing.</p>
+<ul>
+  <li><b>Unrolling <code>Html</code>:</b> every Html node a view builds carries the <code>Html</code> type. Each time, the evaluator unrolled that recursive type of 47 constructors again, substituting through all of it: a sixth of the page's time in the woods.</li>
+  <li><b>An uncached check:</b> a check on each bare constructor was redone every time, while its neighbour's was cached. Another 5%.</li>
+</ul>
+<p><b>Fixed</b> (#2635 <code>efaaee244f</code>, #2597 <code>abadface30</code>): unrolling is remembered per type, and the check is cached by hash like its neighbour's.</p>
+<ul>
+  <li><b>Woods, figure size, each picture new:</b> 3.5, 3.2, 2.6, 3.3 s → 3.1, 2.0, 2.1, 2.7 s.</li>
+  <li><b>Woods, eyes:</b> 4.9–6.2 s.</li>
+  <li><b>Forest:</b> 1.0–1.8 s.</li>
+  <li><b>Kids' Choice:</b> a median of 125.5 ms.</li>
+</ul>
+<p>The view's remaining time is not its per-point work. With <code>coords</code> writing only each shape's first point, about 600 points instead of 2,700, the times did not move: 2.9, 1.7, 2.4 and 2.5 s. What is left is per shape: building each shape's Html node and its attributes, for all ~600 shapes on every change.</p>
+
 <h3>Earlier lessons, checked against this slide</h3>
 <ul>
   <li><b>The worker reuses what did not change (<a href="../001/">issue 001</a>).</b> Moving the figure leaves the scene's code and its inputs as they were, so the woods should come from the cache. They weren't: every change evaluated all 610,670 steps again, because a recursive helper's name leaked out of its <code>let</code> (above). Fixed, a figure-size change now re-evaluates only the figure.</li>
@@ -280,7 +295,7 @@
 <h2 id="next">What next</h2>
 <ul>
   <li><b>A fix for <code>dev</code>:</b> the same one-line statics change, with its two tests.</li>
-  <li><b>The page's redraw of a new picture</b>, still most of a woods change: about 2 s of each 2.6–3.5 s figure change.</li>
+  <li><b>The page's redraw of a new picture</b>, still most of a woods change: the picture's view builds an Html node for each of ~600 shapes on every change (<a href="#casts">above</a>).</li>
   <li><b>#2597:</b> the Scenes slide still takes about 5 minutes to draw its first picture there (281 s with all three fixes). That is the main thread, without #2469's speedups.</li>
   <li><b>A cheaper <code>^picture</code> view:</b> less work per shape, or an unchanged shape's SVG element reused.</li>
   <li><b>A profile of a Witch slide redraw</b>, to find where its extra 2–3 s over Full Body goes.</li>
