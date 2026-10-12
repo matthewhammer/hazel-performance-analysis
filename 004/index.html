@@ -255,6 +255,14 @@
   <li><b>Kids' Choice:</b> keeps its reuse.</li>
   <li><b>Test:</b> a new test checks that a function whose every call is new stops being looked up while one that hits is still reused. It fails with the rule turned off.</li>
 </ul>
+<p><b>Tried after, and not kept:</b> letting the memo keep each shape's call.</p>
+<ul>
+  <li><b>The change:</b> entries found by hash in a table, thousands per function. Misses counted only after a function's first evaluation. Each shape's box computed by a call of its own.</li>
+  <li><b>It worked as far as it went:</b> 72% of the view's lookups hit.</li>
+  <li><b>But the gains were small:</b> moving the figure 2.2–3.4 s (within the noise), changing the woods 5.0–5.1 s rather than 5.2–6.4 s. Loading was about 1 s slower.</li>
+  <li><b>So it stayed out.</b> The patches are kept with this report's sources.</li>
+</ul>
+<p>The view's remaining second or so is mostly computing keys for shapes that arrive as new objects, and the redraw itself.</p>
 
 <h3>Earlier lessons, checked against this slide</h3>
 <ul>

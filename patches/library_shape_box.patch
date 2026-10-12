@@ -1,0 +1,25 @@
+diff --git a/hazel-programs/docs/livelits/playground/scenes.hz b/hazel-programs/docs/livelits/playground/scenes.hz
+index 744df41da4..02ff79e185 100644
+--- a/hazel-programs/docs/livelits/playground/scenes.hz
++++ b/hazel-programs/docs/livelits/playground/scenes.hz
+@@ -372,9 +372,19 @@ module Drawing = {
+        (if y +. 12. >. y1 then y +. 12. else y1));
+     let grow_all : ((Float, Float, Float, Float), [Vertex]) -> (Float, Float, Float, Float) =
+       fun (b, vs) -> case vs | [] => b | v :: tl => grow_all((grow((b, v)), tl)) end;
++    # Each shape's own box, then the boxes together: a shape's box is a #
++    # call of that shape alone, so a redraw where most shapes are the #
++    # same reuses theirs (the view's calls are remembered), where one #
++    # walk through every point, carrying the box so far, reused nothing. #
++    let shape_box = fun s : Shape ->
++      grow_all(((infinity, infinity, neg_infinity, neg_infinity), vertices_of(s)));
++    let union = fun ((a0, a1, a2, a3), (b0, b1, b2, b3))
++        : ((Float, Float, Float, Float), (Float, Float, Float, Float)) ->
++      ((if b0 <. a0 then b0 else a0), (if b1 <. a1 then b1 else a1),
++       (if b2 >. a2 then b2 else a2), (if b3 >. a3 then b3 else a3));
+     let bounds : ((Float, Float, Float, Float), Picture) -> (Float, Float, Float, Float) =
+       fun (b, ss) ->
+-        case ss | [] => b | s :: tl => bounds((grow_all((b, vertices_of(s))), tl)) end;
++        case ss | [] => b | s :: tl => bounds((union((b, shape_box(s))), tl)) end;
+     let view_box = fun pic : Picture ->
+       let start =
+         case pic

@@ -1,0 +1,887 @@
+"""Livelit Playground, regrouped (2026-10-11): Hair, Shoes, Arms, Hands,
+Eyes, Mouth -- each showing only what its livelits draw on -- and Full Body,
+with every livelit. Built from the sections of the committed slides (read
+from git HEAD, so this can be re-run after it overwrites them), plus the
+new pieces: shoe styles, the eye gap and the head that widens for the eyes,
+and a picture frame that fits its drawing.
+
+assemble.py <worktree>"""
+import re, subprocess, sys
+sys.path.insert(0, "/home/matthew/.cache/hazel-diag/slides")
+from shoes_data import shapes_text
+
+WT = sys.argv[1]
+DIR = "hazel-programs/docs/livelits/playground"
+BASE = sys.argv[2] if len(sys.argv) > 2 else "5b0eb5f7c2"   # the slides before this regrouping
+def src(name):
+    return subprocess.run(["git", "-C", WT, "show", f"{BASE}:{DIR}/{name}.hz"],
+                          capture_output=True, text=True, check=True).stdout
+HANDS, ARMS, MOUTH = src("hands"), src("arms"), src("mouth")
+
+def between(text, start, end=None):
+    i = text.index(start)
+    j = text.index(end, i + len(start)) if end else len(text)
+    return text[i:j]
+def drop(text, *lines):
+    for l in lines:
+        assert l in text, l[:60]
+        text = text.replace(l, "")
+    return text
+def sub1(text, old, new):
+    assert text.count(old) == 1, (old[:70], text.count(old))
+    return text.replace(old, new)
+
+FMIN = "let fmin = fun (x, y) : (Float, Float) -> if x <. y then x else y in\n"
+FMAX = "let fmax = fun (x, y) : (Float, Float) -> if x >. y then x else y in\n"
+
+# ---- the library ----
+drawing = between(HANDS, "# DRAWING, AS A LIBRARY #", "\n} in\n") + "\n} in\n"
+drawing = sub1(drawing, """    # The frame: the usual one, grown to take in every point with a #
+    # margin, then made the viewer's shape, 320 by 440, about its middle; #
+    # a taller picture (a long neck) is drawn smaller, never cut off. #""",
+"""    # The frame: every point, with a margin, made the viewer's shape, #
+    # 320 by 440, about its middle. It fits the drawing, so a slide that #
+    # draws only a head shows the head large; a slide that wants its #
+    # frame to stay put while the drawing changes adds Drawing.frame. #""")
+drawing = sub1(drawing, """    let bounds : ((Float, Float, Float, Float), Picture) -> (Float, Float, Float, Float) =
+      fun (b, ss) ->
+        case ss | [] => b | s :: tl => bounds((grow_all((b, vertices_of(s))), tl)) end;""",
+"""    # Each shape's own box, then the boxes together: a shape's box is a #
+    # call of that shape alone, so a redraw where most shapes are the #
+    # same reuses theirs (the view's calls are remembered), where one #
+    # walk through every point, carrying the box so far, reused nothing. #
+    let shape_box = fun s : Shape ->
+      grow_all(((infinity, infinity, neg_infinity, neg_infinity), vertices_of(s)));
+    let union = fun ((a0, a1, a2, a3), (b0, b1, b2, b3))
+        : ((Float, Float, Float, Float), (Float, Float, Float, Float)) ->
+      ((if b0 <. a0 then b0 else a0), (if b1 <. a1 then b1 else a1),
+       (if b2 >. a2 then b2 else a2), (if b3 >. a3 then b3 else a3));
+    let bounds : ((Float, Float, Float, Float), Picture) -> (Float, Float, Float, Float) =
+      fun (b, ss) ->
+        case ss | [] => b | s :: tl => bounds((union((b, shape_box(s))), tl)) end;""")
+drawing = sub1(drawing, """      let (x0, y0, x1, y1) = bounds(((0., -40., 320., 400.), pic)) in""",
+"""      let start =
+        case pic
+        | [] => (0., 0., 0., 0.)
+        | s :: _ =>
+          case vertices_of(s)
+          | [] => (0., 0., 0., 0.)
+          | v :: _ => let (x, y) = v.at in (x, y, x, y)
+          end
+        end in
+      let (x0, y0, x1, y1) = bounds((start, pic)) in""")
+drawing = sub1(drawing, """        if name == n then s :: named(tl, n) else named(tl, n)
+      end
+} in""", """        if name == n then s :: named(tl, n) else named(tl, n)
+      end;
+
+  # A box the picture always takes in: an invisible path along its #
+  # diagonal, for a slide whose frame should stay put while what it #
+  # draws changes -- the arms swinging, the eyes growing. #
+  let frame = fun (x0, y0, x1, y1) : (Float, Float, Float, Float) ->
+    [Path((name = "frame",
+           points = [(at = (x0, y0), label = Plain), (at = (x1, y1), label = Plain)],
+           stroke = (width = 0., color = "none")))]
+} in""")
+
+def types(*extra):
+    t = """# THE PICTURE, AS TYPES #
+
+# A point in the plane, x across and y down, as the drawing has it. #
+type Point = (Float, Float) in
+
+# A vertex is a point and, if it is one, the name of its anchor. #
+type Label = + Plain + Anchor(String) in
+type Vertex = (at = Point, label = Label) in
+
+# A closed polygon has a stroke and a fill; an open path a stroke only. #
+type Stroke = (width = Float, color = String) in
+type Shape =
+  + Polygon((name = String, points = [Vertex], stroke = Stroke, fill = String))
+  + Path((name = String, points = [Vertex], stroke = Stroke))
+in
+
+# A picture is its shapes, drawn in order: the first is underneath. #
+type Picture = [Shape] in
+
+# FOUND OR MISSING #
+
+# An anchor's point, if a shape has one of that name. #
+type Found = + Found(Point) + Missing in
+"""
+    for e in extra:
+        t += "\n" + e
+    return t
+T_HAIR = "# A hairdo, as the buttons name it. #\ntype Hair = + Short + Long + Curly in\n"
+T_STYLE = "# A shirt's style, as its buttons name it. #\ntype Style = + TShirt + LongSleeves + TankTop in\n"
+T_HAND = "# A hand's style, as its buttons name it. #\ntype Hand = + Round + Mittens + Stars + Claws + Human + Alien in\n"
+T_SHOE = ("# A shoe's style, as its buttons name it. #\n"
+          "type Shoe = + Sneakers + Boots + ClownShoes + BareFeet + FiveToes + AlienFour\n"
+          "  + AlienThree + Talons in\n")
+T_EYES = "# An eye's style, as its buttons name it. #\ntype EyeStyle = + PlainEyes + StarEyes + HeartEyes + XEyes in\n"
+T_MOUTH = ("# Teeth and a tongue, as their buttons name them. #\n"
+           "type Teeth = + NormalTeeth + SpikyTeeth + NoTeeth in\n"
+           "type Tongue = + TongueIn + TongueOut + NoTongue in\n")
+
+# ---- helpers, once ----
+shirt_full = between(HANDS, "# THE SHIRT AND PANTS #", "# THE NECK #")
+stretch_def = between(shirt_full, "# Every point x-scaled about the neck", "let torso =")
+helpers = ("# HELPERS #\n\n" + FMIN + FMAX +
+           "let fabs = fun x : Float -> if x <. 0. then 0. -. x else x in\n\n" +
+           stretch_def.replace("# Every point x-scaled about the neck, and those below it y-scaled. #",
+                               "# Every point x-scaled about cx, and those below cy y-scaled. #"))
+GROWN = """# Every point moved sx times as far from (cx, cy) across, and sy #
+# times as far up or down: the picture scaled about that point. #
+let scale_points : ([Vertex], Float, Float, Float, Float) -> [Vertex] =
+  fun (vs, cx, cy, sx, sy) ->
+    case vs
+    | [] => []
+    | v :: tl =>
+      let (x, y) = v.at in
+      (at = (cx +. (x -. cx) *. sx, cy +. (y -. cy) *. sy), label = v.label)
+      :: scale_points((tl, cx, cy, sx, sy))
+    end in
+let scaled : (Picture, Float, Float, Float, Float) -> Picture =
+  fun (pic, cx, cy, sx, sy) ->
+    case pic
+    | [] => []
+    | sh :: tl =>
+      Drawing.with_points(sh, scale_points((Drawing.points_of(sh), cx, cy, sx, sy)))
+      :: scaled((tl, cx, cy, sx, sy))
+    end in
+
+"""
+
+# ---- the body's sections ----
+shirt = ("# THE SHIRT #\n\n"
+         "# A system of polygons: its editor draws the torsos, without sleeves -- #\n"
+         "# a t-shirt's, and a tank top's with its straps over bare shoulders -- #\n"
+         "# with the shoulders as anchors, where the arms come out. #\n\n" +
+         between(shirt_full, "let shirts = ^^livelit(", "let pants = ^^livelit(").replace(stretch_def, ""))
+pants_code = between(shirt_full, "let pants = ^^livelit(")
+pants_editor = between(pants_code, "let pants = ^^livelit(", "\n# The pants' hips") + "\n"
+pants_hung = ("# THE PANTS #\n\n# They hang from the shirt's hips, and are as wide. #\n\n" + pants_code)
+pants_alone = ("# THE PANTS #\n\n# The shoes go on their feet. #\n\n" + pants_editor)
+neck = between(HANDS, "# THE NECK #", "# THE HEAD #")
+head = between(HANDS, "# THE HEAD #", "# THE HAIR #")
+hair = between(HANDS, "# THE HAIR #", "# THE SHOES #")
+arms_simple = between(ARMS, "# THE ARMS #", "# THE PICTURE #")
+arms_lead = between(HANDS, "# THE ARMS #", "# THE HANDS #")
+hands = drop(between(HANDS, "# THE HANDS #", "# THE PICTURE #"), FMIN, FMAX)
+
+# Messed Up Dress Up's new hand controls (2026-10-11): how many claws, how
+# many star points and how far the star turns, an angle for the hand, and
+# longer arms and claws.
+for name in ("arms_simple", "arms_lead"):
+    globals()[name] = sub1(globals()[name], 'Drawing.^slider("arm length", 10, 300)(95)',
+                           'Drawing.^slider("arm length", 10, 600)(95)')
+hands = sub1(hands, """# Messed Up Dress Up's hand controls: the style, its size, and the #
+# three that only some styles read -- a human hand's fingers (5 is a #
+# hand; 1 a thumbs-up, 100 a fringe), an alien hand's, and the claws' #
+# length as a percent of the usual. #
+""", """# Messed Up Dress Up's hand controls: the style, its size, and those #
+# only some styles read -- a human hand's fingers (5 is a hand; 1 a #
+# thumbs-up, 100 a fringe), an alien hand's, a star's points and how #
+# far it turns toward the next one, and the claws' number and their #
+# length as a percent of the usual -- and the hand's angle, about the #
+# wrist, in degrees (one for every style here, where the game keeps one #
+# per style). #
+""")
+hands = sub1(hands, """let alien_fingers = ^^livelit(Drawing.^slider("alien fingers", 1, 99)(3)) in
+let claw_length = ^^livelit(Drawing.^slider("claw length", 20, 300)(100)) in
+""", """let alien_fingers = ^^livelit(Drawing.^slider("alien fingers", 1, 100)(3)) in
+let star_count = ^^livelit(Drawing.^slider("star points", 1, 100)(5)) in
+let star_turn = ^^livelit(Drawing.^slider("star turn (% to the next point)", 0, 100)(0)) in
+let claw_count = ^^livelit(Drawing.^slider("claws", 1, 100)(4)) in
+let claw_length = ^^livelit(Drawing.^slider("claw length", 20, 900)(100)) in
+let hand_angle = ^^livelit(Drawing.^slider("hand angle", 0, 360)(0)) in
+""")
+hands = sub1(hands, "  let n = if n < 1 then 1 else if n > 99 then 99 else n in\n",
+             "  let n = if n < 1 then 1 else if n > 100 then 100 else n in\n")
+hands = sub1(hands, """# Four hooked talons fanned out from a paw: each a curve out to a sharp #
+# hook and back, wide where it leaves the paw; k is the claws' length #
+# as a fraction of the usual. #
+let talons = fun (r, k) : (Float, Float) ->
+  let one = fun deg : Float ->
+    let t = deg *. pi /. 180. in
+    let (dx, dy) = (cos(t), sin(t)) in
+    let len = r *. 1.4 *. k in
+    let w = r *. 0.25 *. fmin((1., 0.6 +. 0.4 *. k)) in
+    let hook = r *. 0.55 *. fmax((0.5, fmin((k, 2.)))) in
+    let p = fun (along, across) : (Float, Float) ->
+      (dx *. along -. dy *. across, dy *. along +. dx *. across) in
+    let paw = r *. 0.7 in
+    (quad((p((paw *. 0.8, 0. -. w)), p((paw +. len *. 0.75, 0. -. w *. 0.9)), p((paw +. len, hook)), 0))
+     @ quad((p((paw +. len, hook)), p((paw +. len *. 0.45, w *. 0.6)), p((paw *. 0.8, w)), 0)),
+     "#f4ecd6", (width = 2., color = "#5c4a2e")) in
+  [one(-62.), one(-22.), one(18.), one(56.)] in
+""", """# n hooked talons fanned out from a paw: each a curve out to a sharp #
+# hook and back, wide where it leaves the paw; k is the claws' length #
+# as a fraction of the usual. Up to 4 they keep the usual spacing; more #
+# fan out wider, nearly all the way round at 100, and get thinner, #
+# outline and all, so each still shows. #
+let talons = fun (r, k, n) : (Float, Float, Int) ->
+  let paw = r *. 0.7 in
+  let nf = float_of_int(n) in
+  let span = if n <= 4 then 118. *. (nf -. 1.) /. 3. else fmin((330., 118. +. (nf -. 4.) *. 20.)) in
+  let step = if n > 1 then span /. (nf -. 1.) else 0. in
+  # half a gap between neighbours, where they leave the paw #
+  let room = if n > 4 then paw *. 0.8 *. sin(step *. pi /. 360.) else 1000000. in
+  let line = if n > 4 then fmax((0.6, fmin((2., room *. 0.5)))) else 2. in
+  let one = fun deg : Float ->
+    let t = deg *. pi /. 180. in
+    let (dx, dy) = (cos(t), sin(t)) in
+    let len = r *. 1.4 *. k in
+    let w = fmax((r *. 0.03, fmin((r *. 0.25 *. fmin((1., 0.6 +. 0.4 *. k)), room *. 1.1)))) in
+    let hook = r *. 0.55 *. fmax((0.5, fmin((k, 2.)))) in
+    let p = fun (along, across) : (Float, Float) ->
+      (dx *. along -. dy *. across, dy *. along +. dx *. across) in
+    (quad((p((paw *. 0.8, 0. -. w)), p((paw +. len *. 0.75, 0. -. w *. 0.9)), p((paw +. len, hook)), 0))
+     @ quad((p((paw +. len, hook)), p((paw +. len *. 0.45, w *. 0.6)), p((paw *. 0.8, w)), 0)),
+     "#f4ecd6", (width = line, color = "#5c4a2e")) in
+  let fan : Int -> [([Point], String, Stroke)] =
+    fun i ->
+      if i == n then []
+      else one(0. -. 3. -. span /. 2. +. float_of_int(i) *. step) :: fan(i + 1) in
+  if n == 4 then [one(-62.), one(-22.), one(18.), one(56.)] else fan(0) in
+""")
+hands = sub1(hands, """# A ten-pointed star. #
+let star_points : (Float, Int) -> [Point] =
+  fun (r, i) ->
+    if i == 10 then []
+    else
+      let a = 0. -. pi /. 2. +. float_of_int(i) *. pi /. 5. in
+      let rr = if i == 1 || i == 3 || i == 5 || i == 7 || i == 9 then r *. 0.55 else r *. 1.4 in
+      (rr *. cos(a), rr *. sin(a)) :: star_points((r, i + 1)) in
+""", """# A star of n points, the first straight up, then turned toward the #
+# next by turn (a fraction of the way there), with a dip between each #
+# two; a wide gap (1 or 2 points) dips in a rounded curve, so 1 is a #
+# teardrop and 2 a lens. Point i, then its dips j = 1 to dips. #
+let star_points : (Float, Int, Float, Int, Int) -> [Point] =
+  fun (r, n, turn, i, j) ->
+    if i == n then []
+    else
+      let gap = 2. *. pi /. float_of_int(n) in
+      let dips = if n >= 3 then 1 else if n == 2 then 2 else 5 in
+      let a = 0. -. pi /. 2. +. (turn +. float_of_int(i)) *. gap in
+      if j == 0 then (r *. 1.4 *. cos(a), r *. 1.4 *. sin(a)) :: star_points((r, n, turn, i, 1))
+      else if j > dips then star_points((r, n, turn, i + 1, 0))
+      else
+        let b = a +. gap *. float_of_int(j) /. float_of_int(dips + 1) in
+        (r *. 0.55 *. cos(b), r *. 0.55 *. sin(b)) :: star_points((r, n, turn, i, j + 1)) in
+""")
+hands = sub1(hands, """  | Stars => [(star_points((r, 0)), skin, skin_line)]
+  | Claws =>
+    talons((r, float_of_int(claw_length) /. 100.))""",
+"""  | Stars =>
+    # many points get a thinner outline, so each still shows #
+    let line = if star_count > 5 then fmax((0.6, fmin((2., pi *. r *. 0.55 /. float_of_int(star_count))))) else 2. in
+    [(star_points((r, star_count, float_of_int(star_turn) /. 100., 0, 0)), skin, (width = line, color = skin_line.color))]
+  | Claws =>
+    talons((r, float_of_int(claw_length) /. 100., claw_count))""")
+hands = sub1(hands, """# The hand in its own frame, made once: both arms draw the same hand. #
+let the_hand = hand_shapes(float_of_int(hand_size)) in
+""", """# The hand in its own frame, made once: both arms draw the same hand, #
+# turned about the wrist by the hand angle (a star turns its own points; #
+# a round hand looks the same however it turns). The two walks are side #
+# by side, not one inside the other: statics analyzes a recursive #
+# function's body three times, so one nested in another is analyzed #
+# nine times. #
+let hand_turn = float_of_int(hand_angle) *. pi /. 180. in
+let turn_points : [Point] -> [Point] =
+  fun ps ->
+    case ps
+    | [] => []
+    | (u, v) :: tl => (u *. cos(hand_turn) -. v *. sin(hand_turn), u *. sin(hand_turn) +. v *. cos(hand_turn)) :: turn_points(tl)
+    end in
+let turn_shapes : [([Point], String, Stroke)] -> [([Point], String, Stroke)] =
+  fun ss ->
+    case ss
+    | [] => []
+    | (ps, fill, stroke) :: tl => (turn_points(ps), fill, stroke) :: turn_shapes(tl)
+    end in
+let the_hand =
+  let hand = hand_shapes(float_of_int(hand_size)) in
+  case hand_style
+  | Stars => hand
+  | Round => hand
+  | _ => if hand_angle == 0 then hand else turn_shapes(hand)
+  end in
+""")
+
+# ---- the shoes ----
+SHOE_STYLES = [("sneakers", "Sneakers"), ("boots", "Boots"), ("clown shoes", "ClownShoes"),
+               ("bare feet", "BareFeet"), ("5 toes", "FiveToes"), ("alien 4 toes", "AlienFour"),
+               ("alien 3 toes", "AlienThree"), ("talons", "Talons")]
+shoes = ("""# THE SHOES #
+
+# Messed Up Dress Up's eight feet, each drawn in the shoe editor and #
+# named for its button: sneakers, boots, clown shoes, bare feet, and #
+# feet with five toes, an alien's four or three, or a bird's talons. #
+# Each has an ankle, an invisible point, and that is where it goes on #
+# a foot. The left is the right one's mirror image. #
+
+let shoes = ^^livelit(Drawing.^polygons((
+  shapes = [
+""" + shapes_text("    ") + """
+  ],
+  current = 0, chosen = -1, held = false, moved = false))) in
+
+let shoe_style = ^^livelit(Drawing.^choice@<Shoe>(
+  [""" + ",\n   ".join(f'("{n}", {c})' for n, c in SHOE_STYLES) + """])(Sneakers)) in
+let shoe_size = ^^livelit(Drawing.^slider("shoe size", 20, 310)(100)) in
+let shoe_name =
+  case shoe_style
+""" + "".join(f'  | {c} => "{n}"\n' for n, c in SHOE_STYLES) + """  end in
+# The chosen shoe, grown about its ankle by the size. #
+let shoe =
+  let one = Drawing.named(shoes, shoe_name) in
+  case Drawing.anchor(one, "ankle")
+  | Found((ax, ay)) =>
+    let k = float_of_int(shoe_size) /. 100. in scaled((one, ax, ay, k, k))
+  | Missing => one
+  end in
+
+""")
+
+# ---- the face ----
+eyes_full = between(MOUTH, "# THE EYES #", "# THE MOUTH #")
+eye_livelits = between(eyes_full, "let eye_style = ", "\nlet fmin")
+eye_livelits = sub1(eye_livelits, '[("plain", Plain),', '[("plain", PlainEyes),')
+eye_livelits = sub1(eye_livelits, '("x eyes", XEyes)])(Plain)) in', '("x eyes", XEyes)])(PlainEyes)) in')
+eye_livelits = sub1(eye_livelits,
+    'let eye_size = ^^livelit(Drawing.^slider("eye size", -35, 300)(50)) in\n',
+    'let eye_size = ^^livelit(Drawing.^slider("eye size", -35, 300)(50)) in\n'
+    'let eye_gap = ^^livelit(Drawing.^slider("eye gap", 0, 200)(38)) in\n')
+face_units = ("# THE FACE, IN THE GAME'S UNITS #\n\n" +
+              between(eyes_full, "# The game's face units", "# A star of five points"))
+eye_shapes = between(eyes_full, "# A star of five points", "# Both eyes, mirror images")
+eye_shapes = sub1(eye_shapes, "  | Plain =>\n", "  | PlainEyes =>\n")
+eyes = ("""# THE EYES #
+
+# Messed Up Dress Up's eye controls: the style, the iris color, the #
+# size, the gap between the eyes, their shape and angle, an iris and #
+# eye whites around the pupil, and the shine. #
+
+""" + eye_livelits + "\n" + eye_shapes + """# How far one eye reaches to either side of its middle, as drawn: a #
+# plain eye's outermost ring (eye white, iris or pupil), squashed and #
+# slanted; a star's or heart's points; an x's two strokes. #
+let eye_half_w =
+  let r = float_of_int(6 + eye_size / 7) in
+  let t = float_of_int(eye_angle) *. pi /. 180. in
+  case eye_style
+  | XEyes => r *. (fabs(cos(t)) +. fabs(sin(t)))
+  | StarEyes => r *. 1.5
+  | HeartEyes => r *. 1.4
+  | PlainEyes =>
+    let k = 1. -. 0.88 *. float_of_int(eye_shape) /. 100. in
+    let iris_r = if iris_size > 0 then r +. float_of_int(iris_size) *. 0.25 else 0. in
+    let white_r =
+      if iris_r >. 0. && eye_whites > 0 then iris_r +. float_of_int(eye_whites) *. 0.25 else 0. in
+    let ring = if white_r >. 0. then white_r else if iris_r >. 0. then iris_r else r in
+    sqrt(ring *. cos(t) *. ring *. cos(t) +. ring *. k *. sin(t) *. ring *. k *. sin(t))
+  end in
+
+# ...and how far above and below it. #
+let eye_half_h =
+  let r = float_of_int(6 + eye_size / 7) in
+  let t = float_of_int(eye_angle) *. pi /. 180. in
+  case eye_style
+  | XEyes => r *. (fabs(cos(t)) +. fabs(sin(t)))
+  | StarEyes => r *. 1.5
+  | HeartEyes => r *. 1.4
+  | PlainEyes =>
+    let k = 1. -. 0.88 *. float_of_int(eye_shape) /. 100. in
+    let iris_r = if iris_size > 0 then r +. float_of_int(iris_size) *. 0.25 else 0. in
+    let white_r =
+      if iris_r >. 0. && eye_whites > 0 then iris_r +. float_of_int(eye_whites) *. 0.25 else 0. in
+    let ring = if white_r >. 0. then white_r else if iris_r >. 0. then iris_r else r in
+    sqrt(ring *. sin(t) *. ring *. sin(t) +. ring *. k *. cos(t) *. ring *. k *. cos(t))
+  end in
+
+# The eyes keep the eye gap between them, edge to edge, however big, #
+# narrow or slanted they are: each eye's middle is half the gap and its #
+# own half-width out from the face's middle line. The default gap, 38, #
+# puts the default eyes where they always were, 32 out. They are mirror #
+# images: the left slants by the angle, the right by its opposite, so #
+# the outer corners rise together. #
+let eye_dx = float_of_int(eye_gap) /. 2. +. eye_half_w in
+let eyes =
+  eye((100. -. eye_dx, float_of_int(eye_angle)))
+  @ eye((100. +. eye_dx, 0. -. float_of_int(eye_angle))) in
+
+# The head, wide enough for its eyes: at the eye line it reaches 8 past #
+# each eye's outer edge, or it is stretched sideways about its middle #
+# until it does. Where the outline crosses that line is found edge by #
+# edge, the last point joined back to the first. #
+let reach_at : ([Vertex], Float, Float) -> Float =
+  fun (vs, cx, y) ->
+    let first = case vs | [] => (cx, y) | v :: _ => v.at end in
+    let go : ([Vertex], Float) -> Float =
+      fun (ws, best) ->
+        case ws
+        | [] => best
+        | w :: tl =>
+          let (x1, y1) = w.at in
+          let (x2, y2) = case tl | [] => first | u :: _ => u.at end in
+          if (y1 -. y) *. (y2 -. y) <=. 0. && fabs(y2 -. y1) >. 0.0001 then
+            let x = x1 +. (x2 -. x1) *. (y -. y1) /. (y2 -. y1) in
+            go((tl, fmax((best, fabs(x -. cx)))))
+          else go((tl, best))
+        end in
+    go((vs, 0.)) in
+let head_reach =
+  case head | [] => 0. | h :: _ => reach_at((Drawing.points_of(h), crown_x, snd(to_head((100., 100.))))) end in
+let head_widen =
+  if head_reach >. 0. then fmax((1., (eye_dx +. eye_half_w +. 8.) *. face_scale /. head_reach)) else 1. in
+
+# ...and tall enough, as a deep mouth makes it longer (THE MOUTH): once #
+# the eyes reach 25% higher above the head's middle than the usual eyes #
+# do (23.6), its top half grows with them, so the hair, which grows with #
+# it, keeps its fringe above them. And the eyes stay 8 inside the outline #
+# all round, which grows the bottom half too: for 24 points around the #
+# eye, grown by 8, the half-height an ellipse as wide as the head needs #
+# to have the point (px, py) inside it, |py| / sqrt(1 - (px / a)^2), #
+# above the middle (s = -1) or below it (s = 1). In face units, of a #
+# head 80 from its middle to its crown and its chin. #
+let eye_need : (Float, Int) -> Float =
+  fun (s, i) ->
+    if i == 24 then 0.
+    else
+      let t = 2. *. pi *. float_of_int(i) /. 24. in
+      let px = eye_dx +. (eye_half_w +. 8.) *. cos(t) in
+      let py = 0. -. 10.6 +. (eye_half_h +. 8.) *. sin(t) in
+      let u = fmin((0.99, fabs(px) /. (80. *. head_widen))) in
+      let here = if py *. s >. 0. then fabs(py) /. sqrt(1. -. u *. u) else 0. in
+      fmax((here, eye_need((s, i + 1)))) in
+let head_lift =
+  let forehead = 80. *. (10.6 +. eye_half_h) /. (23.6 *. 1.25) in
+  fmax((0., fmax((forehead, eye_need((-1., 0)))) -. 80.)) in
+let head_drop = fmax((0., eye_need((1., 0)) -. 80.)) in
+let (head_cy, head_ry) = (crown_y +. 80. *. face_scale, 80. *. face_scale) in
+let fit_points : [Vertex] -> [Vertex] =
+  fun vs ->
+    case vs
+    | [] => []
+    | v :: tl =>
+      let (x, y) = v.at in
+      let grow = if y <. head_cy then head_lift else head_drop in
+      (at = (x, head_cy +. (y -. head_cy) *. (1. +. grow /. 80.)), label = v.label)
+      :: fit_points(tl)
+    end in
+let head =
+  case stretch((head, crown_x, 1000000., head_widen, 1.))
+  | [] => []
+  | h :: tl => Drawing.with_points(h, fit_points(Drawing.points_of(h))) :: tl
+  end in
+
+# Where the eyes reach down to, for the mouth to clear them (THE MOUTH): #
+# at x, in face units, the lowest point of the right eye's outline right #
+# above it -- and so of the left's, its mirror image -- or -1000 where #
+# no eye is. The outline is the eye's own polygon: a plain eye's #
+# outermost ring, a star's or heart's points, an x's two strokes. #
+let below_poly : ([Point], Float) -> Float =
+  fun (ps, x) ->
+    let first = case ps | [] => (x, 0.) | p :: _ => p end in
+    let go : ([Point], Float) -> Float =
+      fun (qs, best) ->
+        case qs
+        | [] => best
+        | (x1, y1) :: tl =>
+          let (x2, y2) = case tl | [] => first | q :: _ => q end in
+          if (x1 -. x) *. (x2 -. x) <=. 0. && fabs(x2 -. x1) >. 0.0001 then
+            go((tl, fmax((best, y1 +. (y2 -. y1) *. (x -. x1) /. (x2 -. x1)))))
+          else go((tl, best))
+        end in
+    go((ps, -1000.)) in
+let eye_outlines : [[Point]] =
+  let (x, y) = (100. +. eye_dx, 100.) in
+  let r = float_of_int(6 + eye_size / 7) in
+  let t = 0. -. float_of_int(eye_angle) *. pi /. 180. in
+  let turn = fun (px, py) : (Float, Float) ->
+    (x +. px *. cos(t) -. py *. sin(t), y +. px *. sin(t) +. py *. cos(t)) in
+  case eye_style
+  | XEyes =>
+    [stroke_eye((turn((0. -. r, 0. -. r)), turn((r, r)), 3. +. r /. 6.)),
+     stroke_eye((turn((0. -. r, r)), turn((r, 0. -. r)), 3. +. r /. 6.))]
+  | StarEyes => [star_eye((x, y, r *. 1.5, t, 0))]
+  | HeartEyes => [heart_eye((x, y, r *. 1.4, t, 0))]
+  | PlainEyes =>
+    let k = 1. -. 0.88 *. float_of_int(eye_shape) /. 100. in
+    let iris_r = if iris_size > 0 then r +. float_of_int(iris_size) *. 0.25 else 0. in
+    let white_r =
+      if iris_r >. 0. && eye_whites > 0 then iris_r +. float_of_int(eye_whites) *. 0.25 else 0. in
+    let ring = if white_r >. 0. then white_r else if iris_r >. 0. then iris_r else r in
+    [round_eye((x, y, ring, k, t, 20, 0))]
+  end in
+let eye_below = fun x : Float ->
+  let ax = 100. +. fabs(x -. 100.) in
+  let go : [[Point]] -> Float =
+    fun os -> case os | [] => -1000. | o :: tl => fmax((below_poly((o, ax)), go(tl))) end in
+  go(eye_outlines) in
+
+""")
+mouth = drop(between(MOUTH, "# THE MOUTH #", "# THE PICTURE #"), FMAX)
+mouth = sub1(mouth, """# much as the mouth needs below it (12 under the lower lip) or rose. #
+let stretch_by =
+  fmax((rise, fmax((bottom +. 2.5 +. 12. -. 190.6, 0.)))) *. face_scale in""",
+"""# much as the mouth needs below it (12 under the lower lip) or rose -- #
+# less what big eyes already stretched it (THE EYES): the head takes the #
+# larger of the two. #
+let stretch_by =
+  fmax((0., fmax((rise, bottom +. 2.5 +. 12. -. 190.6)) -. head_drop)) *. face_scale in""")
+mouth = sub1(mouth, """# An opening frown would rise into the nose's place: the mouth moves #
+# down instead, by as much as its top rose. #
+let rise = if mouth_open == 0 then 0. else fmax((0., lip_top(q) -. lip_top(upper))) in
+""", """# An opening frown would rise into the nose's place: the mouth moves #
+# down instead, by as much as its top rose. #
+let rise0 = if mouth_open == 0 then 0. else fmax((0., lip_top(q) -. lip_top(upper))) in
+# And big eyes close together reach down past its corners: it moves #
+# down until, all along its top curve as drawn (a smile's corners, a #
+# frown's middle, an open mouth's upper lip), it is 8 below the eyes #
+# right above it (THE EYES), as the game does. The usual eyes never #
+# move it. #
+let clear_of_eyes : Int -> Float =
+  fun i ->
+    if i > 40 then 0.
+    else
+      let x = 60. +. 2. *. float_of_int(i) in
+      let t = (x -. 60.) /. 80. in
+      let c = if mouth_open == 0 then q else upper in
+      let lip = 150. +. rise0 +. 2. *. t *. (1. -. t) *. (c -. 150.) -. 2.5 in
+      fmax((eye_below(x) +. 8. -. lip, clear_of_eyes(i + 1))) in
+let rise = rise0 +. clear_of_eyes(0) in
+""")
+# The skin, chosen: every shape drawn in the usual skin (#f1c27d) or its
+# outline (#8a5a44) takes the chosen pair instead -- one pass over the
+# finished picture. Messed Up Dress Up's swatches, its colors that mean
+# something named by what they mean.
+def skin_section(default="#f1c27d"):
+    # name, fill, outline, and the swatch's text color (white on the two dark ones)
+    choices = [("peach", "#f1c27d", "#8a5a44", "black"), ("smiley", "#cfa000", "#6e5500", "black"),
+               ("mad", "#dc143c", "#78091f", "white"), ("sick", "#8cbe32", "#4a6a14", "black"),
+               ("alien", "#aab2ba", "#5a6168", "black"), ("witch", "#6fa34a", "#3a5a24", "black"),
+               ("pale", "#ffdbac", "#8a6a48", "black"), ("tan", "#e0ac69", "#7a5228", "black"),
+               ("brown", "#c68642", "#6a4018", "black"), ("dark", "#8d5524", "#4a2a10", "white")]
+    def shade(c, t=0.14):   # a shade darker, for a nose
+        return "#" + "".join(f"{round(int(c[i:i + 2], 16) * (1 - t)):02x}" for i in (1, 3, 5))
+    line = next(l for _, c, l, _ in choices if c == default)
+    cases = ",\n     ".join(f'("{n}", ("{c}", "{l}", "{shade(c)}"), "{t}")' for n, c, l, t in choices)
+    return f"""# THE SKIN #
+
+# Messed Up Dress Up's skin colors, the ones that mean something named #
+# for what they mean (smiley yellow, mad red, sick green, alien grey, #
+# witch green). Every shape drawn in the usual skin or its outline #
+# takes the chosen pair: one pass over the finished picture. (The #
+# third color, a shade darker, is for the witch's nose.) #
+
+# ^skin: one swatch per skin, in its own color, as in the game; the #
+# one in use is outlined. Ten of them are too many for a ^choice, #
+# whose width is fixed for seven short buttons. #
+let ^skin = {{
+  type Model = (String, String, String);
+  type Action = (String, String, String);
+  type Expansion = (String, String, String);
+  let skins = [{cases}];
+  let init = Pure(("#f1c27d", "#8a5a44", "{shade("#f1c27d")}"));
+  let update = fun _m : Model -> fun a : Action -> Pure(a);
+  let swatch = fun (name, v, text, m) : (String, (String, String, String), String, (String, String, String)) ->
+    let (fill, _, _) = v in
+    Html.button(
+      [Attr.on_click(v),
+       Attr.style([("background", fill), ("color", text),
+                   ("font-family", "var(--code-font)"), ("font-size", "0.72em"),
+                   ("border-radius", "3px"), ("padding", "0 0.3em"), ("cursor", "pointer"),
+                   ("border", if v == m then "2px solid var(--text-default)" else "1px solid #888")])],
+      [Html.text(name)]);
+  let view = fun m : Model -> Pure(
+    Html.div(
+      [Attr.style([("display", "flex"), ("gap", "0.25em"), ("align-items", "center")])],
+      map((skins, fun (name, v, text) : (String, (String, String, String), String) ->
+        swatch((name, v, text, m))))));
+  let expand = Functional(fun m : Model -> m);
+  let shape = Inline(43)
+}} in
+
+let skin_colors = ^^livelit(^skin(("{default}", "{line}", "{shade(default)}"))) in
+let (skin_fill, skin_ink, skin_shade) = skin_colors in
+let recolor = fun c : String ->
+  if c == "#f1c27d" then skin_fill else if c == "#8a5a44" then skin_ink else c in
+let skinned : Picture -> Picture =
+  fun ps ->
+    case ps
+    | [] => []
+    | Polygon(p) :: tl =>
+      Polygon((name = p.name, points = p.points,
+               stroke = (width = p.stroke.width, color = recolor(p.stroke.color)), fill = recolor(p.fill)))
+      :: skinned(tl)
+    | Path(p) :: tl =>
+      Path((name = p.name, points = p.points, stroke = (width = p.stroke.width, color = recolor(p.stroke.color))))
+      :: skinned(tl)
+    end in
+
+"""
+
+NO_EYES = """# No eyes on this slide, so nothing has stretched the head before the #
+# mouth does, and none for the mouth to clear. #
+let head_drop = 0. in
+let eye_below = fun x : Float -> -1000. in
+
+"""
+
+# ---- the slides ----
+def slide(title, intro, typedefs, sections, picture, tries):
+    out = f"# {title} #\n\n{intro}\n{typedefs}\n{drawing}\n{helpers}" + "".join(sections) + picture
+    return out.rstrip() + "\n\n" + tries.strip() + "\n"
+
+def para(text):
+    words, lines, cur = text.split(), [], ""
+    for w in words:
+        if len(cur) + len(w) + 1 > 68:
+            lines.append(cur); cur = w
+        else:
+            cur = (cur + " " + w).strip()
+    lines.append(cur)
+    return "".join(f"# {l} #\n" for l in lines)
+
+def snd_def():
+    return "let snd = fun (_, b) : (Float, Float) -> b in\n\n"
+
+SLIDES = {}
+SLIDES["hair"] = slide("Hair",
+    para("A head and its hair, chosen with buttons: short, long or curly, as Messed Up Dress Up has them. "
+         "Each hairdo is drawn in the hair editor, in two parts -- the back, behind the head, and the top, "
+         "over its crown -- and placed by the crown anchor."),
+    types(T_HAIR), [head, hair],
+    """# THE PICTURE #
+
+# The back of the hair, the head, the top of the hair. #
+
+let hair_at = Drawing.placed(hair, "crown", head, "crown") in
+let picture =
+  Drawing.named(hair_at, hairdo_name) @ head @ Drawing.named(hair_at, hairdo_name ++ " top") in
+let ^^probe(drawn) = ^^livelit(Drawing.^picture((picture = (picture)))) in
+
+# Where the crown ended up. #
+Drawing.anchor(drawn, "crown")
+""",
+    para("Press short, long or curly and the hair changes. Move a hairdo's crown in its editor and that hairdo sits higher or lower on the head."))
+
+SLIDES["shoes"] = slide("Shoes",
+    para("The pants and their shoes: Messed Up Dress Up's eight, chosen with buttons, and a slider for their size. "
+         "Each shoe is drawn in the shoe editor around an ankle, the anchor that goes on a foot of the pants; "
+         "the left shoe is the right one mirrored. The shoes go under the pants' legs, as the game draws them."),
+    types(T_SHOE), [GROWN, pants_alone, shoes],
+    """# THE PICTURE #
+
+let right_shoe = Drawing.placed(shoe, "ankle", pants, "right foot") in
+let left_shoe = Drawing.placed(Drawing.mirrored(shoe), "ankle", pants, "left foot") in
+let picture = right_shoe @ left_shoe @ pants in
+let ^^probe(drawn) = ^^livelit(Drawing.^picture((picture = (picture)))) in
+
+# Where the shoes' ankles ended up. #
+(Drawing.anchor(right_shoe, "ankle"), Drawing.anchor(left_shoe, "ankle"))
+""",
+    para("Press a shoe style and both feet change; slide the size and they grow about their ankles. "
+         "Edit a style's polygons in the shoe editor and that style changes."))
+
+ARMS_PIC = """# THE PICTURE #
+
+# The arms and their sleeves, under the shirt where they join it; the #
+# shirt; the sleeves' fill over the shirt's edge; the hands. The frame #
+# takes in the arms' whole swing, so it stays put while they move. #
+
+let (right_arm, right_sleeve, right_join, right_hand) =
+  arm((1., Drawing.anchor(shirt, "right shoulder"))) in
+let (left_arm, left_sleeve, left_join, left_hand) =
+  arm((-1., Drawing.anchor(shirt, "left shoulder"))) in
+let picture =
+  Drawing.frame((-10., -40., 330., 330.))
+  @ right_arm @ left_arm @ right_sleeve @ left_sleeve @ shirt
+  @ right_join @ left_join @ right_hand @ left_hand in
+let ^^probe(drawn) = ^^livelit(Drawing.^picture((picture = (picture)))) in
+
+# Where the shoulders ended up. #
+(Drawing.anchor(drawn, "right shoulder"), Drawing.anchor(drawn, "left shoulder"))
+"""
+SLIDES["arms"] = slide("Arms",
+    para("The torso gets arms, with Messed Up Dress Up's three sliders: the arms' angle, from straight up to "
+         "straight down, and their length and width. The shirt is a system of polygons with buttons for its "
+         "style -- a t-shirt, long sleeves, a tank top -- and sliders for its width and height; the arms come "
+         "out of its shoulders, and the style decides how much sleeve covers them."),
+    types(T_STYLE), [shirt, arms_simple], ARMS_PIC,
+    para("Slide the arms' angle and they swing from the shoulders; slide their length and width and they grow, "
+         "sleeves and all. Press a shirt style and the sleeves change; slide the shirt wider or taller and the "
+         "arms move with its shoulders."))
+
+SLIDES["hands"] = slide("Hands",
+    para("The arms get hands, chosen with buttons: Messed Up Dress Up's six -- round, mittens, stars, claws, "
+         "human and alien -- and its sliders for their size, how many fingers a human hand has, how many an "
+         "alien hand has, how many points a star has and how far it turns toward the next, how many claws "
+         "there are and how long, and the hand's angle. A hand is drawn in its own frame, the arm along x, "
+         "turned about the wrist by its angle, then turned to the arm's angle and, on the left, mirrored."),
+    types(T_STYLE, T_HAND), [shirt, arms_lead, hands], ARMS_PIC,
+    para("Press a hand style and both hands change; slide the hand size, the fingers of a human or alien "
+         "hand, a star's points or its turn, the claws' number or length, or the hand's angle. The arms and "
+         "the shirt work as on the last slide."))
+
+SLIDES["eyes"] = slide("Eyes",
+    para("The head gets eyes, as Messed Up Dress Up draws them, in its own face units: plain, stars, hearts or "
+         "x eyes, with sliders for their size, the gap between them, their shape and angle, an iris and eye "
+         "whites, and the shine. However big or slanted the eyes, the gap between them stays as set, and the "
+         "head grows wider to hold them."),
+    types(T_EYES), [snd_def(), head, face_units, eyes],
+    """# THE PICTURE #
+
+# The head, wide enough for its eyes, and the eyes. The frame is a #
+# little more than the head's, so a head that widens is seen to. #
+
+let picture = Drawing.frame((100., 80., 220., 160.)) @ head @ eyes in
+let ^^probe(drawn) = ^^livelit(Drawing.^picture((picture = (picture)))) in
+
+# How much wider and taller the eyes made the head. #
+(head_widen, head_lift, head_drop)
+""",
+    para("Press plain, stars, hearts or x eyes, and slide the eyes bigger, narrower or slanted: they keep their "
+         "gap, and the head widens when they need it. Slide the gap and they move apart or together. Give them "
+         "an iris, then whites around it."))
+
+SLIDES["mouth"] = slide("Mouth",
+    para("The head gets a mouth, as Messed Up Dress Up draws one: a smile, from a frown to a grin, that opens, "
+         "with normal teeth, spiky teeth or none, and a tongue -- in, sticking out, or none -- as long, wide "
+         "and colored as its sliders say. A deep mouth stretches the head's lower half to make room."),
+    types(T_MOUTH), [head, face_units, NO_EYES, mouth],
+    """# THE PICTURE #
+
+# The head, stretched for a deep mouth, and the mouth. #
+
+let picture = Drawing.frame((110., 80., 210., 170.)) @ head_shaped @ mouth in
+let ^^probe(drawn) = ^^livelit(Drawing.^picture((picture = (picture)))) in
+
+# Where the chin ended up. #
+Drawing.anchor(drawn, "chin")
+""",
+    para("Slide the smile from a frown to a grin, and open the mouth: press for normal teeth, spiky teeth or "
+         "none, and stick the tongue out, longer or wider."))
+
+ARM_FRONT = """# The part of a raised arm in front of the face: from where it clears #
+# the shirt's top, 14 above the shoulder as the game's collar is, out #
+# to the hand. It is drawn again after the head, as the game draws its #
+# arms over the face, with a little fill and no outline over where the #
+# copy starts, so no seam shows. An arm that never rises past the #
+# shirt's top has no such part. #
+let arm_front = fun (side, shoulder) : (Float, Found) ->
+  case shoulder
+  | Missing => []
+  | Found((sx, sy)) =>
+    let a = float_of_int(arm_angle) *. pi /. 180. in
+    let len = float_of_int(arm_length) in
+    let w = float_of_int(arm_width) in
+    let (rx, ry) = (sx -. side *. 12., sy +. 12.) in
+    let along = fun k : Float -> (rx +. side *. k *. len *. cos(a), ry +. k *. len *. sin(a)) in
+    let rise = 0. -. sin(a) *. len in
+    let clear = 26. +. w /. 2. *. fabs(cos(a)) in
+    if rise <=. clear then []
+    else
+      let k0 = clear /. rise in
+      let (k_in, k_out) = (fmax((0., k0 -. 3. /. len)), fmin((1., k0 +. 3. /. len))) in
+      [band(("arm", along(k0), along(1.), w, skin_line, skin)),
+       band(("arm", along(k_in), along(k_out), w -. 2., (width = 0., color = skin), skin))]
+      @ (if sleeve >. k0
+         then
+           [band(("sleeve", along(k0), along(sleeve), w +. 14., cloth_line, cloth)),
+            band(("sleeve", along(k_in), along(sleeve), w +. 11., (width = 0., color = cloth), cloth))]
+         else [])
+  end in
+
+"""
+
+SLIDES["full-body"] = slide("Full Body",
+    para("Every livelit of the slides before, on one figure: the shirt and its arms and hands, the pants and "
+         "their shoes, the neck, the head with its eyes and mouth, and the hair. A change to any of them -- a "
+         "slider, a button, a point moved in an editor -- draws the whole figure again."),
+    types(T_HAIR, T_STYLE, T_HAND, T_SHOE, T_EYES, T_MOUTH),
+    [snd_def(), GROWN, shirt, pants_hung, neck, head, skin_section(), hair, shoes, arms_lead, hands, ARM_FRONT, face_units, eyes, mouth],
+    """# THE PICTURE #
+
+# Each piece placed by its anchor, then stacked in drawing order: the #
+# neck, behind the shirt so it shows in the collar; the shoes, under #
+# the pants' legs; the pants; the arms and their sleeves, under the #
+# shirt where they join it; the shirt; the sleeves' fill over the #
+# shirt's edge; the back of the hair; the head, its eyes and mouth; the #
+# top of the hair, grown with the head; then raised arms again, over #
+# the face; and the hands, last, as the game draws them. #
+
+let neck_at = Drawing.shift(Drawing.placed(neck, "base", body, "neck"), 0., 8.) in
+let face_at = Drawing.shift(Drawing.placed(head_shaped @ eyes @ mouth, "chin", neck_at, "top"), 0., 8.) in
+# The hair grows with the head, about the head's middle, 80 face units #
+# below its crown. #
+let hair_fit =
+  case Drawing.anchor(hair, "crown")
+  | Found((hx, hy)) =>
+    scaled((hair, hx, hy +. 80. *. face_scale, head_widen, 1. +. head_lift /. 80.))
+  | Missing => hair
+  end in
+let hair_at = Drawing.placed(hair_fit, "crown", face_at, "crown") in
+let right_shoe = Drawing.placed(shoe, "ankle", body, "right foot") in
+let left_shoe = Drawing.placed(Drawing.mirrored(shoe), "ankle", body, "left foot") in
+let (right_arm, right_sleeve, right_join, right_hand) =
+  arm((1., Drawing.anchor(body, "right shoulder"))) in
+let (left_arm, left_sleeve, left_join, left_hand) =
+  arm((-1., Drawing.anchor(body, "left shoulder"))) in
+let outfit =
+  Drawing.frame((0., -40., 320., 400.))
+  @ neck_at @ right_shoe @ left_shoe @ pants_at @ right_arm @ left_arm @ right_sleeve
+  @ left_sleeve @ shirt @ right_join @ left_join
+  @ Drawing.named(hair_at, hairdo_name) @ face_at
+  @ Drawing.named(hair_at, hairdo_name ++ " top")
+  @ arm_front((1., Drawing.anchor(body, "right shoulder")))
+  @ arm_front((-1., Drawing.anchor(body, "left shoulder"))) @ right_hand @ left_hand in
+let ^^probe(drawn) = ^^livelit(Drawing.^picture((picture = (skinned(outfit))))) in
+
+# Where the crown and the shoes' ankles ended up. #
+(Drawing.anchor(drawn, "crown"), Drawing.anchor(right_shoe, "ankle"),
+ Drawing.anchor(left_shoe, "ankle"))
+""",
+    para("Change anything on any slide's livelits here and the whole figure follows: press a hairdo, a shirt, "
+         "a hand, a shoe, an eye style; slide the arms, the neck, the eyes, the smile; or move a point in the "
+         "shirt's, the head's, the hair's or the shoes' editor."))
+
+from witch_slide import WITCH_CONTROLS, NOSE_CLEAR, MOUTH_OLD, MOUTH_NEW, WITCH_PIECES, WITCH_PICTURE
+shirt_witch = sub1(shirt, """let shirt_style = ^^livelit(Drawing.^choice@<Style>(
+  [("t-shirt", TShirt), ("long sleeves", LongSleeves), ("tank top", TankTop)])(TShirt)) in
+""", """# (a witch's dress: long sleeves, always) #
+let shirt_style = LongSleeves in
+""")
+mouth_witch = sub1(mouth, MOUTH_OLD, MOUTH_NEW)
+SLIDES["witch"] = slide("Witch",
+    para("Messed Up Dress Up's witch, on the Full Body figure. Her hat and long dress are one color, with a "
+         "spider web on the dress and a belt, striped stockings and buckled boots. Her nose points left, out "
+         "or right, as long as you like, and the mouth moves down to clear it. The skin choice starts at "
+         "witch green. A tuxedo cat on her shoulder and a broom in her hand both start off, and each has "
+         "its colors or its size."),
+    types(T_HAIR, T_STYLE, T_HAND, T_EYES, T_MOUTH),
+    [snd_def(), GROWN, shirt_witch, pants_hung, neck, head, skin_section("#6fa34a"), hair, arms_lead, hands, ARM_FRONT,
+     face_units, eyes, WITCH_CONTROLS, NOSE_CLEAR, mouth_witch, WITCH_PIECES],
+    WITCH_PICTURE,
+    para("Press a color and the hat and dress change; turn the nose, or slide its length; put the cat on her "
+         "shoulder and the broom in her hand, then grow or shrink them."))
+
+from scenes_slide import (SCENE_TYPES, SCENE_STAGE, SCENE_DOLL, SCENE_CONTROLS, SCENE_FOREST, SCENE_UNDERWATER,
+                          SCENE_BEACH, SCENE_WOODS, SCENE_PICTURE)
+SLIDES["scenes"] = slide("Scenes",
+    para("Four of Messed Up Dress Up's backgrounds -- the forest, under the sea, the beach and the witch's "
+         "woods -- behind a paper doll for the figure, which its sliders size and place anywhere on the "
+         "stage. In the woods, the hut can stand on giant chicken legs (off to start), as long as you like, "
+         "and come nearer the fence, and the skulls' red eyes can be any size."),
+    types(SCENE_TYPES),
+    [SCENE_CONTROLS, SCENE_STAGE, SCENE_DOLL, SCENE_FOREST, SCENE_UNDERWATER, SCENE_BEACH, SCENE_WOODS],
+    SCENE_PICTURE,
+    para("Press a scene; grow, shrink and move the figure; in the woods, give the hut its legs and stretch "
+         "them, bring it nearer, and grow the skulls' eyes."))
+
+for name, text in SLIDES.items():
+    path = f"{WT}/{DIR}/{name}.hz"
+    open(path, "w").write(text)
+    non_ascii = [c for c in text if ord(c) > 127]
+    print(f"{name}.hz: {text.count(chr(10))} lines" + (f"  NON-ASCII {set(non_ascii)}" if non_ascii else ""))

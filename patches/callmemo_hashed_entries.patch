@@ -1,0 +1,216 @@
+diff --git a/src/haz3lcore/projectors/implementations/LivelitProj.re b/src/haz3lcore/projectors/implementations/LivelitProj.re
+index 2fc7726185..cf6ad8754a 100644
+--- a/src/haz3lcore/projectors/implementations/LivelitProj.re
++++ b/src/haz3lcore/projectors/implementations/LivelitProj.re
+@@ -795,6 +795,7 @@ module M: Projector = {
+   let view_calls = lazy(CallMemo.create());
+   let eval_view = (e: DHExp.t): result(DHExp.t, string) => {
+     let call_memo = Lazy.force(view_calls);
++    CallMemo.start_run(call_memo);
+     switch (MvuShape.safe_evaluate_open(~call_memo, e)) {
+     | Error(_) as err => err
+     | Ok(cmd) => ViewCmdRunner.run(~call_memo, cmd)
+diff --git a/src/language/dynamics/CallMemo.re b/src/language/dynamics/CallMemo.re
+index 37a3bd0685..7e6530f43b 100644
+--- a/src/language/dynamics/CallMemo.re
++++ b/src/language/dynamics/CallMemo.re
+@@ -27,7 +27,9 @@
+ open Util;
+ 
+ let min_steps = 40;
+-let max_entries = 8;
++/* calls kept per body, found by their key's hash: a picture's view calls
++   its shape helper once per shape, and keeps each shape's */
++let max_entries = 4096;
+ 
+ /* every name occurring in a body as a variable, sorted */
+ let vars_of: Exp.t => list(Var.t) =
+@@ -133,18 +135,19 @@ and values = (env: Environment.t(Exp.t), body: Exp.t): Exp.t => {
+   IdTagged.mk_internal([Id.invalid], term);
+ };
+ 
+-type entry = {
+-  key: Exp.t,
+-  value: Exp.t,
+-};
+-
+ type t = {
+   /* bodies whose calls took at least min_steps steps */
+   costly: IdentityTable.t(Exp.t, unit),
+-  /* each costly body's last calls, newest first */
+-  entries: IdentityTable.t(Exp.t, list(entry)),
+-  /* each costly body's lookups and hits, over the memo's life */
++  /* each costly body's calls, by their key's hash (ValueHash.key_string):
++     a lookup is one table lookup, however many calls are kept */
++  entries: IdentityTable.t(Exp.t, Hashtbl.t(string, Exp.t)),
++  /* each costly body's lookups and hits, over the memo's life, from its
++     second evaluation on (see [start_run]) */
+   tries: IdentityTable.t(Exp.t, (int, int)),
++  /* the evaluation, counted by [start_run], in which each body was first
++     recorded */
++  born: IdentityTable.t(Exp.t, int),
++  run: ref(int),
+   /* how many calls were looked up, and how many reused, for tests and
+      measuring */
+   lookups: ref(int),
+@@ -155,6 +158,8 @@ let create = (): t => {
+   costly: IdentityTable.create(),
+   entries: IdentityTable.create(),
+   tries: IdentityTable.create(),
++  born: IdentityTable.create(),
++  run: ref(0),
+   lookups: ref(0),
+   hits: ref(0),
+ };
+@@ -162,6 +167,12 @@ let create = (): t => {
+ let is_costly = (memo: t, body: Exp.t): bool =>
+   IdentityTable.find_opt(memo.costly, body) != None;
+ 
++/* A new evaluation of a view begins. In the evaluation where a body's
++   calls are first recorded, every lookup of it misses -- nothing was kept
++   yet -- so those are not counted against it (a picture's 600 shapes
++   would otherwise give its shape helper up before it could hit once). */
++let start_run = (memo: t): unit => incr(memo.run);
++
+ /* A body whose lookups keep missing is given up on. A lookup costs the
+    call's key, every value its body reads put in form and hashed, and on a
+    miss the key is recorded too. Kids' Choice's face makes a few calls,
+@@ -188,23 +199,28 @@ let find = (memo: t, body: Exp.t, key: Exp.t): option(Exp.t) => {
+   let (lookups, hits) =
+     Option.value(IdentityTable.find_opt(memo.tries, body), ~default=(0, 0));
+   let found =
+-    switch (IdentityTable.find_opt(memo.entries, body)) {
+-    | None => None
+-    | Some(entries) =>
+-      switch (
+-        List.find_opt((e: entry) => ValueHash.same(e.key, key), entries)
+-      ) {
+-      | Some(e) =>
++    switch (
++      IdentityTable.find_opt(memo.entries, body),
++      ValueHash.key_string(key),
++    ) {
++    | (Some(table), Some(h)) =>
++      switch (Hashtbl.find_opt(table, h)) {
++      | Some(value) =>
+         incr(memo.hits);
+-        Some(e.value);
++        Some(value);
+       | None => None
+       }
++    | _ => None
+     };
+-  IdentityTable.replace(
+-    memo.tries,
+-    body,
+-    (lookups + 1, found == None ? hits : hits + 1),
+-  );
++  let born =
++    Option.value(IdentityTable.find_opt(memo.born, body), ~default=0);
++  if (memo.run^ > born) {
++    IdentityTable.replace(
++      memo.tries,
++      body,
++      (lookups + 1, found == None ? hits : hits + 1),
++    );
++  };
+   found;
+ };
+ 
+@@ -222,29 +238,29 @@ let record =
+     )
+     : unit =>
+   if (steps >= min_steps) {
++    if (!is_costly(memo, body)) {
++      IdentityTable.replace(memo.born, body, memo.run^);
++    };
+     IdentityTable.replace(memo.costly, body, ());
+     let k =
+       switch (k) {
+       | Some(k) => k
+       | None => key(env, body)
+       };
+-    let old =
+-      switch (IdentityTable.find_opt(memo.entries, body)) {
+-      | Some(es) => List.filter((e: entry) => !ValueHash.same(e.key, k), es)
+-      | None => []
++    switch (ValueHash.key_string(k)) {
++    | None => ()
++    | Some(h) =>
++      let table =
++        switch (IdentityTable.find_opt(memo.entries, body)) {
++        | Some(table) => table
++        | None =>
++          let table = Hashtbl.create(8);
++          IdentityTable.replace(memo.entries, body, table);
++          table;
++        };
++      if (Hashtbl.length(table) >= max_entries) {
++        Hashtbl.reset(table);
+       };
+-    IdentityTable.replace(
+-      memo.entries,
+-      body,
+-      ListUtil.take(
+-        max_entries,
+-        [
+-          {
+-            key: k,
+-            value,
+-          },
+-          ...old,
+-        ],
+-      ),
+-    );
++      Hashtbl.replace(table, h, value);
++    };
+   };
+diff --git a/src/util/ValueHash.re b/src/util/ValueHash.re
+index ea04643430..a1018347b3 100644
+--- a/src/util/ValueHash.re
++++ b/src/util/ValueHash.re
+@@ -105,6 +105,26 @@ let same = (a: 'a, b: 'a): bool =>
+    when it has no hash; it can throw on a value too deep to walk. */
+ let js_hash = (): Js.Unsafe.any => Js.Unsafe.get(Lazy.force(impl), "hash");
+ 
++/* A value's hash as a string, to key a table by: two values with the same
++   one are `same`. None when the value has no hash, or is too deep to walk. */
++let key_impl: Lazy.t(Js.Unsafe.any) =
++  lazy(
++    Js.Unsafe.js_expr(
++      {js|(function (hash, v) {
++  try { const h = hash(v); return h === null ? null : h[0] + ":" + h[1]; }
++  catch (_) { return null; }
++})|js},
++    )
++  );
++let key_string = (a: 'a): option(string) => {
++  let r: Js.opt(Js.t(Js.js_string)) =
++    Js.Unsafe.fun_call(
++      Lazy.force(key_impl),
++      [|js_hash(), Js.Unsafe.inject(a)|],
++    );
++  Js.Opt.case(r, () => None, s => Some(Js.to_string(s)));
++};
++
+ /* Answers remembered for pairs of objects, by the identity of both: for a
+    comparison of immutable values that would otherwise be repeated on the
+    same pair. One answer per left object (the last pair asked about),
+diff --git a/test/Test_CallMemo.re b/test/Test_CallMemo.re
+index 4611615b9b..0b2850bb7f 100644
+--- a/test/Test_CallMemo.re
++++ b/test/Test_CallMemo.re
+@@ -136,11 +136,13 @@ let tests = (
+           );
+         let memo = CallMemo.create();
+         for (k in 1 to 30) {
++          CallMemo.start_run(memo);
+           ignore(apply(~call_memo=memo, f, k));
+         };
+         let lookups = memo.lookups^;
+         let hits = memo.hits^;
+         for (k in 31 to 40) {
++          CallMemo.start_run(memo);
+           ignore(apply(~call_memo=memo, f, k));
+         };
+         /* without giving up, each run looked up map's 60 calls and sum's
