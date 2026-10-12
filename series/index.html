@@ -32,6 +32,14 @@
   <p class="sub">Notes on making <a href="https://hazel.org">Hazel</a> responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed. Matthew Hammer.</p>
   <ol class="issues" reversed>
     <li>
+      <a class="thumb" href="005/"><img src="005/img/thumb.png" alt="A diagram in two lanes. On the main thread: a request carrying only what is new, and each changed view turned into Html, virtual DOM and DOM, whole. On the eval worker: evaluation that reuses by hash and answers with only what is new. Below: no DOM in a worker, only data crosses."></a>
+      <div>
+      <div class="num">Issue 005 · 2026-10-12</div>
+      <div class="title"><a href="005/">Two threads, one picture: the worker, the page, and diffing the view</a></div>
+      <p class="blurb">Hazel evaluates a program in a web worker and draws it on the page's main thread. Each fix so far, sorted by thread, and compared with a more principled idea: the worker diffs each view and sends the page only patches. A worker cannot build real DOM, only data, and Hazel's Html value is already that data. What crosses between the threads already carries only what changed. What is still done whole on every change is the page's: evaluating each changed view, converting it to virtual DOM, and diffing it. The cheapest next step is on the page: skip what is the same.</p>
+      </div>
+    </li>
+    <li>
       <a class="thumb" href="004/"><img src="004/img/thumb.png" alt="Two witches from the Hazel Witch slide: one in purple with a tuxedo cat on her shoulder and a broom, one in black with white webs, red boots and a ginger cat."></a>
       <div>
       <div class="num">Issue 004 · 2026-10-11</div>

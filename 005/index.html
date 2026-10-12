@@ -58,7 +58,7 @@
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · Issue 005 · 2026-10-12 · draft</p>
+<p class="series"><a href="../">Hazel performance analysis</a> · Issue 005 · 2026-10-12</p>
 <h1>Two threads, one picture: the worker, the page, and diffing the view</h1>
 <p class="sub">Hazel evaluates a program in a web worker and draws it on the page's main thread. A question from a meeting with Cyrus: how do our performance fixes so far compare with a more principled approach, where the worker builds a virtual DOM of each view, diffs it against the last one, and sends the page only the patches? Did we already do some of this, and how far does the idea go? Can a worker even build real DOM nodes? And is it expensive to keep several representations of the same DOM?</p>
 
@@ -173,7 +173,7 @@
 <h2 id="copies">Is it expensive to keep several representations?</h2>
 <p>A view exists in up to five forms at once: the Html value (in the view memo); in the worker's and the page's tables of shared values; the virtual DOM tree the page last drew, kept for the next diff; the new virtual DOM tree, during a diff; and the DOM itself.</p>
 <p><b>In memory, sharing makes most of these cheap.</b> The Html value and the tables hold references to the same objects, not copies: the boundary returns the page's own objects for anything unchanged. The two virtual DOM trees exist together only during a diff. The DOM is the only full copy that cannot be avoided. What memory these take has not been measured. The tables are capped at 200,000 entries each.</p>
-<p><b>In time, the cost is rebuilding, not holding.</b> Today, steps 7 and 8 rebuild a view's virtual DOM and walk all of it whenever the view is drawn. That is a cost per representation per change, and C is what removes it. On Kids' Choice it is small: converting the face's Html to the page took 8 ms of a 104 ms redraw (profiled, <a href="../#now">issue 001</a>), and in an earlier profile, the browser's own layout and DOM work was about 30 ms of a 310 ms redraw. In the woods, with about 600 shapes, the conversion and the diff are part of the half of the page's time that is not evaluating the view (<a href="../004/#cost">issue 004</a>). How large a part has not been measured.</p>
+<p><b>In time, the cost is rebuilding, not holding.</b> Today, steps 7 and 8 rebuild a view's virtual DOM and walk all of it whenever the view is drawn. That is a cost per representation per change, and C is what removes it. On Kids' Choice it is small: converting the face's Html to the page took 8 ms of a 104 ms redraw (profiled, <a href="../001/#now">issue 001</a>), and in an earlier profile, the browser's own layout and DOM work was about 30 ms of a 310 ms redraw. In the woods, with about 600 shapes, the conversion and the diff are part of the half of the page's time that is not evaluating the view (<a href="../004/#cost">issue 004</a>). How large a part has not been measured.</p>
 
 <h2 id="next">What to measure next</h2>
 <ul>
@@ -186,7 +186,7 @@
 <h2 id="method">How this was put together</h2>
 <ul>
   <li>The pipeline and the code facts: read from <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <a href="https://github.com/hazelgrove/hazel/commit/b18cef1f5a"><code>b18cef1f5a</code></a>, and from <code>virtual_dom</code>'s compiled diff.</li>
-  <li>The numbers: from issues <a href="../">001</a> and <a href="../004/">004</a>, and from the commit messages linked above. Nothing new was measured for this issue.</li>
+  <li>The numbers: from issues <a href="../001/">001</a> and <a href="../004/">004</a>, and from the commit messages linked above. Nothing new was measured for this issue.</li>
 </ul>
 
 </main>
