@@ -58,17 +58,17 @@
 <main>
 
 <p class="series"><a href="../">Hazel performance analysis</a> · Issue 004 · 2026-10-11</p>
-<h1>The witch, ported to Hazel</h1>
-<p class="sub">M's witch went into Messed Up Dress Up first (<a href="../003/">issue 003</a>). Now she is a slide in the Livelit Playground, on branch <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), kept in step on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> (user-defined livelits). This issue covers what the slide does, two layout bugs the port turned up, and what a redraw costs. The backgrounds are next.</p>
+<h1>The witch and her woods, ported to Hazel</h1>
+<p class="sub">M's witch went into Messed Up Dress Up first (<a href="../003/">issue 003</a>). Now she is a slide in the Livelit Playground, on branch <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), kept in step on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> (user-defined livelits). Her woods and three more of the game's backgrounds followed, as a Scenes slide. This issue covers what the two slides do, two layout bugs the port turned up, and what a redraw costs, with a first look at why the woods cost so much.</p>
 
 <figure><img src="img/hz-witch.png" alt="The Witch slide's picture five ways: the default purple witch with green skin and a hooked nose; with a tuxedo cat on her shoulder and a broom in her hand; her nose pointing straight out at twice its length; in black with white webs, purple trim, red boots and a ginger cat; and with the cat at 400% and the broom at 300%.">
 <figcaption>The Witch slide, by its own livelits: the default; the cat and the broom turned on; the nose pointing out, at 200; other colors; the cat at 400% and the broom at 300%.</figcaption></figure>
 
 <div class="kpis">
-  <div class="kpi"><div class="v">15</div><div class="l">new controls, each a livelit: the witch's colors, nose, cat and broom, and a row of skin swatches shared with Full Body</div></div>
-  <div class="kpi"><div class="v">2</div><div class="l">layout bugs fixed on the way, both buttons that could not be pressed or read</div></div>
+  <div class="kpi"><div class="v">2</div><div class="l">new slides, Witch and Scenes, with 24 new controls between them; and 2 layout bugs fixed on the way</div></div>
   <div class="kpi"><div class="v warn">5.0–7.5 s</div><div class="l">the Witch slide redrawing after one change (14.5 s to load)</div></div>
-  <div class="kpi"><div class="v good">~1 ms</div><div class="l">the game drawing the same witch, cat and broom</div></div>
+  <div class="kpi"><div class="v bad">10–21 s</div><div class="l">a redraw in the witch's woods, even when only the figure moves (3.5–5.5 s in the forest)</div></div>
+  <div class="kpi"><div class="v good">1–3 ms</div><div class="l">the game drawing the same witch, or a scene</div></div>
 </div>
 
 <h2 id="slide">The Witch slide</h2>
@@ -103,7 +103,38 @@
 <figcaption>After.</figcaption></figure>
 <p>Both bugs come from the same place. A livelit's box is a fixed width, one line tall, and nothing reports when its view overflows the box. A script now checks every button on these two slides: each sits inside its box, and nothing covers it. Full Body still has five shoe labels that wrap, such as "alien 4 toes". That fix is next.</p>
 
+<h2 id="scenes">The Scenes slide</h2>
+<p>Four of the game's backgrounds, with all their sliders: the forest; under the sea, with the sharks at their picnic table, forks in their fins; the beach; and the witch's woods. A paper doll in the game's usual look stands in for the figure. The slides before this one draw the real figure, and drawing it here would make every redraw pay for both. Three sliders size the doll about its feet and move it across and up or down the stage.</p>
+<figure><img src="img/hz-scenes.png" alt="The paper doll in each of four scenes: a sunny forest with pines, sunshafts, flowers and round trees; under the sea with a shipwreck, seaweed, fish and two sharks at a picnic table; a beach with palms, umbrellas, chairs, blankets and sand castles; and the witch's woods at dusk, with dead trees, a skull-topped fence, skeletons and a bubbling cauldron.">
+<figcaption>The four scenes, each as the slide first draws it.</figcaption></figure>
+<p>The woods have the game's newest controls (<a href="../003/">issue 003</a>):</p>
+<ul>
+  <li><b>Chicken legs</b> under the hut, off to start, as M wants them, with their size (20–300%).</li>
+  <li><b>Hut nearer:</b> the hut comes down toward the fence and grows, and always stays behind it.</li>
+  <li><b>The skulls' red eyes:</b> how much of each eye hole they fill. Their blink rate is a slider too, but a slide's picture holds still. So the slide answers it as the seconds between blinks.</li>
+</ul>
+<figure><img src="img/hz-woods.png" alt="The woods three ways: the hut on chicken legs behind the fence; the legs at 200% and the hut as near as it comes, its top flattened against the top of the stage, the skulls' eyes bigger; and the doll at half size, moved left and up."><figcaption>Chicken legs on; legs at 200%, the hut nearest and the eyes at 100%; the figure at 50%, moved.</figcaption></figure>
+<p>Some things are approximated, as agreed before the port:</p>
+<ul>
+  <li>Circles and curves are polygons.</li>
+  <li>The game's gradients are 6–8 bands of color.</li>
+  <li>See-through colors, such as the sunshafts and the light under the sea, are 8-digit hex.</li>
+  <li>The stage is 600 by 601 here; the game's is 812 by 601. So it fits the picture's 320 by 440 without leaving most of it empty.</li>
+  <li>Everything is kept on the stage, so the frame holds still. A hut pushed past the top, on long legs and as near as it comes, is flattened against the edge. The game cuts it off (the middle picture).</li>
+</ul>
+<p>Try it: <a href="https://hazel.org/build/integration/livelits-modular-editors/?slide=livelit-playground-scenes">the Scenes slide</a>.</p>
+
+<h2 id="webs">The slide's webs, back in the game</h2>
+<p>I liked the slide's few webs better than the game's web all over the dress. So the game now offers both for the witch:</p>
+<ul>
+  <li>"all over", as before and still the default;</li>
+  <li>"a few webs", drawn as the slide draws them: two on the bodice and three on the skirt, each with eight threads and three rings.</li>
+</ul>
+<figure><img src="img/game-webs.png" alt="The game's witch four ways: her web all over the dress; a few webs; a few white webs on a black dress; a few webs on a wider dress, the webs grown to fit." style="max-width:min(100%, 1015px)">
+<figcaption>In the game: all over; a few webs; a few, on black; a few, on a wider dress.</figcaption></figure>
+
 <h2 id="cost">What it costs</h2>
+<h3>The Witch slide</h3>
 <div class="scroll"><table>
 <tr><th>Change</th><th>Witch slide</th><th>Full Body slide</th><th>Game <code>draw()</code></th></tr>
 <tr><td>Load, to the first picture</td><td class="n">14.5 s</td><td class="n">14.7 s</td><td class="n"></td></tr>
@@ -116,15 +147,57 @@
 <p>Every change to the witch costs about the same, 5–7.5 s, whatever it changes. A skin press costs about 2–3 s more on the Witch slide than on Full Body, though the Witch slide is shorter (2,189 lines against 2,896). So the extra time comes from what the witch adds, not from the slide's length. Which part of it is not known yet: this slide hasn't been profiled.</p>
 <p class="note">These are single runs, one per change, so read them as sizes rather than precise numbers. Earlier issues saw a few tenths of a second between runs of the same change.</p>
 
+<h3>The Scenes slide</h3>
+<div class="scroll"><table>
+<tr><th>Scene</th><th>Shapes</th><th>Points</th><th>Switching to it</th><th>Moving the figure (size 100 → 90 → 100 → 90 → 100)</th></tr>
+<tr><td>Forest</td><td class="n">164</td><td class="n">1,242</td><td class="n">6.3 s</td><td class="n">5.5, 3.5, 3.6, 3.7 s</td></tr>
+<tr><td>Under the sea</td><td class="n">149</td><td class="n">1,025</td><td class="n">5.4 s</td><td class="n"></td></tr>
+<tr><td>Beach</td><td class="n">181</td><td class="n">895</td><td class="n">5.0 s</td><td class="n"></td></tr>
+<tr><td>Witch's woods</td><td class="n">570 (614 with legs)</td><td class="n">2,558 (2,702)</td><td class="n">12.0 s</td><td class="n">15.5, 10.0, 12.0, 10.9 s</td></tr>
+</table></div>
+<p>In the woods, each slider took 16.5–21.2 s, one run each: chicken legs on, leg size, hut nearer, eye size, and the figure's size and place. The slide takes 23.5–26.3 s to load. The game draws a scene in about 3 ms.</p>
+<p>The woods cost about three times as much as the other scenes, even when only the figure moves. Resizing the figure in the woods takes 10–15.5 s; in the forest it takes 3.5–5.5 s. So a redraw costs what the whole picture costs, not what changed. The woods have 3.7 times the forest's shapes and 2.2 times its points. In every series, the first change after loading is the slowest.</p>
+
+<h3>Three experiments on the woods</h3>
+<div class="scroll"><table>
+<tr><th>Variant</th><th>Shapes</th><th>Points</th><th>Moving the figure, four runs</th></tr>
+<tr><td>As first built: the scene and the figure kept on the stage together</td><td class="n">570</td><td class="n">2,558</td><td class="n">18.0, 10.3, 13.2, 11.2 s</td></tr>
+<tr><td>The scene and the figure kept on the stage apart (kept)</td><td class="n">570</td><td class="n">2,558</td><td class="n">15.5, 10.0, 12.0, 10.9 s</td></tr>
+<tr><td>Each dead tree drawn as one line per fork level, retracing its limbs</td><td class="n">372</td><td class="n">3,416</td><td class="n">18.3, 12.0, 14.4, 14.0 s</td></tr>
+<tr><td>The view's call memo keeping 1,024 calls per helper, not 8 (an engine change, not kept)</td><td class="n">570</td><td class="n">2,558</td><td class="n">17.8, 11.5, 10.2, 10.6 s</td></tr>
+</table></div>
+<ul>
+  <li><b>Kept apart:</b> within the noise. It stays, since it is no slower and moving the figure no longer touches the scene.</li>
+  <li><b>Fewer shapes with more points:</b> slower, so points cost at least as much as shapes. It was reverted.</li>
+  <li><b>The memo:</b> no measurable change; see the lessons below.</li>
+</ul>
+
+<h3>Where a woods redraw goes</h3>
+<p>A profile of two figure-size changes in the woods, on the first build. Each change splits about evenly between the eval worker and the page:</p>
+<ul>
+  <li><b>The worker:</b> about 60% evaluating the program, and about a third encoding the result for the page.</li>
+  <li><b>The page:</b> about half evaluating the <code>^picture</code>'s view. That is the Hazel code that turns each of the ~600 shapes into an SVG element. The rest is redrawing.</li>
+</ul>
+<p class="note">Profiled times run longer than real ones: these two changes took 14.8 and 19.7 s under the profiler, against 10–15.5 s without it. Read the split as shares, not times.</p>
+
+<h3>Earlier lessons, checked against this slide</h3>
+<ul>
+  <li><b>The worker reuses what did not change (<a href="../001/">issue 001</a>).</b> Moving the figure leaves the scene's code and its inputs as they were, so the woods should come from the cache. But the worker spends about as long evaluating per change as a whole fresh evaluation of the slide takes in node (2.2–2.5 s). So it is probably evaluating the woods again. Why is open. The next step is a timeline of the worker's messages, as in issue 001.</li>
+  <li><b>A view re-evaluates only the calls whose inputs changed (001).</b> This was made for Kids' Choice, whose face is a few helper calls, and it keeps the last 8 calls of each helper. The picture's view calls its shape helper about 600 times. Keeping 1,024 calls changed nothing measurable, so the view's cost is not only in those calls. Where the rest is, is open.</li>
+  <li><b>Profiled times overstate code made of many small calls (001).</b> It held here too, as the note above shows.</li>
+  <li><b>A trap in the measuring harness.</b> Timed in node, incremental evaluation came out 7–15 times slower than fresh on Hands and Eyes.
+    <ul>
+      <li>The test re-ran statics from scratch, which gives the elaboration new ids. So the reuse check could not match terms by hash, and compared them in full: every subterm, walked again for every node it checked.</li>
+      <li>The page's statics are incremental, and the worker's profile shows no such walk. So this is the harness, not the app.</li>
+      <li>But whenever ids do change, the check can cost the square of the program's length.</li>
+    </ul></li>
+</ul>
+
 <h2 id="next">What next</h2>
 <ul>
-  <li><b>A Scenes slide</b> with four of the game's backgrounds: underwater, beach, forest and the witch's woods, with all their sliders.
-    <ul>
-      <li>For every background: the figure's size and place in the scene.</li>
-      <li>For the woods: chicken legs on the hut, off to start (M's call), with a size; how near the hut comes, always behind the fence; and the skulls' red eyes, how big and how fast they blink.</li>
-      <li>Circles and curves will be polygons. The eyes will be still red dots: the blink-rate slider will be there, but a slide's picture is a still picture, so nothing will blink yet.</li>
-    </ul></li>
-  <li><b>A profile of a Witch slide redraw</b>, to find where its extra 2–3 s goes.</li>
+  <li><b>Why the worker evaluates the unchanged woods again</b>, from a timeline of its messages. If it reused them, most of the worker's half of a woods change would go.</li>
+  <li><b>A cheaper <code>^picture</code> view:</b> less work per shape, or an unchanged shape's SVG element reused.</li>
+  <li><b>A profile of a Witch slide redraw</b>, to find where its extra 2–3 s over Full Body goes.</li>
   <li><b>Full Body's shoe labels</b>, so they fit their line.</li>
 </ul>
 
@@ -136,6 +209,8 @@
       <li>It then waits until the <code>^picture</code>'s SVG changes, up to 60 s.</li>
       <li>The script used to look only for <code>^choice</code> buttons, so it now finds any button inside a livelit, the swatches included.</li>
     </ul></li>
+  <li><b>Node:</b> the slide tests' own evaluation, run once fresh and once incrementally after one literal changes, with a full GC before each, three changes per slide. This harness is not committed.</li>
+  <li><b>The profile:</b> the Gecko profiler in the same headless Firefox, two figure-size changes in the woods.</li>
   <li><b>The layout check:</b> for every button inside a livelit, scrolled into view, its box against the livelit's box, and the element at its center.</li>
   <li><b>Game:</b> <code>draw()</code> plus a layout read (<code>getBBox</code>), the median of 30 runs per setting in the same Firefox. Firefox rounds its timer to 1 ms, so these are to the nearest millisecond.</li>
   <li><b>Pictures:</b> each slide's <code>^picture</code> SVG and the game's own SVG, rasterized in headless Firefox. The editor shots are of the same headless Firefox.</li>
