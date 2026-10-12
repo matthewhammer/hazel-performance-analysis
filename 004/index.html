@@ -71,6 +71,10 @@
   <div class="kpi"><div class="v good">1–3 ms</div><div class="l">the game drawing the same witch, or a scene</div></div>
 </div>
 
+<div class="headline" style="border-left-color: var(--warn)">
+<p><b>Update, 2026-10-12: the picture's view, made cheaper, and a correction.</b> The woods' remaining cost was not per shape, as said below, but per point, and in copies. Three changes since: the frame now sets the picture's box; the points strings are cheaper; and a typed value is no longer copied at every boundary it crosses. Moving the figure in the woods now redraws in a median of 1.41 s, down from 2.20 s. <a href="#update">The details</a>.</p>
+</div>
+
 <h2 id="slide">The Witch slide</h2>
 <p>The slide starts from Full Body's figure: the same hair, head, eyes, mouth, arms and hands. It adds the witch's own controls and pieces. As in the game:</p>
 <ul>
@@ -278,6 +282,7 @@
   <li><b>Kids' Choice:</b> a median of 125.5 ms.</li>
 </ul>
 <p>The view's remaining time is not its per-point work. With <code>coords</code> writing only each shape's first point, about 600 points instead of 2,700, the times did not move: 2.9, 1.7, 2.4 and 2.5 s. What is left is per shape: building each shape's Html node and its attributes, for all ~600 shapes on every change.</p>
+<p class="note"><b>Update, 2026-10-12:</b> not so. The Html nodes are about 3% of the view's evaluation steps. Most of the rest was per point, in two places. The view's box walked every point, all of them even in this experiment, which is why the times did not move; and so did the points strings. The view also copied the picture each time it was passed to a typed function. <a href="#update">Below</a>.</p>
 
 <h3>Earlier lessons, checked against this slide</h3>
 <ul>
@@ -292,12 +297,30 @@
     </ul></li>
 </ul>
 
+<h2 id="update">Update, 2026-10-12: the picture's view, made cheaper</h2>
+<p>Counted under node, by kind of step and by part of the view, then timed on the page. The woods' picture has 570 shapes and about 2,560 points. Its view took 238,781 evaluation steps:</p>
+<div class="scroll">
+<table>
+<tr><th>Part of the view</th><th class="n">Steps</th><th class="n">Share</th></tr>
+<tr><td>The box (<code>view_box</code>): every point, to find the bounds</td><td class="n">134,320</td><td class="n">56%</td></tr>
+<tr><td>The points strings (<code>coords</code>)</td><td class="n">92,703</td><td class="n">39%</td></tr>
+<tr><td>The Html nodes and their attributes</td><td class="n">about 6,600</td><td class="n">3%</td></tr>
+</table>
+</div>
+<p>Three changes followed, each measured before and after. They are on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> and <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, and the third is also a <code>dev</code> PR, <a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a>:</p>
+<ol class="ranked">
+  <li><b>A frame sets the box.</b> Most playground pictures already had a <code>Drawing.frame</code>, there so the box holds still. Now the box is the frame's, with the same margin, and the view no longer walks every point. Anything drawn outside the frame is cut off. The Witch's and Full Body's frames were raised to take in the hat and the hair as the slides open, so every slide opens with the box it had before. The view went from 238,781 to 99,621 steps. The redraw of a figure move went from a median of 2.20 s to 1.52 s, 8 changes each, with the same pictures.</li>
+  <li><b>Cheaper points strings.</b> <code>to_fixed</code> called directly, and a space after every point. Steps 99,621 → 74,055, but the view's own time only about 6% less, measured on one build: 26% fewer steps, 6% less time. Steps are not equal; see <a href="../006/#update">issue 006's update</a>.</li>
+  <li><b>No copy at a typed boundary.</b> Giving a value a type, as a typed parameter does, rebuilt the value, every list cell and tuple field, even when nothing inside changed. The picture was copied whole, 15,500 nodes, at <code>view_box(pic : Picture)</code> and again elsewhere. The copies cost time and garbage, and, being new objects, they made the view's call memo redo its keys: about a quarter of the view on every redraw. Now a value that already has the type comes back as itself. The view on a move to a new size went from about 725–830 ms to 520–650 ms. Revisiting a size the view has drawn still takes about 210 ms, and Kids' Choice is unchanged. The whole redraw, in the same session, went from a median of 1.62 s to 1.41 s.</li>
+</ol>
+<p>What is left of the view is the evaluator's own work, about 500 ms: variable lookups, pattern matching, fresh ids. That is the next target.</p>
+
 <h2 id="next">What next</h2>
 <ul>
   <li><b>A fix for <code>dev</code>:</b> the same one-line statics change, with its two tests.</li>
   <li><b>The page's redraw of a new picture</b>, still most of a woods change: the picture's view builds an Html node for each of ~600 shapes on every change (<a href="#casts">above</a>).</li>
   <li><b>#2597:</b> the Scenes slide still takes about 5 minutes to draw its first picture there (281 s with all three fixes). That is the main thread, without #2469's speedups.</li>
-  <li><b>A cheaper <code>^picture</code> view:</b> less work per shape, or an unchanged shape's SVG element reused.</li>
+  <li><b>A cheaper <code>^picture</code> view:</b> less work per shape, or an unchanged shape's SVG element reused. <i>Done 2026-10-12, though the work was per point, not per shape (<a href="#update">above</a>).</i></li>
   <li><b>A profile of a Witch slide redraw</b>, to find where its extra 2–3 s over Full Body goes.</li>
   <li><b>Full Body's shoe labels</b>, so they fit their line.</li>
 </ul>

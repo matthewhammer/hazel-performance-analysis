@@ -195,7 +195,7 @@
 </table>
 </div>
 <p>Counting the garbage collection it causes, evaluating the view is about 69% of the time. C can save only the two small rows, about 2%. It would also be harder than <a href="#where">above</a> assumed. The view's call memo misses on the woods' ~600 shapes, so each shape's Html is a new object on every change, even when nothing in it changed. A memo would need a content hash as its key, not identity. And each event handler holds the state it was drawn with, so a remembered node would need handlers that look the state up when the event fires.</p>
-<p>So the order changes: first make the view cheaper to evaluate, per shape and in the evaluator's general overhead. Then consider moving it off the main thread (B), weighing the round trip it would add to each interaction. C waits. On Kids' Choice the conversion was 8 of 104 ms (<a href="../001/#now">issue 001</a>), a larger share but a small time.</p>
+<p>So the order changes: first make the view cheaper to evaluate, per shape and in the evaluator's general overhead (done the same day, in three changes: the woods' redraw from a median of 2.20 s to 1.41 s, <a href="../004/#update">issue 004's update</a>). Then consider moving it off the main thread (B), weighing the round trip it would add to each interaction. C waits. On Kids' Choice the conversion was 8 of 104 ms (<a href="../001/#now">issue 001</a>), a larger share but a small time.</p>
 
 <h2 id="next">What to measure next</h2>
 <ul>
