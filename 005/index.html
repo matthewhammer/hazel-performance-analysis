@@ -72,6 +72,10 @@
 </ol>
 </div>
 
+<div class="headline" style="border-left-color: var(--warn); margin-top: 14px">
+<p><b>Update, later on 2026-10-12: measured, and C is not the next step.</b> A profile of a figure move in the woods shows what the page does with its time. Converting Html to virtual DOM is 1.1% of it, and the diff and patch 0.9%. So C would save at most about 2%, while evaluating the view is about 69%. The next step is making the view cheaper, and moving it to the worker (B) after that. <a href="#update">The numbers</a>.</p>
+</div>
+
 <h2 id="today">Who does what today</h2>
 <p>The main thread is the page: it owns the DOM, takes the user's input, and keeps the editor running smoothly. The worker evaluates the program, so that a long evaluation does not freeze the page. Here is one change, such as a slider's release, in order. The links are to the code on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors) at <a href="https://github.com/hazelgrove/hazel/commit/b18cef1f5a"><code>b18cef1f5a</code></a>.</p>
 
@@ -169,16 +173,34 @@
 </table>
 </div>
 <p><b>So far we have done A, and part of what B would bring:</b> the worker already does the evaluation that is not a view. <b>C is the cheapest next step.</b> It needs no protocol, and the boundary already keeps unchanged objects the same (<a href="https://github.com/hazelgrove/hazel/commit/90994d4443"><code>90994d4443</code></a>), which is what C keys on. <b>B is the bigger change,</b> and it is worth it only if evaluating views stays the page's largest cost after C. It probably will in the woods: there, the picture's view evaluates about 600 shapes on every change.</p>
+<p class="note"><b>Update, later on 2026-10-12:</b> it does, by far. C would save at most about 2% in the woods (<a href="#update">below</a>).</p>
 
 <h2 id="copies">Is it expensive to keep several representations?</h2>
 <p>A view exists in up to five forms at once: the Html value (in the view memo); in the worker's and the page's tables of shared values; the virtual DOM tree the page last drew, kept for the next diff; the new virtual DOM tree, during a diff; and the DOM itself.</p>
 <p><b>In memory, sharing makes most of these cheap.</b> The Html value and the tables hold references to the same objects, not copies: the boundary returns the page's own objects for anything unchanged. The two virtual DOM trees exist together only during a diff. The DOM is the only full copy that cannot be avoided. What memory these take has not been measured. The tables are capped at 200,000 entries each.</p>
 <p><b>In time, the cost is rebuilding, not holding.</b> Today, steps 7 and 8 rebuild a view's virtual DOM and walk all of it whenever the view is drawn. That is a cost per representation per change, and C is what removes it. On Kids' Choice it is small: converting the face's Html to the page took 8 ms of a 104 ms redraw (profiled, <a href="../001/#now">issue 001</a>), and in an earlier profile, the browser's own layout and DOM work was about 30 ms of a 310 ms redraw. In the woods, with about 600 shapes, the conversion and the diff are part of the half of the page's time that is not evaluating the view (<a href="../004/#cost">issue 004</a>). How large a part has not been measured.</p>
+<p class="note"><b>Update, later on 2026-10-12:</b> measured: about 2% (<a href="#update">below</a>).</p>
+
+<h2 id="update">Update, later on 2026-10-12: the woods' redraw, split</h2>
+<p>A Gecko profile of two figure-size changes in the woods, on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <a href="https://github.com/hazelgrove/hazel/commit/b18cef1f5a"><code>b18cef1f5a</code></a>. The runs took 4.4 and 4.1 s under the profiler, which makes code with many small calls look slower than it is, so read the shares, not the times. Each sample of the page's main thread is counted once, under the innermost of these that it was in:</p>
+<div class="scroll">
+<table>
+<tr><th>The page's main thread, during the two changes</th><th class="n">Share</th></tr>
+<tr><td>Evaluating the view (<code>eval_view</code>, <code>evaluate_open</code>)</td><td class="n">50%</td></tr>
+<tr><td>Garbage collection, most of it during that evaluation</td><td class="n">21%</td></tr>
+<tr><td>The app's own update machinery: frame callbacks, recomputing its views</td><td class="n">25%</td></tr>
+<tr><td>Converting Html to virtual DOM (<code>HazelDOM</code>)</td><td class="n">1.1%</td></tr>
+<tr><td>The virtual DOM diff and patch</td><td class="n">0.9%</td></tr>
+<tr><td>The browser's style, layout and paint</td><td class="n">1.4%</td></tr>
+</table>
+</div>
+<p>Counting the garbage collection it causes, evaluating the view is about 69% of the time. C can save only the two small rows, about 2%. It would also be harder than <a href="#where">above</a> assumed. The view's call memo misses on the woods' ~600 shapes, so each shape's Html is a new object on every change, even when nothing in it changed. A memo would need a content hash as its key, not identity. And each event handler holds the state it was drawn with, so a remembered node would need handlers that look the state up when the event fires.</p>
+<p>So the order changes: first make the view cheaper to evaluate, per shape and in the evaluator's general overhead. Then consider moving it off the main thread (B), weighing the round trip it would add to each interaction. C waits. On Kids' Choice the conversion was 8 of 104 ms (<a href="../001/#now">issue 001</a>), a larger share but a small time.</p>
 
 <h2 id="next">What to measure next</h2>
 <ul>
-  <li><b>The woods' redraw, split:</b> evaluating the view, Html to virtual DOM, the diff and patch, and the browser's layout, for one figure move.</li>
-  <li><b>C, tried:</b> remember <code>HazelDOM</code>'s output per Html subterm, and measure a woods change and a Kids' Choice release.</li>
+  <li><b>The woods' redraw, split:</b> evaluating the view, Html to virtual DOM, the diff and patch, and the browser's layout, for one figure move. <i>Done: <a href="#update">above</a>.</i></li>
+  <li><b>C, tried:</b> remember <code>HazelDOM</code>'s output per Html subterm, and measure a woods change and a Kids' Choice release. <i>Parked: it would save about 2% in the woods (<a href="#update">above</a>).</i></li>
   <li><b>The sizes of view samples on the wire:</b> they are not trimmed as the result is.</li>
   <li><b>The memory of the shared-value tables</b> and of the per-object hashes.</li>
 </ul>

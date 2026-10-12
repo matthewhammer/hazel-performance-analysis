@@ -44,7 +44,7 @@
       <div>
       <div class="num">Issue 005 · 2026-10-12</div>
       <div class="title"><a href="005/">Two threads, one picture: the worker, the page, and diffing the view</a></div>
-      <p class="blurb">Hazel evaluates a program in a web worker and draws it on the page's main thread. Each fix so far, sorted by thread, and compared with a more principled idea: the worker diffs each view and sends the page only patches. A worker cannot build real DOM, only data, and Hazel's Html value is already that data. What crosses between the threads already carries only what changed. What is still done whole on every change is the page's: evaluating each changed view, converting it to virtual DOM, and diffing it. The cheapest next step is on the page: skip what is the same.</p>
+      <p class="blurb">Hazel evaluates a program in a web worker and draws it on the page's main thread. Each fix so far, sorted by thread, and compared with a more principled idea: the worker diffs each view and sends the page only patches. A worker cannot build real DOM, only data, and Hazel's Html value is already that data. What crosses between the threads already carries only what changed. What is still done whole on every change is the page's: evaluating each changed view, converting it to virtual DOM, and diffing it. <b>Updated the same day:</b> measured in the woods, evaluating the view is about 69% of the page's time, and converting and diffing about 2%. So the next step is a cheaper view.</p>
       </div>
     </li>
     <li>
