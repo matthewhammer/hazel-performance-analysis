@@ -66,8 +66,8 @@
 
 <div class="kpis">
   <div class="kpi"><div class="v">2</div><div class="l">new slides, Witch and Scenes, with 24 new controls between them; and 2 layout bugs fixed on the way</div></div>
-  <div class="kpi"><div class="v warn">2.4–5.2 s</div><div class="l">the Witch slide redrawing after one change, with the two fixes below (it was 5.0–7.5 s)</div></div>
-  <div class="kpi"><div class="v warn">6–11 s</div><div class="l">a redraw in the witch's woods of a picture not drawn before, after two fixes below; about 1 s for one drawn before. It was 10–21 s, even when only the figure moved</div></div>
+  <div class="kpi"><div class="v warn">2.2–4.5 s</div><div class="l">the Witch slide redrawing after one change, with the three fixes below (it was 5.0–7.5 s)</div></div>
+  <div class="kpi"><div class="v warn">2.6–6.4 s</div><div class="l">a redraw in the witch's woods, each picture new, after three fixes below: 2.6–3.5 s moving the figure, 5.2–6.4 s changing the woods. It was 10–21 s</div></div>
   <div class="kpi"><div class="v good">1–3 ms</div><div class="l">the game drawing the same witch, or a scene</div></div>
 </div>
 
@@ -145,11 +145,11 @@
 <tr><td>Cat size 100 → 400; broom size 100 → 300</td><td class="n">6.1 s; 7.5 s</td><td class="n"></td></tr>
 </table></div>
 <p>Every change to the witch costs about the same, 5–7.5 s, whatever it changes. A skin press costs about 2–3 s more on the Witch slide than on Full Body, though the Witch slide is shorter (2,189 lines against 2,896). So the extra time comes from what the witch adds, not from the slide's length. Which part of it is not known yet: this slide hasn't been profiled.</p>
-<p><b>Since the two fixes below</b> (<a href="#timeline">the worker's slices</a> and <a href="#reuse">reuse</a>), each slide re-evaluates only what a change reaches. The same changes now take about half as long, single runs again:</p>
+<p><b>Since the three fixes below</b> (<a href="#timeline">the worker's slices</a>, <a href="#reuse">reuse</a> and <a href="#memo">the view's memo</a>), the same changes take about half as long, single runs again:</p>
 <ul>
-  <li><b>The witch:</b> 2.4–5.2 s.</li>
-  <li><b>Full Body's skin presses:</b> 2.0, 1.7 and 1.5 s.</li>
-  <li><b>Kids' Choice:</b> a release still takes about 0.13 s, a median of 125 ms over 12. Its worker was never on its path.</li>
+  <li><b>The witch:</b> 2.2–4.5 s; she loads in 12.9 s.</li>
+  <li><b>Full Body's skin presses:</b> 1.8, 1.5 and 1.6 s.</li>
+  <li><b>Kids' Choice:</b> a release still takes about 0.13 s, a median of 130 ms over 12.</li>
 </ul>
 <p class="note">These are single runs, one per change, so read them as sizes rather than precise numbers. Earlier issues saw a few tenths of a second between runs of the same change.</p>
 
@@ -238,10 +238,28 @@
 </table></div>
 <p>Moving the figure saves about 3 s. Changing the woods saves nothing, as it should: the woods must be evaluated again. Going back to a picture the page has drawn before now takes about 1 s: 0.95–1.07 s in the woods, 0.64–0.78 s in the forest. What is left for a new picture is mostly the page drawing it.</p>
 
+<h3 id="memo">The view's memo cost more than it saved, and a fix</h3>
+<p>With the worker reusing the woods, a profile of two new-picture changes put almost all of the time on the page, in the <code>^picture</code>'s view. A third of the view was the call memo's own work: computing each call's key, which puts every value the function reads in canonical form and hashes it, and looking it up.</p>
+<p>The memo keeps 8 calls per function, which suits Kids' Choice's few helpers. The picture's view calls its shape helper once per shape, about 600 times. So it missed on every call and still paid for every key.</p>
+<div class="scroll"><table>
+<tr><th>Woods, figure size, each picture new, four runs</th><th>Release to redraw</th><th>Kids' Choice, median of 12</th></tr>
+<tr><td>The memo as it was</td><td class="n">6.5, 6.1, 7.3, 6.2 s</td><td class="n">125 ms</td></tr>
+<tr><td>Keeping 1,024 calls per function, not 8</td><td class="n">10.3, 9.0, 9.7, 12.2 s</td><td class="n"></td></tr>
+<tr><td>The memo off</td><td class="n">2.4, 2.4, 2.6, 2.9 s</td><td class="n">167.5 ms</td></tr>
+<tr><td>The memo giving up on a function that keeps missing (kept)</td><td class="n">3.5, 3.2, 2.6, 3.3 s</td><td class="n">130 ms</td></tr>
+</table></div>
+<p>A bigger memo was slower, since a lookup scans the stored entries. With the memo off, the woods were fast but Kids' Choice lost the 40 ms the memo was made to save.</p>
+<p><b>Fixed</b> (#2635 <code>126f595ce9</code>, #2597 <code>498cf299ea</code>): once a function has missed 24 times for each time it hit, it is no longer looked up or recorded. A function that hits stays memoized.</p>
+<ul>
+  <li><b>The woods:</b> about as fast as with the memo off. Changing the woods themselves went from 8.3–10.7 s to 5.2–6.4 s.</li>
+  <li><b>Kids' Choice:</b> keeps its reuse.</li>
+  <li><b>Test:</b> a new test checks that a function whose every call is new stops being looked up while one that hits is still reused. It fails with the rule turned off.</li>
+</ul>
+
 <h3>Earlier lessons, checked against this slide</h3>
 <ul>
   <li><b>The worker reuses what did not change (<a href="../001/">issue 001</a>).</b> Moving the figure leaves the scene's code and its inputs as they were, so the woods should come from the cache. They weren't: every change evaluated all 610,670 steps again, because a recursive helper's name leaked out of its <code>let</code> (above). Fixed, a figure-size change now re-evaluates only the figure.</li>
-  <li><b>A view re-evaluates only the calls whose inputs changed (001).</b> This was made for Kids' Choice, whose face is a few helper calls, and it keeps the last 8 calls of each helper. The picture's view calls its shape helper about 600 times. Keeping 1,024 calls changed nothing measurable, so the view's cost is not only in those calls. Where the rest is, is open.</li>
+  <li><b>A view re-evaluates only the calls whose inputs changed (001).</b> This was made for Kids' Choice, whose face is a few helper calls, and it keeps the last 8 calls of each helper. The picture's view calls its shape helper about 600 times. Keeping 1,024 calls didn't help. What did was giving up on a function that keeps missing (above).</li>
   <li><b>Profiled times overstate code made of many small calls (001).</b> It held here too, as the note above shows.</li>
   <li><b>A trap in the measuring harness.</b> Timed in node, incremental evaluation came out 7–15 times slower than fresh on Hands and Eyes.
     <ul>
@@ -254,7 +272,8 @@
 <h2 id="next">What next</h2>
 <ul>
   <li><b>A fix for <code>dev</code>:</b> the same one-line statics change, with its two tests.</li>
-  <li><b>The page's redraw of a new picture</b>, now the largest part of a woods change: 5.7–6.6 s.</li>
+  <li><b>The page's redraw of a new picture</b>, still most of a woods change: about 2 s of each 2.6–3.5 s figure change.</li>
+  <li><b>#2597:</b> the Scenes slide still takes about 5 minutes to draw its first picture there (281 s with all three fixes). That is the main thread, without #2469's speedups.</li>
   <li><b>A cheaper <code>^picture</code> view:</b> less work per shape, or an unchanged shape's SVG element reused.</li>
   <li><b>A profile of a Witch slide redraw</b>, to find where its extra 2–3 s over Full Body goes.</li>
   <li><b>Full Body's shoe labels</b>, so they fit their line.</li>
