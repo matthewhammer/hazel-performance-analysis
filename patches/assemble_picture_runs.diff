@@ -1,0 +1,63 @@
+--- assemble.py.bak-runs	2026-10-12 09:17:52.645896985 -0600
++++ assemble.py	2026-10-12 09:24:27.922423897 -0600
+@@ -68,6 +68,60 @@
+            stroke = (width = 0., color = "none")))]
+ } in""")
+ 
++# ^picture draws in runs: see the comment in the replacement
++drawing = sub1(drawing, """    let view_box = fun pic : Picture ->
++      let start =
++        case pic
++        | [] => (0., 0., 0., 0.)
++        | s :: _ =>
++          case vertices_of(s)
++          | [] => (0., 0., 0., 0.)
++          | v :: _ => let (x, y) = v.at in (x, y, x, y)
++          end
++        end in
++      let (x0, y0, x1, y1) = bounds((start, pic)) in""",
++"""    # The shapes in runs of 100, each run's nodes made by one call and its #
++    # box by another. A view's calls are remembered by their arguments, #
++    # so a redraw where most shapes are the same reuses most runs: moving #
++    # a figure in front of a big scene draws the figure's run again, not #
++    # the scene's. #
++    let split : (Int, Picture) -> (Picture, Picture) =
++      fun (n, ss) ->
++        case ss
++        | [] => ([], [])
++        | s :: tl =>
++          if n == 0 then ([], ss)
++          else let (a, b) = split((n - 1, tl)) in (s :: a, b)
++        end;
++    let runs : Picture -> [Picture] =
++      fun ss ->
++        case ss | [] => [] | _ => let (r, rest) = split((100, ss)) in r :: runs(rest) end;
++    let run_nodes = fun r : Picture -> shape_nodes(r);
++    let run_box = fun r : Picture ->
++      bounds(((infinity, infinity, neg_infinity, neg_infinity), r));
++    let union = fun ((a0, a1, a2, a3), (b0, b1, b2, b3))
++        : ((Float, Float, Float, Float), (Float, Float, Float, Float)) ->
++      ((if b0 <. a0 then b0 else a0), (if b1 <. a1 then b1 else a1),
++       (if b2 >. a2 then b2 else a2), (if b3 >. a3 then b3 else a3));
++    let boxes : ((Float, Float, Float, Float), [Picture]) -> (Float, Float, Float, Float) =
++      fun (b, rs) -> case rs | [] => b | r :: tl => boxes((union((b, run_box(r))), tl)) end;
++    let view_box = fun rs : [Picture] ->
++      let (b0, b1, b2, b3) = boxes(((infinity, infinity, neg_infinity, neg_infinity), rs)) in
++      # no point at all: the empty box #
++      let (x0, y0, x1, y1) = if b0 >. b2 then (0., 0., 0., 0.) else (b0, b1, b2, b3) in""")
++drawing = sub1(drawing, """        | Some(Val(pic)) =>
++          Html.node("svg",
++            [Attr.create("viewBox", view_box(pic)), Attr.width("320"),
++             Attr.height("440"),
++             Attr.style([("border", "1px solid #ccc"), ("background", "#fafafa")])],
++            shape_nodes(pic))""", """        | Some(Val(pic)) =>
++          let rs = runs(pic) in
++          Html.node("svg",
++            [Attr.create("viewBox", view_box(rs)), Attr.width("320"),
++             Attr.height("440"),
++             Attr.style([("border", "1px solid #ccc"), ("background", "#fafafa")])],
++            concat(map((rs, run_nodes))))""")
++
+ def types(*extra):
+     t = """# THE PICTURE, AS TYPES #
+ 
