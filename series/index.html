@@ -36,7 +36,7 @@
       <div>
       <div class="num">Issue 004 · 2026-10-11</div>
       <div class="title"><a href="004/">The witch and her woods, ported to Hazel</a></div>
-      <p class="blurb">M's witch is now a Livelit Playground slide, with her colors, her nose, her cat and her broom, and her woods and three more of the game's backgrounds are a Scenes slide. A witch redraw takes 5–7.5 s. One in the woods took 10–21 s, even when only the figure moved, against 1–3 ms in the game. A message timeline found the eval worker idle more than half that time; fixed, the woods take 3.6–9.4 s.</p>
+      <p class="blurb">M's witch is now a Livelit Playground slide, with her colors, her nose, her cat and her broom, and her woods and three more of the game's backgrounds are a Scenes slide. A witch redraw takes 5–7.5 s. One in the woods took 10–21 s, even when only the figure moved, against 1–3 ms in the game. A message timeline found two causes, both now fixed. The eval worker sat idle more than half the time, and a recursive helper's name leaking out of its <code>let</code> stopped anything from being reused.</p>
       </div>
     </li>
     <li>

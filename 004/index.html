@@ -66,8 +66,8 @@
 
 <div class="kpis">
   <div class="kpi"><div class="v">2</div><div class="l">new slides, Witch and Scenes, with 24 new controls between them; and 2 layout bugs fixed on the way</div></div>
-  <div class="kpi"><div class="v warn">5.0–7.5 s</div><div class="l">the Witch slide redrawing after one change (14.5 s to load)</div></div>
-  <div class="kpi"><div class="v warn">3.6–9.4 s</div><div class="l">a redraw in the witch's woods since the worker fix below; it was 10–21 s, even when only the figure moved</div></div>
+  <div class="kpi"><div class="v warn">2.4–5.2 s</div><div class="l">the Witch slide redrawing after one change, with the two fixes below (it was 5.0–7.5 s)</div></div>
+  <div class="kpi"><div class="v warn">6–11 s</div><div class="l">a redraw in the witch's woods of a picture not drawn before, after two fixes below; about 1 s for one drawn before. It was 10–21 s, even when only the figure moved</div></div>
   <div class="kpi"><div class="v good">1–3 ms</div><div class="l">the game drawing the same witch, or a scene</div></div>
 </div>
 
@@ -145,6 +145,12 @@
 <tr><td>Cat size 100 → 400; broom size 100 → 300</td><td class="n">6.1 s; 7.5 s</td><td class="n"></td></tr>
 </table></div>
 <p>Every change to the witch costs about the same, 5–7.5 s, whatever it changes. A skin press costs about 2–3 s more on the Witch slide than on Full Body, though the Witch slide is shorter (2,189 lines against 2,896). So the extra time comes from what the witch adds, not from the slide's length. Which part of it is not known yet: this slide hasn't been profiled.</p>
+<p><b>Since the two fixes below</b> (<a href="#timeline">the worker's slices</a> and <a href="#reuse">reuse</a>), each slide re-evaluates only what a change reaches. The same changes now take about half as long, single runs again:</p>
+<ul>
+  <li><b>The witch:</b> 2.4–5.2 s.</li>
+  <li><b>Full Body's skin presses:</b> 2.0, 1.7 and 1.5 s.</li>
+  <li><b>Kids' Choice:</b> a release still takes about 0.13 s, a median of 125 ms over 12. Its worker was never on its path.</li>
+</ul>
 <p class="note">These are single runs, one per change, so read them as sizes rather than precise numbers. Earlier issues saw a few tenths of a second between runs of the same change.</p>
 
 <h3>The Scenes slide</h3>
@@ -210,9 +216,31 @@
 <p>Kids' Choice, issue 001's slider, is unchanged: release to face has a median of 138 ms over 12 releases. On that slide the worker is not on the face's path.</p>
 <p class="note">On #2597, which lacks #2469's speedups, the Scenes slide takes about 5 minutes to draw its first picture, with or without the fix (297 and 301 s). The page is too busy even to answer a script. The Witch slide takes 172 s there. That is the main thread, not the worker.</p>
 
+<h3 id="reuse">Why nothing was reused, and a fix</h3>
+<p>The next question was which variable broke reuse. The worker logged, again only for this, every top-level binding it evaluated again, and why its definition's reuse check failed. Followed back from the woods, the chain started at the top of the slide:</p>
+<ul>
+  <li><b>The <code>Drawing</code> library was never reused.</b> Its check found variables with no source at all: <code>grow_all</code>, <code>bounds</code>, <code>coords</code>, <code>shape_nodes</code> and the rest of its own recursive helpers.</li>
+  <li><b>Every control reads <code>Drawing</code></b> (<code>Drawing.^slider</code>, <code>Drawing.^choice</code>). So every control was evaluated again, and everything that reads a control after it.</li>
+  <li><b>The woods' own function failed the same way,</b> on <code>grow</code>, its dead trees' recursive helper.</li>
+</ul>
+<p>The cause is in statics, which works out each expression's free variables, the ones the reuse check compares. A recursive function is compiled into a fixpoint that binds its own name. Statics already dropped that name from the fixpoint's free variables, with a comment saying that leaving it in breaks reuse. But the <code>let</code> around the fixpoint still took its definition's free variables whole, so the name leaked into every expression around it. A slide's library is such an expression, and every slide has one.</p>
+<p><b>Fixed</b> (#2635 <code>4b964e6660</code>, #2597 <code>a1a148278e</code>): a recursive <code>let</code>'s free variables drop the names its fixpoint binds.</p>
+<ul>
+  <li><b>What's left to evaluate:</b> after a figure-size change, the worker now re-evaluates 5 bindings, the figure and what reads it. Before, it was everything after the library.</li>
+  <li><b>Tests:</b> two new tests reuse a module with a recursive member, and a function with a recursive helper inside, after an unrelated edit. Both fail without the fix.</li>
+  <li><b>Suite:</b> the full test suite has the same 9 failures with and without it.</li>
+  <li><b>Upstream:</b> <code>dev</code> has the same code, so it has the same bug.</li>
+</ul>
+<div class="scroll"><table>
+<tr><th>Woods, each change a new picture, four runs</th><th>Without the fix</th><th>With it</th></tr>
+<tr><td>Figure size (the woods unchanged)</td><td class="n">8.4, 9.9, 9.0, 10.7 s</td><td class="n">6.5, 6.1, 7.3, 6.2 s</td></tr>
+<tr><td>Skull eye size (the woods changed)</td><td class="n">8.3, 10.2, 8.8, 10.3 s</td><td class="n">8.3, 10.2, 9.2, 10.7 s</td></tr>
+</table></div>
+<p>Moving the figure saves about 3 s. Changing the woods saves nothing, as it should: the woods must be evaluated again. Going back to a picture the page has drawn before now takes about 1 s: 0.95–1.07 s in the woods, 0.64–0.78 s in the forest. What is left for a new picture is mostly the page drawing it.</p>
+
 <h3>Earlier lessons, checked against this slide</h3>
 <ul>
-  <li><b>The worker reuses what did not change (<a href="../001/">issue 001</a>).</b> Moving the figure leaves the scene's code and its inputs as they were, so the woods should come from the cache. The timeline above shows they don't: every change evaluates all 610,670 steps again. Which changed variable the reuse check sees is the next question.</li>
+  <li><b>The worker reuses what did not change (<a href="../001/">issue 001</a>).</b> Moving the figure leaves the scene's code and its inputs as they were, so the woods should come from the cache. They weren't: every change evaluated all 610,670 steps again, because a recursive helper's name leaked out of its <code>let</code> (above). Fixed, a figure-size change now re-evaluates only the figure.</li>
   <li><b>A view re-evaluates only the calls whose inputs changed (001).</b> This was made for Kids' Choice, whose face is a few helper calls, and it keeps the last 8 calls of each helper. The picture's view calls its shape helper about 600 times. Keeping 1,024 calls changed nothing measurable, so the view's cost is not only in those calls. Where the rest is, is open.</li>
   <li><b>Profiled times overstate code made of many small calls (001).</b> It held here too, as the note above shows.</li>
   <li><b>A trap in the measuring harness.</b> Timed in node, incremental evaluation came out 7–15 times slower than fresh on Hands and Eyes.
@@ -225,7 +253,7 @@
 
 <h2 id="next">What next</h2>
 <ul>
-  <li><b>Why the worker evaluates the unchanged woods again.</b> The checks fail mostly on a changed variable (199) or a missing entry (428). Next is to find which variable it is. If the woods were reused, most of the worker's remaining 2 s per change would go.</li>
+  <li><b>A fix for <code>dev</code>:</b> the same one-line statics change, with its two tests.</li>
   <li><b>The page's redraw of a new picture</b>, now the largest part of a woods change: 5.7–6.6 s.</li>
   <li><b>A cheaper <code>^picture</code> view:</b> less work per shape, or an unchanged shape's SVG element reused.</li>
   <li><b>A profile of a Witch slide redraw</b>, to find where its extra 2–3 s over Full Body goes.</li>
