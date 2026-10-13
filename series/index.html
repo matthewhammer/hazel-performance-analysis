@@ -40,6 +40,14 @@
   <p class="sub">Notes on making <a href="https://hazel.org">Hazel</a> responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed. Matthew Hammer.</p>
   <ol class="issues" reversed>
     <li>
+      <a class="thumb" href="010/"><img class="light" src="010/img/thumb-light.svg" alt="Two pictures from the Livelit Playground after a smile slider edit, Full Body and the witch, with the shapes the edit changed in colour and the rest in grey: 8 of 49 shapes and 16 of 133, the face, the hair and, on the witch, the hat."><img class="dark" src="010/img/thumb-dark.svg" alt="Two pictures from the Livelit Playground after a smile slider edit, Full Body and the witch, with the shapes the edit changed in colour and the rest in grey: 8 of 49 shapes and 16 of 133, the face, the hair and, on the witch, the hat."></a>
+      <div>
+      <div class="num">Issue 010 · 2026-10-13</div>
+      <div class="title"><a href="010/">What a slider change touches</a></div>
+      <p class="blurb">Which parts of the picture does a slider change, and can Hazel tell them from the rest? On three Livelit Playground slides, a slider edit changes 5 to 16% of the picture's shapes, yet Hazel evaluates the whole picture again (issue 009). Naming each call by position, as Incremental Computation with Names names allocations in its interpreter, and comparing its inputs with the run before: 75 to 84% of the steps Hazel takes today are in calls whose inputs did not change. Preliminary: steps, with every check free, not times.</p>
+      </div>
+    </li>
+    <li>
       <a class="thumb" href="009/"><img class="light" src="009/img/thumb-light.svg" alt="For a slider edit on Full Body, 336 parts are reused with fresh ids and with names alike. Derived names kept on the values, Merkle style, cost the woods 1.7 s against 1.5 s, and keep 33,846 of the picture's 33,847 names from run to run."><img class="dark" src="009/img/thumb-dark.svg" alt="For a slider edit on Full Body, 336 parts are reused with fresh ids and with names alike. Derived names kept on the values, Merkle style, cost the woods 1.7 s against 1.5 s, and keep 33,846 of the picture's 33,847 names from run to run."></a>
       <div>
       <div class="num">Issue 009 · 2026-10-13</div>
