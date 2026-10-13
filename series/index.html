@@ -32,6 +32,14 @@
   <p class="sub">Notes on making <a href="https://hazel.org">Hazel</a> responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed. Matthew Hammer.</p>
   <ol class="issues" reversed>
     <li>
+      <a class="thumb" href="009/"><img src="009/img/thumb.png" alt="Two stacked bars for a slider edit on Full Body, with fresh ids and with names: mostly green (same by hash), a little amber (same by structure) and grey (changed); 336 parts reused either way. Below: 461,422 ids minted by the evaluator for one woods picture of 33,847 nodes. Names change how reuse is found, not what."></a>
+      <div>
+      <div class="num">Issue 009 · 2026-10-13</div>
+      <div class="title"><a href="009/">Names and reuse: what fresh ids cost Hazel</a></div>
+      <p class="blurb">How do fresh ids relate to lack of reuse? The question of Incremental Computation with Names (OOPSLA 2015), asked of Hazel. The editor names the program's syntax; statics and the evaluator mint gensyms for the rest. Analyzing a slide again renames hundreds of nodes, and naming two sites in statics cuts that by seven eighths. But the reuse check falls back to comparing structure, so the same parts are reused either way: in Hazel today, fresh ids cost time, in the check, in the 461,422 ids one woods evaluation mints, and in what crosses to the worker, not reuse.</p>
+      </div>
+    </li>
+    <li>
       <a class="thumb" href="008/"><img src="008/img/thumb.png" alt="A bar chart of one slider change on the Full Body slide: #2597, a long red bar, 8.6 seconds; #2635 showing only the GUI, 3.5 seconds; the same with the reuse check's fix, a short green bar, 1.26 seconds; #2635 with the whole program, 1.23 seconds. Below: the worker's reuse check, GUI only, about 2 seconds to 1 to 4 milliseconds, with lexemes compared in the same walk as structure."></a>
       <div>
       <div class="num">Issue 008 · 2026-10-12</div>

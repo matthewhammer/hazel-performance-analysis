@@ -14,6 +14,7 @@ A series of issues on making [Hazel](https://hazel.org) responsive enough for it
 | [006](006/) | Catching performance regressions in CI |
 | [007](007/) | Five minutes to the first picture |
 | [008](008/) | One slider, three ways: what modular editing saves |
+| [009](009/) | Names and reuse: what fresh ids cost Hazel |
 
 The performance tracking issue is [hazelgrove/hazel#2609](https://github.com/hazelgrove/hazel/issues/2609); its findings are cited by number. Most of the work is on [#2635](https://github.com/hazelgrove/hazel/pull/2635) (livelits × modular editors) and [#2597](https://github.com/hazelgrove/hazel/pull/2597) (the full livelits branch).
 
