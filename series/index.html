@@ -32,6 +32,14 @@
   <p class="sub">Notes on making <a href="https://hazel.org">Hazel</a> responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed. Matthew Hammer.</p>
   <ol class="issues" reversed>
     <li>
+      <a class="thumb" href="008/"><img src="008/img/thumb.png" alt="A bar chart of one slider change on the Full Body slide: #2597, a long red bar, 8.6 seconds; #2635 showing only the GUI, 3.5 seconds; the same with the reuse check's fix, a short green bar, 1.26 seconds; #2635 with the whole program, 1.23 seconds. Below: the worker's reuse check, GUI only, about 2 seconds to 1 to 4 milliseconds, with lexemes compared in the same walk as structure."></a>
+      <div>
+      <div class="num">Issue 008 · 2026-10-12</div>
+      <div class="title"><a href="008/">One slider, three ways: what modular editing saves</a></div>
+      <p class="blurb">One slider change on the Livelit Playground's Full Body slide, three ways. On #2597, without modular editing, it takes 8.6 s, mostly statics on the whole program. On #2635, with it, 1.2 s. Showing only the slider and the picture should be faster still, but it took 3.5 s: opening them as cells gives the picture new ids on every change, and the worker's reuse check then compared lexemes in a walk that was quadratic over the program's <code>let</code>s. Comparing them in the same memoized walk as structure, now on #2635, brings it to 1.26 s, as fast as the whole program.</p>
+      </div>
+    </li>
+    <li>
       <a class="thumb" href="007/"><img src="007/img/thumb.png" alt="A bar chart of the Scenes slide's first picture, cold: #2597, a long red bar, 287.5 seconds; the same with one commit, a short green bar, 17.4 seconds; #2635, 12.5 seconds. Below: worker messages the page redrew for while loading, 2,520 down to 86, from one commit from #2469."></a>
       <div>
       <div class="num">Issue 007 · 2026-10-12</div>
