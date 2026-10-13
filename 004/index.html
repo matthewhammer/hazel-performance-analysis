@@ -219,6 +219,7 @@
 </table></div>
 <p>Kids' Choice, issue 001's slider, is unchanged: release to face has a median of 138 ms over 12 releases. On that slide the worker is not on the face's path.</p>
 <p class="note">On #2597, which lacks #2469's speedups, the Scenes slide takes about 5 minutes to draw its first picture, with or without the fix (297 and 301 s). The page is too busy even to answer a script. The Witch slide takes 172 s there. That is the main thread, not the worker.</p>
+<p class="note"><b>Later on 2026-10-12:</b> still true, measured again cold (Scenes 287.5 s, Witch 173.1 s), and now explained in <a href="../007/">issue 007</a>. On #2597 the page runs a full update for every partial result the worker streams, re-projecting the whole program each time, and the worker streams after every slice. One commit from #2469, <a href="https://github.com/hazelgrove/hazel/commit/c07bdacead"><code>c07bdacead</code></a>, brings Scenes to about 17 s and Witch to about 19 s in a copy of #2597.</p>
 
 <h3 id="reuse">Why nothing was reused, and a fix</h3>
 <p>The next question was which variable broke reuse. The worker logged, again only for this, every top-level binding it evaluated again, and why its definition's reuse check failed. Followed back from the woods, the chain started at the top of the slide:</p>
@@ -319,7 +320,7 @@
 <ul>
   <li><b>A fix for <code>dev</code>:</b> the same one-line statics change, with its two tests.</li>
   <li><b>The page's redraw of a new picture</b>, still most of a woods change: the picture's view builds an Html node for each of ~600 shapes on every change (<a href="#casts">above</a>).</li>
-  <li><b>#2597:</b> the Scenes slide still takes about 5 minutes to draw its first picture there (281 s with all three fixes). That is the main thread, without #2469's speedups.</li>
+  <li><b>#2597:</b> the Scenes slide still takes about 5 minutes to draw its first picture there (281 s with all three fixes). That is the main thread, without #2469's speedups. <i>Later on 2026-10-12: why, and a one-commit fix (287.5 → about 17 s), in <a href="../007/">issue 007</a>.</i></li>
   <li><b>A cheaper <code>^picture</code> view:</b> less work per shape, or an unchanged shape's SVG element reused. <i>Done 2026-10-12, though the work was per point, not per shape (<a href="#update">above</a>).</i></li>
   <li><b>A profile of a Witch slide redraw</b>, to find where its extra 2–3 s over Full Body goes.</li>
   <li><b>Full Body's shoe labels</b>, so they fit their line.</li>
