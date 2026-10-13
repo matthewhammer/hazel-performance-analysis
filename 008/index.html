@@ -74,6 +74,7 @@
     </ul></li>
   <li><b>So the hypothesis holds for analysis, not yet for display.</b> Not reprocessing unrelated code is the big win, and statics per item already does it. Hiding the unrelated code saves nothing yet: with the whole program on screen, #2635 spends only 9 ms per change on the code view, because it is cached. And dividing the program costs more than hiding saves.</li>
   <li><b>On #2597 the figure is rebuilt rather than patched:</b> its elements are new after every change. That costs the page more, and it fooled the first measurements here (<a href="#measuring">below</a>).</li>
+  <li><b>One fix in the worker's reuse check makes B as fast as C: 1.26 s against 1.23 s</b> (medians of 12, on a local branch for review). The check now compares lexemes in the same memoized walk as structure, so the 2 s becomes 1–4 ms, with exactly the same reuse decisions (<a href="#fix">below</a>).</li>
   <li><b>The worker's 2 s has one cause:</b> the open picture cell's item depends on the slider, and in the divided program it is elaborated again after every change, with fresh ids. About 120 enclosing parts of the program then differ only by ids, and each takes the reuse check's slow path. With only the slider's cell open, those slow checks fall from 122 to 4 per change. Keeping a re-analyzed cell's ids stable would fix it. A GUI-only view that keeps the program whole would avoid all three costs.</li>
 </ol>
 </div>
@@ -82,6 +83,7 @@
   <div class="kpi"><div class="v bad">8.6 s</div><div class="l">A: #2597, no modular editing</div></div>
   <div class="kpi"><div class="v good">1.2 s</div><div class="l">C: #2635, the whole program on screen</div></div>
   <div class="kpi"><div class="v warn">3.5 s</div><div class="l">B: #2635, only the slider and the picture</div></div>
+  <div class="kpi"><div class="v good">1.26 s</div><div class="l">B with the reuse check fixed</div></div>
 </div>
 
 <h2 id="setup">The three set-ups</h2>
@@ -151,6 +153,18 @@
   <li><b>In the check:</b> compare lexemes in the same memoized walk as structure, so a part that only changed ids costs one visit, not one per enclosing <code>let</code>. This also guards every other case where unchanged code arrives with new ids. The same full-trace comparison, <code>Exp.fast_equal_with_lexemes</code>, also gates several caches in the page.</li>
 </ul>
 
+<h2 id="fix">A fix for the check, tried</h2>
+<p>The check's structural comparison is cheap because it is memoized across checks, and two subterms whose hashes match are equal without a walk. The lexeme comparison had neither. So <code>Equality</code> gets a <code>~lexemes</code> option: every walker, for each sort of node, also requires the two nodes' lexemes to be equal, inside the same hash shortcut and memo. The reuse check calls <code>Exp.fast_equal_hashed_with_lexemes</code> instead of the structural comparison followed by two traces. Other callers of <code>Equality</code> are unchanged.</p>
+<div class="scroll"><table>
+<tr><th>Per change</th><th>B before</th><th>B with the fix</th><th>C with the fix</th></tr>
+<tr><td>Release to redraw (median of 12)</td><td class="n">3.5 s</td><td class="n"><b>1.26 s</b></td><td class="n">1.23 s</td></tr>
+<tr><td>The reuse check's slow path</td><td class="n">1,450–2,500 ms</td><td class="n">1–4 ms</td><td class="n">0–1 ms</td></tr>
+<tr><td>Slow matches, and parts reused</td><td class="n">122, 337</td><td class="n">122, 337</td><td class="n">1, 338</td></tr>
+</table></div>
+<p>The decisions are identical; only their cost changed. With the check cheap, a change in B also finishes before the autosave fires, so the save stopped landing in the middle of it. B's range was 1.06–1.9 s, with one change at 3.8 s.</p>
+<p>The fix is on a local branch of #2635 (<code>perf/2635-reuse-one-walk</code>, <code>cbdab791f5</code>), not pushed, for review. It adds a test that the one-walk check agrees with the trace check (the same term with new ids: equal; a lexeme-only edit: not; a real change: not). The existing test that a lexeme-only edit invalidates reuse still passes, as do the <code>Evaluator</code> (524), <code>Evaluator.Incremental</code> (46), <code>IncrSlides</code> (13), <code>CallMemo</code> (6) and <code>Equality</code> (8) groups.</p>
+<p>#2597 has no lexeme comparison in its check, so it has neither this cost nor that protection. <code>dev</code> compares lexemes by trace on every check, and without the hash shortcut, so the same fix would suit it, together with the shortcut.</p>
+
 <h2 id="measuring">Measuring it: two things that went wrong first</h2>
 <ul>
   <li><b>On #2597, a slider set by a script does nothing.</b> Setting the input's value and dispatching <code>input</code> and <code>change</code> events moves the slider on #2635, but on #2597 neither the label nor the picture changed in five minutes. A real pointer drag through WebDriver works on both, so every number here comes from real drags.</li>
@@ -159,8 +173,9 @@
 
 <h2 id="next">What next</h2>
 <ol class="ranked">
+  <li><b>Review and push the reuse check's fix</b> (<code>perf/2635-reuse-one-walk</code>) to #2635, and consider it, with the hash shortcut, for <code>dev</code>.</li>
   <li><b>Keep an open cell's ids stable when it is analyzed again</b> without its text changing, or don't analyze it again. That would remove most of B's 2 s in the worker, on any slide with cells open (<a href="#reuse">above</a>).</li>
-  <li><b>Make the reuse check's lexeme comparison as cheap as its structural one,</b> memoized in the same walk, so a part that only changed ids never costs a quadratic walk again.</li>
+
   <li><b>Keep the autosave out of a change:</b> save when the page is idle, not on a timer that can fall in the middle of an update.</li>
   <li><b>Give the cells' livelit views the view memo</b> the whole program's editor uses.</li>
   <li><b>Or a GUI-only view that keeps the program whole,</b> drawing just the chosen livelits from the whole program's editor instead of opening cells. That would avoid all three costs at once.</li>
@@ -172,7 +187,7 @@
   <li><b>Builds:</b> #2597 at <a href="https://github.com/hazelgrove/hazel/commit/a15c6f0b65"><code>a15c6f0b65</code></a> (with issue 007's fix) and #2635 at <code>57c928cef4</code>, dev builds, served locally. The Full Body slide's text is identical on both.</li>
   <li><b>Times:</b> headless Firefox over WebDriver, a fresh profile per set-up, the slide opened at <code>/fresh</code>. Each change was a real drag of the "arm length" slider to a new length, the same twelve lengths in each set-up. The time runs from the slider's <code>pointerup</code> to the first moment a large picture's markup differed from before the drag, checked every 200 ms in the page. One set-up at a time, on one laptop.</li>
   <li><b>B's set-up:</b> the outline switched to 🖼️ UX mode, then every GUI row's 🖼️ chip switched off except "arm_length" and "drawn", by clicking the outline's own controls.</li>
-  <li><b>The reuse counts:</b> a temporary build of #2635 (local branch <code>perf/2635-reuse-diag</code>, not pushed) that counted <code>IncrEval.reuse_check</code>'s outcomes and printed them per request. Firefox copied the worker's console to a file (<code>devtools.console.stdout.content</code>). Its times for B match the plain build's.</li>
+  <li><b>The reuse counts:</b> a temporary build of #2635 (local branch <code>perf/2635-reuse-diag</code>, not pushed) that counted <code>IncrEval.reuse_check</code>'s outcomes and printed them per request. Firefox copied the worker's console to a file (<code>devtools.console.stdout.content</code>). Its own sampling (an id trace of a few large subterms per change) slowed it, so the times in this issue come from builds without it.</li>
   <li><b>Profiles:</b> the Gecko profiler, sampling every 1 ms, over three changes per set-up. The windows run from each <code>pointerup</code> to its redraw, from marks the page set. The worker's evaluation is <code>run_scheduled_slice</code>, and its reuse check <code>reuse_check</code>.</li>
 </ul>
 
