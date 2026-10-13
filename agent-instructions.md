@@ -22,6 +22,7 @@ The series is **not our working record.** That is `hazel-work-notes`, a private 
 
 | What | Where |
 |---|---|
+| This repository | https://github.com/matthewhammer/hazel-performance-analysis (public), checked out at `~/hazel-perf-report`. |
 | The issues | `NNN/index.html`, with images in `NNN/img/`. Issue 001 is the root `index.html` (it began as a single report). |
 | The series index | `series/index.html`, a card per issue. `series/NNN` are links to the issues. |
 | Patches tried and not kept | `patches/`, named for what they do. |
@@ -57,6 +58,6 @@ An issue is drafted here and previewed locally. **Matthew reviews it and says wh
 1. Copy the issue, and any issues with new dated notes, to `~/matthewhammer.github.io/hazel/performance-analysis/`. Update the series index there with the new card.
 2. Give the card a thumbnail (`NNN/img/thumb.png`), rendered in headless Firefox, that says the issue's point at a glance.
 3. Push, wait for the Pages run, and check the live pages over HTTP, not HTTPS.
-4. Commit here too, saying what was published.
+4. Commit here too, saying what was published, and push. This repository is public, so what is pushed is published as well: push a draft only once Matthew has seen it.
 
 Ask before posting to GitHub, for example a finding on #2609. Post with `gh ... --body-file` and a quoted heredoc.
