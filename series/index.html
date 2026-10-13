@@ -32,6 +32,14 @@
   <p class="sub">Notes on making <a href="https://hazel.org">Hazel</a> responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed. Matthew Hammer.</p>
   <ol class="issues" reversed>
     <li>
+      <a class="thumb" href="007/"><img src="007/img/thumb.png" alt="A bar chart of the Scenes slide's first picture, cold: #2597, a long red bar, 287.5 seconds; the same with one commit, a short green bar, 17.4 seconds; #2635, 12.5 seconds. Below: worker messages the page redrew for while loading, 2,520 down to 86, from one commit from #2469."></a>
+      <div>
+      <div class="num">Issue 007 · 2026-10-12</div>
+      <div class="title"><a href="007/">Five minutes to the first picture</a></div>
+      <p class="blurb">On #2597, the full livelits branch, the Livelit Playground's Scenes slide took about five minutes to draw its first picture. It really does, 287.5 s against 12.5 s on #2635, and the reason is that the page redraws everything for every message from the worker. #2597's worker sends one after every slice of its evaluation: 2,520 while the slide loads, each costing the page about 140 ms, mostly rebuilding the code editor's view of the whole program. The worker sits idle while the page catches up. One commit from #2469, which sends at most one message every 100 ms, brings the first picture to about 17 s on a copy of #2597.</p>
+      </div>
+    </li>
+    <li>
       <a class="thumb" href="006/"><img src="006/img/thumb.png" alt="Two bar charts. A time: five runs of the full test job, bars of uneven height, 1,110 to 1,453 seconds. A count: evaluator steps, five equal bars, 206,834 every time. Below: only a count can fail a build."></a>
       <div>
       <div class="num">Issue 006 · 2026-10-12</div>
