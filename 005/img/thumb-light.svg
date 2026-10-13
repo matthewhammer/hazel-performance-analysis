@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 300" width="450" height="300" font-family="'DejaVu Sans', system-ui, sans-serif" font-size="13">
+<style>
+  .f1f2328 { fill: #1f2328; } .f5b6470 { fill: #5b6470; } .fb91c1c { fill: #b91c1c; } .s15803d { stroke: #15803d; } .s5b6470 { stroke: #5b6470; } .s6d28d9 { stroke: #6d28d9; } .sb91c1c { stroke: #b91c1c; } .scfcac0 { stroke: #cfcac0; }
+</style>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="f5b6470" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+
+<text class="f5b6470" x="16" y="28" font-weight="700" font-size="13">MAIN THREAD (the page)</text>
+<rect class="s6d28d9" x="12" y="42" width="140" height="64" rx="9" fill="none" stroke-width="1.6"/>
+<text class="f1f2328" x="82" y="70" text-anchor="middle">request:</text><text class="f1f2328" x="82" y="90" text-anchor="middle">only what's new</text>
+<rect class="sb91c1c" x="176" y="42" width="262" height="64" rx="9" fill="none" stroke-width="2.2"/>
+<text class="f1f2328" x="307" y="70" text-anchor="middle">view → Html → vdom → DOM</text><text class="fb91c1c" x="307" y="90" text-anchor="middle">whole, for each changed view</text>
+<line class="scfcac0" x1="16" y1="150" x2="434" y2="150" stroke-dasharray="6 5"/>
+<text class="f5b6470" x="16" y="186" font-weight="700" font-size="13">EVAL WORKER</text>
+<rect class="s15803d" x="95" y="200" width="250" height="64" rx="9" fill="none" stroke-width="1.6"/>
+<text class="f1f2328" x="220" y="228" text-anchor="middle">evaluate, reusing by hash;</text><text class="f1f2328" x="220" y="248" text-anchor="middle">answer: only what's new</text>
+<g class="s5b6470" stroke-width="1.8" fill="none" marker-end="url(#ah)"><path d="M90,106 C110,160 125,180 150,198"/><path d="M300,198 C305,170 305,140 307,108"/></g>
+<text class="f5b6470" x="225" y="290" text-anchor="middle" font-size="12">no DOM in a worker: only data crosses</text>
+</svg>

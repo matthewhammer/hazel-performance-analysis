@@ -59,7 +59,7 @@ A published issue is never rewritten. To correct or extend it:
 An issue is drafted here and previewed locally. **Matthew reviews it and says when to publish.** Then:
 
 1. Copy the issue, and any issues with new dated notes, to `~/matthewhammer.github.io/hazel/performance-analysis/`. Update the series index there with the new card.
-2. Give the card a thumbnail (`NNN/img/thumb.png`), rendered in headless Firefox, that says the issue's point at a glance.
+2. Give the card a thumbnail that says the issue's point at a glance: a transparent SVG, `NNN/img/thumb.svg`, with its light colours in plain rules and its dark ones in one `@media (prefers-color-scheme: dark)` block, split with `tools/theme_variants.py` into `thumb-light.svg` and `thumb-dark.svg`, both in the card as `img.light` and `img.dark`. Check both on a white and on a dark card. Only a picture of the app itself (002 to 004) stays a PNG on a light ground.
 3. Push, wait for the Pages run, and check the live pages over HTTP, not HTTPS.
 4. Commit here too, saying what was published, and push. This repository is public, so what is pushed is published as well: push a draft only once Matthew has seen it.
 

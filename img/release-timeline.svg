@@ -5,9 +5,11 @@
     font-family: system-ui, "Segoe UI", Roboto, sans-serif; }
   .pipe text { fill: var(--ink); font-size: 14px; }
   .pipe .muted { fill: var(--muted); }
+  @media (prefers-color-scheme: dark) {
+    svg { --ink: #e8e6e3; --muted: #a2a9b3; --idle: #475569; --accent: #c4b5fd; }
+  }
   @media (prefers-reduced-motion: reduce) { .packet { display: none; } }
 </style>
-<rect x="-20" y="-20" width="960" height="400" fill="#fbfaf7"/>
   <defs>
     <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="currentColor"/></marker>
   </defs>
