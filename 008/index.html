@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One Slider, Three Ways</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+  .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi .v { font-size: 1.7em; font-weight: 700; }
+  .kpi .l { color: var(--muted); font-size: 0.9em; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure { margin: 18px 0; }
+  figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 10px; display: block; background: #ffffff; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 72ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .step { border-left: 3px solid var(--line); padding-left: 14px; }
+  .kicker { margin: 0; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8em; }
+  ol.ranked > li { margin: 10px 0; }
+  .dedicated { margin: 0 0 18px; font-style: italic; color: var(--muted); }
+  .dedication { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px; }
+  .dedication p { font-size: 1.05em; }
+</style>
+</head>
+
+<body>
+<main>
+
+<p class="series"><a href="../">Hazel performance analysis</a> · Issue 008 · 2026-10-12 · <b>draft</b></p>
+<h1>One slider, three ways: what modular editing saves</h1>
+<p class="sub">A question about the two livelits branches. <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> has no modular editing, and <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> has it, from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> (modular editors). How long does one slider change take on a complex picture, the Livelit Playground's Full Body slide? The hypothesis: #2635 is much faster, especially in its UX outline mode, showing only the slider and the picture, because it doesn't reprocess the unrelated code. A third set-up separates the two halves of that hypothesis.</p>
+
+<div class="headline">
+<p><b>Short answers.</b></p>
+<ol>
+  <li><b>Modular editing makes the change about 7× faster.</b> From releasing the slider to the redrawn figure took a median of 8.6 s on #2597, and 1.2 s on #2635 with the whole program on screen (12 changes each). On #2597 the page analyzes the whole program again for every change: 5.4 s of statics per change, profiled. On #2635 it analyzes only the changed item, in 38 ms.</li>
+  <li><b>Showing only the GUI, as it's built today, makes the change about 3× slower again: 3.5 s.</b> In UX mode, the outline opens the slider and the picture as cells, and that divides the program into cells and the rest. The divided program costs more per change:
+    <ul>
+      <li>the worker's reuse check takes 2.2 s instead of 0.05 s, and the worker evaluates about twice as much;</li>
+      <li>the page's autosave lands inside the change, turning the whole program into text and storing it (0.55 s);</li>
+      <li>the cells' livelit views run without their memo (0.46 s), and the cells redraw their code (0.48 s).</li>
+    </ul></li>
+  <li><b>So the hypothesis holds for analysis, not yet for display.</b> Not reprocessing unrelated code is the big win, and statics per item already does it. Hiding the unrelated code saves nothing yet: with the whole program on screen, #2635 spends only 9 ms per change on the code view, because it is cached. And dividing the program costs more than hiding saves.</li>
+  <li><b>On #2597 the figure is rebuilt rather than patched:</b> its elements are new after every change. That costs the page more, and it fooled the first measurements here (<a href="#measuring">below</a>).</li>
+  <li><b>The divided program's costs look fixable,</b> the worker's reuse first. A GUI-only view that keeps the program whole would avoid all three.</li>
+</ol>
+</div>
+
+<div class="kpis">
+  <div class="kpi"><div class="v bad">8.6 s</div><div class="l">A: #2597, no modular editing</div></div>
+  <div class="kpi"><div class="v good">1.2 s</div><div class="l">C: #2635, the whole program on screen</div></div>
+  <div class="kpi"><div class="v warn">3.5 s</div><div class="l">B: #2635, only the slider and the picture</div></div>
+</div>
+
+<h2 id="setup">The three set-ups</h2>
+<p>The Full Body slide draws a whole figure from about forty livelits: polygon editors for the shirt, pants, head, hair and shoes, choices and sliders for everything else, and a final <code>^picture</code> of it all. Its text is the same on both branches. The change measured is one drag of the "arm length" slider, to a length not drawn before, so no change could be served from a cache of earlier pictures.</p>
+<div class="scroll"><table>
+<tr><th></th><th>Branch</th><th>On screen</th></tr>
+<tr><td><b>A</b></td><td>#2597, no modular editing</td><td>the whole program, with its livelits</td></tr>
+<tr><td><b>C</b></td><td>#2635, modular editing</td><td>the whole program, with its livelits (the outline's 🏗️ dev mode)</td></tr>
+<tr><td><b>B</b></td><td>#2635, modular editing</td><td>only two cells: the slider and the picture (the outline's 🖼️ UX mode, with every other GUI row switched off)</td></tr>
+</table></div>
+<p>A against C is what modular editing does. C against B is what showing only the GUI does on top of it.</p>
+
+<h2 id="times">How long a change takes</h2>
+<p>From the slider's release to the redrawn figure, twelve changes in each set-up, after two warm-up changes:</p>
+<div class="scroll"><table>
+<tr><th></th><th>Median</th><th>Range</th><th>Against C</th></tr>
+<tr><td><b>A</b>: #2597</td><td class="n"><b>8.6 s</b></td><td class="n">7.4–10.5 s</td><td class="n">7.2×</td></tr>
+<tr><td><b>C</b>: #2635, whole program</td><td class="n"><b>1.2 s</b></td><td class="n">0.9–1.8 s</td><td class="n">1</td></tr>
+<tr><td><b>B</b>: #2635, slider and picture only</td><td class="n"><b>3.5 s</b></td><td class="n">2.9–5.0 s</td><td class="n">2.9×</td></tr>
+</table></div>
+<p>The ranges don't overlap, so the order is not noise. A has <a href="../007/"><code>c07bdacead</code></a> (issue 007), so its worker's stream messages are throttled as on #2635.</p>
+
+<h2 id="where">Where the time goes</h2>
+<p>Three changes in each set-up were profiled, the page's main thread and the eval worker together. Times are milliseconds per change, profiled, so they run longer than the clock (the windows were 13.3, 1.8 and 4.2 s). Rows overlap: a function's time includes what it calls.</p>
+<div class="scroll"><table>
+<tr><th>Per change, profiled</th><th>A</th><th>C</th><th>B</th></tr>
+<tr><td>Release to redraw (the profiled window)</td><td class="n">13,289</td><td class="n">1,768</td><td class="n">4,150</td></tr>
+<tr><td><b>Page:</b> the whole update</td><td class="n">12,719</td><td class="n">949</td><td class="n">2,264</td></tr>
+<tr><td>— statics</td><td class="n"><b>5,405</b></td><td class="n">38</td><td class="n">4</td></tr>
+<tr><td>— the code view (<code>of_segment</code>)</td><td class="n">2,293</td><td class="n">9</td><td class="n">480</td></tr>
+<tr><td>— the program turned into text (<code>segment_to_string</code>)</td><td class="n">1,522</td><td class="n">—</td><td class="n">472</td></tr>
+<tr><td>— the autosave (<code>save_current</code>)</td><td class="n">—</td><td class="n">—</td><td class="n"><b>547</b></td></tr>
+<tr><td>— livelit views without their memo (<code>live_html</code>)</td><td class="n">840</td><td class="n">—</td><td class="n">463</td></tr>
+<tr><td>— livelit views through their memo (<code>memo_view</code>)</td><td class="n">—</td><td class="n">163</td><td class="n">—</td></tr>
+<tr><td><b>Worker:</b> the reuse check</td><td class="n">22</td><td class="n">51</td><td class="n"><b>2,210</b></td></tr>
+<tr><td><b>Worker:</b> evaluating</td><td class="n">975</td><td class="n">1,056</td><td class="n">2,174</td></tr>
+</table></div>
+
+<h3 id="a">A: the whole program, analyzed again</h3>
+<p>On #2597, a slider change edits the program's text, since the livelit's model lives in it, and the page then runs statics on the whole program from scratch. That is 5.4 s of a 13.3 s profiled change. The page also rebuilds the whole code view (2.3 s) and turns the whole program into text (1.5 s). The worker's part, about a second, is the same as on #2635. This is the cost <a href="../001/">issue 001</a> found on the much smaller Kids' Choice slide, where it was 3.5 s of statics against #2635's per-item 16 ms.</p>
+
+<h3 id="b">B: what dividing the program costs</h3>
+<p>The UX outline mode shows a GUI by opening its row as a cell: a small editor of its own. With cells open, the program is <i>divided</i>: the cells hold their items, and the rest stays in a base, and on every change the whole document is assembled again from them. Three costs follow, and none of them is in C:</p>
+<ul>
+  <li><b>The worker's reuse check, 2.2 s per change, and twice the evaluation.</b> The worker reuses what didn't change by checking each part of a new request against its cache of the last one. With the program whole, that check takes 51 ms and most of the program is reused. Divided, it takes 2.2 s, and the worker evaluates about twice as much. The likely cause is that the program assembled from the cells comes out as new objects, or with new ids, so the check must walk deep into every item before it can decide, and decides "changed" more often. The page also mints about 2.5 times as many fresh ids per change in B as in C (531 against 213 ms). This hasn't yet been confirmed by counting the checks' outcomes.</li>
+  <li><b>The autosave, 0.55 s.</b> The app saves about a second after an edit. A change in C is usually over by then. In B it isn't, and the save, which turns the divided document into text and writes it out, lands on the main thread in the middle of the change.</li>
+  <li><b>The cells' views, about 0.9 s.</b> The cells' livelit views are drawn without the view memo that the whole program's editor uses (<code>live_html</code> instead of <code>memo_view</code>), and the cells redraw their code each time (<code>of_segment</code>, 0.48 s).</li>
+</ul>
+<p>So B is slower not because it shows less, but because of how it shows less. Its picture and slider are as cheap to draw as C's, but they come from a divided program.</p>
+
+<h2 id="measuring">Measuring it: two things that went wrong first</h2>
+<ul>
+  <li><b>On #2597, a slider set by a script does nothing.</b> Setting the input's value and dispatching <code>input</code> and <code>change</code> events moves the slider on #2635, but on #2597 neither the label nor the picture changed in five minutes. A real pointer drag through WebDriver works on both, so every number here comes from real drags.</li>
+  <li><b>On #2597, the picture is rebuilt, not patched.</b> A MutationObserver watching the picture's elements saw no change on #2597, because after a change those elements are gone, and the new picture is new elements. So the redraw is detected by content instead: every 200 ms the page compares the large pictures' markup with what it was before the drag. That works whether a picture is patched or rebuilt.</li>
+</ul>
+
+<h2 id="next">What next</h2>
+<ol class="ranked">
+  <li><b>Find why the worker's reuse fails on a divided program,</b> by counting the reuse check's outcomes in B and C, and fix it. This is the largest of B's costs, and a fix would also help any slide with cells open.</li>
+  <li><b>Keep the autosave out of a change:</b> save when the page is idle, not on a timer that can fall in the middle of an update.</li>
+  <li><b>Give the cells' livelit views the view memo</b> the whole program's editor uses.</li>
+  <li><b>Or a GUI-only view that keeps the program whole,</b> drawing just the chosen livelits from the whole program's editor instead of opening cells. That would avoid all three costs at once.</li>
+  <li><b>A way to open a slide in UX mode from its address,</b> for example <code>?mode=ux&amp;show=arm_length,drawn</code>. It would make these measurements, and demos, quicker to set up than clicking 41 rows off.</li>
+</ol>
+
+<h2 id="method">How this was put together</h2>
+<ul>
+  <li><b>Builds:</b> #2597 at <a href="https://github.com/hazelgrove/hazel/commit/a15c6f0b65"><code>a15c6f0b65</code></a> (with issue 007's fix) and #2635 at <code>57c928cef4</code>, dev builds, served locally. The Full Body slide's text is identical on both.</li>
+  <li><b>Times:</b> headless Firefox over WebDriver, a fresh profile per set-up, the slide opened at <code>/fresh</code>. Each change was a real drag of the "arm length" slider to a new length, the same twelve lengths in each set-up. The time runs from the slider's <code>pointerup</code> to the first moment a large picture's markup differed from before the drag, checked every 200 ms in the page. One set-up at a time, on one laptop.</li>
+  <li><b>B's set-up:</b> the outline switched to 🖼️ UX mode, then every GUI row's 🖼️ chip switched off except "arm_length" and "drawn", by clicking the outline's own controls.</li>
+  <li><b>Profiles:</b> the Gecko profiler, sampling every 1 ms, over three changes per set-up. The windows run from each <code>pointerup</code> to its redraw, from marks the page set. The worker's evaluation is <code>run_scheduled_slice</code>, and its reuse check <code>reuse_check</code>.</li>
+</ul>
+
+</main>
+</body>
+</html>
