@@ -6,7 +6,7 @@ How Matthew and his agent write the **Hazel performance analysis** series: what 
 
 The series explains Hazel's performance to **people outside our working loop**: Cyrus, the Hazel team, and anyone else who follows the work. Each issue takes one question and answers it with measurements. Is it really that slow? Where does the time go? What fixed it, and what's left? The questions often come from a meeting with Cyrus, or from the dashboard's next steps.
 
-The series is **not our working record.** That is [`hazel-work-notes`](https://github.com/matthewhammer/hazel-work-notes): the Hazel Work Dashboard, its snapshots and our next steps, written for the two of us. So:
+The series is **not our working record.** That is `hazel-work-notes`, a private repository: the Hazel Work Dashboard, its snapshots and our next steps, written for the two of us. So:
 
 - **Write for a reader who wasn't there.** Say what the slide, the branch or the measurement is. Never rely on what was said in chat.
 - **No working chatter:** no to-do lists for ourselves, no local ports or `localhost` links, no "we tried X at 3 am". A dead end belongs in an issue only when it teaches the reader something ("tried and not kept", with its numbers).
