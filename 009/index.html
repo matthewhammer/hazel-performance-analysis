@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Names and Reuse</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+  .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi .v { font-size: 1.7em; font-weight: 700; }
+  .kpi .l { color: var(--muted); font-size: 0.9em; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure { margin: 18px 0; }
+  figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 10px; display: block; background: #ffffff; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 72ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .step { border-left: 3px solid var(--line); padding-left: 14px; }
+  .kicker { margin: 0; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8em; }
+  ol.ranked > li { margin: 10px 0; }
+  .dedicated { margin: 0 0 18px; font-style: italic; color: var(--muted); }
+  .dedication { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px; }
+  .dedication p { font-size: 1.05em; }
+
+  svg.chart { width: 100%; height: auto; display: block; font: 12.5px system-ui, sans-serif; color: var(--ink); }
+  svg.chart .ct { fill: var(--ink); font-weight: 600; font-size: 13.5px; }
+  svg.chart .cl { fill: var(--ink); }
+  svg.chart .cv { fill: var(--muted); }
+  svg.chart .cin { fill: #ffffff; font-size: 11px; font-weight: 600; }
+  svg.chart .box { fill: var(--paper); stroke: var(--line); stroke-width: 1.5; }
+  svg.chart .bt { fill: var(--ink); font-weight: 700; font-size: 14px; }
+  svg.chart .bs { fill: var(--muted); }
+  svg.chart .bn { font-weight: 700; font-size: 15px; }
+  svg.chart .good { fill: var(--good); } svg.chart .warn { fill: var(--warn); } svg.chart .bad { fill: var(--bad); }
+  .glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr)); gap: 14px; margin: 16px 0 6px; }
+  .glance figure, figure.fig { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 0; }
+  figure.fig { margin: 16px 0; }
+</style>
+</head>
+
+<body>
+<main>
+
+<p class="series"><a href="../">Hazel performance analysis</a> · Issue 009 · 2026-10-13 · <b>draft</b></p>
+<h1>Names and reuse: what fresh ids cost Hazel</h1>
+<p class="sub">How do fresh ids relate to lack of reuse in Hazel? An incremental system recognizes work it can reuse by identity, and identity is only as stable as the ids it hands out. <a href="https://arxiv.org/abs/1503.07792">Incremental Computation with Names</a> (Hammer, Dunfield, Headley, Labich, Foster, Hicks and Van Horn, OOPSLA 2015), which Matthew co-wrote, asks this of <a href="http://adapton.org">Adapton</a>: allocate with a fresh name and a re-run never matches the last one; allocate with a name derived from where you are, and it can. This issue measures what Hazel can tell us about it today, on the Livelit Playground's slides.</p>
+
+<div class="headline">
+<p><b>Short answers.</b></p>
+<ol>
+  <li><b>Hazel has both kinds of id.</b> <code>Id.mk</code> is a gensym: a counter and random bytes, unique every time. <code>Id.derive</code>, <code>Id.next</code> and <code>IdTagged.fresh_deterministic</code> make names: an id computed from a parent's, the same each time. The editor's tiles give the program's syntax names that last across edits. Statics and the evaluator mint almost everything else with the gensym (<a href="#ids">Figure 1</a>).</li>
+  <li><b>Analyzing the same program again renames what statics adds: 667 of Full Body's 111,462 nodes,</b> and through the program's chain of <code>let</code>s, that changes the hash of 692 expressions though their structure is the same. No syntax id ever changes (<a href="#statics">below</a>).</li>
+  <li><b>Two sites in statics make most of them,</b> and naming them as Adapton would, by where they are, cuts the renames from 667 to 85 and the changed hashes from 692 to 247 (<a href="#naming">below</a>).</li>
+  <li><b>But names do not change what is reused, only how.</b> After a slider edit, Full Body reuses 336 parts with fresh ids or with names. Hazel's reuse check falls back to comparing structure, so a renamed part is still found the same, at a higher cost; naming moves 59 checks from that fallback to a hash lookup (<a href="#reuse">below</a>).</li>
+  <li><b>And on these edits, incremental evaluation is no faster than starting over:</b> Full Body 502 ms against 451 ms from scratch, Witch 857 against 791, Scenes 1,547 against 1,571 (node, medians of five). The edit's dependents are recomputed whatever the ids; the reuse a slider change could use is inside them.</li>
+  <li><b>The evaluator mints by far the most:</b> 461,422 ids to build the woods' picture of 33,847 nodes. The same picture evaluated twice is equal in structure but never by hash; the only ids the two share are the program's own (<a href="#evaluation">below</a>).</li>
+  <li><b>Between the page and the eval worker, fresh ids cost 11% of what results send, and requests twice what they could be,</b> on eight woods figure moves. Results stay small because the worker's reuse hands back the very same objects: identity survives there through reuse, not through names (<a href="#wire">below</a>).</li>
+</ol>
+</div>
+
+<h2 id="glance">At a glance</h2>
+<figure class="fig"><svg viewBox="0 0 640 210" role="img" class="chart diagram">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill: var(--muted)"/></marker></defs>
+<rect x="6" y="40" width="180" height="120" rx="10" class="box"/>
+<text x="96" y="64" text-anchor="middle" class="bt">The editor</text>
+<text x="96" y="88" text-anchor="middle" class="bs">each tile keeps its id</text>
+<text x="96" y="106" text-anchor="middle" class="bs">across edits:</text>
+<text x="96" y="132" text-anchor="middle" class="bn good">names</text>
+<rect x="230" y="40" width="180" height="120" rx="10" class="box"/>
+<text x="320" y="64" text-anchor="middle" class="bt">Statics</text>
+<text x="320" y="88" text-anchor="middle" class="bs">keeps the syntax's ids;</text>
+<text x="320" y="106" text-anchor="middle" class="bs">mints ids for what it adds</text>
+<text x="320" y="132" text-anchor="middle" class="bn warn">mostly gensyms</text>
+<rect x="454" y="40" width="180" height="120" rx="10" class="box"/>
+<text x="544" y="64" text-anchor="middle" class="bt">The evaluator</text>
+<text x="544" y="88" text-anchor="middle" class="bs">a fresh id for every</text>
+<text x="544" y="106" text-anchor="middle" class="bs">node it builds</text>
+<text x="544" y="132" text-anchor="middle" class="bn bad">gensyms</text>
+<path d="M188 100 H226" style="stroke: var(--muted); stroke-width: 2; fill: none" marker-end="url(#ar)"/>
+<path d="M412 100 H450" style="stroke: var(--muted); stroke-width: 2; fill: none" marker-end="url(#ar)"/>
+<text x="96" y="188" text-anchor="middle" class="bs">22,611 syntax nodes (Full Body)</text>
+<text x="320" y="188" text-anchor="middle" class="bs">667 renamed per analysis</text>
+<text x="544" y="188" text-anchor="middle" class="bs">461,422 minted (the woods)</text>
+<text x="320" y="22" text-anchor="middle" class="ct">Where Hazel's ids come from</text>
+</svg><figcaption>Figure 1. Where Hazel's ids come from: the editor names the syntax; statics and the evaluator mint most of the rest (<a href="#ids">below</a>).</figcaption></figure>
+<div class="glance">
+<figure><svg viewBox="0 0 560 354" role="img" class="chart"><text x="0" y="16" class="ct">Nodes renamed when the same program is analyzed again</text><text x="162" y="51.0" text-anchor="end" class="cl">Full Body</text><rect x="170" y="26" width="243.3" height="18" rx="3" style="fill: var(--warn)"/><text x="419.3" y="39" class="cv">667</text><rect x="170" y="50" width="31.0" height="18" rx="3" style="fill: var(--good)"/><text x="207.0" y="63" class="cv">85</text><text x="162" y="109.0" text-anchor="end" class="cl">Witch</text><rect x="170" y="84" width="291.0" height="18" rx="3" style="fill: var(--warn)"/><text x="467.0" y="97" class="cv">798</text><rect x="170" y="108" width="31.0" height="18" rx="3" style="fill: var(--good)"/><text x="207.0" y="121" class="cv">85</text><text x="162" y="167.0" text-anchor="end" class="cl">Scenes</text><rect x="170" y="142" width="76.6" height="18" rx="3" style="fill: var(--warn)"/><text x="252.6" y="155" class="cv">210</text><rect x="170" y="166" width="31.0" height="18" rx="3" style="fill: var(--good)"/><text x="207.0" y="179" class="cv">85</text><text x="162" y="225.0" text-anchor="end" class="cl">Shirt and Pants</text><rect x="170" y="200" width="41.6" height="18" rx="3" style="fill: var(--warn)"/><text x="217.6" y="213" class="cv">114</text><rect x="170" y="224" width="28.8" height="18" rx="3" style="fill: var(--good)"/><text x="204.8" y="237" class="cv">79</text><text x="162" y="283.0" text-anchor="end" class="cl">Polygons</text><rect x="170" y="258" width="5.1" height="18" rx="3" style="fill: var(--warn)"/><text x="181.1" y="271" class="cv">14</text><rect x="170" y="282" width="1.5" height="18" rx="3" style="fill: var(--good)"/><text x="177.5" y="295" class="cv">0</text><rect x="170" y="312" width="12" height="12" rx="2" style="fill: var(--warn)"/><text x="187" y="322" class="cl">fresh ids, as today</text><rect x="170" y="330" width="12" height="12" rx="2" style="fill: var(--good)"/><text x="187" y="340" class="cl">named, the experiment</text></svg><figcaption>Figure 2. Each slide parsed once and analyzed twice, as if every item were analyzed again. Amber: as Hazel is today. Green: with the two sites of <a href="#naming">the experiment</a> named.</figcaption></figure>
+<figure><svg viewBox="0 0 560 354" role="img" class="chart"><text x="0" y="16" class="ct">Expressions whose hash then changes (structure equal)</text><text x="162" y="51.0" text-anchor="end" class="cl">Full Body</text><rect x="170" y="26" width="238.4" height="18" rx="3" style="fill: var(--warn)"/><text x="414.4" y="39" class="cv">692</text><rect x="170" y="50" width="85.1" height="18" rx="3" style="fill: var(--good)"/><text x="261.1" y="63" class="cv">247</text><text x="162" y="109.0" text-anchor="end" class="cl">Witch</text><rect x="170" y="84" width="290.7" height="18" rx="3" style="fill: var(--warn)"/><text x="466.7" y="97" class="cv">844</text><rect x="170" y="108" width="106.1" height="18" rx="3" style="fill: var(--good)"/><text x="282.1" y="121" class="cv">308</text><text x="162" y="167.0" text-anchor="end" class="cl">Scenes</text><rect x="170" y="142" width="81.6" height="18" rx="3" style="fill: var(--warn)"/><text x="257.6" y="155" class="cv">237</text><rect x="170" y="166" width="46.8" height="18" rx="3" style="fill: var(--good)"/><text x="222.8" y="179" class="cv">136</text><text x="162" y="225.0" text-anchor="end" class="cl">Shirt and Pants</text><rect x="170" y="200" width="28.2" height="18" rx="3" style="fill: var(--warn)"/><text x="204.2" y="213" class="cv">82</text><rect x="170" y="224" width="20.0" height="18" rx="3" style="fill: var(--good)"/><text x="196.0" y="237" class="cv">58</text><text x="162" y="283.0" text-anchor="end" class="cl">Polygons</text><rect x="170" y="258" width="7.9" height="18" rx="3" style="fill: var(--warn)"/><text x="183.9" y="271" class="cv">23</text><rect x="170" y="282" width="4.5" height="18" rx="3" style="fill: var(--good)"/><text x="180.5" y="295" class="cv">13</text><rect x="170" y="312" width="12" height="12" rx="2" style="fill: var(--warn)"/><text x="187" y="322" class="cl">fresh ids, as today</text><rect x="170" y="330" width="12" height="12" rx="2" style="fill: var(--good)"/><text x="187" y="340" class="cl">named, the experiment</text></svg><figcaption>Figure 3. Each renamed node changes the hash of every expression that holds it, here the chain of <code>let</code>s above it.</figcaption></figure>
+<figure><svg viewBox="0 0 560 284" role="img" class="chart"><text x="0" y="16" class="ct">After a slider edit: how the reuse check recognized each part</text><text x="172" y="40" text-anchor="end" class="cl">Full Body, fresh ids</text><rect x="180.0" y="26" width="103.4" height="20" style="fill: var(--good)"><title>same by hash (names held): 943</title></rect><text x="231.7" y="40" text-anchor="middle" class="cin">943</text><rect x="283.4" y="26" width="11.5" height="20" style="fill: var(--warn)"><title>same by structure (renamed): 105</title></rect><rect x="294.9" y="26" width="15.2" height="20" style="fill: var(--muted)"><title>different: 139</title></rect><text x="316.1" y="40" class="cv">reused 336</text><text x="172" y="70" text-anchor="end" class="cl">Full Body, named</text><rect x="180.0" y="56" width="109.8" height="20" style="fill: var(--good)"><title>same by hash (names held): 1,002</title></rect><text x="234.9" y="70" text-anchor="middle" class="cin">1,002</text><rect x="289.8" y="56" width="5.0" height="20" style="fill: var(--warn)"><title>same by structure (renamed): 46</title></rect><rect x="294.9" y="56" width="15.3" height="20" style="fill: var(--muted)"><title>different: 140</title></rect><text x="316.2" y="70" class="cv">reused 336</text><text x="172" y="110" text-anchor="end" class="cl">Witch, fresh ids</text><rect x="180.0" y="96" width="242.8" height="20" style="fill: var(--good)"><title>same by hash (names held): 2,215</title></rect><text x="301.4" y="110" text-anchor="middle" class="cin">2,215</text><rect x="422.8" y="96" width="18.9" height="20" style="fill: var(--warn)"><title>same by structure (renamed): 172</title></rect><rect x="441.7" y="96" width="16.7" height="20" style="fill: var(--muted)"><title>different: 152</title></rect><text x="464.3" y="110" class="cv">reused 663</text><text x="172" y="140" text-anchor="end" class="cl">Witch, named</text><rect x="180.0" y="126" width="251.3" height="20" style="fill: var(--good)"><title>same by hash (names held): 2,293</title></rect><text x="305.7" y="140" text-anchor="middle" class="cin">2,293</text><rect x="431.3" y="126" width="10.3" height="20" style="fill: var(--warn)"><title>same by structure (renamed): 94</title></rect><rect x="441.7" y="126" width="16.8" height="20" style="fill: var(--muted)"><title>different: 153</title></rect><text x="464.4" y="140" class="cv">reused 663</text><text x="172" y="180" text-anchor="end" class="cl">Scenes, fresh ids</text><rect x="180.0" y="166" width="12.1" height="20" style="fill: var(--good)"><title>same by hash (names held): 110</title></rect><rect x="192.1" y="166" width="11.6" height="20" style="fill: var(--warn)"><title>same by structure (renamed): 106</title></rect><rect x="203.7" y="166" width="3.4" height="20" style="fill: var(--muted)"><title>different: 31</title></rect><text x="213.1" y="180" class="cv">reused 114</text><text x="172" y="210" text-anchor="end" class="cl">Scenes, named</text><rect x="180.0" y="196" width="14.2" height="20" style="fill: var(--good)"><title>same by hash (names held): 130</title></rect><rect x="194.2" y="196" width="9.4" height="20" style="fill: var(--warn)"><title>same by structure (renamed): 86</title></rect><rect x="203.7" y="196" width="3.6" height="20" style="fill: var(--muted)"><title>different: 33</title></rect><text x="213.3" y="210" class="cv">reused 114</text><rect x="180" y="230" width="12" height="12" rx="2" style="fill: var(--good)"/><text x="197" y="240" class="cl">same by hash (names held)</text><rect x="180" y="248" width="12" height="12" rx="2" style="fill: var(--warn)"/><text x="197" y="258" class="cl">same by structure (renamed)</text><rect x="180" y="266" width="12" height="12" rx="2" style="fill: var(--muted)"/><text x="197" y="276" class="cl">different</text></svg><figcaption>Figure 4. The eval worker's reuse check on the second run, after a slider edit. Names move parts from the structural fallback (amber) to the hash (green); what is reused does not change.</figcaption></figure>
+<figure><svg viewBox="0 0 560 238" role="img" class="chart"><text x="0" y="16" class="ct">After the edit: incremental vs from scratch (medians of 5)</text><text x="162" y="51.0" text-anchor="end" class="cl">Full Body</text><rect x="170" y="26" width="86.5" height="18" rx="3" style="fill: var(--accent)"/><text x="262.5" y="39" class="cv">502 ms</text><rect x="170" y="50" width="77.7" height="18" rx="3" style="fill: var(--muted)"/><text x="253.7" y="63" class="cv">451 ms</text><text x="162" y="109.0" text-anchor="end" class="cl">Witch</text><rect x="170" y="84" width="147.6" height="18" rx="3" style="fill: var(--accent)"/><text x="323.6" y="97" class="cv">857 ms</text><rect x="170" y="108" width="136.2" height="18" rx="3" style="fill: var(--muted)"/><text x="312.2" y="121" class="cv">791 ms</text><text x="162" y="167.0" text-anchor="end" class="cl">Scenes</text><rect x="170" y="142" width="266.4" height="18" rx="3" style="fill: var(--accent)"/><text x="442.4" y="155" class="cv">1,547 ms</text><rect x="170" y="166" width="270.6" height="18" rx="3" style="fill: var(--muted)"/><text x="446.6" y="179" class="cv">1,571 ms</text><rect x="170" y="196" width="12" height="12" rx="2" style="fill: var(--accent)"/><text x="187" y="206" class="cl">incremental, against the first run&#x27;s cache</text><rect x="170" y="214" width="12" height="12" rx="2" style="fill: var(--muted)"/><text x="187" y="224" class="cl">from scratch</text></svg><figcaption>Figure 5. Evaluating the edited program against the first run's cache, and without it, in node. Incremental is not faster on these edits.</figcaption></figure>
+<figure><svg viewBox="0 0 560 152" role="img" class="chart"><text x="0" y="16" class="ct">The woods picture, one evaluation</text><text x="162" y="39.0" text-anchor="end" class="cl">ids minted</text><rect x="170" y="26" width="304.3" height="18" rx="3" style="fill: var(--bad)"/><text x="480.3" y="39" class="cv">461,422</text><text x="162" y="71.0" text-anchor="end" class="cl">nodes in the picture</text><rect x="170" y="58" width="22.3" height="18" rx="3" style="fill: var(--accent)"/><text x="198.3" y="71" class="cv">33,847</text><text x="162" y="103.0" text-anchor="end" class="cl">distinct ids in it</text><rect x="170" y="90" width="5.0" height="18" rx="3" style="fill: var(--accent)"/><text x="181.0" y="103" class="cv">7,650</text><text x="162" y="135.0" text-anchor="end" class="cl">nodes with program ids</text><rect x="170" y="122" width="17.3" height="18" rx="3" style="fill: var(--good)"/><text x="193.3" y="135" class="cv">26,266</text></svg><figcaption>Figure 6. One evaluation of the Scenes slide up to its woods picture: the ids the evaluator minted, against the picture it built. Green: the picture's nodes whose ids are the program's own, the only ids two evaluations share.</figcaption></figure>
+<figure><svg viewBox="0 0 560 182" role="img" class="chart"><text x="0" y="16" class="ct">Eight woods figure moves: slots sent</text><text x="122" y="51.0" text-anchor="end" class="cl">worker → page</text><rect x="130" y="26" width="323.0" height="18" rx="3" style="fill: var(--warn)"/><text x="459.0" y="39" class="cv">387,625</text><rect x="130" y="50" width="289.9" height="18" rx="3" style="fill: var(--good)"/><text x="425.9" y="63" class="cv">347,920</text><text x="122" y="111.0" text-anchor="end" class="cl">page → worker</text><rect x="130" y="86" width="36.0" height="18" rx="3" style="fill: var(--warn)"/><text x="172.0" y="99" class="cv">43,248</text><rect x="130" y="110" width="18.1" height="18" rx="3" style="fill: var(--good)"/><text x="154.1" y="123" class="cv">21,728</text><rect x="130" y="140" width="12" height="12" rx="2" style="fill: var(--warn)"/><text x="147" y="150" class="cl">sent, as today</text><rect x="130" y="158" width="12" height="12" rx="2" style="fill: var(--good)"/><text x="147" y="168" class="cl">if equal values had equal ids</text></svg><figcaption>Figure 7. What crossed between the page and the worker on eight woods figure moves, in slots of the values sent, against what would have crossed if parts equal in structure to ones already sent went as references.</figcaption></figure>
+</div>
+
+<h2 id="ids">Where Hazel's ids come from</h2>
+<p>An id in Hazel is a 16-byte UUID. <code>Id.mk</code> makes one from a counter in its leading bytes and random bytes after it: a <i>gensym</i>, new at every call, which is what an incremental system cannot match from one run to the next. <code>Id.derive(~salt, x)</code>, <code>Id.next(x)</code> and <code>Id.mk_str(s)</code> make version-5 UUIDs from a parent id or a string: <i>names</i>, the same every time they are computed from the same place. <code>IdTagged.fresh_deterministic(prev_id, term)</code> builds a node with <code>Id.next(prev_id)</code>.</p>
+<p>The program's syntax is named by the editor: each tile keeps its id across edits, so an item that did not change carries the same ids into the next analysis. Statics keeps those ids in the elaboration and mints ids for the nodes it adds. A few sites name them (function sugar, one definition site in <code>Statics</code>, module roots, padding in the pretty printer); most use <code>IdTagged.fresh</code>, which calls <code>Id.mk</code>, often through <code>IdTagged.FreshGrammar</code>. The evaluator gives every node it builds a fresh id.</p>
+
+<h2 id="statics">Statics, run again: what gets renamed</h2>
+<p>Each slide was parsed once, so its syntax has one set of ids, and analyzed twice with <code>Statics.mk_unmemoized</code>, as the editor's per-item statics does for an item it analyzes again. (The memoized <code>Statics.mk</code> hands back the very same elaboration for the very same term, and so renames nothing.) This is the worst case: in the editor, only the edited item is analyzed again, and, in UX mode, the open cells (<a href="../008/">issue 008</a>). The two elaborations have the same structure, node for node; walking them side by side:</p>
+<div class="scroll"><table>
+<tr><th>Slide</th><th>Nodes</th><th>Renamed, fresh ids</th><th>Renamed, named</th><th>Hash changed, fresh ids</th><th>Hash changed, named</th></tr>
+<tr><td>Full Body</td><td class="n">111,462</td><td class="n">667</td><td class="n">85</td><td class="n">692</td><td class="n">247</td></tr>
+<tr><td>Witch</td><td class="n">107,728</td><td class="n">798</td><td class="n">85</td><td class="n">844</td><td class="n">308</td></tr>
+<tr><td>Scenes</td><td class="n">101,403</td><td class="n">210</td><td class="n">85</td><td class="n">237</td><td class="n">136</td></tr>
+<tr><td>Shirt and Pants</td><td class="n">87,215</td><td class="n">114</td><td class="n">79</td><td class="n">82</td><td class="n">58</td></tr>
+<tr><td>Polygons</td><td class="n">62,628</td><td class="n">14</td><td class="n">0</td><td class="n">23</td><td class="n">13</td></tr>
+</table></div>
+<p>Every renamed node is one statics minted; no syntax id changes. On Full Body they are, by kind: 42 <code>case</code> expressions and 42 holes, 84 constructor patterns and 84 constructor applications in patterns, 86 variable bindings, 59 ascriptions, 52 variable references, 47 field accesses, 45 applications, and 62 type nodes: about one set for each of the slide's livelit uses, and the types. They come from two places:</p>
+<ul>
+  <li><b><code>UserLivelit.mk_expand_dot_def</code></b> builds each livelit use's elaboration: a <code>case</code> on the definition's <code>expand</code>, a <code>Functional</code> arm that applies it to the model and a <code>Macro</code> arm that is an ascribed hole. It is built with <code>IdTagged.FreshGrammar</code>, so every analysis gives it new ids.</li>
+  <li><b><code>StaticsBase.fresh_ascription</code></b> inserts an ascription where a value's type differs from the expected one, also with <code>FreshGrammar</code>.</li>
+</ul>
+<p>A renamed node changes the Merkle hash (<code>Util.ValueHash</code>, ids included) of every expression that holds it. A slide is a chain of <code>let</code>s, each holding the rest of the program, so one renamed node late in the chain changes the hash of every <code>let</code> above it.</p>
+
+<h2 id="naming">Naming them: the experiment</h2>
+<p>Both sites can be named by where they are, as Adapton names an allocation:</p>
+<ul>
+  <li>the dispatch is renamed after it is built, each node's id derived from its parent's and its place among the parent's children, from a root derived from the use's own id. The code it embeds, the use's function and its model, keeps its ids. Two uses get different names; one use gets the same names at every analysis;</li>
+  <li>an inserted ascription takes its id from the expression it ascribes: <code>Id.derive(~salt="ascription", Exp.rep_id(d))</code>.</li>
+</ul>
+<p>The renames fall from 667 to 85 on Full Body, and to 85 on every slide that uses the Drawing library: those 85 (62 of them type nodes) are the same on each of those slides, which points at the library's own analysis. Polygons has none left. The changed hashes fall from 692 to 247 (Figures 2 and 3). The experiment is on a local branch and was not committed; it is a measurement, not a proposal.</p>
+
+<h2 id="reuse">What the eval worker reuses, and what it costs</h2>
+<p>The worker evaluates incrementally: it checks each part of the new elaboration against its cache of the last run, by id, and reuses a part found the same with the same inputs. "The same" is the check from <a href="../008/">issue 008</a>: one hash lookup, ids included, and if that fails, a walk comparing structure and lexemes, memoized. Here, each slide was evaluated, a slider's model was edited in place with every id kept (as the slider's commit keeps them), the edited program analyzed again, and evaluated against the first run's cache:</p>
+<div class="scroll"><table>
+<tr><th>Slide (edit)</th><th>Ids</th><th>Same by hash</th><th>Same by structure</th><th>Different</th><th>Reused</th></tr>
+<tr><td>Full Body (smile 85 → 120)</td><td>fresh ids</td><td class="n">943</td><td class="n">105</td><td class="n">139</td><td class="n">336</td></tr>
+<tr><td>Full Body (smile 85 → 120)</td><td>named</td><td class="n">1002</td><td class="n">46</td><td class="n">140</td><td class="n">336</td></tr>
+<tr><td>Witch (smile 85 → 120)</td><td>fresh ids</td><td class="n">2215</td><td class="n">172</td><td class="n">152</td><td class="n">663</td></tr>
+<tr><td>Witch (smile 85 → 120)</td><td>named</td><td class="n">2293</td><td class="n">94</td><td class="n">153</td><td class="n">663</td></tr>
+<tr><td>Scenes (eye size 70 → 90)</td><td>fresh ids</td><td class="n">110</td><td class="n">106</td><td class="n">31</td><td class="n">114</td></tr>
+<tr><td>Scenes (eye size 70 → 90)</td><td>named</td><td class="n">130</td><td class="n">86</td><td class="n">33</td><td class="n">114</td></tr>
+</table></div>
+<p>The parts reused are the same with fresh ids and with names: the structural fallback finds a renamed part the same, as a hash lookup finds a named one. Names only change the cost of finding it, which the one-walk check of <a href="../008/#fix">issue 008</a> already made small. So in Hazel today, fresh ids do not cause lack of reuse; they cost the check.</p>
+<p>What the reuse saves is another question. Timed, five runs each, alternating the incremental run and one from scratch:</p>
+<div class="scroll"><table>
+<tr><th>Slide</th><th>Incremental, ms</th><th>Median</th><th>From scratch, ms</th><th>Median</th><th>Named: incremental / scratch</th></tr>
+<tr><td>Full Body</td><td class="n">756 479 502 510 502</td><td class="n"><b>502</b></td><td class="n">458 435 446 461 451</td><td class="n"><b>451</b></td><td class="n">527 / 480</td></tr>
+<tr><td>Witch</td><td class="n">943 829 824 857 857</td><td class="n"><b>857</b></td><td class="n">810 792 747 791 766</td><td class="n"><b>791</b></td><td class="n">852 / 783</td></tr>
+<tr><td>Scenes</td><td class="n">1804 1499 1547 1548 1477</td><td class="n"><b>1547</b></td><td class="n">1585 1579 1570 1545 1571</td><td class="n"><b>1571</b></td><td class="n">1630 / 1660</td></tr>
+</table></div>
+<p>The first incremental run is slower each time (the JavaScript engine warming up); the medians are what Figure 5 shows. Incremental evaluation is no faster here, with fresh ids or named. A slider's value flows into the drawing, so the parts that depend on it, the costly ones, are evaluated again; what is reused is mostly definitions, which are cheap. The reuse that would pay is inside those parts: the shapes of a picture that the slider did not move. Recognizing that needs the values computed inside an evaluation to carry identities from one run to the next, which is where the evaluator's ids come in.</p>
+<p class="note">This is node, with the whole program analyzed again. In the browser, the worker's request shares unchanged values with the last one and per-item statics keeps unchanged items, so more checks succeed by identity; whether the worker's incremental run beats a fresh one there is the next measurement.</p>
+
+<h2 id="evaluation">The evaluator: an id for every node it builds</h2>
+<p>Counting <code>Id.mk</code> calls while the Scenes slide is evaluated up to its woods picture: <b>461,422 ids</b>, the same number every run, for a picture of 33,847 nodes with 7,650 distinct ids (copies of a value keep its id). Nearly all of them belong to intermediate terms the evaluator builds and throws away; a fresh id is a 16-byte string, made at every step that builds a node: part of what each step of evaluation allocates.</p>
+<p>Evaluated twice, the two pictures are equal in structure and differ by hash. Of the second picture's nodes, 26,266 have an id that is also in the first, and every one of those is an id of the program itself, a literal carried into the picture. The rest are new each time. So a cache keyed by a value's hash can never recognize the same value computed again. That is why the views' call memo erases ids from its keys before comparing, and why the worker's results share well only where its reuse handed back the very same object.</p>
+
+<h2 id="wire">Between the page and the worker</h2>
+<p>Requests and results cross between the page and the worker with their already-sent values replaced by references, by hash, ids included (<code>Util.ShareCodec</code>). A build that counted, for each message, the slots of the values it sent, and the slots it would have sent if every part equal in structure to one already sent had also gone as a reference, moved the figure in the woods eight times:</p>
+<div class="scroll"><table>
+<tr><th>Direction</th><th>Messages</th><th>Slots sent</th><th>If equal values had equal ids</th><th>Ratio</th></tr>
+<tr><td>worker → page (results and streams)</td><td class="n">32</td><td class="n">387,625</td><td class="n">347,920</td><td class="n">1.11×</td></tr>
+<tr><td>page → worker (requests)</td><td class="n">8</td><td class="n">43,248</td><td class="n">21,728</td><td class="n">1.99×</td></tr>
+</table></div>
+<p>About 2,900 parts a move went to the page as references. They are the parts the worker reused: the same objects as last time, so the same hashes. What a result sends beyond them is mostly new: the moved figure and the picture's list built around it. A request is twice what it could be, from a small base (about 5,400 slots a move, against 749,480 when the slide loads): the edited item, analyzed again, with what statics adds renamed (<a href="#statics">above</a>).</p>
+
+<h2 id="next">What next</h2>
+<ol class="ranked">
+  <li><b>Name what statics adds.</b> The two sites measured here, the livelit use's dispatch and the inserted ascriptions, then the 85 left from the library. It removes most renames of an item analyzed again, so its unchanged parts pass the reuse check by hash; whether it closes the gap measured in requests is to be measured. A small change, with a test that two analyses give the same ids and two uses different ones.</li>
+  <li><b>Mint fewer ids in the evaluator.</b> 461,422 for one picture, most for terms thrown away: minting an id only when a node is kept, or naming it by its provenance, is part of the per-step allocation the evaluator still has.</li>
+  <li><b>Names inside evaluation, for the reuse that would pay.</b> Reusing the shapes a slider did not move, inside a part that is evaluated again, needs values that keep their identity from run to run: names for what evaluation allocates, in the sense of the 2015 paper. That is a design question, for a note with Cyrus before any code.</li>
+  <li><b>Measure the worker's incremental run in the browser,</b> against a fresh one, with per-item statics and shared requests as they are there.</li>
+</ol>
+
+<h2 id="method">How this was put together</h2>
+<ul>
+  <li><b>Build:</b> #2635 (livelits × modular editors) at <a href="https://github.com/hazelgrove/hazel/commit/c4e64060f1"><code>c4e64060f1</code></a>, with measuring code on a local branch, not pushed: counters in the reuse check and in <code>Id.mk</code>, the naming experiment behind a switch, and the message counts in <code>ShareCodec</code>.</li>
+  <li><b>Statics and reuse:</b> node, the test build, the slides of the Livelit Playground. Each slide parsed once (<code>FastParse</code>, <code>MakeTerm</code>), analyzed with <code>Statics.mk_unmemoized</code>; the edit replaces one integer literal, a slider's model whose value occurs once in the slide, keeping its id. Renamed means the same position in both elaborations with different ids; a hash changed means <code>Util.ValueHash.same</code> was false for an expression whose structure was equal.</li>
+  <li><b>Times:</b> node's CPU time (<code>Sys.time</code>) after a full collection, five runs alternating the incremental and the fresh evaluation, in one process, fresh ids first, then named.</li>
+  <li><b>Evaluation:</b> <code>Evaluator.evaluate_open</code>, as the page evaluates a view, of the Scenes slide cut at its picture and ending with the picture.</li>
+  <li><b>Page and worker:</b> headless Firefox over WebDriver, the Scenes slide (woods), eight moves of the "across" slider by input events, six seconds apart, the console copied to a file. A slot is a field of a value as js_of_ocaml lays it out (an array); a part counts as equal in structure by a hash that skips 16-character strings, taken for ids.</li>
+</ul>
+
+</main>
+</body>
+</html>
