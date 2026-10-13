@@ -20,6 +20,7 @@
   ol.issues li { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin: 12px 0;
                  display: grid; grid-template-columns: 220px 1fr; gap: 18px; align-items: start; }
   .thumb img { display: block; width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #ffffff; }
+  .thumb img[src$=".svg"] { background: transparent; }
   @media (max-width: 600px) { ol.issues li { grid-template-columns: 1fr; } .thumb { max-width: 320px; } }
   .num { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.9em; }
   .title { font-size: 1.15em; font-weight: 700; }
@@ -32,7 +33,7 @@
   <p class="sub">Notes on making <a href="https://hazel.org">Hazel</a> responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed. Matthew Hammer.</p>
   <ol class="issues" reversed>
     <li>
-      <a class="thumb" href="009/"><img src="009/img/thumb.png" alt="Two stacked bars for a slider edit on Full Body, with fresh ids and with names: mostly green (same by hash), a little amber (same by structure) and grey (changed); 336 parts reused either way. Below: 461,422 ids minted by the evaluator for one woods picture of 33,847 nodes. Names change how reuse is found, not what."></a>
+      <a class="thumb" href="009/"><img src="009/img/thumb.svg" alt="For a slider edit on Full Body, 336 parts are reused with fresh ids and with names alike. Derived names kept on the values, Merkle style, cost the woods 2.9 s against 2.3 s, and keep 33,846 of the picture's 33,847 names from run to run."></a>
       <div>
       <div class="num">Issue 009 · 2026-10-13</div>
       <div class="title"><a href="009/">Names and reuse: what fresh ids cost Hazel</a></div>
