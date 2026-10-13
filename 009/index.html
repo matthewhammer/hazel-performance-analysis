@@ -66,6 +66,14 @@
   .glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr)); gap: 14px; margin: 16px 0 6px; }
   .glance figure, figure.fig { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 0; }
   figure.fig { margin: 16px 0; }
+  .update { background: var(--paper); border-left: 4px solid var(--warn); padding: 10px 14px; border-radius: 6px; margin: 16px 0; }
+  .added { font-size: 0.6em; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; vertical-align: middle; margin-left: 6px; }
+  svg.chart .nb { stroke-width: 1.5; }
+  svg.chart .nb.ok { fill: color-mix(in srgb, var(--good) 22%, var(--paper)); stroke: var(--good); }
+  svg.chart .nb.in { fill: color-mix(in srgb, var(--warn) 28%, var(--paper)); stroke: var(--warn); }
+  svg.chart .nb.re { fill: color-mix(in srgb, var(--bad) 18%, var(--paper)); stroke: var(--bad); }
+  svg.chart .nl { fill: var(--ink); font-size: 12px; }
+  svg.chart .ar { stroke: var(--muted); stroke-width: 1.6; fill: none; }
 </style>
 </head>
 
@@ -87,6 +95,15 @@
   <li><b>The evaluator mints by far the most:</b> 461,422 ids to build the woods' picture of 33,847 nodes. The same picture evaluated twice is equal in structure but never by hash; the only ids the two share are the program's own (<a href="#evaluation">below</a>).</li>
   <li><b>Between the page and the eval worker, fresh ids cost 11% of what results send, and requests twice what they could be,</b> on eight woods figure moves. Results stay small because the worker's reuse hands back the very same objects: identity survives there through reuse, not through names (<a href="#wire">below</a>).</li>
 </ol>
+</div>
+
+<div class="update">
+<p><b>Update, later on 2026-10-13: the paper, and Hazel's caching in its terms.</b> Four sections are added below, at Matthew's request: the paper's main ideas (<a href="#paper">below</a>), Hazel's cache and how it is invalidated, in the paper's terms (<a href="#caching">below</a>), an experiment that derives names everywhere in statics and the evaluator (<a href="#derived">below</a>), and what following the paper would take (<a href="#adapt">below</a>). In short:</p>
+<ul>
+  <li><b>Hazel already does the paper's outer layer:</b> the editor gives the syntax names, minted when a tile is made and kept while it is edited, and the cache is keyed by them. It does not do the inner layer: names inside the computation are gensyms, its dependencies are the free variables statics finds rather than what was actually read, and an evaluated-again value marks everything downstream dirty, whatever it came out to.</li>
+  <li><b>A slider edit mints 85,000 to 423,000 fresh ids in evaluation</b> (Full Body, Witch, Scenes), and 6,000 to 19,000 in statics when the whole program is analyzed again: not hundreds.</li>
+  <li><b>Deriving them from content removes 92 to 97%</b> and keeps the woods picture's names from one run to the next (33,846 of its 33,847 nodes, against 26,266), which is what an early cutoff or a cache keyed by name needs. But as built it is 23 times slower: a name computed from content costs as much as the content, where the paper's names are derived from a parent's name at constant cost.</li>
+</ul>
 </div>
 
 <h2 id="glance">At a glance</h2>
@@ -126,6 +143,7 @@
 <h2 id="ids">Where Hazel's ids come from</h2>
 <p>An id in Hazel is a 16-byte UUID. <code>Id.mk</code> makes one from a counter in its leading bytes and random bytes after it: a <i>gensym</i>, new at every call, which is what an incremental system cannot match from one run to the next. <code>Id.derive(~salt, x)</code>, <code>Id.next(x)</code> and <code>Id.mk_str(s)</code> make version-5 UUIDs from a parent id or a string: <i>names</i>, the same every time they are computed from the same place. <code>IdTagged.fresh_deterministic(prev_id, term)</code> builds a node with <code>Id.next(prev_id)</code>.</p>
 <p>The program's syntax is named by the editor: each tile keeps its id across edits, so an item that did not change carries the same ids into the next analysis. Statics keeps those ids in the elaboration and mints ids for the nodes it adds. A few sites name them (function sugar, one definition site in <code>Statics</code>, module roots, padding in the pretty printer); most use <code>IdTagged.fresh</code>, which calls <code>Id.mk</code>, often through <code>IdTagged.FreshGrammar</code>. The evaluator gives every node it builds a fresh id.</p>
+<p class="note"><b>Added later on 2026-10-13:</b> not quite every one. A step's result keeps the id of the expression it came from (<code>rewrap</code>, about 116 uses in <code>Transition</code>, and <code>fast_copy</code>): an input name passed straight through, with no part saying which instance it is, so one piece of syntax evaluated in many calls gives many values with one id. And a variable's value is named, for reuse, by the binding it came from and the path into it (<a href="#caching">below</a>). Sampling who mints the rest: variable lookups 38% (each copies the value under a new id), environment frames 20%, ascriptions pushed through values about 30%.</p>
 
 <h2 id="statics">Statics, run again: what gets renamed</h2>
 <p>Each slide was parsed once, so its syntax has one set of ids, and analyzed twice with <code>Statics.mk_unmemoized</code>, as the editor's per-item statics does for an item it analyzes again. (The memoized <code>Statics.mk</code> hands back the very same elaboration for the very same term, and so renames nothing.) This is the worst case: in the editor, only the edited item is analyzed again, and, in UX mode, the open cells (<a href="../008/">issue 008</a>). The two elaborations have the same structure, node for node; walking them side by side:</p>
@@ -187,11 +205,67 @@
 </table></div>
 <p>About 2,900 parts a move went to the page as references. They are the parts the worker reused: the same objects as last time, so the same hashes. What a result sends beyond them is mostly new: the moved figure and the picture's list built around it. A request is twice what it could be, from a small base (about 5,400 slots a move, against 749,480 when the slide loads): the edited item, analyzed again, with what statics adds renamed (<a href="#statics">above</a>).</p>
 
+<h2 id="paper">The paper's main ideas <span class="added">added later on 2026-10-13</span></h2>
+<p>An incremental system saves work by recognizing, in a new run, work it did in the last one. <a href="https://arxiv.org/abs/1503.07792">Incremental Computation with Names</a> is about how it recognizes it.</p>
+<ul>
+  <li><b>By structure is too conservative.</b> Classic Adapton matched a thunk or a reference cell by its content. Map a function over a list, insert an element, and every new cell before the insertion points to a new tail, so each looks changed and the whole prefix is computed again: "small changes cascade into larger changes" (its Section 2.2).</li>
+  <li><b>Names, fresh only at the edges.</b> A name is a first-class identifier given to an allocation, a thunk or a reference. Fresh names are made only in the outer layer, where the inputs are built. Inside the computation, every name is derived from the names it is given: <code>fork n</code> makes two names from <code>n</code>, the same two every time, and namespaces (<code>ns</code>, <code>nest</code>) let one computation run twice under different names. The same input names give the same names, in every run.</li>
+  <li><b>A graph of what was demanded.</b> Running records a demanded computation graph: each force, with the result it observed, and each allocation. Changing an input dirties, backwards along those edges, whatever observed it. Asking for the result again re-checks a dirty node's forces in order: where a dependency's result is unchanged, the edge is clean and the work stops there (an early cutoff); where it changed, the node runs again. Running again, it allocates under the same names, so it finds its old nodes, updates them in place, and dirties only what really changed.</li>
+  <li><b>Where to put names</b> is the programmer's choice, with guidance: one per list cell, forked from the input cell's name; folds over trees rather than lists, so a change touches one path; in the paper's interpreter, the program position and the loop count.</li>
+  <li><b>Misused names cost speed, not correctness.</b> A name used for two different things in one run is detected (a node on the stack of forces is dirtied by the match) and reported. The calculus is proved from-scratch consistent: an incremental run gives what a run from scratch gives.</li>
+  <li><b>The results:</b> speedups over running from scratch of up to about 10,900 times, and over classic Adapton of up to about 21,000, on lists, trees and an interpreter.</li>
+</ul>
+
+<h2 id="caching">Caching in Hazel, in the paper's terms <span class="added">added later on 2026-10-13</span></h2>
+<figure class="fig"><svg viewBox="0 0 600 300" role="img" class="chart diagram"><defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" style="fill: var(--muted)"/></marker></defs><text x="120" y="26" text-anchor="middle" class="ct">Hazel today</text><text x="440" y="26" text-anchor="middle" class="ct">Incremental Computation with Names</text><rect x="40" y="50" width="160" height="28" rx="6" class="nb ok"/><text x="120.0" y="68.0" text-anchor="middle" class="nl">let shapes = …</text><rect x="40" y="88" width="160" height="28" rx="6" class="nb ok"/><text x="120.0" y="106.0" text-anchor="middle" class="nl">let colors = …</text><rect x="40" y="126" width="160" height="28" rx="6" class="nb in"/><text x="120.0" y="144.0" text-anchor="middle" class="nl">let smile = 120</text><rect x="40" y="164" width="160" height="28" rx="6" class="nb re"/><text x="120.0" y="182.0" text-anchor="middle" class="nl">let face = … smile …</text><rect x="40" y="202" width="160" height="28" rx="6" class="nb re"/><text x="120.0" y="220.0" text-anchor="middle" class="nl">let pic = … face …</text><rect x="40" y="240" width="160" height="28" rx="6" class="nb ok"/><text x="120.0" y="258.0" text-anchor="middle" class="nl">let woods = …</text><path d="M120 78 L120 88" class="ar" marker-end="url(#ar2)"/><path d="M120 116 L120 126" class="ar" marker-end="url(#ar2)"/><path d="M120 154 L120 164" class="ar" marker-end="url(#ar2)"/><path d="M120 192 L120 202" class="ar" marker-end="url(#ar2)"/><path d="M120 230 L120 240" class="ar" marker-end="url(#ar2)"/><rect x="330" y="50" width="120" height="28" rx="6" class="nb in"/><text x="390.0" y="68.0" text-anchor="middle" class="nl">smile (input)</text><rect x="280" y="114" width="110" height="28" rx="6" class="nb re"/><text x="335.0" y="132.0" text-anchor="middle" class="nl">face</text><rect x="400" y="114" width="110" height="28" rx="6" class="nb re"/><text x="455.0" y="132.0" text-anchor="middle" class="nl">mouth</text><rect x="280" y="182" width="110" height="28" rx="6" class="nb ok"/><text x="335.0" y="200.0" text-anchor="middle" class="nl">pic</text><rect x="470" y="50" width="100" height="28" rx="6" class="nb ok"/><text x="520.0" y="68.0" text-anchor="middle" class="nl">woods</text><path d="M370 78 L340 110" class="ar" marker-end="url(#ar2)"/><path d="M410 78 L450 110" class="ar" marker-end="url(#ar2)"/><path d="M335 142 L335 178" class="ar" marker-end="url(#ar2)"/><text x="120" y="292" text-anchor="middle" class="bs">re-run from the top; what uses smile runs again</text><text x="430" y="232" text-anchor="middle" class="bs">re-check only what read smile;</text><text x="430" y="250" text-anchor="middle" class="bs">face came out the same, so pic stays</text><rect x="236" y="268" width="12" height="12" rx="2" class="nb ok"/><text x="253" y="278" class="bs">reused</text><rect x="312" y="268" width="12" height="12" rx="2" class="nb in"/><text x="329" y="278" class="bs">edited</text><rect x="386" y="268" width="12" height="12" rx="2" class="nb re"/><text x="403" y="278" class="bs">evaluated again</text></svg><figcaption>Figure 8. Two ways to find what an edit invalidates, on a made-up program. Hazel re-runs the program from the top and reuses a top-level part whose code is the same and whose free variables came from parts that were reused, so everything after the edit that uses it runs again, whatever it computes. The paper re-checks only what read the changed input, along recorded edges, and stops where a result is unchanged: if <code>face</code> comes out the same, <code>pic</code> is not run again.</figcaption></figure>
+<p><b>The input names.</b> The editor makes a tile's id when the tile is made, keeps it while the tile is edited, and drops it when the tile goes: the gensym happens in the outer layer, as in the paper. A slider's model is a literal in the program, so moving a slider changes that literal and keeps its id.</p>
+<p><b>What is cached.</b> One entry per top-level node of the program, keyed by its id: its elaboration, the provenance of its free variables, its probe targets, its value, and what the evaluation recorded (probe samples and tests, replayed when the entry is reused). Nothing is cached inside a function call: entries are recorded and reused only at the top of the program.</p>
+<p><b>Names Hazel derives today.</b> Statics derives a few (function sugar, one definition site, module roots, livelits' context entries) and mints the rest. The evaluator passes input names through: a step's result keeps its redex's id. And the incremental evaluator names each variable's value by its <i>provenance</i>: the id of the binding that produced it and the path into that value (a tuple's field, a list's cell, a constructor's argument, an ascription), with a flag, clean or dirty. That pair is a derived name for a value, though it says where the value came from, not what it is.</p>
+<p><b>How invalidation works.</b> The evaluator runs the program from the top. At each top-level node with an entry, it reuses the entry if the node's elaboration is the same (by hash, or by structure: issue 008), its free variables' provenances are what they were (the same binding, the same path, still clean), and its probe targets are the same. A binding whose right-hand side was reused makes its variables clean; one that was evaluated again makes them dirty, whatever value it produced. So:</p>
+<div class="scroll"><table>
+<tr><th></th><th>Hazel today</th><th>Incremental Computation with Names</th></tr>
+<tr><td>What is cached</td><td>Top-level nodes of the program</td><td>Any thunk, at any depth</td></tr>
+<tr><td>Identity</td><td>The editor's ids; a value's provenance (binding, path)</td><td>Names derived from the input names</td></tr>
+<tr><td>Dependencies</td><td>Static: the free variables statics finds</td><td>Dynamic: what each thunk forced, in order, with what it saw</td></tr>
+<tr><td>What invalidates</td><td>A dependency that was evaluated again</td><td>A dependency whose result changed</td></tr>
+<tr><td>Early cutoff</td><td>None</td><td>Yes: the observed result is compared</td></tr>
+<tr><td>Who decides</td><td>A re-run from the top, reusing what checks out</td><td>Demand: only what is dirty and asked for</td></tr>
+<tr><td>Correctness</td><td>Incremental agrees with fresh (the <code>IncrSlides</code> tests)</td><td>Proved: from-scratch consistency</td></tr>
+</table></div>
+<p>Hazel does the paper's outer layer, and does it well: unchanged code keeps its names across edits. It has not tried the inner layer. That explains <a href="#reuse">the timings above</a>: a slider's value flows into the drawing, the binding it reaches is evaluated again, every binding after it is dirty whatever it computes, and nothing inside the calls that draw can be reused. It also explains why the inner layer cannot simply be added: with fresh ids inside, nothing computed again is recognizable by name.</p>
+
+<h2 id="derived">Derived names everywhere: an experiment <span class="added">added later on 2026-10-13</span></h2>
+<p>A switch, in a local build, under which statics' and the evaluator's ids are computed instead of minted: at <code>IdTagged.fresh</code>, at <code>Exp.replace_all_ids</code>, at a variable lookup, and at <code>Environment.extend</code>, a node's id is a hash of its content (its constructor, its children's ids, its literals), computed with <code>ValueHash</code>. Names then flow up from the editor's input names. This is the structural way to derive names, close to hash-consing, not the paper's positional <code>fork</code>. Counting the ids still minted (<code>Id.mk</code> calls), the same three slider edits as above:</p>
+<figure class="fig"><svg viewBox="0 0 560 238" role="img" class="chart"><text x="0" y="16" class="ct">Fresh ids minted by one incremental evaluation after a slider edit</text><text x="162" y="51.0" text-anchor="end" class="cl">Full Body</text><rect x="170" y="26" width="60.9" height="18" rx="3" style="fill: var(--warn)"/><text x="236.9" y="39" class="cv">84,528</text><rect x="170" y="50" width="3.2" height="18" rx="3" style="fill: var(--good)"/><text x="179.2" y="63" class="cv">4,425</text><text x="162" y="109.0" text-anchor="end" class="cl">Witch</text><rect x="170" y="84" width="106.0" height="18" rx="3" style="fill: var(--warn)"/><text x="282.0" y="97" class="cv">147,081</text><rect x="170" y="108" width="4.9" height="18" rx="3" style="fill: var(--good)"/><text x="180.9" y="121" class="cv">6,842</text><text x="162" y="167.0" text-anchor="end" class="cl">Scenes</text><rect x="170" y="142" width="305.2" height="18" rx="3" style="fill: var(--warn)"/><text x="481.2" y="155" class="cv">423,362</text><rect x="170" y="166" width="9.8" height="18" rx="3" style="fill: var(--good)"/><text x="185.8" y="179" class="cv">13,578</text><rect x="170" y="196" width="12" height="12" rx="2" style="fill: var(--warn)"/><text x="187" y="206" class="cl">fresh ids, as today</text><rect x="170" y="214" width="12" height="12" rx="2" style="fill: var(--good)"/><text x="187" y="224" class="cl">derived names, the experiment</text></svg><figcaption>Figure 9. Fresh ids minted by the incremental evaluation after one slider edit, as Hazel is and with derived names.</figcaption></figure>
+<div class="scroll"><table>
+<tr><th>Slider edit</th><th>Statics, today</th><th>Statics, derived</th><th>Incremental evaluation, today</th><th>Incremental evaluation, derived</th></tr>
+<tr><td>Full Body (smile 85 → 120)</td><td class="n">15,624</td><td class="n">4,398</td><td class="n">84,528</td><td class="n">4,425</td></tr>
+<tr><td>Witch (smile 85 → 120)</td><td class="n">18,637</td><td class="n">4,995</td><td class="n">147,081</td><td class="n">6,842</td></tr>
+<tr><td>Scenes (eye size 70 → 90)</td><td class="n">6,055</td><td class="n">1,852</td><td class="n">423,362</td><td class="n">13,578</td></tr>
+</table></div>
+<ul>
+  <li><b>The ids a slider edit mints are the evaluator's,</b> tens to hundreds of thousands; statics, analyzing the whole program again, mints thousands. With derived names, 92 to 97% of the evaluator's are gone; the rest are values the hash gives up on (too deep) and sites the switch does not reach.</li>
+  <li><b>Values keep their names.</b> The woods picture, evaluated twice, shares 33,846 of its 33,847 nodes' ids with the first run, against 26,266 as Hazel is. One node is still minted, so the two are not yet equal by hash; nearly are.</li>
+  <li><b>Statics' renames do not go:</b> 652 on Full Body, against 667. The nodes statics adds are built by <code>FreshGrammar</code>, whose constructors pick a node's annotation before its term exists, so a name from content cannot reach them; the two sites named by position in <a href="#naming">the earlier experiment</a> can. In statics, a name is most naturally derived from where a node is made: the paper's way.</li>
+  <li><b>And it is far too slow:</b> one evaluation of the woods, 1.9 s as Hazel is, took 44.2 s; Full Body from scratch, 511 ms, took 7,414. A name from content costs as much as hashing the content, and some values, an environment's chain of frames, are deep; a hash that gives up is not remembered and is tried again. The paper's names are derived from a parent's name at constant cost per allocation. In the evaluator, that is a name from the step's own input name and the instance it runs in.</li>
+</ul>
+<figure class="fig"><svg viewBox="0 0 560 80" role="img" class="chart"><text x="0" y="16" class="ct">Time (ms)</text><text x="167" y="51.0" text-anchor="end" class="cl">woods, one evaluation</text><rect x="175" y="26" width="12.7" height="18" rx="3" style="fill: var(--warn)"/><text x="193.7" y="39" class="cv">1,912 ms</text><rect x="175" y="50" width="293.0" height="18" rx="3" style="fill: var(--accent)"/><text x="474.0" y="63" class="cv">44,197 ms</text></svg><svg viewBox="0 0 560 122" role="img" class="chart"><text x="0" y="16" class="ct">Names kept from the first run (of 33,847 nodes)</text><text x="167" y="51.0" text-anchor="end" class="cl">nodes named as before</text><rect x="175" y="26" width="232.2" height="18" rx="3" style="fill: var(--warn)"/><text x="413.2" y="39" class="cv">26,266</text><rect x="175" y="50" width="299.2" height="18" rx="3" style="fill: var(--accent)"/><text x="480.2" y="63" class="cv">33,846</text><rect x="175" y="80" width="12" height="12" rx="2" style="fill: var(--warn)"/><text x="192" y="90" class="cl">fresh ids, as today</text><rect x="175" y="98" width="12" height="12" rx="2" style="fill: var(--accent)"/><text x="192" y="108" class="cl">derived names, the experiment</text></svg><figcaption>Figure 10. What derived names bought and cost, on the woods: names that last across runs, at many times the time. Single runs, node.</figcaption></figure>
+
+<h2 id="adapt">Following the paper: what it would take <span class="added">added later on 2026-10-13</span></h2>
+<ol class="ranked">
+  <li><b>Cached units below the top level, with names.</b> Each call (and each <code>let</code>'s right-hand side) a unit, named from its call site's id, the name of the unit it runs in, and its argument's name. Hazel's probes already key a sample by (syntax id, call-stack instance), which is this name made by position; the paper's lesson is to derive it from the argument's name instead, so that an inserted element does not shift every later name.</li>
+  <li><b>Record what each unit reads.</b> In the evaluator, a variable lookup and a function application are the reads. Record each with the name of the result it saw; the provenance map already records where a variable came from, not what it held.</li>
+  <li><b>An early cutoff.</b> A dirty dependency whose new result has its old name stops the invalidation there. This needs equal values to have equal names: the experiment above, at the paper's cost, not content's.</li>
+  <li><b>Inputs as named references.</b> A slider's model is a literal with a tile id, so moving it is setting that reference: dirty what read it, ask for the result again, run again only what is dirty.</li>
+  <li><b>What Hazel can build on:</b> the views' call memo is already a cache per call, by structure (classic Adapton's kind); entries already replay their probe samples and tests, which units inside calls would also have to do; probes already name call instances.</li>
+  <li><b>What is hard:</b> replaying observations (probes, the stepper) for units deep in recursion; the memory of an edge for every read; and boundaries for units in an evaluator that steps a term on a trampoline (the call memo's boundary, at an application, is the place to start).</li>
+</ol>
+
 <h2 id="next">What next</h2>
 <ol class="ranked">
   <li><b>Name what statics adds.</b> The two sites measured here, the livelit use's dispatch and the inserted ascriptions, then the 85 left from the library. It removes most renames of an item analyzed again, so its unchanged parts pass the reuse check by hash; whether it closes the gap measured in requests is to be measured. A small change, with a test that two analyses give the same ids and two uses different ones.</li>
   <li><b>Mint fewer ids in the evaluator.</b> 461,422 for one picture, most for terms thrown away: minting an id only when a node is kept, or naming it by its provenance, is part of the per-step allocation the evaluator still has.</li>
-  <li><b>Names inside evaluation, for the reuse that would pay.</b> Reusing the shapes a slider did not move, inside a part that is evaluated again, needs values that keep their identity from run to run: names for what evaluation allocates, in the sense of the 2015 paper. That is a design question, for a note with Cyrus before any code.</li>
+  <li><b>Names inside evaluation, for the reuse that would pay.</b> Reusing the shapes a slider did not move, inside a part that is evaluated again, needs values that keep their identity from run to run: names for what evaluation allocates, in the sense of the 2015 paper. That is a design question, for a note with Cyrus before any code. <i><b>Added later on 2026-10-13:</b> the sections on <a href="#caching">Hazel's caching</a> and on <a href="#adapt">following the paper</a> lay out that question.</i></li>
   <li><b>Measure the worker's incremental run in the browser,</b> against a fresh one, with per-item statics and shared requests as they are there.</li>
 </ol>
 
@@ -205,5 +279,58 @@
 </ul>
 
 </main>
+<!-- steps: begin -->
+<style>
+  button.mint { margin-left: 4px; font: inherit; font-size: 0.75em; padding: 0 6px; border: 1px solid var(--line, #ccc);
+    border-radius: 4px; background: transparent; color: var(--muted, #666); cursor: pointer; vertical-align: 1px; }
+  button.mint:hover { color: inherit; }
+  button.mint.done { color: var(--good, #15803d); border-color: var(--good, #15803d); }
+  a.step-link { color: var(--muted, #666); text-decoration: none; font-size: 0.85em; margin-left: 4px; }
+  a.step-link:hover { text-decoration: underline; }
+  li:target { background: color-mix(in srgb, var(--good, #15803d) 12%, transparent); border-radius: 6px; }
+</style>
+<script>
+/* Each "What next" step: a link to it, and a button copying a request to
+   mint a ticket for it (to paste to Claude): the issue, the step, its URL. */
+(() => {
+  const h = document.getElementById("next");
+  if (!h) return;
+  let list = h.nextElementSibling;
+  while (list && !/^(OL|UL)$/.test(list.tagName)) {
+    if (list.tagName === "H2") return;
+    list = list.nextElementSibling;
+  }
+  if (!list) return;
+  const m = (document.querySelector(".series") || document.body).textContent.match(/Issue (\d{3})/);
+  const issue = m ? m[1] : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + issue + "/";
+  [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
+    const n = i + 1;
+    if (!li.id) li.id = "step-" + n;
+    const b = li.querySelector("b, strong");
+    const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
+    const url = base + "#" + li.id;
+    const text = "Mint a ticket for this step: Hazel performance analysis, issue " + issue +
+      ", What next, step " + n + ': "' + title + '". ' + url;
+    const a = document.createElement("a");
+    a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "mint"; btn.textContent = "copy for a ticket";
+    btn.title = "Copies a request to mint a ticket for this step, to paste to Claude";
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) {
+        const t = document.createElement("textarea"); t.value = text; document.body.append(t);
+        t.select(); document.execCommand("copy"); t.remove();
+      }
+      btn.textContent = "copied"; btn.classList.add("done");
+      setTimeout(() => { btn.textContent = "copy for a ticket"; btn.classList.remove("done"); }, 1500);
+    });
+    li.append(" ", a, " ", btn);
+  });
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+})();
+</script>
+<!-- steps: end -->
 </body>
 </html>

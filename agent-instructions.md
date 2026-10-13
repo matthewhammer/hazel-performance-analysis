@@ -42,6 +42,7 @@ The series is **not our working record.** That is `hazel-work-notes`, a private 
 - **Credit other people's work** by name, with the commit. Several fixes in the series are Andrew Blinn's, from #2469.
 - **Link plainly:** PRs as `hazelgrove/hazel#N` with a phrase saying what each is, commits by their 10-character id, findings on #2609 by number, and other issues relatively (`../004/`).
 - **Matthew's kids are M and N,** never by name.
+- **Every "What next" step gets a link and a ticket button.** Run `python3 tools/add_steps.py NNN/index.html` on a new issue before publishing (it is idempotent, so run it again after regenerating). Each step of the list after `<h2 id="next">` gets an anchor (`#step-N`) and a "copy for a ticket" button that copies `Mint a ticket for this step: Hazel performance analysis, issue NNN, What next, step N: "...". URL`, for Matthew to paste to Claude. Steps have no ticket numbers in the issue: a ticket is minted, in the work notes, only when he asks.
 - **When adding an issue, read the others.** Link back to what it builds on. Where it explains or corrects an earlier issue, add a dated note there (below).
 
 ## Corrections and updates
