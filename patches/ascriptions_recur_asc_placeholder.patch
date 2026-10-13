@@ -1,0 +1,146 @@
+diff --git a/src/language/dynamics/transition/Ascriptions.re b/src/language/dynamics/transition/Ascriptions.re
+index b2d6049cd9..6178cb7637 100644
+--- a/src/language/dynamics/transition/Ascriptions.re
++++ b/src/language/dynamics/transition/Ascriptions.re
+@@ -119,6 +119,10 @@ let resolve = (ctx: Ctx.t, t: Typ.t): Typ.t =>
+ let unchanged = (ds: list(DHExp.t), ds': list(DHExp.t)): bool =>
+   List.for_all2((d, d') => d === d', ds, ds');
+ 
++/* The tag of an Asc node made only to be pushed through and dropped
++   (see recur_asc in transition): never kept in a value. */
++let placeholder_tag = IdTagged.IdTag.mk_internal([Id.invalid]);
++
+ let rec transition = (~recursive=false, d: DHExp.t): option(DHExp.t) => {
+   let ctx = ctx_ref^;
+   let recur = (d: DHExp.t): DHExp.t =>
+@@ -127,6 +131,28 @@ let rec transition = (~recursive=false, d: DHExp.t): option(DHExp.t) => {
+     } else {
+       d;
+     };
++  /* recur into a part given a type, Asc(e, ty). A recursive push makes
++     that node only to read it back: it gets the shared placeholder tag,
++     and a minted id only if the push sticks and the node stays in the
++     value. Minting the ids of these nodes was 14% of evaluating the
++     woods' picture view. A stepwise push keeps every node it makes. */
++  let recur_asc = (e: DHExp.t, ty: Typ.t): DHExp.t =>
++    if (recursive) {
++      switch (
++        transition(
++          ~recursive,
++          {
++            term: Asc(e, ty),
++            annotation: placeholder_tag,
++          },
++        )
++      ) {
++      | Some(r) => r
++      | None => Asc(e, ty) |> DHExp.fresh
++      };
++    } else {
++      Asc(e, ty) |> DHExp.fresh;
++    };
+   switch (DHExp.term_of(d)) {
+   | Asc(e, t) =>
+     /* Resolve the type for structural matching. Types may be Var("HTML")
+@@ -162,10 +188,10 @@ let rec transition = (~recursive=false, d: DHExp.t): option(DHExp.t) => {
+         ),
+       )
+     | (TupLabel({term: ExplicitNonlabel, _}, inner), _) =>
+-      Some(recur(Asc(inner, t) |> DHExp.fresh))
++      Some(recur_asc(inner, t))
+     | (TupLabel(l, inner), TupLabel(_l2, inner_ty)) =>
+       // TODO Figure out what to do if the labels don't match
+-      let inner' = recur(Asc(inner, inner_ty) |> DHExp.fresh);
++      let inner' = recur_asc(inner, inner_ty);
+       inner' === inner
+         ? Some(e)
+         : Some(
+@@ -198,9 +224,7 @@ let rec transition = (~recursive=false, d: DHExp.t): option(DHExp.t) => {
+         members
+         |> List.map(((x, ty)) =>
+              Mod.modval_lookup(items, x)
+-             |> Option.map(v =>
+-                  Mod.fresh(ModVal(x, recur(Asc(v, ty) |> DHExp.fresh)))
+-                )
++             |> Option.map(v => Mod.fresh(ModVal(x, recur_asc(v, ty))))
+            )
+         |> Util.OptUtil.sequence;
+       switch (picked) {
+@@ -214,8 +238,7 @@ let rec transition = (~recursive=false, d: DHExp.t): option(DHExp.t) => {
+       | None => None
+       };
+     | (Tuple(es), Prod(tys)) when List.length(es) == List.length(tys) =>
+-      let es' =
+-        List.map2((e, ty) => recur(Asc(e, ty) |> DHExp.fresh), es, tys);
++      let es' = List.map2((e, ty) => recur_asc(e, ty), es, tys);
+       unchanged(es, es')
+         ? Some(e)
+         : Some(
+@@ -238,7 +261,7 @@ let rec transition = (~recursive=false, d: DHExp.t): option(DHExp.t) => {
+       | (Bool(_), _) => None
+       }
+     | (ListLit(ds), List(ty)) =>
+-      let ds' = List.map(d => recur(Asc(d, ty) |> DHExp.fresh), ds);
++      let ds' = List.map(d => recur_asc(d, ty), ds);
+       unchanged(ds, ds')
+         ? Some(e)
+         : Some(
+@@ -248,8 +271,8 @@ let rec transition = (~recursive=false, d: DHExp.t): option(DHExp.t) => {
+             ),
+           );
+     | (Cons(d1, d2), List(ty)) =>
+-      let d1' = recur(Asc(d1, ty) |> DHExp.fresh);
+-      let d2' = recur(Asc(d2, t) |> DHExp.fresh);
++      let d1' = recur_asc(d1, ty);
++      let d2' = recur_asc(d2, t);
+       d1' === d1 && d2' === d2
+         ? Some(e)
+         : Some(
+@@ -267,11 +290,7 @@ let rec transition = (~recursive=false, d: DHExp.t): option(DHExp.t) => {
+       Some(
+         IdTagged.fast_copy(
+           DHExp.rep_id(e),
+-          TypFun(
+-            tp,
+-            recur(Asc(body, Typ.subst(new_ty, tp', t')) |> DHExp.fresh),
+-            name,
+-          )
++          TypFun(tp, recur_asc(body, Typ.subst(new_ty, tp', t')), name)
+           |> DHExp.fresh,
+         ),
+       );
+@@ -279,11 +298,7 @@ let rec transition = (~recursive=false, d: DHExp.t): option(DHExp.t) => {
+       Some(
+         IdTagged.fast_copy(
+           DHExp.rep_id(e),
+-          If(
+-            recur(cond),
+-            recur(Asc(e1, t) |> DHExp.fresh),
+-            recur(Asc(e2, t) |> DHExp.fresh),
+-          )
++          If(recur(cond), recur_asc(e1, t), recur_asc(e2, t))
+           |> DHExp.fresh,
+         ),
+       )
+@@ -320,7 +335,7 @@ let rec transition = (~recursive=false, d: DHExp.t): option(DHExp.t) => {
+       let entry = ConstructorMap.get_entry(c, m);
+       switch (entry) {
+       | Some(Some(t')) =>
+-        let payload' = recur(Asc(payload, t') |> DHExp.fresh);
++        let payload' = recur_asc(payload, t');
+         payload' === payload
+           ? Some(e)
+           : Some(
+@@ -393,11 +408,7 @@ let rec transition = (~recursive=false, d: DHExp.t): option(DHExp.t) => {
+       Some(
+         IdTagged.fast_copy(
+           DHExp.rep_id(e),
+-          ListConcat(
+-            recur(Asc(d1, t) |> DHExp.fresh),
+-            recur(Asc(d2, t) |> DHExp.fresh),
+-          )
+-          |> DHExp.fresh,
++          ListConcat(recur_asc(d1, t), recur_asc(d2, t)) |> DHExp.fresh,
+         ),
+       )
+     | (Let(p, e1, e2), _) =>
