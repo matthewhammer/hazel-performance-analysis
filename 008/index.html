@@ -163,7 +163,7 @@
 </table></div>
 <p>The decisions are identical; only their cost changed. With the check cheap, a change in B also finishes before the autosave fires, so the save stopped landing in the middle of it. B's range was 1.06–1.9 s, with one change at 3.8 s.</p>
 <p>The fix is on a local branch of #2635 (<code>perf/2635-reuse-one-walk</code>, <code>cbdab791f5</code>), not pushed, for review. It adds a test that the one-walk check agrees with the trace check (the same term with new ids: equal; a lexeme-only edit: not; a real change: not). The existing test that a lexeme-only edit invalidates reuse still passes, as do the <code>Evaluator</code> (524), <code>Evaluator.Incremental</code> (46), <code>IncrSlides</code> (13), <code>CallMemo</code> (6) and <code>Equality</code> (8) groups.</p>
-<p>#2597 has no lexeme comparison in its check, so it has neither this cost nor that protection. <code>dev</code> compares lexemes by trace on every check, and without the hash shortcut, so the same fix would suit it, together with the shortcut.</p>
+<p>#2597 has no lexeme comparison in its check: it predates <a href="https://github.com/hazelgrove/hazel/commit/7de3875cd8"><code>7de3875cd8</code></a>, which added the comparison to <code>dev</code> after an in-place edit of <code>@@</code> to <code>@@@</code> showed the old operator's result. So #2597 has neither this cost nor that protection. <code>dev</code> compares lexemes by trace on every check, and without the hash shortcut, so the same fix would suit it, together with the shortcut.</p>
 
 <h2 id="measuring">Measuring it: two things that went wrong first</h2>
 <ul>
