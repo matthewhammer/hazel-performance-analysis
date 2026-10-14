@@ -19,6 +19,7 @@ A series of reports on making [Hazel](https://hazel.org) responsive enough for i
 | [011](011/) | Naming what a slider leaves alone |
 | [012](012/) | Moving a group, not its points |
 | [013](013/) | Telling the request what changed |
+| [014](014/) | What the page keeps from one edit to the next |
 
 The performance tracking issue is [hazelgrove/hazel#2609](https://github.com/hazelgrove/hazel/issues/2609); its findings are cited by number. Most of the work is on [#2635](https://github.com/hazelgrove/hazel/pull/2635) (livelits × modular editors) and [#2597](https://github.com/hazelgrove/hazel/pull/2597) (the full livelits branch).
 
