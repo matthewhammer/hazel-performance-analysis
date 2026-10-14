@@ -64,7 +64,7 @@ def info(repo, n):
 CARDS = open(os.path.join(HERE, "pr_cards.html"), encoding="utf-8").read()
 
 def add_cards(page):
-    page = re.sub(r"\n?<!-- pr-cards: begin -->.*?<!-- pr-cards: end -->\n?", "\n", page, flags=re.S)
+    page = re.sub(r"\s*<!-- pr-cards: begin -->.*?<!-- pr-cards: end -->", "", page, flags=re.S)
     keys = sorted({(r, n) for r, n in LINK.findall(page)}, key=lambda k: (k[0], int(k[1])))
     if not keys:
         return page
@@ -72,7 +72,7 @@ def add_cards(page):
     block = CARDS.replace("__CACHED__", json.dumps(cached, ensure_ascii=False).replace("</", "<\\/")) \
                  .replace("__BUILT__", time.strftime("%Y-%m-%d"))
     i = page.rfind("</body>")
-    return page[:i] + block + "\n" + page[i:] if i >= 0 else page + block
+    return page[:i].rstrip() + "\n" + block + "\n" + page[i:] if i >= 0 else page + block
 
 def run(path):
     src = open(path, encoding="utf-8").read()

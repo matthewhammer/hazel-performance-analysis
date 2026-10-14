@@ -10,7 +10,8 @@ unless it is already inside a link or names the page it is on; and an
 older chip, ^issue(N), into ^report(N). Leaves <head>,
 <script>, <style> and <svg> alone. Adds the chips' style once (between
 "refs" markers). Idempotent: run it on every new or changed page, like
-add_steps.py, add_theme.py and link_prs.py.
+add_steps.py, add_theme.py and link_prs.py. Each chip's link gets a hover
+card, read live (ref_cards.html).
 
   python3 tools/report_refs.py NNN/index.html [index.html series/index.html ...]"""
 import os, re, sys
@@ -63,6 +64,13 @@ def run(path):
         new = new[:new.index(BEGIN)] + STYLE + new[new.index(END) + len(END):]
     elif 'class="ref"' in new:
         new = new.replace("</body>", STYLE + "\n</body>", 1)
+    # each chip's link gets a hover card, read live (ref_cards.html; a
+    # report's card reads the report's page)
+    new = re.sub(r"\s*<!-- ref-cards: begin -->.*?<!-- ref-cards: end -->", "", new, flags=re.S)
+    if 'class="ref"' in new:
+        cards = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "ref_cards.html"), encoding="utf-8").read()
+        i = new.rfind("</body>")
+        new = new[:i].rstrip() + "\n" + cards.replace("__TICKETS__", "null") + "\n" + new[i:]
     if new != src:
         open(path, "w", encoding="utf-8").write(new)
     print(f"{path}: ^report chips {src.count('<b>^report(</b>')} -> {new.count('<b>^report(</b>')}")
