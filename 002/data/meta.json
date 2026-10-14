@@ -1,0 +1,38 @@
+{
+ "title": "Dress Up in Hazel",
+ "date": "2026-10-11",
+ "measured": "2026-10-11",
+ "question": "How did a plain HTML/JS prototype, played by real players (Messed Up Dress Up), become Hazel slides you can use (hair on the head, a neck, arms, a shirt with a style and a size, hands, eyes and a mouth), and what does a change cost on each new Livelit Playground slide, until its picture redraws?",
+ "headline": [
+  {"value": "4 + 1", "what": "new playground slides (Arms, Hands, Eyes, Mouth), and Shoes and Hair grown"},
+  {"value": "0.3–0.9 s", "what": "a change on Shoes and Hair or Arms, until the picture redraws"},
+  {"value": "0.5–1.7 s", "what": "a change on Eyes or Mouth"},
+  {"value": "1–2.5 s", "what": "a change on Hands, the heaviest: 1 s for round hands, 2.5 s for seven alien fingers"}
+ ],
+ "builds": [
+  {"name": "#2635, dev builds", "pr": "hazelgrove/hazel#2635", "commit": "not stated per measurement", "note": "the report links each feature's commit: 446dfbe74c (hair on the head), 2b8b102429 (the neck and the frame), 489e2db3f7 and 2bbbc6d85d (arms and the shirt), 744f0e0ad5 (hands), 658e850942 and b78faab21a (eyes and mouth); and the usability fixes 47afffcf10, b580d84aa1, 7bb257be0e, 38a6df851e. Which commit each time was measured on is not stated. The slides are kept in step on #2597, which was not timed here."},
+  {"name": "Kids' Choice, for comparison", "pr": "hazelgrove/hazel#2635", "commit": "as in ^report(1)", "note": "a release is about 0.13 s (cited from ^report(1), not measured here)"},
+  {"name": "Messed Up Dress Up (the plain HTML/JS game)", "commit": "version not stated in the report", "note": "\"the game itself takes under a millisecond\" (not timed in this report)"}
+ ],
+ "runtime": "headless Firefox over WebDriver, a fresh profile per run, dev builds of #2635 on Matthew's laptop (the Firefox version is not stated in the report)",
+ "runs": "one run each: each time in the table and the captions is one change, timed once. The Hands profile: four alien-finger changes. The Eyes slide's times are marked \"one run each\" in their caption.",
+ "measures": {
+  "until the picture redraws": "s: a change is a slider set or a button pressed; its time runs until the ^picture's SVG changes, polled every 0.2 s, so the times are good to about 0.2 s",
+  "Hands profile": "s per change, profiled: about 1.7 s on the main thread, in ^picture's view (Hazel code turning every point of the picture into SVG text), and about 1.5 s in the worker, computing the points; profiled times, real ones are smaller",
+  "points": "count: both hands, in two layers, with pads, come to over a thousand",
+  "seven alien fingers, before and after two cheap steps": "s: 4.7 to 2.5 (fewer points per shape: a pad a 12-gon, a fingertip arc 5 points; and the hand made once for both arms)",
+  "Eyes sliders, before finding the head's frame once": "s: 1.5–1.8, then 0.5–1.2"
+ },
+ "times": "a script sets a slider or presses a button, then polls the ^picture's SVG every 0.2 s until it changes. The Hands profile: the Gecko profiler, the main thread and the eval worker read apart. Every slide was also checked with the CLI (no static errors; the anchors where expected); the figures are the pictures' own SVG, saved after each change.",
+ "figures": [
+  {"section_id": "hair", "change": "pressing a hairdo", "printed": "0.3–0.4 s"},
+  {"section_id": "neck", "change": "the neck slider", "printed": "0.4 s"},
+  {"section_id": "arms", "change": "each arm slider", "printed": "0.5–0.7 s"},
+  {"section_id": "arms", "change": "the shirt's style, width and height", "printed": "0.6–0.9 s"},
+  {"section_id": "hands", "change": "round hands; twelve human or seven alien fingers", "printed": "about 1 s; 2.2–2.5 s"},
+  {"section_id": "face", "change": "Eyes: a style; a slider", "printed": "0.4–0.6 s; 0.5–1.2 s (one run each)"},
+  {"section_id": "face", "change": "Mouth: a smile change; an opening, teeth or tongue change", "printed": "0.8 s; 1.3–1.7 s"}
+ ],
+ "provenance": "No raw readings of this report survive: every number exists only as printed in the page, in its one table (tables.json) and in the captions of its pictures (figures, above). The Hands profile is not in this repository. The pictures are screenshots of the slides and carry no numbers.",
+ "raw_files": {}
+}

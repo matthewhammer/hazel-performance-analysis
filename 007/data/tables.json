@@ -1,0 +1,102 @@
+[
+ {
+  "section": "Is it really that long?",
+  "section_id": "really",
+  "columns": [
+   "Build",
+   "Scenes, first picture",
+   "Witch, first picture",
+   "When"
+  ],
+  "rows": [
+   [
+    "#2597, before the worker's slices ran back to back",
+    "297 s",
+    "172 s",
+    "2026-10-12 morning (finding 25)"
+   ],
+   [
+    "#2597, after it",
+    "301 s",
+    "",
+    "finding 25"
+   ],
+   [
+    "#2597, after the view's casts were fixed",
+    "286 s",
+    "",
+    "finding 28"
+   ],
+   [
+    "#2597, with all three of the day's view fixes",
+    "281 s",
+    "",
+    "^report(4)"
+   ],
+   [
+    "#2597 at 1fa1384445, tonight",
+    "287.5 s",
+    "173.1 s",
+    "2026-10-12 evening"
+   ],
+   [
+    "#2635 at 57c928cef4, tonight",
+    "11.4, 13.2, 12.5 s",
+    "11.8 s",
+    "2026-10-12 evening"
+   ]
+  ]
+ },
+ {
+  "section": "Where the five minutes go",
+  "section_id": "why",
+  "columns": [
+   "Part of the page's work",
+   "Share of the main thread"
+  ],
+  "rows": [
+   [
+    "Rebuilding the code editor's view of the whole program (main_view)",
+    "77%"
+   ],
+   [
+    "— of which, turning every tile of the program into the view (of_segment)",
+    "58%"
+   ],
+   [
+    "Recalculating (calculate)",
+    "19%"
+   ],
+   [
+    "— of which, statics on the whole program, from scratch",
+    "15%"
+   ]
+  ]
+ },
+ {
+  "section": "The fix, tried on #2597",
+  "section_id": "experiment",
+  "columns": [
+   "Build",
+   "Scenes, first picture",
+   "Witch, first picture"
+  ],
+  "rows": [
+   [
+    "#2597",
+    "287.5 s",
+    "173.1 s"
+   ],
+   [
+    "#2597 with c07bdacead",
+    "17.6, 16.6, 17.4 s",
+    "19.4, 18.9, 18.6 s"
+   ],
+   [
+    "#2635",
+    "11.4, 13.2, 12.5 s",
+    "11.8 s"
+   ]
+  ]
+ }
+]

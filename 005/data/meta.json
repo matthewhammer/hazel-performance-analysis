@@ -1,0 +1,81 @@
+{
+ "title": "Two threads, one picture: the worker, the page, and diffing the view",
+ "date": "2026-10-12",
+ "question": "A question from a meeting with Cyrus: how do our performance fixes so far compare with a more principled approach, where the worker builds a virtual DOM of each view, diffs it against the last one, and sends the page only the patches? Did we already do some of this, and how far does the idea go? Can a worker even build real DOM nodes? And is it expensive to keep several representations of the same DOM?",
+ "builds": [
+  {
+   "name": "2635 as read",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "b18cef1f5a",
+   "note": "the pipeline and the code facts were read from this commit, and from virtual_dom's compiled diff"
+  },
+  {
+   "name": "2635 profiled (update)",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "b18cef1f5a",
+   "note": "the update, later on 2026-10-12: a Gecko profile of two figure-size changes in the woods was taken on this commit"
+  }
+ ],
+ "runtime": "the update's profile: Firefox, with the Gecko profiler (the report states no Firefox version). Nothing else in the report was measured for it.",
+ "runs": "The body of the report measured nothing new: its numbers come from ^report(1) and ^report(4), and from the commit messages linked in the table of fixes. The update (later on 2026-10-12): one Gecko profile of two figure-size changes in the woods; the two runs took 4.4 and 4.1 s under the profiler.",
+ "measures": {
+  "Share (the update's table)": "%: of the samples of the page's main thread during the two figure-size changes, each sample counted once, under the innermost of the table's rows that it was in",
+  "evaluating the view, with its garbage collection": "%: about 69%, 'counting the garbage collection it causes' (the table's rows are 50% for evaluating the view and 21% for garbage collection, 'most of it during that evaluation')",
+  "what C would save": "%: at most about 2%, the two rows 'Converting Html to virtual DOM (HazelDOM)' (1.1%) and 'The virtual DOM diff and patch' (0.9%)",
+  "the fixes table ('What it does')": "sizes in KB, times in ms or s, counts: each fix's effect as measured in ^report(1) to ^report(4) or stated in the commit message linked beside it (the report does not say which number came from which)",
+  "the diff table ('Main-thread work saved')": "ms per answer: decoding 14 -> 1 ms, the page's decoding of an answer before and after 90994d4443, as in the fixes table"
+ },
+ "times": "the update gives shares of profiler samples, not times: profiling 'makes code with many small calls look slower than it is, so read the shares, not the times'",
+ "figures": {
+  "One change, in eight steps": "a diagram of who does what for one change (the worker's steps, the boundary, and steps 6-8 on the main thread); it carries no measured numbers"
+ },
+ "cited": [
+  {
+   "number": "about 400 KB -> about 16 KB",
+   "what": "a Kids' Choice release's messages between the threads, before and after the boundary shares parts by hash",
+   "from": "the report's method: ^report(1), ^report(4) and the commit messages linked in its table of fixes"
+  },
+  {
+   "number": "8 ms of a 104 ms redraw",
+   "what": "converting the Kids' Choice face's Html to the page, profiled",
+   "from": "^report(1)"
+  },
+  {
+   "number": "about 30 ms of a 310 ms redraw",
+   "what": "the browser's own layout and DOM work, in an earlier Kids' Choice profile",
+   "from": "'an earlier profile' (the report's method: ^report(1) or ^report(4))"
+  },
+  {
+   "number": "about 600 shapes",
+   "what": "the shapes the woods' picture view evaluates on every change",
+   "from": "^report(4)"
+  },
+  {
+   "number": "about half the page's time",
+   "what": "evaluating views, in the woods",
+   "from": "the report's method: ^report(1) or ^report(4)"
+  },
+  {
+   "number": "200,000 entries",
+   "what": "the cap on each of the worker's and the page's tables of shared values (a code fact, not a measurement)",
+   "from": "the code on #2635 at b18cef1f5a"
+  },
+  {
+   "number": "median 2.20 s -> 1.41 s",
+   "what": "the woods' redraw, after three changes that made the view cheaper",
+   "from": "^report(4)'s update"
+  },
+  {
+   "number": "about nine tenths of a run from scratch",
+   "what": "the worker's update cost after a slider edit on the Playground's figure slides (added 2026-10-13)",
+   "from": "^report(10), ^report(11)"
+  },
+  {
+   "number": "about 92 MB per slider edit",
+   "what": "what a tab keeps after every slider edit on Full Body on #2597 (added 2026-10-14)",
+   "from": "^report(14)"
+  }
+ ],
+ "provenance": "No raw file was kept with this report. The update's shares exist only as printed (the table under #update); the Gecko profile they were read from is not in data/. The body's numbers are quoted from earlier reports and commit messages, and their data is with those reports.",
+ "raw_files": {}
+}

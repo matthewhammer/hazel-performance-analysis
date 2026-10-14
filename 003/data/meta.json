@@ -1,0 +1,50 @@
+{
+ "title": "Requests from M and N",
+ "date": "2026-10-11",
+ "measured": "2026-10-11",
+ "question": "What did two players, M and N, ask for in Messed Up Dress Up in one day, which parts reached the Hazel slides that day, and what do those parts cost there, against the game itself?",
+ "headline": [
+  {
+   "value": "14",
+   "what": "deploys of the game between 14:39 and 16:10, each feature live as soon as it was ready"
+  },
+  {
+   "value": "1–5 ms",
+   "what": "the game redrawing its heaviest pictures (100 claws, 99 alien fingers, a scene)"
+  },
+  {
+   "value": "0.4–32 s",
+   "what": "a Hazel slide redrawing after one of today's hand sliders"
+  },
+  {
+   "value": "hands, mouth",
+   "what": "the features already formulated in the Hazel slides; costumes, stripes and backgrounds are next"
+  }
+ ],
+ "builds": [
+  {
+   "name": "#2635, served locally",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "not stated in the report",
+   "note": "the Hands and Full Body slides with the day's hand and mouth features; these reached both livelits branches (#2635 and #2597), and only #2635 was timed"
+  },
+  {
+   "name": "Messed Up Dress Up (the plain HTML/JS game)",
+   "commit": "not stated in the report",
+   "note": "the day's version; the before pictures are from earlier commits of the game"
+  }
+ ],
+ "runtime": "headless Firefox over WebDriver with a fresh profile, for both the Hazel slides and the game (the Firefox version is not stated in the report)",
+ "runs": "Hazel: single runs, one per change (\"read them as sizes rather than precise numbers\"; earlier reports saw a few tenths of a second between runs of the same change). Game: the median of 30 runs per setting.",
+ "measures": {
+  "Hazel slide redraw": "s: a script changes a slider (input and change events) or presses a button, then waits until the picture's SVG changes, up to 15–120 seconds. A change that draws the same picture never \"redraws\".",
+  "Game draw()": "ms: draw() plus a layout read (getBBox), the median of 30 runs per setting, to the nearest millisecond (Firefox rounds its timer to 1 ms)",
+  "per-finger cost": "s per finger: the alien hand's redraw grows about 0.3 s per finger; 100 claws cost about a quarter of that per claw (from the table, not profiled)",
+  "emoji reach": "eye-radii: measured in Firefox, a star or heart emoji reaches 1.97 eye-radii below its middle, not the 1.5 the game had assumed",
+  "deploys": "count: deploys of the game between 14:39 and 16:10"
+ },
+ "times": "Hazel: from the slider's input and change events, or a button press, until the picture's SVG changes. A first version gave up after 2 s when nothing was pending, but a Full Body slider shows nothing pending for most of its 2.4 s, so some early pictures were stale; the times here wait for the change. Game: draw() plus getBBox, timed in the page.",
+ "provenance": "No raw readings of this report survive: every number exists only as printed in the page, in its one table (tables.json) and its text. The pictures are the game's and the slides' own SVG, rasterized, and carry no numbers.",
+ "raw_files": {},
+ "tables_reading": "In the table, two Game draw() cells each span two rows in the page: \"1–2 ms\" covers the star row and the hand-angle and arm-length row, and \"3 ms at 100\" covers both claw rows. tables.json reads cell by cell, so the second row of each pair has two cells. The Game draw() cell for alien fingers 20 → 50 is empty in the page."
+}

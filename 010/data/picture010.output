@@ -1,0 +1,22 @@
+PICTURE full-body.hz 85->120 (picture = skinned(outfit)): shapes 49 before, 49 after; the same in place 41, the same somewhere 41, unhashable 0
+CALLNAMES full-body.hz PICTURE ONLY, FROM SCRATCH: executed 121973 steps, 110882 in calls; calls 3564 | same name 3522, same name and body 3486, reusable by name 2927 (outermost save 91471 steps, 75.0% of steps) | input changed but result the same 137 | by content 2968 (outermost save 91598 steps, 75.1%) | new names 42, vanished 42 | costly (>=40 steps) and reusable by name 2006, saving 90198 steps
+CALLNAMES full-body.hz PICTURE ONLY, FROM SCRATCH: unhashable (counted as changed): inputs 0, results 0, of 3564 calls
+CALLNAMES full-body.hz PICTURE ONLY, FROM SCRATCH: run again (not reusable by name), by function, own steps: shift_points+ 202 calls 6644 steps, clear_of_eyes+ 42 calls 2882 steps, along_lip+ 42 calls 2388 steps, skinned+ 26 calls 1183 steps, lip_y 39 calls 1014 steps, ^slider 27 calls 729 steps, ? 52 calls 566 steps, on_head+ 28 calls 531 steps
+CALLNAMES full-body.hz PICTURE ONLY, FROM SCRATCH: input differs: clear_of_eyes+, 35879 steps, result the same; variables differing: 
+CALLNAMES full-body.hz PICTURE ONLY, FROM SCRATCH: input differs: clear_of_eyes+, 34964 steps, result the same; variables differing: 
+CALLNAMES full-body.hz PICTURE ONLY, FROM SCRATCH: calls by steps: <10 801, 10-39 375, 40-399 1286, 400-3999 1045, >=4000 57
+PICTURE scenes.hz 70->90 (picture = Drawing.frame((x0, y0, x1, y1)) @ backdrop @ figure): shapes 570 before, 570 after; the same in place 544, the same somewhere 544, unhashable 0
+CALLNAMES scenes.hz PICTURE ONLY, FROM SCRATCH: executed 530960 steps, 529902 in calls; calls 31612 | same name 31603, same name and body 31594, reusable by name 28055 (outermost save 460743 steps, 86.8% of steps) | input changed but result the same 809 | by content 28065 (outermost save 460779 steps, 86.8%) | new names 9, vanished 9 | costly (>=40 steps) and reusable by name 12254, saving 435370 steps
+CALLNAMES scenes.hz PICTURE ONLY, FROM SCRATCH: unhashable (counted as changed): inputs 0, results 0, of 31612 calls
+CALLNAMES scenes.hz PICTURE ONLY, FROM SCRATCH: run again (not reusable by name), by function, own steps: ? 1280 calls 34173 steps, map+ 848 calls 13238 steps, init_helper+ 269 calls 5002 steps, verts+ 234 calls 3900 steps, skull 9 calls 2367 steps, fmin 313 calls 1878 steps, fmax 313 calls 1878 steps, skeleton 4 calls 1184 steps
+CALLNAMES scenes.hz PICTURE ONLY, FROM SCRATCH: input differs: woods, 249879 steps, result different; variables differing: 
+CALLNAMES scenes.hz PICTURE ONLY, FROM SCRATCH: input differs: on_stage, 239103 steps, result different; variables differing: 
+CALLNAMES scenes.hz PICTURE ONLY, FROM SCRATCH: calls by steps: <10 12658, 10-39 4184, 40-399 11709, 400-3999 2281, >=4000 780
+PICTURE witch.hz 85->120 (picture = skinned(dressed(outfit))): shapes 133 before, 133 after; the same in place 117, the same somewhere 117, unhashable 0
+CALLNAMES witch.hz PICTURE ONLY, FROM SCRATCH: executed 186699 steps, 179939 in calls; calls 5947 | same name 5895, same name and body 5848, reusable by name 4858 (outermost save 143908 steps, 77.1% of steps) | input changed but result the same 149 | by content 4909 (outermost save 144064 steps, 77.2%) | new names 52, vanished 52 | costly (>=40 steps) and reusable by name 3075, saving 138660 steps
+CALLNAMES witch.hz PICTURE ONLY, FROM SCRATCH: unhashable (counted as changed): inputs 0, results 0, of 5947 calls
+CALLNAMES witch.hz PICTURE ONLY, FROM SCRATCH: run again (not reusable by name), by function, own steps: shift_points+ 409 calls 13490 steps, dressed+ 110 calls 5030 steps, skinned+ 110 calls 4699 steps, clear_of_eyes+ 42 calls 2882 steps, along_lip+ 42 calls 2388 steps, ? 71 calls 1027 steps, lip_y 39 calls 1014 steps, with_points 27 calls 900 steps
+CALLNAMES witch.hz PICTURE ONLY, FROM SCRATCH: input differs: clear_of_eyes+, 35879 steps, result the same; variables differing: 
+CALLNAMES witch.hz PICTURE ONLY, FROM SCRATCH: input differs: clear_of_eyes+, 34964 steps, result the same; variables differing: 
+CALLNAMES witch.hz PICTURE ONLY, FROM SCRATCH: calls by steps: <10 1020, 10-39 1074, 40-399 2257, 400-3999 1391, >=4000 205
+ASSERT ran

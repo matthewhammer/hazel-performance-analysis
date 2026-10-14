@@ -309,6 +309,9 @@
   <li><b>Times:</b> node's CPU time (<code>Sys.time</code>) after a full collection. Each configuration (fresh ids, the two statics sites named, derived names kept on the values) and each workload (a slide's edit, or the woods) runs in its own process, so that none inherits another's heap or side tables: five timed runs, a slide's alternating the incremental and the fresh evaluation, the median shown with the fastest and slowest. Earlier versions of this report mixed runs from long sessions; the growth in Figure 11 is why that matters.</li>
   <li><b>Evaluation:</b> <code>Evaluator.evaluate_open</code>, as the page evaluates a view, of the Scenes slide cut at its picture and ending with the picture.</li>
   <li><b>Page and worker:</b> headless Firefox over WebDriver, the Scenes slide (woods), eight moves of the "across" slider by input events, six seconds apart, the console copied to a file. A slot is a field of a value as js_of_ocaml lays it out (an array); a part counts as equal in structure by a hash that skips 16-character strings, taken for ids.</li>
+  <!-- data-line: begin -->
+  <li><b>The numbers, for programs too:</b> every table in this report, and what its numbers measure, is also in this page as JSON, in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset. The same, with any raw files that survive, is in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/009/data"><code>009/data/</code></a>.</li>
+  <!-- data-line: end -->
 </ul>
 
 </main>
@@ -579,6 +582,388 @@
 })();
 </script>
 <!-- pr-cards: end -->
-
+<!-- report-data: begin -->
+<script type="application/json" id="report-data">
+{
+ "report": 9,
+ "title": "Names and reuse: what fresh ids cost Hazel",
+ "date": "2026-10-13",
+ "question": "How do fresh ids relate to lack of reuse in Hazel? An incremental system recognizes work it can reuse by identity, and identity is only as stable as the ids it hands out (Incremental Computation with Names, OOPSLA 2015). Measured on the Livelit Playground's slides: what statics and the evaluator rename, whether that costs reuse, and what deriving names instead would change and cost.",
+ "builds": [
+  {
+   "name": "measuring build",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "c4e64060f1",
+   "note": "with measuring code on a local branch, not pushed: counters in the reuse check and in Id.mk, the naming experiment behind a switch, and the message counts in ShareCodec"
+  }
+ ],
+ "configurations": {
+  "fresh": "fresh ids, as Hazel is (Id.mk, a gensym: a counter and random bytes)",
+  "named": "the two statics sites named by where they are: the livelit use's dispatch (UserLivelit.mk_expand_dot_def), each node's id derived from its parent's and its place among the parent's children, from a root derived from the use's own id; and an inserted ascription (StaticsBase.fresh_ascription), Id.derive(~salt=\"ascription\", Exp.rep_id(d))",
+  "derived": "a switch under which statics' and the evaluator's ids are computed instead of minted (at IdTagged.fresh, Exp.replace_all_ids, a variable lookup and Environment.extend): a node's id is a hash of its content (its constructor, its children's ids, its literals), computed with ValueHash. First measured with the hashes kept in a side table (a JavaScript WeakMap); the report's times are with each hash kept on its value (Merkle names, a hidden property of the JavaScript object)"
+ },
+ "runtime": "node, the test build (statics, reuse, evaluation and every time); headless Firefox over WebDriver for what crossed between the page and the eval worker. Versions not stated in the report.",
+ "programs": "the Livelit Playground's slides: Full Body, Witch, Scenes, Shirt and Pants and Polygons for the statics census; Full Body, Witch and Scenes for the slider edits; the Scenes slide cut at its woods picture (ending with Drawing.frame((x0, y0, x1, y1)) @ backdrop @ figure) for the evaluator's ids and the woods times",
+ "edits": "one integer literal replaced, a slider's model whose value occurs once in the slide, keeping its id: Full Body smile 85 -> 120, Witch smile 85 -> 120, Scenes eye size 70 -> 90. Between the page and the worker: eight moves of the Scenes slide's \"across\" slider by input events, six seconds apart.",
+ "runs": "Statics census: each slide parsed once (FastParse, MakeTerm) and analyzed twice with Statics.mk_unmemoized, the elaborations walked side by side. Reuse: each slide evaluated, the slider edited, the edited program analyzed again and evaluated against the first run's cache. Times: each configuration (fresh, named, derived) and each workload (a slide's edit, or the woods) in its own node process, five timed runs, a slide's alternating the incremental and the from-scratch evaluation. Counts: one run each; the report says the woods' 461,422 ids are the same number every run, and the fresh-ids reuse counts are the same in every raw file that has them (reuse009, derived009_side_table, derived009_on_values). The growth across a session (Figure 11): the woods with derived names, three rounds in one process, the third evaluation of each round timed.",
+ "measures": {
+  "nodes": "count: nodes of a slide's elaboration; the two elaborations have the same structure, node for node",
+  "renamed": "count: the same position in both elaborations with different ids (every one a node statics minted; no syntax id changes)",
+  "hash changed": "count: expressions whose structure was equal and for which Util.ValueHash.same (a Merkle hash, ids included) was false",
+  "same by hash, same by structure, different": "count: the eval worker's reuse check on the second run, after the slider edit: each part of the new elaboration checked against the cache of the last run, by id; 'the same' is one hash lookup, ids included, and if that fails, a walk comparing structure and lexemes, memoized (the check from ^report(8))",
+  "reused": "count: parts found the same with the same inputs, and reused",
+  "incremental, from scratch": "ms: one evaluation of the edited program (Evaluator.evaluate) against the first run's cache, and without it",
+  "the woods, one evaluation": "ms: Evaluator.evaluate_open, as the page evaluates a view, of the Scenes slide cut at its picture",
+  "ids minted, fresh ids": "count: Id.mk calls (gensyms), in statics analyzing the whole edited program again and in the incremental evaluation after the edit (Figure 9), or in one evaluation of the woods",
+  "picture nodes, distinct ids, nodes with program ids": "count: the woods picture's nodes, the distinct ids among them (copies of a value keep its id), and the nodes of a second evaluation's picture whose id is also in the first (every one an id of the program itself)",
+  "names kept": "count: nodes of the second woods picture sharing an id with the first run's (33,846 of 33,847 with derived names, 26,266 with fresh ids)",
+  "objects hashed, hashes found already made": "count: for one evaluation of the woods with derived names, the objects whose name was computed, and how many of those found one already made",
+  "slots sent, if equal values had equal ids": "count: what crossed between the page and the worker (Util.ShareCodec, already-sent values replaced by references, by hash, ids included), in slots: a slot is a field of a value as js_of_ocaml lays it out (an array); the second count is what would have been sent if every part equal in structure to one already sent had also gone as a reference, a part counting as equal in structure by a hash that skips 16-character strings, taken for ids",
+  "messages": "count: messages in each direction over the eight moves",
+  "cost": "ratio: the median with derived names kept on the values over the median with fresh ids"
+ },
+ "times": "node's CPU time (Sys.time) after a full collection (Gc.full_major); five timed runs per process, the median of all five shown with the fastest and slowest. The first incremental run in each process is usually its slowest (the JavaScript engine warming up).",
+ "raw_files": {
+  "data/times009.log": "The log of the timing protocol (one node process per configuration and workload, in sequence). '[<mode> <workload> exit <code>]' starts each process's lines; modes are fresh, named and derived (above). NAMES lines are the statics census (workload census): per slide 'NAMES <slide>: same object false, structure equal true, nodes N / N, syntax nodes S', then 'kept:' and 'renamed:' counts by sort (exp, pat, typ) and origin (syntax id, minted by statics, same object), then 'expressions whose hash differs (structure equal): other H'. A slide's renamed count is the sum of its 'renamed:' entries (Full Body, fresh: 351 + 254 + 62 = 667). TIMES lines: 'TIMES <mode> <slide> <from>-><to> | incremental t1 .. t5 | median m | scratch t1 .. t5 | median m' (ms, in run order, the two kinds of run alternating), and 'TIMES <mode> woods | one evaluation t1 .. t5 | median m'. Every time in the report's tables and Figures 5, 10 and 12 is from this file.",
+  "data/census009_fresh_by_kind.output": "The fresh-ids census process's full output: the same counts as times009.log's first block, with two kinds of line the log leaves out: 'a renamed case: ...' (one renamed livelit dispatch, printed as a term, ids opaque) and 'renamed, by kind: ...' (the renamed nodes by sort and kind of node, with counts): the source of the report's breakdown of Full Body's 667 renames.",
+  "data/reuse009.output": "REUSE lines, fresh ids ('==== FRESH (as today)') then named ('==== NAMED (the experiment)'): 'REUSE <slide> (<from> -> <to>): checked N; by hash a, by structure b, different c; reused r | incremental ..., median m | from scratch ..., median m'. The counts are the reuse table's (Figure 4). The times on these lines are from an earlier run and are superseded by times009.log (the report's update 'one set of timings').",
+  "data/mint009.output": "One MINT line: Id.mk calls in each of two evaluations of the woods picture, its nodes, its distinct ids, the nodes sharing an id with the first picture and how many of those are the program's own, and whether the two pictures are equal in structure and by hash.",
+  "data/derived009_side_table.output": "The derived-names experiment as first run, with the hashes in a side table. For each mode ('==== FRESH IDS (as today)', then '==== DERIVED NAMES (the experiment)'): the statics census (NAMES lines as above, with 'a renamed case' and 'renamed, by kind'); a DERIVED line per slide edit: 'gensyms: statics S, first evaluation E1; after the edit: statics S2, incremental evaluation E2 | reuse checked N: by hash a, by structure b, different c; reused r | incremental t ms, scratch t ms (medians of 3)'; and a woods line: Id.mk calls per evaluation, nodes, nodes sharing an id with the first run, equal in structure and by hash, one evaluation in ms. The gensym counts are Figure 9's table; the census under derived names is the source of 'statics' renames do not go: 652 on Full Body'. Its fresh-ids census is from a run before times009.log's and differs from the statics table by a few nodes (Full Body: 664 renamed and 690 hashes changed, against the table's 667 and 692); the table is times009.log's. Its derived-names times (Full Body from scratch 7,414 ms, the woods 44,197 ms against 1,912 ms) are the first measurement, which the report corrects: they were the cost of the side table, not of the names.",
+  "data/derived009_on_values.output": "The same experiment with each hash kept on its value: the same kinds of line, the same gensym counts, the woods' kept names (33,846 of 33,847), and per mode a line 'hashing in the timed evaluation: on-object names: walked N, reused M; ValueHash: walked ..., memo hits ..., no-hash ...; gensyms so far G'. Its times are medians of three in one process; the report's times are times009.log's.",
+  "data/hashing009_side_table.output": "The woods with derived names, hashes in the side table, three rounds in one process: per round 'hashing in the timed evaluation: objects walked 1033746, memo hits 932980, hits on no-hash/busy 0, gensyms G' and the woods line (its time in ms). The source of 'every evaluation hashes the same: 1,033,746 objects, with 932,980 hashes found already made'.",
+  "data/growth009_side_table.output": "Figure 11, hashes in the side table: the derived-names census of Full Body and Witch (NAMES lines), then the woods in three rounds in one process, the third evaluation of each round timed: 2,319, 5,463 and 6,296 ms (the 'one evaluation' at the end of each woods line).",
+  "data/growth009_side_table_17s.output": "Another run of the same kind (it too begins with the census of Full Body and Witch): 2,552, 4,054 and 17,228 ms; the last is the report's 'after analyzing two slides first, the third evaluation took 17.2 s'. What set this run apart from the one above is not stated in the report.",
+  "data/growth009_on_values.output": "Figure 11, hashes kept on the values: three rounds in one process, each with its hashing counts (on-object names walked 1,033,746, reused 932,980) and its woods line: 2,205, 2,484 and 2,221 ms."
+ },
+ "provenance": {
+  "between the page and the worker": "Exists only as printed: the wire table (32 and 8 messages; 387,625 against 347,920 slots, and 43,248 against 21,728), about 2,900 references a move, and requests of about 5,400 slots a move against 749,480 when the slide loads. The console log of the eight moves did not survive.",
+  "who mints": "Exists only as printed: the sample of Id.mk's callers (variable lookups 38%, environment frames 20%, ascriptions about 30%).",
+  "the session's growth": "Exists only as printed: the heap growing from 685 MB to 1.2 GB, the collector's pauses of 650 to 970 ms, and 'the whole derived-names experiment, both modes, in one process: 180 s, against 1,043 s with the side table'.",
+  "counts of code": "About 116 uses of rewrap in Transition is a count of the source, not a measurement."
+ },
+ "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
+ "tables": [
+  {
+   "section": "Statics, run again: what gets renamed",
+   "section_id": "statics",
+   "columns": [
+    "Slide",
+    "Nodes",
+    "Renamed, fresh ids",
+    "Renamed, named",
+    "Hash changed, fresh ids",
+    "Hash changed, named"
+   ],
+   "rows": [
+    [
+     "Full Body",
+     "111,462",
+     "667",
+     "85",
+     "692",
+     "247"
+    ],
+    [
+     "Witch",
+     "107,728",
+     "798",
+     "85",
+     "844",
+     "308"
+    ],
+    [
+     "Scenes",
+     "101,403",
+     "210",
+     "85",
+     "237",
+     "136"
+    ],
+    [
+     "Shirt and Pants",
+     "87,215",
+     "114",
+     "79",
+     "82",
+     "58"
+    ],
+    [
+     "Polygons",
+     "62,628",
+     "14",
+     "0",
+     "23",
+     "13"
+    ]
+   ]
+  },
+  {
+   "section": "What the eval worker reuses, and what it costs",
+   "section_id": "reuse",
+   "columns": [
+    "Slide (edit)",
+    "Ids",
+    "Same by hash",
+    "Same by structure",
+    "Different",
+    "Reused"
+   ],
+   "rows": [
+    [
+     "Full Body (smile 85 → 120)",
+     "fresh ids",
+     "943",
+     "105",
+     "139",
+     "336"
+    ],
+    [
+     "Full Body (smile 85 → 120)",
+     "named",
+     "1002",
+     "46",
+     "140",
+     "336"
+    ],
+    [
+     "Witch (smile 85 → 120)",
+     "fresh ids",
+     "2215",
+     "172",
+     "152",
+     "663"
+    ],
+    [
+     "Witch (smile 85 → 120)",
+     "named",
+     "2293",
+     "94",
+     "153",
+     "663"
+    ],
+    [
+     "Scenes (eye size 70 → 90)",
+     "fresh ids",
+     "110",
+     "106",
+     "31",
+     "114"
+    ],
+    [
+     "Scenes (eye size 70 → 90)",
+     "named",
+     "130",
+     "86",
+     "33",
+     "114"
+    ]
+   ]
+  },
+  {
+   "section": "What the eval worker reuses, and what it costs",
+   "section_id": "reuse",
+   "columns": [
+    "Slide",
+    "Incremental, ms",
+    "Median",
+    "From scratch, ms",
+    "Median",
+    "Named: incremental / scratch"
+   ],
+   "rows": [
+    [
+     "Full Body",
+     "621 476 494 500 499",
+     "499",
+     "448 457 464 484 469",
+     "464",
+     "552 / 508"
+    ],
+    [
+     "Witch",
+     "796 707 754 830 718",
+     "754",
+     "675 701 755 923 650",
+     "701",
+     "727 / 692"
+    ],
+    [
+     "Scenes",
+     "1522 1357 1416 1412 1455",
+     "1416",
+     "1453 1421 1444 1462 1464",
+     "1453",
+     "1416 / 1432"
+    ]
+   ]
+  },
+  {
+   "section": "Between the page and the worker",
+   "section_id": "wire",
+   "columns": [
+    "Direction",
+    "Messages",
+    "Slots sent",
+    "If equal values had equal ids",
+    "Ratio"
+   ],
+   "rows": [
+    [
+     "worker → page (results and streams)",
+     "32",
+     "387,625",
+     "347,920",
+     "1.11×"
+    ],
+    [
+     "page → worker (requests)",
+     "8",
+     "43,248",
+     "21,728",
+     "1.99×"
+    ]
+   ]
+  },
+  {
+   "section": "Caching in Hazel, in the paper's terms added later on 2026-10-13",
+   "section_id": "caching",
+   "columns": [
+    "",
+    "Hazel today",
+    "Incremental Computation with Names"
+   ],
+   "rows": [
+    [
+     "What is cached",
+     "Top-level nodes of the program",
+     "Any thunk, at any depth"
+    ],
+    [
+     "Identity",
+     "The editor's ids; a value's provenance (binding, path)",
+     "Names derived from the input names"
+    ],
+    [
+     "Dependencies",
+     "Static: the free variables statics finds",
+     "Dynamic: what each thunk forced, in order, with what it saw"
+    ],
+    [
+     "What invalidates",
+     "A dependency that was evaluated again",
+     "A dependency whose result changed"
+    ],
+    [
+     "Early cutoff",
+     "None",
+     "Yes: the observed result is compared"
+    ],
+    [
+     "Who decides",
+     "A re-run from the top, reusing what checks out",
+     "Demand: only what is dirty and asked for"
+    ],
+    [
+     "Correctness",
+     "Incremental agrees with fresh (the IncrSlides tests)",
+     "Proved: from-scratch consistency"
+    ]
+   ]
+  },
+  {
+   "section": "Derived names everywhere: an experiment added later on 2026-10-13",
+   "section_id": "derived",
+   "columns": [
+    "Slider edit",
+    "Statics, today",
+    "Statics, derived",
+    "Incremental evaluation, today",
+    "Incremental evaluation, derived"
+   ],
+   "rows": [
+    [
+     "Full Body (smile 85 → 120)",
+     "15,624",
+     "4,398",
+     "84,528",
+     "4,425"
+    ],
+    [
+     "Witch (smile 85 → 120)",
+     "18,637",
+     "4,995",
+     "147,081",
+     "6,842"
+    ],
+    [
+     "Scenes (eye size 70 → 90)",
+     "6,055",
+     "1,852",
+     "423,362",
+     "13,578"
+    ]
+   ]
+  },
+  {
+   "section": "Merkle names, kept on the values added later still on 2026-10-13",
+   "section_id": "merkle",
+   "columns": [
+    "",
+    "Fresh ids, as today",
+    "Derived names, kept on the values",
+    "Cost"
+   ],
+   "rows": [
+    [
+     "The woods, one evaluation",
+     "1,508 ms (1,489–1,780)",
+     "1,667 ms (1,629–1,785)",
+     "1.11×"
+    ],
+    [
+     "Full Body, from scratch",
+     "464 ms (448–484)",
+     "524 ms (503–535)",
+     "1.13×"
+    ],
+    [
+     "Witch, from scratch",
+     "701 ms (650–923)",
+     "852 ms (787–1,087)",
+     "1.22×"
+    ],
+    [
+     "Scenes, from scratch",
+     "1,453 ms (1,421–1,464)",
+     "1,897 ms (1,714–2,060)",
+     "1.31×"
+    ],
+    [
+     "The whole derived-names experiment, both modes, in one process",
+     "180 s, against 1,043 s with the side table",
+     "180 s, against 1,043 s with the side table",
+     ""
+    ]
+   ]
+  }
+ ],
+ "files": [
+  "data/census009_fresh_by_kind.output",
+  "data/derived009_on_values.output",
+  "data/derived009_side_table.output",
+  "data/growth009_on_values.output",
+  "data/growth009_side_table.output",
+  "data/growth009_side_table_17s.output",
+  "data/hashing009_side_table.output",
+  "data/meta.json",
+  "data/mint009.output",
+  "data/reuse009.output",
+  "data/tables.json",
+  "data/times009.log"
+ ],
+ "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/009/data"
+}
+</script>
+<!-- report-data: end -->
 </body>
 </html>

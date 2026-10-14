@@ -1,0 +1,703 @@
+[
+ {
+  "slide": "full-body.hz",
+  "name": "alien_fingers",
+  "shapes": 49,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "arm_angle",
+  "shapes": 49,
+  "changed": 30,
+  "kinds": {
+   "rotated": 30
+  },
+  "transforms": 2,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "arm_length",
+  "shapes": 49,
+  "changed": 30,
+  "kinds": {
+   "reshaped": 6,
+   "moved": 24
+  },
+  "transforms": 2,
+  "tree": 8,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "arm_width",
+  "shapes": 49,
+  "changed": 6,
+  "kinds": {
+   "reshaped": 6
+  },
+  "transforms": 0,
+  "tree": 6,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "claw_count",
+  "shapes": 49,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "claw_length",
+  "shapes": 49,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "eye_angle",
+  "shapes": 49,
+  "changed": 2,
+  "kinds": {
+   "rotated": 2
+  },
+  "transforms": 2,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "eye_gap",
+  "shapes": 49,
+  "changed": 4,
+  "kinds": {
+   "moved": 4
+  },
+  "transforms": 2,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "eye_shape",
+  "shapes": 49,
+  "changed": 2,
+  "kinds": {
+   "reshaped": 2
+  },
+  "transforms": 0,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "eye_size",
+  "shapes": 49,
+  "changed": 7,
+  "kinds": {
+   "reshaped": 3,
+   "scaled": 4
+  },
+  "transforms": 2,
+  "tree": 5,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "eye_whites",
+  "shapes": 49,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "fingers",
+  "shapes": 49,
+  "after": 129,
+  "structural": true
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "hand_angle",
+  "shapes": 49,
+  "changed": 24,
+  "kinds": {
+   "rotated": 24
+  },
+  "transforms": 2,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "hand_size",
+  "shapes": 49,
+  "changed": 24,
+  "kinds": {
+   "reshaped": 12,
+   "scaled": 12
+  },
+  "transforms": 2,
+  "tree": 14,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "iris_size",
+  "shapes": 49,
+  "after": 51,
+  "structural": true
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "mouth_open",
+  "shapes": 49,
+  "after": 54,
+  "structural": true
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "neck_length",
+  "shapes": 49,
+  "changed": 9,
+  "kinds": {
+   "reshaped": 1,
+   "moved": 8
+  },
+  "transforms": 1,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "shine_size",
+  "shapes": 49,
+  "changed": 2,
+  "kinds": {
+   "scaled": 2
+  },
+  "transforms": 2,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "shirt_height",
+  "shapes": 49,
+  "changed": 9,
+  "kinds": {
+   "moved": 8,
+   "reshaped": 1
+  },
+  "transforms": 2,
+  "tree": 3,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "shirt_width",
+  "shapes": 49,
+  "changed": 39,
+  "kinds": {
+   "moved": 36,
+   "reshaped": 2,
+   "scaled": 1
+  },
+  "transforms": 5,
+  "tree": 7,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "shoe_size",
+  "shapes": 49,
+  "changed": 4,
+  "kinds": {
+   "scaled": 4
+  },
+  "transforms": 2,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "smile",
+  "shapes": 49,
+  "changed": 8,
+  "kinds": {
+   "moved": 6,
+   "reshaped": 2
+  },
+  "transforms": 1,
+  "tree": 3,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "spikes",
+  "shapes": 49,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "star_count",
+  "shapes": 49,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "star_turn",
+  "shapes": 49,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "tongue_length",
+  "shapes": 49,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "full-body.hz",
+  "name": "tongue_width",
+  "shapes": 49,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "scenes.hz",
+  "name": "eye_glow",
+  "shapes": 570,
+  "changed": 26,
+  "kinds": {
+   "scaled": 26
+  },
+  "transforms": 25,
+  "tree": 25,
+  "structural": false
+ },
+ {
+  "slide": "scenes.hz",
+  "name": "eye_rate",
+  "shapes": 570,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "scenes.hz",
+  "name": "fig_size",
+  "shapes": 570,
+  "changed": 23,
+  "kinds": {
+   "scaled": 16,
+   "reshaped": 7
+  },
+  "transforms": 1,
+  "tree": 8,
+  "structural": false
+ },
+ {
+  "slide": "scenes.hz",
+  "name": "fig_x",
+  "shapes": 570,
+  "changed": 23,
+  "kinds": {
+   "moved": 23
+  },
+  "transforms": 1,
+  "tree": 1,
+  "structural": false
+ },
+ {
+  "slide": "scenes.hz",
+  "name": "fig_y",
+  "shapes": 570,
+  "changed": 23,
+  "kinds": {
+   "reshaped": 1,
+   "moved": 22
+  },
+  "transforms": 1,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "scenes.hz",
+  "name": "hut_near",
+  "shapes": 570,
+  "changed": 18,
+  "kinds": {
+   "scaled": 18
+  },
+  "transforms": 1,
+  "tree": 1,
+  "structural": false
+ },
+ {
+  "slide": "scenes.hz",
+  "name": "leg_size",
+  "shapes": 570,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "alien_fingers",
+  "shapes": 133,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "arm_angle",
+  "shapes": 133,
+  "changed": 30,
+  "kinds": {
+   "rotated": 30
+  },
+  "transforms": 2,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "arm_length",
+  "shapes": 133,
+  "changed": 30,
+  "kinds": {
+   "reshaped": 6,
+   "moved": 24
+  },
+  "transforms": 2,
+  "tree": 8,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "arm_width",
+  "shapes": 133,
+  "changed": 6,
+  "kinds": {
+   "reshaped": 6
+  },
+  "transforms": 0,
+  "tree": 6,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "broom_size",
+  "shapes": 133,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "cat_size",
+  "shapes": 133,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "claw_count",
+  "shapes": 133,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "claw_length",
+  "shapes": 133,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "eye_angle",
+  "shapes": 133,
+  "changed": 2,
+  "kinds": {
+   "rotated": 2
+  },
+  "transforms": 2,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "eye_gap",
+  "shapes": 133,
+  "changed": 4,
+  "kinds": {
+   "moved": 4
+  },
+  "transforms": 2,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "eye_shape",
+  "shapes": 133,
+  "changed": 2,
+  "kinds": {
+   "reshaped": 2
+  },
+  "transforms": 0,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "eye_size",
+  "shapes": 133,
+  "changed": 11,
+  "kinds": {
+   "reshaped": 7,
+   "scaled": 4
+  },
+  "transforms": 2,
+  "tree": 9,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "eye_whites",
+  "shapes": 133,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "fingers",
+  "shapes": 133,
+  "after": 213,
+  "structural": true
+ },
+ {
+  "slide": "witch.hz",
+  "name": "hand_angle",
+  "shapes": 133,
+  "changed": 24,
+  "kinds": {
+   "rotated": 24
+  },
+  "transforms": 2,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "hand_size",
+  "shapes": 133,
+  "changed": 24,
+  "kinds": {
+   "reshaped": 12,
+   "scaled": 12
+  },
+  "transforms": 2,
+  "tree": 14,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "iris_size",
+  "shapes": 133,
+  "after": 135,
+  "structural": true
+ },
+ {
+  "slide": "witch.hz",
+  "name": "mouth_open",
+  "shapes": 133,
+  "after": 138,
+  "structural": true
+ },
+ {
+  "slide": "witch.hz",
+  "name": "neck_length",
+  "shapes": 133,
+  "changed": 17,
+  "kinds": {
+   "reshaped": 1,
+   "moved": 16
+  },
+  "transforms": 1,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "nose_length",
+  "shapes": 133,
+  "changed": 4,
+  "kinds": {
+   "reshaped": 1,
+   "scaled": 3
+  },
+  "transforms": 3,
+  "tree": 4,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "shine_size",
+  "shapes": 133,
+  "changed": 2,
+  "kinds": {
+   "scaled": 2
+  },
+  "transforms": 2,
+  "tree": 2,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "shirt_height",
+  "shapes": 133,
+  "changed": 85,
+  "kinds": {
+   "moved": 84,
+   "reshaped": 1
+  },
+  "transforms": 3,
+  "tree": 4,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "shirt_width",
+  "shapes": 133,
+  "changed": 113,
+  "kinds": {
+   "moved": 54,
+   "reshaped": 3,
+   "scaled": 56
+  },
+  "transforms": 8,
+  "tree": 11,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "smile",
+  "shapes": 133,
+  "changed": 16,
+  "kinds": {
+   "moved": 14,
+   "reshaped": 2
+  },
+  "transforms": 1,
+  "tree": 3,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "spikes",
+  "shapes": 133,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "star_count",
+  "shapes": 133,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "star_turn",
+  "shapes": 133,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "tongue_length",
+  "shapes": 133,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ },
+ {
+  "slide": "witch.hz",
+  "name": "tongue_width",
+  "shapes": 133,
+  "changed": 0,
+  "kinds": {},
+  "transforms": 0,
+  "tree": 0,
+  "structural": false
+ }
+]

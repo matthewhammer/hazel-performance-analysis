@@ -1,0 +1,114 @@
+{
+ "title": "Catching performance regressions in CI",
+ "date": "2026-10-12",
+ "question": "The second question from a meeting with Cyrus: ^report(1) to ^report(5) found and fixed performance problems by hand, one profile at a time. What stops them coming back? What does Hazel's CI check today, why did its two benchmark workflows never work, why can a time not fail a build on GitHub's runners while a count can, what is the first count-based check (hazelgrove/hazel#2678), and should it build on #2161, an earlier benchmarking PR, or start fresh?",
+ "builds": [
+  {
+   "name": "dev's workflows",
+   "branch": "dev",
+   "commit": "e12145c69b",
+   "note": "the workflow files read; dev's branch protection and the runs' logs read with the GitHub CLI"
+  },
+  {
+   "name": "dev's CI runs",
+   "branch": "dev",
+   "commit": "not stated in the report",
+   "note": "the last ten green dev runs, 2026-09-22 to 10-09, each a different commit; the last five, with nearly the same tests (4,699-4,704), are the ones quoted"
+  },
+  {
+   "name": "2678",
+   "pr": "hazelgrove/hazel#2678",
+   "commit": "not stated in the report",
+   "note": "the first count-based check: Evaluator.evaluate_counting_work and the PerfBudgets test group, 'one small commit on today's dev'"
+  },
+  {
+   "name": "2678, reuse off",
+   "pr": "hazelgrove/hazel#2678",
+   "commit": "not stated in the report",
+   "note": "the same test, with reuse switched off in IncrEval.reuse_check, to see it fail"
+  },
+  {
+   "name": "the woods' picture view (update)",
+   "commit": "not stated in the report",
+   "note": "the update, later on 2026-10-12: 'one build', with the variants compared in turn (the points strings made more directly; the view's call memo turned off)"
+  }
+ ],
+ "runtime": "CI times: GitHub's shared runners, as read from the runs' logs. Counts: node, on the laptop, in Hazel's quick test suite (#2678's PerfBudgets group, under a second). The update's view times: on the page, in a browser (the report does not name it).",
+ "runs": "CI noise: the 'Test Successful in N s' lines of the last ten green dev runs (2026-09-22 to 10-09); the five most recent, with nearly the same suite (4,699-4,704 tests), are the ones quoted. Counts: #2678's test run twice, and once with reuse switched off; 'the counts are the same on every run'. Update: one build, the variants compared in turn; changes in the whole redraw 'were too noisy to see', so the view's own evaluation was timed.",
+ "measures": {
+  "Time (What CI runs today)": "min or h: each workflow's run time, from its runs' logs read with the GitHub CLI (the report does not say how many runs each)",
+  "full test job": "s: the full test job's 'Test Successful in N s' time over the last five dev runs: 1,110-1,453 s, mean 1,323 s, standard deviation 127 s (about 10%)",
+  "quick job": "s: the quick job's time over the same five runs: 145-147 s four times, 87 s once",
+  "Steps now": "count: the steps the evaluator's trampoline actually took (Evaluator.evaluate_counting_work); a result taken from the cache counts as the one step that fetches it. Not the evaluator's older step count, which counts a reused subtree's steps again",
+  "Budget": "count: the PerfBudgets test's ceiling per case; the re-run must also stay under 5% of a cold run, whatever the budgets",
+  "Steps (update)": "count: evaluation steps of the woods' picture view",
+  "The view's time (update)": "ms: the view's own evaluation on the page, a timer around it"
+ },
+ "times": "CI: the logs' 'Test Successful in N s' lines. The update: a timer around the view's own evaluation, the variants compared in turn on one build.",
+ "readings": {
+  "PerfBudgets, cold run": {
+   "steps": 206834,
+   "budget": 227000,
+   "program": "recursion, list traversals and case matches (a smaller bench/eval-bench.hz)"
+  },
+  "PerfBudgets, re-run after an edit to a literal nothing else reads": {
+   "steps": 378,
+   "budget": 420,
+   "also": "under 5% of a cold run"
+  },
+  "PerfBudgets, re-run with reuse switched off": {
+   "steps": 206834,
+   "result": "fails: 'over its budget of 420. A performance regression'"
+  },
+  "full test job, last five dev runs": {
+   "range_s": [
+    1110,
+    1453
+   ],
+   "mean_s": 1323,
+   "sd_s": 127
+  },
+  "quick job, last five dev runs": {
+   "s": "145-147 four times, 87 once"
+  }
+ },
+ "cited": [
+  {
+   "number": "2026-03-06",
+   "what": "the last two real successes of /perf, on #2161; one on 08-12 'succeeded' with nothing to compare against; the last run on dev, 09-30, exited with 'No such file or directory'",
+   "from": "the runs' logs"
+  },
+  {
+   "number": "10% and 0.5 ms",
+   "what": "the threshold at which #2161's comparison script marks a change (it always exits successfully)",
+   "from": "the benchmark workflows' comparison script, from #2161"
+  },
+  {
+   "number": "48 commits, +2,376 and -323 lines in 30 files",
+   "what": "#2161, 'Performance benchmarking', by David Moon: a draft opened 2026-03-05, last commit 2026-03-13",
+   "from": "#2161"
+  },
+  {
+   "number": "median of 10 runs; let-chains of 100 and 500 bindings",
+   "what": "#2161's harness, bench/hazel_bench.re, timing the editor's syntax and statics phases in four scenarios",
+   "from": "#2161"
+  },
+  {
+   "number": "about 11 minutes",
+   "what": "the cost of a run of #2161's separate job, building base and head",
+   "from": "the report's comparison table"
+  },
+  {
+   "number": "15,500 nodes",
+   "what": "the woods' picture, rebuilt whole in one step at every typed parameter it crossed, by giving a value a type",
+   "from": "the report's update"
+  },
+  {
+   "number": "20-25% faster",
+   "what": "the view, after removing that copying, with its step count not much changed",
+   "from": "^report(4)'s update, #2679"
+  }
+ ],
+ "provenance": "No raw file was kept with this report: the CI logs were read with the GitHub CLI and not saved, the counts are as #2678's test printed them, and the update's times exist only as printed (the table under #update). Every number here exists only as printed in the report.",
+ "raw_files": {}
+}

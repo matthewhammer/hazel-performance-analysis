@@ -316,6 +316,9 @@
   <li><b>Edits:</b> every <code>Drawing.^slider</code> on the three slides, found by its <code>let</code>'s name; its model is the literal the slider's outer call is applied to. Each moved by a fifth of its range.</li>
   <li><b>Runs:</b> node, the test build; each slide cut at its picture, analyzed with <code>Statics.mk_unmemoized</code>, evaluated with <code>Evaluator.evaluate</code> once before the edits, again with no edit (the control, from scratch and incrementally), and twice for each edit. Steps are counted as the evaluator takes them; they are deterministic, so one run of each suffices, and every control is clean.</li>
   <li><b>Fumola:</b> the merge sort and its notes at commit <a href="https://github.com/Adapton/fumola/commit/667a34d5f24b52c9ed1355703294ab58e7acb6fc"><code>667a34d5f2</code></a>.</li>
+  <!-- data-line: begin -->
+  <li><b>The numbers, for programs too:</b> every table in this report, and what its numbers measure, is also in this page as JSON, in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset. The same, with any raw files that survive, is in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/011/data"><code>011/data/</code></a>.</li>
+  <!-- data-line: end -->
 </ul>
 
 </main>
@@ -586,6 +589,1416 @@
 })();
 </script>
 <!-- pr-cards: end -->
-
+<!-- report-data: begin -->
+<script type="application/json" id="report-data">
+{
+ "report": 11,
+ "title": "Naming what a slider leaves alone",
+ "date": "2026-10-13",
+ "question": "How close could Hazel get to evaluating only what a slider change touches? ^report(10)'s question asked of every slider on three Livelit Playground slides, and of how the answer depends on how the calls are named, taking the design space of names from the merge sort in Fumola, where one computation is named three ways.",
+ "builds": [
+  {
+   "name": "measuring build",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "c4e64060f1",
+   "note": "with ^report(10)'s oracle extended on a local branch, not pushed: the reads of each call (variable lookups and callee results), a localized and an operand name for each call, and names told apart by order"
+  }
+ ],
+ "fumola": "the worked example, not measured here: Fumola's merge sort (levelTree.fumola) and its notes on naming, at commit 667a34d5f2",
+ "runtime": "node, the test build. Versions not stated in the report.",
+ "programs": "the Livelit Playground's Full Body, Witch and Scenes slides, each cut at its picture as in ^report(10)",
+ "edits": "every Drawing.^slider on the three slides, 63 in all, found by its let's name; its model is the literal the slider's outer call is applied to. Each moved by a fifth of its range (down, if up would leave the range), with its literal's id kept, as a slider's commit keeps it. Each edit's slider, label, old and new value are in its ladder line.",
+ "runs": "Each slide analyzed with Statics.mk_unmemoized and evaluated with Evaluator.evaluate once before the edits, again with no edit (the control, from scratch and incrementally), and twice for each edit: from scratch, and incrementally against the first run's cache, as the eval worker does. Every call of the two runs after the edit compared with the run before. Steps are deterministic, so one run of each suffices; every control is clean (the same program evaluated twice matches every call under every name, once names that would collide are told apart by their order). Two further runs: the eye-size and eye-gap edits on Full Body and Witch again, with every call's variables recorded (the diagnosis), and three Full Body sliders moved by one instead of a fifth.",
+ "measures": {
+  "picture diff": "% (or count of shapes): the shapes of the picture the edit changed, as a share of the picture's shapes, found by comparing the two pictures shape by shape (as in ^report(10)). A diff of the result, not of the computation; it counts shapes, not steps. Edits that change how many shapes there are have none (printed 'B -> A shapes').",
+  "trace distance": "% of a run from scratch: the fewest steps any update could evaluate again, under the best matching of the new run's trace to the old one's (in the sense of Acar and colleagues' work on self-adjusting computation). It belongs to the program and the edit, not to any cache. Estimated from above, by matching whole calls by their content (any call before with the same code and the same inputs), and more finely by matching each call's own steps by what it reads.",
+  "update cost": "% of a run from scratch: the steps an actual update evaluates again, given its cache, how its cache names what it keeps, and how it decides what to evaluate again: the steps of Hazel's incremental run today less what a memo of calls keyed by the scheme could skip, over the steps of the edited program evaluated from scratch. Never below the trace distance.",
+  "Hazel's update, steps": "count: the steps of Hazel's incremental run after the edit (it caches top-level bindings by the editor's ids)",
+  "naming schemes": "by position (the call path and a count, ^report(10)'s; 'path' in the raw files), by the caller (the caller's site and inputs, made unique by order; 'local'), by operand (the call site and the argument's value, made unique by order; 'operand'), by content (the call's code and every input)",
+  "outcomes": "count of calls after the edit, under a scheme: equal (a call before had its name and the same inputs), notEqual (its name, other inputs), onlyRight (a name new to this run); onlyLeft counts the calls before whose name is gone",
+  "collisions": "count: calls in one run sharing a name with an earlier call under a scheme, before names are told apart by order (Full Body: 1,375 by operand, 609 by caller)",
+  "reads": "steps: an update that matches each call's own steps by what it reads (every variable its own steps look up and the result of every call it makes, each with the hash of its value): a call whose reads all saw what the call of its name saw before skips its own steps",
+  "cells": "steps, an upper bound: as reads, with every list a call reads compared by its head alone, the rest stood in for by a name",
+  "shapes changed, moved, scaled, rotated, reshaped": "count (Figure 5): each changed shape compared with its old self: moved (every point translated alike), scaled (and maybe moved), rotated (and maybe scaled and moved), each one transform of the shape's old points; or reshaped, its geometry itself changed (the table's reshaped column includes shapes whose style alone changed)",
+  "distinct transforms, nodes changed with transforms": "count: the distinct transforms among the changed shapes, and the nodes that would change in a picture of groups with transforms, at best: one per distinct transform plus one per shape reshaped or restyled",
+  "functions that run again (eye sliders)": "for the eye-size and eye-gap edits, by position: each function whose calls run again, its calls, its own steps, and the variables whose values differ most often among those calls"
+ },
+ "table_notes": "The four tables under #eyes have the same columns and no caption; the paragraph above each names it. In order: Full Body, eye size; Full Body, eye gap; Witch, eye size; Witch, eye gap. Each lists the eight functions with the most own steps among the calls that run again, by position.",
+ "times": "not timed: counts of evaluation steps, not times, from an oracle that watches and reuses nothing, with every check free",
+ "raw_files": {
+  "data/ladder011.output": "The ladder: one tab-separated LADDER line per edit, and a CONTROL line per slide (66 lines; Scenes, then Full Body, then Witch). Fields: 'LADDER <slide>', the slider's name, its label, the old value, the new value, 'shapes <before> <after> same <n>' (n: shapes equal in place; -1 when the count changes), then 'SCRATCH' and the edited program evaluated from scratch, then 'TODAY' and it evaluated incrementally against the first run's cache. Each run: 'executed E in_calls C calls N content K' (K: the steps of the outermost calls matched by content) and one field per scheme, path, local and operand: '<scheme> skip S reads R cells L | equal a notEqual b onlyLeft c onlyRight d collisions e' (S: the steps of the outermost calls a memo keyed by the scheme could skip; R, L: the steps saved matching own steps by reads, and by reads with lists as named cells; then the four outcomes and the collisions). An update's cost is the TODAY run's E less what it saves (S, R, L or K), over the SCRATCH run's E. The sweep table, Figures 1 to 4 and the numbers in the text are from this file.",
+  "data/diag011.output": "The eye sliders' diagnosis: a run with every call's variables recorded, of the eye-size and eye-gap edits on Full Body and Witch, with each slide's control, as LADDER lines (as above), and tab-separated DIAG lines: 'DIAG <slide> <slider>', the function, '<n> calls', '<n> own steps', and 'differing:' the variables whose values differ most often among its calls, with counts (up to twelve functions an edit, by own steps; the report's tables show eight).",
+  "data/representation011.json": "Figure 5 and the representation table: a JSON list, one entry per edit, {slide, name, shapes, changed, kinds: {moved, scaled, rotated, reshaped, style}, transforms, tree, structural}: the shapes the edit changed, classified (above), the distinct transforms among them, and 'tree', the nodes that would change in a picture of groups with transforms, at best. An edit that changes how many shapes there are has structural true, and the shape counts before and after instead. Made by a script from the exported picture of every edit (68 JSON files, about 5.5 MB, not kept here).",
+  "data/small_steps011.output": "Three Full Body sliders moved by one instead (shirt width 66 -> 67, arm length 95 -> 96, hand size 14 -> 15), with the control, as LADDER lines: the source of 'moved by one instead, Full Body's shirt width, arm length and hand size change the same 39, 30 and 24 of its 49 shapes'."
+ },
+ "provenance": {
+  "dated notes": "The notes added later on 2026-10-13 that point to ^report(12) (at most 14 nodes, the tree flattened is today's picture) are that report's measurements (012/data/).",
+  "Fumola": "The Fumola section reports no measurements; its claims about pathwise, inductive and cartesian names are from Fumola's notes at commit 667a34d5f2."
+ },
+ "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
+ "tables": [
+  {
+   "section": "Every slider",
+   "section_id": "sweep",
+   "columns": [
+    "Slide",
+    "Slider",
+    "Edit",
+    "Picture diff",
+    "Hazel's update, steps",
+    "Update cost, by position",
+    "by operand",
+    "by content"
+   ],
+   "rows": [
+    [
+     "Scenes",
+     "figure size",
+     "100 → 138",
+     "23 of 570",
+     "27,982",
+     "5%",
+     "5%",
+     "5%"
+    ],
+    [
+     "Scenes",
+     "across",
+     "0 → 120",
+     "23 of 570",
+     "27,983",
+     "5%",
+     "5%",
+     "5%"
+    ],
+    [
+     "Scenes",
+     "up, down",
+     "0 → 76",
+     "23 of 570",
+     "27,984",
+     "5%",
+     "5%",
+     "5%"
+    ],
+    [
+     "Scenes",
+     "leg size",
+     "100 → 156",
+     "0 of 570",
+     "489,105",
+     "0%",
+     "0%",
+     "0%"
+    ],
+    [
+     "Scenes",
+     "hut nearer",
+     "0 → 20",
+     "18 of 570",
+     "489,105",
+     "3%",
+     "3%",
+     "3%"
+    ],
+    [
+     "Scenes",
+     "eye size",
+     "70 → 90",
+     "26 of 570",
+     "489,105",
+     "10%",
+     "10%",
+     "10%"
+    ],
+    [
+     "Scenes",
+     "blinks a minute",
+     "30 → 78",
+     "0 of 570",
+     "41",
+     "0%",
+     "0%",
+     "0%"
+    ],
+    [
+     "Full Body",
+     "shirt width",
+     "66 → 88",
+     "39 of 49",
+     "108,558",
+     "21%",
+     "21%",
+     "21%"
+    ],
+    [
+     "Full Body",
+     "shirt height",
+     "146 → 202",
+     "9 of 49",
+     "108,048",
+     "5%",
+     "5%",
+     "5%"
+    ],
+    [
+     "Full Body",
+     "neck",
+     "28 → 40",
+     "9 of 49",
+     "105,197",
+     "9%",
+     "9%",
+     "9%"
+    ],
+    [
+     "Full Body",
+     "shoe size",
+     "100 → 158",
+     "4 of 49",
+     "104,189",
+     "3%",
+     "3%",
+     "3%"
+    ],
+    [
+     "Full Body",
+     "arms (up / down)",
+     "55 → 127",
+     "30 of 49",
+     "104,193",
+     "17%",
+     "17%",
+     "17%"
+    ],
+    [
+     "Full Body",
+     "arm length",
+     "95 → 213",
+     "30 of 49",
+     "104,189",
+     "17%",
+     "17%",
+     "17%"
+    ],
+    [
+     "Full Body",
+     "arm width",
+     "16 → 27",
+     "6 of 49",
+     "104,189",
+     "2%",
+     "2%",
+     "2%"
+    ],
+    [
+     "Full Body",
+     "hand size",
+     "14 → 30",
+     "24 of 49",
+     "104,189",
+     "23%",
+     "23%",
+     "23%"
+    ],
+    [
+     "Full Body",
+     "human fingers",
+     "5 → 25",
+     "49 → 129 shapes",
+     "184,214",
+     "52%",
+     "51%",
+     "50%"
+    ],
+    [
+     "Full Body",
+     "alien fingers",
+     "3 → 23",
+     "0 of 49",
+     "104,189",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Full Body",
+     "star points",
+     "5 → 25",
+     "0 of 49",
+     "104,189",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Full Body",
+     "star turn (% to the next point)",
+     "0 → 20",
+     "0 of 49",
+     "104,189",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Full Body",
+     "claws",
+     "4 → 24",
+     "0 of 49",
+     "104,189",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Full Body",
+     "claw length",
+     "100 → 276",
+     "0 of 49",
+     "104,189",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Full Body",
+     "hand angle",
+     "0 → 72",
+     "24 of 49",
+     "110,025",
+     "20%",
+     "20%",
+     "20%"
+    ],
+    [
+     "Full Body",
+     "eye size",
+     "50 → 117",
+     "7 of 49",
+     "104,025",
+     "51%",
+     "51%",
+     "51%"
+    ],
+    [
+     "Full Body",
+     "eye gap",
+     "38 → 78",
+     "4 of 49",
+     "102,429",
+     "45%",
+     "45%",
+     "45%"
+    ],
+    [
+     "Full Body",
+     "eye shape (round / narrow)",
+     "0 → 20",
+     "2 of 49",
+     "104,189",
+     "42%",
+     "42%",
+     "42%"
+    ],
+    [
+     "Full Body",
+     "eye angle",
+     "0 → 24",
+     "2 of 49",
+     "104,029",
+     "42%",
+     "42%",
+     "42%"
+    ],
+    [
+     "Full Body",
+     "iris size",
+     "0 → 30",
+     "49 → 51 shapes",
+     "112,424",
+     "56%",
+     "54%",
+     "54%"
+    ],
+    [
+     "Full Body",
+     "eye whites",
+     "0 → 30",
+     "0 of 49",
+     "104,189",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Full Body",
+     "shine size",
+     "45 → 75",
+     "2 of 49",
+     "104,189",
+     "6%",
+     "6%",
+     "6%"
+    ],
+    [
+     "Full Body",
+     "smile",
+     "85 → 145",
+     "8 of 49",
+     "104,189",
+     "15%",
+     "15%",
+     "15%"
+    ],
+    [
+     "Full Body",
+     "mouth open",
+     "0 → 60",
+     "49 → 54 shapes",
+     "134,282",
+     "29%",
+     "28%",
+     "27%"
+    ],
+    [
+     "Full Body",
+     "spiky teeth",
+     "5 → 8",
+     "0 of 49",
+     "104,189",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Full Body",
+     "tongue length",
+     "100 → 158",
+     "0 of 49",
+     "104,189",
+     "2%",
+     "2%",
+     "2%"
+    ],
+    [
+     "Full Body",
+     "tongue width",
+     "100 → 144",
+     "0 of 49",
+     "104,189",
+     "2%",
+     "2%",
+     "2%"
+    ],
+    [
+     "Witch",
+     "shirt width",
+     "66 → 88",
+     "113 of 133",
+     "176,681",
+     "37%",
+     "37%",
+     "37%"
+    ],
+    [
+     "Witch",
+     "shirt height",
+     "146 → 202",
+     "85 of 133",
+     "176,171",
+     "19%",
+     "19%",
+     "19%"
+    ],
+    [
+     "Witch",
+     "neck",
+     "28 → 40",
+     "17 of 133",
+     "171,878",
+     "15%",
+     "15%",
+     "15%"
+    ],
+    [
+     "Witch",
+     "arms (up / down)",
+     "55 → 127",
+     "30 of 133",
+     "170,874",
+     "17%",
+     "17%",
+     "17%"
+    ],
+    [
+     "Witch",
+     "arm length",
+     "95 → 213",
+     "30 of 133",
+     "170,870",
+     "17%",
+     "17%",
+     "17%"
+    ],
+    [
+     "Witch",
+     "arm width",
+     "16 → 27",
+     "6 of 133",
+     "170,870",
+     "6%",
+     "6%",
+     "6%"
+    ],
+    [
+     "Witch",
+     "hand size",
+     "14 → 30",
+     "24 of 133",
+     "170,870",
+     "21%",
+     "21%",
+     "21%"
+    ],
+    [
+     "Witch",
+     "human fingers",
+     "5 → 25",
+     "133 → 213 shapes",
+     "256,735",
+     "44%",
+     "44%",
+     "42%"
+    ],
+    [
+     "Witch",
+     "alien fingers",
+     "3 → 23",
+     "0 of 133",
+     "170,870",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Witch",
+     "star points",
+     "5 → 25",
+     "0 of 133",
+     "170,870",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Witch",
+     "star turn (% to the next point)",
+     "0 → 20",
+     "0 of 133",
+     "170,870",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Witch",
+     "claws",
+     "4 → 24",
+     "0 of 133",
+     "170,870",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Witch",
+     "claw length",
+     "100 → 276",
+     "0 of 133",
+     "170,870",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Witch",
+     "hand angle",
+     "0 → 72",
+     "24 of 133",
+     "176,706",
+     "19%",
+     "19%",
+     "19%"
+    ],
+    [
+     "Witch",
+     "eye size",
+     "50 → 117",
+     "11 of 133",
+     "170,706",
+     "42%",
+     "42%",
+     "42%"
+    ],
+    [
+     "Witch",
+     "eye gap",
+     "38 → 78",
+     "4 of 133",
+     "169,110",
+     "34%",
+     "34%",
+     "34%"
+    ],
+    [
+     "Witch",
+     "eye shape (round / narrow)",
+     "0 → 20",
+     "2 of 133",
+     "170,870",
+     "32%",
+     "32%",
+     "32%"
+    ],
+    [
+     "Witch",
+     "eye angle",
+     "0 → 24",
+     "2 of 133",
+     "170,710",
+     "32%",
+     "32%",
+     "32%"
+    ],
+    [
+     "Witch",
+     "iris size",
+     "0 → 30",
+     "133 → 135 shapes",
+     "179,251",
+     "50%",
+     "45%",
+     "45%"
+    ],
+    [
+     "Witch",
+     "eye whites",
+     "0 → 30",
+     "0 of 133",
+     "170,870",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Witch",
+     "shine size",
+     "45 → 75",
+     "2 of 133",
+     "170,870",
+     "9%",
+     "9%",
+     "9%"
+    ],
+    [
+     "Witch",
+     "witch nose length",
+     "100 → 174",
+     "4 of 133",
+     "170,870",
+     "13%",
+     "13%",
+     "13%"
+    ],
+    [
+     "Witch",
+     "cat size",
+     "100 → 298",
+     "0 of 133",
+     "170,870",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Witch",
+     "broom size",
+     "100 → 298",
+     "0 of 133",
+     "170,870",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Witch",
+     "smile",
+     "85 → 145",
+     "16 of 133",
+     "170,870",
+     "19%",
+     "19%",
+     "19%"
+    ],
+    [
+     "Witch",
+     "mouth open",
+     "0 → 60",
+     "133 → 138 shapes",
+     "201,329",
+     "28%",
+     "24%",
+     "23%"
+    ],
+    [
+     "Witch",
+     "spiky teeth",
+     "5 → 8",
+     "0 of 133",
+     "170,870",
+     "1%",
+     "1%",
+     "1%"
+    ],
+    [
+     "Witch",
+     "tongue length",
+     "100 → 158",
+     "0 of 133",
+     "170,870",
+     "2%",
+     "2%",
+     "2%"
+    ],
+    [
+     "Witch",
+     "tongue width",
+     "100 → 144",
+     "0 of 133",
+     "170,870",
+     "2%",
+     "2%",
+     "2%"
+    ]
+   ]
+  },
+  {
+   "section": "Naming, a design space",
+   "section_id": "naming",
+   "columns": [
+    "What needs a name",
+    "Hazel today",
+    "Choices"
+   ],
+   "rows": [
+    [
+     "The input: a slider's literal",
+     "The editor's tile id, kept while the tile is edited",
+     "Keep it. It is what the user edits, so it needs a name that stays put while its value changes: Fumola's rule for a pointer name."
+    ],
+    [
+     "A call: a memo entry",
+     "None: calls are not cached",
+     "By position (the call path and a count), by the caller (its site and inputs), by its operand (its site and its argument), by content (its code and every input). Measured below."
+    ],
+    [
+     "A list cell evaluation builds (the picture's list of shapes)",
+     "A fresh id at every step",
+     "By index, by the cell it came from (the paper's map forks an output cell's name from its input cell's), or by content (^report(9)'s Merkle names)."
+    ],
+    [
+     "A shape",
+     "A fresh id, and a name string the program gives it (\"eye\", \"red eye\")",
+     "The program's own name, told apart from others of the same name by order: names carried by the data, as Fumola's elements carry symbols."
+    ],
+    [
+     "A function that captures the slider (Scenes' map is given one)",
+     "A fresh id",
+     "Its definition site with the names of what it captures; by content, it changes whenever the slider does."
+    ]
+   ]
+  },
+  {
+   "section": "A worked example: naming a merge",
+   "section_id": "fumola",
+   "columns": [
+    "Fumola's scheme",
+    "A merge cell is named for",
+    "Closest Hazel scheme, for calls"
+   ],
+   "rows": [
+    [
+     "pathwise",
+     "its position in the recursion: the path from the root of the tree",
+     "by position: the call path and a count (^report(10)'s)"
+    ],
+    [
+     "inductive",
+     "the tree node it belongs to and the element that won the comparison, in a namespace per node",
+     "by the caller: the caller's site and inputs, made unique by order"
+    ],
+    [
+     "cartesian",
+     "the pair of elements compared, which no other cell of the network compares",
+     "by operand: the call site and the argument's value"
+    ]
+   ]
+  },
+  {
+   "section": "Why the eye sliders cost so much",
+   "section_id": "eyes",
+   "columns": [
+    "Function",
+    "Calls",
+    "Own steps",
+    "Differing"
+   ],
+   "rows": [
+    [
+     "go",
+     "943",
+     "29,765",
+     "go 557, first 557, qs 536, x2 495, x1 495"
+    ],
+    [
+     "round_eye",
+     "77",
+     "6,339",
+     "x 77, r 77, px 72, py 67, y 22"
+    ],
+    [
+     "shift_points",
+     "174",
+     "5,724",
+     "vs 162, tl 150, v 144, y 140, x 100"
+    ],
+    [
+     "eye_need",
+     "50",
+     "4,418",
+     "eye_need 50, eye_half_w 50, eye_half_h 50, eye_dx 50, u 46"
+    ],
+    [
+     "clear_of_eyes",
+     "42",
+     "2,882",
+     "eye_below 42, clear_of_eyes 42"
+    ],
+    [
+     "scale_points",
+     "36",
+     "1,634",
+     "sy 36"
+    ],
+    [
+     "skinned",
+     "26",
+     "1,183",
+     "ps 25, tl 24, p 7"
+    ],
+    [
+     "on_head",
+     "56",
+     "1,044",
+     "ps 52, p 50, tl 48"
+    ]
+   ]
+  },
+  {
+   "section": "Why the eye sliders cost so much",
+   "section_id": "eyes",
+   "columns": [
+    "Function",
+    "Calls",
+    "Own steps",
+    "Differing"
+   ],
+   "rows": [
+    [
+     "go",
+     "943",
+     "28,685",
+     "go 531, first 531, qs 512, x2 490, x1 490"
+    ],
+    [
+     "round_eye",
+     "77",
+     "6,339",
+     "x 77"
+    ],
+    [
+     "eye_need",
+     "50",
+     "4,418",
+     "eye_need 50, eye_dx 50, u 48, px 48, here 24"
+    ],
+    [
+     "shift_points",
+     "112",
+     "3,680",
+     "x 104, vs 104, v 104, tl 96"
+    ],
+    [
+     "clear_of_eyes",
+     "42",
+     "2,882",
+     "eye_below 42, clear_of_eyes 42"
+    ],
+    [
+     "skinned",
+     "24",
+     "1,091",
+     "ps 23, tl 22, p 4"
+    ],
+    [
+     "on_head",
+     "56",
+     "1,044",
+     "ps 52, p 52, tl 48"
+    ],
+    [
+     "to_head",
+     "52",
+     "988",
+     "u 52"
+    ]
+   ]
+  },
+  {
+   "section": "Why the eye sliders cost so much",
+   "section_id": "eyes",
+   "columns": [
+    "Function",
+    "Calls",
+    "Own steps",
+    "Differing"
+   ],
+   "rows": [
+    [
+     "go",
+     "943",
+     "29,765",
+     "go 557, first 557, qs 536, x2 495, x1 495"
+    ],
+    [
+     "shift_points",
+     "253",
+     "8,346",
+     "vs 237, tl 221, v 219, y 215, x 100"
+    ],
+    [
+     "round_eye",
+     "77",
+     "6,339",
+     "x 77, r 77, px 72, py 67, y 22"
+    ],
+    [
+     "dressed",
+     "110",
+     "5,030",
+     "ps 109, tl 108, p 11"
+    ],
+    [
+     "skinned",
+     "110",
+     "4,699",
+     "ps 109, tl 108, p 11"
+    ],
+    [
+     "eye_need",
+     "50",
+     "4,418",
+     "eye_need 50, eye_half_w 50, eye_half_h 50, eye_dx 50, u 46"
+    ],
+    [
+     "hat_verts",
+     "79",
+     "3,131",
+     "head_lift 79, hat_verts 79"
+    ],
+    [
+     "clear_of_eyes",
+     "42",
+     "2,882",
+     "eye_below 42, clear_of_eyes 42"
+    ]
+   ]
+  },
+  {
+   "section": "Why the eye sliders cost so much",
+   "section_id": "eyes",
+   "columns": [
+    "Function",
+    "Calls",
+    "Own steps",
+    "Differing"
+   ],
+   "rows": [
+    [
+     "go",
+     "943",
+     "28,685",
+     "go 531, first 531, qs 512, x2 490, x1 490"
+    ],
+    [
+     "round_eye",
+     "77",
+     "6,339",
+     "x 77"
+    ],
+    [
+     "dressed",
+     "100",
+     "4,546",
+     "ps 99, tl 98, p 4"
+    ],
+    [
+     "eye_need",
+     "50",
+     "4,418",
+     "eye_need 50, eye_dx 50, u 48, px 48, here 24"
+    ],
+    [
+     "skinned",
+     "100",
+     "4,245",
+     "ps 99, tl 98, p 4"
+    ],
+    [
+     "shift_points",
+     "112",
+     "3,680",
+     "x 104, vs 104, v 104, tl 96"
+    ],
+    [
+     "clear_of_eyes",
+     "42",
+     "2,882",
+     "eye_below 42, clear_of_eyes 42"
+    ],
+    [
+     "on_head",
+     "56",
+     "1,044",
+     "ps 52, p 52, tl 48"
+    ]
+   ]
+  },
+  {
+   "section": "How the picture's representation sets its diff",
+   "section_id": "representation",
+   "columns": [
+    "Slide",
+    "Slider",
+    "Shapes changed",
+    "moved",
+    "scaled",
+    "rotated",
+    "reshaped",
+    "Distinct transforms",
+    "Nodes changed, with transforms"
+   ],
+   "rows": [
+    [
+     "Full Body",
+     "shirt width",
+     "39",
+     "36",
+     "1",
+     "0",
+     "2",
+     "5",
+     "7"
+    ],
+    [
+     "Full Body",
+     "arms (up / down)",
+     "30",
+     "0",
+     "0",
+     "30",
+     "0",
+     "2",
+     "2"
+    ],
+    [
+     "Full Body",
+     "arm length",
+     "30",
+     "24",
+     "0",
+     "0",
+     "6",
+     "2",
+     "8"
+    ],
+    [
+     "Full Body",
+     "hand angle",
+     "24",
+     "0",
+     "0",
+     "24",
+     "0",
+     "2",
+     "2"
+    ],
+    [
+     "Full Body",
+     "hand size",
+     "24",
+     "0",
+     "12",
+     "0",
+     "12",
+     "2",
+     "14"
+    ],
+    [
+     "Full Body",
+     "neck",
+     "9",
+     "8",
+     "0",
+     "0",
+     "1",
+     "1",
+     "2"
+    ],
+    [
+     "Full Body",
+     "shirt height",
+     "9",
+     "8",
+     "0",
+     "0",
+     "1",
+     "2",
+     "3"
+    ],
+    [
+     "Full Body",
+     "smile",
+     "8",
+     "6",
+     "0",
+     "0",
+     "2",
+     "1",
+     "3"
+    ],
+    [
+     "Full Body",
+     "eye size",
+     "7",
+     "0",
+     "4",
+     "0",
+     "3",
+     "2",
+     "5"
+    ],
+    [
+     "Full Body",
+     "arm width",
+     "6",
+     "0",
+     "0",
+     "0",
+     "6",
+     "0",
+     "6"
+    ],
+    [
+     "Full Body",
+     "eye gap",
+     "4",
+     "4",
+     "0",
+     "0",
+     "0",
+     "2",
+     "2"
+    ],
+    [
+     "Full Body",
+     "shoe size",
+     "4",
+     "0",
+     "4",
+     "0",
+     "0",
+     "2",
+     "2"
+    ],
+    [
+     "Full Body",
+     "eye angle",
+     "2",
+     "0",
+     "0",
+     "2",
+     "0",
+     "2",
+     "2"
+    ],
+    [
+     "Full Body",
+     "eye shape (round / narrow)",
+     "2",
+     "0",
+     "0",
+     "0",
+     "2",
+     "0",
+     "2"
+    ],
+    [
+     "Full Body",
+     "shine size",
+     "2",
+     "0",
+     "2",
+     "0",
+     "0",
+     "2",
+     "2"
+    ],
+    [
+     "Scenes",
+     "eye size",
+     "26",
+     "0",
+     "26",
+     "0",
+     "0",
+     "25",
+     "25"
+    ],
+    [
+     "Scenes",
+     "figure size",
+     "23",
+     "0",
+     "16",
+     "0",
+     "7",
+     "1",
+     "8"
+    ],
+    [
+     "Scenes",
+     "across",
+     "23",
+     "23",
+     "0",
+     "0",
+     "0",
+     "1",
+     "1"
+    ],
+    [
+     "Scenes",
+     "up, down",
+     "23",
+     "22",
+     "0",
+     "0",
+     "1",
+     "1",
+     "2"
+    ],
+    [
+     "Scenes",
+     "hut nearer",
+     "18",
+     "0",
+     "18",
+     "0",
+     "0",
+     "1",
+     "1"
+    ],
+    [
+     "Witch",
+     "shirt width",
+     "113",
+     "54",
+     "56",
+     "0",
+     "3",
+     "8",
+     "11"
+    ],
+    [
+     "Witch",
+     "shirt height",
+     "85",
+     "84",
+     "0",
+     "0",
+     "1",
+     "3",
+     "4"
+    ],
+    [
+     "Witch",
+     "arms (up / down)",
+     "30",
+     "0",
+     "0",
+     "30",
+     "0",
+     "2",
+     "2"
+    ],
+    [
+     "Witch",
+     "arm length",
+     "30",
+     "24",
+     "0",
+     "0",
+     "6",
+     "2",
+     "8"
+    ],
+    [
+     "Witch",
+     "hand angle",
+     "24",
+     "0",
+     "0",
+     "24",
+     "0",
+     "2",
+     "2"
+    ],
+    [
+     "Witch",
+     "hand size",
+     "24",
+     "0",
+     "12",
+     "0",
+     "12",
+     "2",
+     "14"
+    ],
+    [
+     "Witch",
+     "neck",
+     "17",
+     "16",
+     "0",
+     "0",
+     "1",
+     "1",
+     "2"
+    ],
+    [
+     "Witch",
+     "smile",
+     "16",
+     "14",
+     "0",
+     "0",
+     "2",
+     "1",
+     "3"
+    ],
+    [
+     "Witch",
+     "eye size",
+     "11",
+     "0",
+     "4",
+     "0",
+     "7",
+     "2",
+     "9"
+    ],
+    [
+     "Witch",
+     "arm width",
+     "6",
+     "0",
+     "0",
+     "0",
+     "6",
+     "0",
+     "6"
+    ],
+    [
+     "Witch",
+     "eye gap",
+     "4",
+     "4",
+     "0",
+     "0",
+     "0",
+     "2",
+     "2"
+    ],
+    [
+     "Witch",
+     "witch nose length",
+     "4",
+     "0",
+     "3",
+     "0",
+     "1",
+     "3",
+     "4"
+    ],
+    [
+     "Witch",
+     "eye angle",
+     "2",
+     "0",
+     "0",
+     "2",
+     "0",
+     "2",
+     "2"
+    ],
+    [
+     "Witch",
+     "eye shape (round / narrow)",
+     "2",
+     "0",
+     "0",
+     "0",
+     "2",
+     "0",
+     "2"
+    ],
+    [
+     "Witch",
+     "shine size",
+     "2",
+     "0",
+     "2",
+     "0",
+     "0",
+     "2",
+     "2"
+    ]
+   ]
+  }
+ ],
+ "files": [
+  "data/diag011.output",
+  "data/ladder011.output",
+  "data/meta.json",
+  "data/representation011.json",
+  "data/small_steps011.output",
+  "data/tables.json"
+ ],
+ "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/011/data"
+}
+</script>
+<!-- report-data: end -->
 </body>
 </html>

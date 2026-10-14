@@ -1,0 +1,65 @@
+[fresh census exit 0]
+NAMES full-body.hz: same object false, structure equal true, nodes 111462 / 111462, syntax nodes 22611
+NAMES   kept: typ, minted by statics, same object 62835, typ, minted by statics 17983, exp, syntax id 17152, typ, syntax id, same object 5441, typ, syntax id 3018, exp, syntax id, same object 2438, pat, syntax id 1677, pat, syntax id, same object 176, exp, minted by statics 58, pat, minted by statics 17
+NAMES   renamed: exp, minted by statics 351, pat, minted by statics 254, typ, minted by statics 62
+NAMES   expressions whose hash differs (structure equal): other 692
+NAMES scenes.hz: same object false, structure equal true, nodes 101403 / 101403, syntax nodes 14752
+NAMES   kept: typ, minted by statics, same object 62843, typ, minted by statics 17139, exp, syntax id 11772, typ, syntax id, same object 4851, typ, syntax id 2614, pat, syntax id 1462, exp, syntax id, same object 280, pat, syntax id, same object 186, exp, minted by statics 29, pat, minted by statics 17
+NAMES   renamed: exp, minted by statics 92, typ, minted by statics 62, pat, minted by statics 56
+NAMES   expressions whose hash differs (structure equal): other 237
+NAMES witch.hz: same object false, structure equal true, nodes 107728 / 107728, syntax nodes 17933
+NAMES   kept: typ, minted by statics, same object 62835, typ, minted by statics 18114, exp, syntax id 13641, typ, syntax id, same object 5985, typ, syntax id 3253, pat, syntax id 1904, exp, syntax id, same object 907, pat, syntax id, same object 208, exp, minted by statics 66, pat, minted by statics 17
+NAMES   renamed: exp, minted by statics 422, pat, minted by statics 314, typ, minted by statics 62
+NAMES   expressions whose hash differs (structure equal): other 844
+NAMES shirt-and-pants.hz: same object false, structure equal true, nodes 87215 / 87215, syntax nodes 3678
+NAMES   kept: typ, minted by statics, same object 62834, typ, minted by statics 16796, typ, syntax id, same object 2640, exp, syntax id 2353, typ, syntax id 1629, pat, syntax id 464, exp, syntax id, same object 312, pat, syntax id, same object 55, exp, minted by statics 17, pat, minted by statics 1
+NAMES   renamed: typ, minted by statics 56, exp, minted by statics 44, pat, minted by statics 14
+NAMES   expressions whose hash differs (structure equal): other 82
+NAMES polygons.hz: same object false, structure equal true, nodes 62628 / 62628, syntax nodes 2909
+NAMES   kept: typ, minted by statics, same object 44877, typ, minted by statics 11993, typ, syntax id, same object 2004, exp, syntax id 1875, typ, syntax id 1217, pat, syntax id 346, exp, syntax id, same object 246, pat, syntax id, same object 44, exp, minted by statics 12
+NAMES   renamed: exp, minted by statics 8, pat, minted by statics 6
+NAMES   expressions whose hash differs (structure equal): other 23
+[named census exit 0]
+NAMES full-body.hz: same object false, structure equal true, nodes 111462 / 111462, syntax nodes 22611
+NAMES   kept: typ, minted by statics, same object 62835, typ, minted by statics 18058, exp, syntax id 17152, typ, syntax id, same object 5396, typ, syntax id 2988, exp, syntax id, same object 2438, pat, syntax id 1677, exp, minted by statics 387, pat, minted by statics 270, pat, syntax id, same object 176
+NAMES   renamed: typ, minted by statics 62, exp, minted by statics 22, pat, minted by statics 1
+NAMES   expressions whose hash differs (structure equal): other 247
+NAMES scenes.hz: same object false, structure equal true, nodes 101403 / 101403, syntax nodes 14752
+NAMES   kept: typ, minted by statics, same object 62843, typ, minted by statics 17152, exp, syntax id 11772, typ, syntax id, same object 4842, typ, syntax id 2610, pat, syntax id 1462, exp, syntax id, same object 280, pat, syntax id, same object 186, exp, minted by statics 99, pat, minted by statics 72
+NAMES   renamed: typ, minted by statics 62, exp, minted by statics 22, pat, minted by statics 1
+NAMES   expressions whose hash differs (structure equal): other 136
+NAMES witch.hz: same object false, structure equal true, nodes 107728 / 107728, syntax nodes 17933
+NAMES   kept: typ, minted by statics, same object 62835, typ, minted by statics 18190, exp, syntax id 13641, typ, syntax id, same object 5928, typ, syntax id 3234, pat, syntax id 1904, exp, syntax id, same object 907, exp, minted by statics 466, pat, minted by statics 330, pat, syntax id, same object 208
+NAMES   renamed: typ, minted by statics 62, exp, minted by statics 22, pat, minted by statics 1
+NAMES   expressions whose hash differs (structure equal): other 308
+NAMES shirt-and-pants.hz: same object false, structure equal true, nodes 87215 / 87215, syntax nodes 3678
+NAMES   kept: typ, minted by statics, same object 62834, typ, minted by statics 16798, typ, syntax id, same object 2638, exp, syntax id 2353, typ, syntax id 1629, pat, syntax id 464, exp, syntax id, same object 312, pat, syntax id, same object 55, exp, minted by statics 39, pat, minted by statics 14
+NAMES   renamed: typ, minted by statics 56, exp, minted by statics 22, pat, minted by statics 1
+NAMES   expressions whose hash differs (structure equal): other 58
+NAMES polygons.hz: same object false, structure equal true, nodes 62628 / 62628, syntax nodes 2909
+NAMES   kept: typ, minted by statics, same object 44877, typ, minted by statics 11994, typ, syntax id, same object 2003, exp, syntax id 1875, typ, syntax id 1217, pat, syntax id 346, exp, syntax id, same object 246, pat, syntax id, same object 44, exp, minted by statics 20, pat, minted by statics 6
+NAMES   renamed: 
+NAMES   expressions whose hash differs (structure equal): other 13
+[fresh full-body.hz exit 0]
+TIMES fresh full-body.hz 85->120 | incremental 621 476 494 500 499 | median 499 | scratch 448 457 464 484 469 | median 464
+[named full-body.hz exit 0]
+TIMES named full-body.hz 85->120 | incremental 646 524 535 552 553 | median 552 | scratch 484 508 500 515 527 | median 508
+[derived full-body.hz exit 0]
+TIMES derived full-body.hz 85->120 | incremental 650 511 510 542 546 | median 542 | scratch 524 503 517 535 532 | median 524
+[fresh witch.hz exit 0]
+TIMES fresh witch.hz 85->120 | incremental 796 707 754 830 718 | median 754 | scratch 675 701 755 923 650 | median 701
+[named witch.hz exit 0]
+TIMES named witch.hz 85->120 | incremental 827 680 697 727 732 | median 727 | scratch 650 683 692 712 696 | median 692
+[derived witch.hz exit 0]
+TIMES derived witch.hz 85->120 | incremental 957 875 907 847 813 | median 875 | scratch 852 876 1087 799 787 | median 852
+[fresh scenes.hz exit 0]
+TIMES fresh scenes.hz 70->90 | incremental 1522 1357 1416 1412 1455 | median 1416 | scratch 1453 1421 1444 1462 1464 | median 1453
+[named scenes.hz exit 0]
+TIMES named scenes.hz 70->90 | incremental 1513 1379 1416 1400 1449 | median 1416 | scratch 1432 1425 1428 1458 1525 | median 1432
+[derived scenes.hz exit 0]
+TIMES derived scenes.hz 70->90 | incremental 1860 1816 1892 1929 1944 | median 1892 | scratch 1819 1897 1984 2060 1714 | median 1897
+[fresh woods exit 0]
+TIMES fresh woods | one evaluation 1508 1497 1780 1525 1489 | median 1508
+[derived woods exit 0]
+TIMES derived woods | one evaluation 1785 1684 1667 1629 1649 | median 1667
+DONE

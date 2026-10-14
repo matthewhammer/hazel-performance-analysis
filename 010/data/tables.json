@@ -1,0 +1,141 @@
+[
+ {
+  "section": "The picture, shape by shape",
+  "section_id": "picture",
+  "columns": [
+   "Slide (edit)",
+   "The picture",
+   "Shapes",
+   "Changed",
+   "Changed, by name"
+  ],
+  "rows": [
+   [
+    "Full Body (smile 85 → 120)",
+    "skinned(outfit)",
+    "49",
+    "8",
+    "long, head, eye (4), mouth, long top"
+   ],
+   [
+    "Witch (smile 85 → 120)",
+    "skinned(dressed(outfit))",
+    "133",
+    "16",
+    "long, head, eye (4), mouth, nose, wart (3), long top, hat (4)"
+   ],
+   [
+    "Scenes (eye size 70 → 90)",
+    "Drawing.frame((x0, y0, x1, y1)) @ backdrop @ figure",
+    "570",
+    "26",
+    "red eye (26)"
+   ]
+  ]
+ },
+ {
+  "section": "What a memo by name could skip",
+  "section_id": "work",
+  "columns": [
+   "Slide",
+   "Run",
+   "Steps",
+   "In calls",
+   "Calls",
+   "Reusable by name",
+   "Steps a memo by name skips",
+   "By content",
+   "Left to run"
+  ],
+  "rows": [
+   [
+    "Full Body",
+    "from scratch",
+    "128,393",
+    "113,230",
+    "3,712",
+    "3,043",
+    "93,224 (73%)",
+    "93,351",
+    "35,169"
+   ],
+   [
+    "Full Body",
+    "incremental, today",
+    "110,597",
+    "105,470",
+    "3,357",
+    "2,780",
+    "87,125 (79%)",
+    "87,125",
+    "23,472"
+   ],
+   [
+    "Witch",
+    "from scratch",
+    "205,665",
+    "190,512",
+    "6,639",
+    "5,442",
+    "152,290 (74%)",
+    "152,446",
+    "53,375"
+   ],
+   [
+    "Witch",
+    "incremental, today",
+    "189,832",
+    "179,267",
+    "6,125",
+    "5,037",
+    "143,104 (75%)",
+    "143,104",
+    "46,728"
+   ],
+   [
+    "Scenes",
+    "from scratch",
+    "556,688",
+    "529,904",
+    "31,613",
+    "28,055",
+    "460,743 (83%)",
+    "460,779",
+    "95,945"
+   ],
+   [
+    "Scenes",
+    "incremental, today",
+    "514,822",
+    "488,987",
+    "28,981",
+    "26,124",
+    "433,901 (84%)",
+    "433,913",
+    "80,921"
+   ]
+  ]
+ },
+ {
+  "section": "What would still run",
+  "section_id": "left",
+  "columns": [
+   "Slide",
+   "Functions that run again, with calls and own steps"
+  ],
+  "rows": [
+   [
+    "Full Body",
+    "shift_points 202 calls, 6,644 steps; clear_of_eyes 42 calls, 2,882 steps; along_lip 42 calls, 2,388 steps; skinned 26 calls, 1,183 steps; lip_y 39 calls, 1,014 steps; on_head 28 calls, 531 steps"
+   ],
+   [
+    "Witch",
+    "shift_points 409 calls, 13,490 steps; dressed 110 calls, 5,030 steps; skinned 110 calls, 4,699 steps; clear_of_eyes 42 calls, 2,882 steps; along_lip 42 calls, 2,388 steps; anchor 97 calls, 2,032 steps"
+   ],
+   [
+    "Scenes",
+    "(anonymous functions) 686 calls, 21,787 steps; map 755 calls, 11,794 steps; init_helper 269 calls, 5,002 steps; verts 234 calls, 3,900 steps; skull 9 calls, 2,367 steps; fmin 313 calls, 1,878 steps"
+   ]
+  ]
+ }
+]

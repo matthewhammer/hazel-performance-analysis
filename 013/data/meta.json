@@ -1,0 +1,28 @@
+{
+ "title": "Telling the request what changed",
+ "date": "2026-10-14",
+ "question": "How much cheaper is a slider release's request to the evaluation worker on hazelgrove/hazel#2635 after two commits that keep the request's projection of the statics and let the per-item statics say which keys changed, and can the change be carried to #2469, dev and #2597?",
+ "builds": [
+  {"name": "2635-before", "pr": "hazelgrove/hazel#2635", "commit": "41897ec3a5"},
+  {"name": "2635-after", "pr": "hazelgrove/hazel#2635", "commit": "9fb2bdf067", "note": "the two commits, pushed 2026-10-14"},
+  {"name": "2469 as it is", "pr": "hazelgrove/hazel#2469", "commit": "c1e4aeee4a"},
+  {"name": "2469 with the ports", "pr": "hazelgrove/hazel#2469", "commit": "c1e4aeee4a plus 128f3f303d, cdb799a376, 474b1e050e", "note": "a local branch, not pushed"}
+ ],
+ "runtime": "node, on a laptop, with Hazel's test build (dune's dev profile); one probe (PortData) built into the test suite of all four builds",
+ "runs": "each build run twice, interleaved. Each series analyses a program cold, then edits one integer literal five or six times as the editor edits a model, every id kept. Edit 1 of each series is the first after a cold start (the engine warming up): it is left out of the medians and kept in the tables.",
+ "measures": {
+  "statics": "ms: the statics after the edit",
+  "projection": "ms: building the request's projection of the statics",
+  "hashing": "ms: hashing the request's values (ShareCodec)",
+  "encoding": "ms: encoding the request",
+  "request": "ms: the request in all (projection + hashing + encoding)",
+  "new nodes": "count: objects of the new projection that are not objects of the last one",
+  "nodes copied": "count: arrays an encoding output holds that are not references",
+  "rebuild, walk, as built": "ms, test programs: rebuilding the projection, walking the two statics maps, and the change as built"
+ },
+ "times": "performance.now() around each part; medians over edits 2 on",
+ "raw_files": {
+  "data/data013.tsv": "the probe's rows, tab-separated, no header. First the run's tag (<build>-<run>), then either: DATA branch program where pos items edit statics rebuild walk keyed new_nodes (the test programs), or SLIDER branch slide slider pos items edit statics proj hash enc new_prog new_info (the Livelit Playground slides). Times in ms.",
+  "data/enc013.tsv": "the encoding, split: ENC branch slide slider pos items edit t_program t_info copies_program copies_info (ms, then counts of arrays copied)"
+ }
+}

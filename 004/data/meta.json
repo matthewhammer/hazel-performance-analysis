@@ -1,0 +1,217 @@
+{
+ "title": "The Witch in Hazel",
+ "date": "2026-10-11",
+ "measured": "2026-10-11, with an update on 2026-10-12",
+ "question": "M's witch and her woods, ported from Messed Up Dress Up to the Livelit Playground as the Witch and Scenes slides: what do the two slides do, which layout bugs did the port turn up, what does a redraw cost, and why do the woods cost so much?",
+ "headline": [
+  {
+   "value": "2",
+   "what": "new slides, Witch and Scenes, with 24 new controls between them; and 2 layout bugs fixed on the way"
+  },
+  {
+   "value": "2.2–4.5 s",
+   "what": "the Witch slide redrawing after one change, with the three fixes below (it was 5.0–7.5 s)"
+  },
+  {
+   "value": "2.6–6.4 s",
+   "what": "a redraw in the witch's woods, each picture new, after three fixes below: 2.6–3.5 s moving the figure, 5.2–6.4 s changing the woods. It was 10–21 s"
+  },
+  {
+   "value": "1–3 ms",
+   "what": "the game drawing the same witch, or a scene"
+  },
+  {
+   "value": "1.41 s",
+   "what": "the dated update box, 2026-10-12: moving the figure in the woods redraws in a median of 1.41 s, down from 2.20 s"
+  }
+ ],
+ "builds": [
+  {
+   "name": "#2635, the first build",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "not stated in the report",
+   "note": "the Witch and Scenes cost tables, the three experiments, and the profile of two figure-size changes"
+  },
+  {
+   "name": "+ the worker's slices",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "25e515536d",
+   "note": "on #2597: 74f8056646. Slices run back to back for up to 30 ms before the worker yields"
+  },
+  {
+   "name": "+ recursive lets' free variables",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "4b964e6660",
+   "note": "on #2597: a1a148278e. Not yet on dev, which has the same code"
+  },
+  {
+   "name": "+ the view's memo gives up on a function that keeps missing",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "126f595ce9",
+   "note": "on #2597: 498cf299ea"
+  },
+  {
+   "name": "+ the view's casts",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "efaaee244f",
+   "note": "on #2597: abadface30"
+  },
+  {
+   "name": "update, 2026-10-12: a frame sets the box; cheaper points strings; no copy at a typed boundary",
+   "pr": "hazelgrove/hazel#2635 and hazelgrove/hazel#2597",
+   "commit": "not stated in the report",
+   "note": "the third change is also a dev PR, hazelgrove/hazel#2679"
+  },
+  {
+   "name": "not kept: the call memo keeping 1,024 calls per function, not 8",
+   "commit": "an engine change on the first build, not committed",
+   "note": "a row of the three-experiments and memo tables"
+  },
+  {
+   "name": "not kept: the memo keeping each shape's call",
+   "commit": "not committed; patches below",
+   "note": "entries found by hash in a table, thousands per function; misses counted only after a function's first evaluation; each shape's box computed by a call of its own"
+  },
+  {
+   "name": "#2597, first picture",
+   "pr": "hazelgrove/hazel#2597",
+   "commit": "not stated in the report",
+   "note": "Scenes about 5 minutes to draw its first picture, with or without the slices fix (297 and 301 s), Witch 172 s; Scenes 281 s with all three fixes; measured again cold on 2026-10-12: Scenes 287.5 s, Witch 173.1 s. That is the main thread, not the worker."
+  },
+  {
+   "name": "Kids' Choice, the control",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "the same builds",
+   "note": "^report(1)'s slider, release to face, median of 12, to check each fix leaves it as it was"
+  },
+  {
+   "name": "Messed Up Dress Up (the plain HTML/JS game)",
+   "commit": "not stated in the report"
+  }
+ ],
+ "runtime": "headless Firefox over WebDriver, a fresh profile per run, dev builds of #2635 on Matthew's laptop (the Firefox version is not stated in the report); step counts and the node harness under node",
+ "runs": {
+  "Witch slide and Full Body changes": "single runs, one per change (\"read them as sizes rather than precise numbers\"; earlier reports saw a few tenths of a second between runs of the same change)",
+  "moving the figure": "four changes in a series, size 100 → 90 → 100 → 90 → 100; in every series the first change after loading is the slowest",
+  "woods, each picture new (the reuse, memo and casts tables)": "four runs",
+  "update, 2026-10-12": "the frame: a median over 8 changes each, with the same pictures; the points strings: measured on one build; no copy at a typed boundary: the whole redraw's median, in the same session",
+  "Kids' Choice": "median of 12 releases",
+  "message timeline": "two figure-size changes, two eye-size changes, then the same in the forest",
+  "profiles": "two figure-size changes in the woods",
+  "node harness": "the slide tests' own evaluation, run once fresh and once incrementally after one literal changes, with a full GC before each, three changes per slide (not committed)",
+  "game": "the median of 30 runs per setting"
+ },
+ "measures": {
+  "redraw": "s: a script sets a slider (input and change events) or presses a button by its label (repeated labels, such as \"black\", by their place in the slide), then waits until the ^picture's SVG changes, up to 60 s",
+  "load, to the first picture": "s",
+  "shapes, points": "count: shapes and points in a scene's picture",
+  "the worker per change": "s: from request to result, split into evaluating and the gaps between slices (a slice is 5,000 trampoline steps, about 3 ms; a change was 1,292 slices)",
+  "evaluation steps": "count: steps of the worker's evaluation per change (610,670 in the woods, the same as the first load), and of the ^picture view's evaluation, by part of the view (the update's table)",
+  "reuse checks": "count: nodes from the cache (130), and failed checks by reason (no cached entry 428; a variable whose source had changed 199; a changed elaboration 18–30)",
+  "bindings re-evaluated": "count: top-level bindings the worker evaluates again after a figure-size change (5 after the fix)",
+  "result size": "about 1 MB",
+  "the view's own time": "ms: the ^picture view's evaluation on the page (update, 2026-10-12)",
+  "profile shares": "share of a change: the worker about 60% evaluating and about a third encoding; the page about half evaluating the ^picture's view; profiled times run longer than real ones (two changes took 14.8 and 19.7 s profiled, against 10–15.5 s without)",
+  "Kids' Choice release to face": "ms, median of 12",
+  "Game draw()": "ms: draw() plus a layout read (getBBox), the median of 30 runs per setting, to the nearest millisecond",
+  "memo hits": "share of the view's lookups that hit (72%, the not-kept hashed memo)",
+  "nodes copied": "count: the picture copied whole at a typed boundary, 15,500 nodes",
+  "slide length": "lines: Witch 2,189, Full Body 2,896"
+ },
+ "times": "Hazel: from the slider's input and change events, or a button press, until the ^picture's SVG changes. The message timeline covered the page's posts to the eval worker and the worker's replies, with their sizes and times; the worker logged, per request, how its time went and what it reused (temporary logging). The profile: the Gecko profiler in the same headless Firefox. Step counts: under node, by kind of step and by part of the view, then timed on the page. The layout check: for every button inside a livelit, scrolled into view, its box against the livelit's box, and the element at its center. Game: draw() plus getBBox.",
+ "printed_in_text": [
+  {
+   "section_id": "cost",
+   "what": "since the three fixes, single runs: the witch; her load; Full Body's skin presses; Kids' Choice",
+   "printed": "2.2–4.5 s; 12.9 s; 1.8, 1.5 and 1.6 s; about 0.13 s, a median of 130 ms over 12"
+  },
+  {
+   "section_id": "cost",
+   "what": "the woods: each slider (chicken legs on, leg size, hut nearer, eye size, the figure's size and place), one run each; loading the slide",
+   "printed": "16.5–21.2 s; 23.5–26.3 s"
+  },
+  {
+   "section_id": "skin",
+   "what": "the skin presses before ^skin: every other press; \"peach\"",
+   "printed": "5–7 s; never, even after 60 s"
+  },
+  {
+   "section_id": "timeline",
+   "what": "the worker per woods change, before: request to result; evaluating; between slices",
+   "printed": "about 10 s; 3.9–4.4 s; 5.8–6.2 s"
+  },
+  {
+   "section_id": "timeline",
+   "what": "loading the slide, before: between slices, of the evaluation",
+   "printed": "5.7 s in a 10.4 s evaluation"
+  },
+  {
+   "section_id": "timeline",
+   "what": "the page after the result: a picture not drawn before; one drawn before",
+   "printed": "5.7–6.6 s; 0.6–1.1 s"
+  },
+  {
+   "section_id": "timeline",
+   "what": "with the slices fix: the worker per woods change; evaluating; gaps between slices; loading Scenes",
+   "printed": "10.0–10.7 s → 2.1–2.6 s; 1.8–2.1 s; 0.23–0.26 s; 23.5–26.3 s → 17.2–17.4 s"
+  },
+  {
+   "section_id": "timeline",
+   "what": "Kids' Choice with the slices fix, release to face",
+   "printed": "median of 138 ms over 12 releases"
+  },
+  {
+   "section_id": "reuse",
+   "what": "with the reuse fix, going back to a picture the page has drawn: woods; forest",
+   "printed": "0.95–1.07 s; 0.64–0.78 s"
+  },
+  {
+   "section_id": "memo",
+   "what": "with the memo fix: changing the woods themselves",
+   "printed": "8.3–10.7 s → 5.2–6.4 s"
+  },
+  {
+   "section_id": "memo",
+   "what": "the not-kept hashed memo: moving the figure; changing the woods; loading",
+   "printed": "2.2–3.4 s; 5.0–5.1 s; about 1 s slower"
+  },
+  {
+   "section_id": "casts",
+   "what": "with the casts fix: woods figure size, each picture new; woods eyes; forest; Kids' Choice",
+   "printed": "3.5, 3.2, 2.6, 3.3 s → 3.1, 2.0, 2.1, 2.7 s; 4.9–6.2 s; 1.0–1.8 s; a median of 125.5 ms"
+  },
+  {
+   "section_id": "casts",
+   "what": "coords writing only each shape's first point (about 600 points instead of 2,700)",
+   "printed": "2.9, 1.7, 2.4 and 2.5 s"
+  },
+  {
+   "section_id": "update",
+   "what": "a frame sets the box: view steps; a figure move's redraw, median of 8 changes",
+   "printed": "238,781 → 99,621; 2.20 s → 1.52 s"
+  },
+  {
+   "section_id": "update",
+   "what": "cheaper points strings: view steps; the view's own time",
+   "printed": "99,621 → 74,055; about 6% less"
+  },
+  {
+   "section_id": "update",
+   "what": "no copy at a typed boundary: the view on a move to a new size; revisiting a size; the whole redraw, median, same session",
+   "printed": "about 725–830 ms → 520–650 ms; about 210 ms; 1.62 s → 1.41 s"
+  },
+  {
+   "section_id": "update",
+   "what": "what is left of the view: the evaluator's own work",
+   "printed": "about 500 ms"
+  }
+ ],
+ "patches": {
+  "patches/callmemo_hashed_entries.patch": "the not-kept hashed memo, engine side: CallMemo keeps up to 4,096 calls per body, found by their key's hash, and counts misses only after a body's first evaluation (the patch's own comments)",
+  "patches/library_shape_box.patch": "the not-kept hashed memo, slide side: the Scenes slide's Drawing library computes each shape's box by a call of its own (shape_box), then joins the boxes",
+  "patches/assemble_shape_box.py.txt": "the slide generator with the same shape_box change"
+ },
+ "provenance": "No raw readings of this report survive: every number exists only as printed in the page, in its tables (tables.json) and its text (printed_in_text, above). The CPU profiles and the message timelines are not in this repository; the worker's logging and the node harness were temporary and not committed. The pictures are the slides' and the game's own SVG, rasterized, and carry no numbers.",
+ "tables_reading": "In the Witch slide's table, the Game draw() cell \"~1 ms, the witch with her cat and broom (3 ms on the beach)\" spans five rows in the page (skin to sizes); tables.json reads cell by cell, so the four rows below it have three cells. Empty cells are empty in the page.",
+ "raw_files": {}
+}

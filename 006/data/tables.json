@@ -1,0 +1,200 @@
+[
+ {
+  "section": "What CI runs today",
+  "section_id": "today",
+  "columns": [
+   "Workflow",
+   "When",
+   "What it does",
+   "Time"
+  ],
+  "rows": [
+   [
+    "ci.yml → checks.yml",
+    "Every push, to any branch",
+    "Fast checks: formatting, a release build, the quick tests. Full tests: the whole suite with coverage.",
+    "19–28 min"
+   ],
+   [
+    "fork-ci.yml",
+    "Pull requests from forks",
+    "The same checks, without coverage",
+    ""
+   ],
+   [
+    "deploy.yml",
+    "Every push",
+    "A release build, published to hazel.org/build",
+    "4 min"
+   ],
+   [
+    "extended-tests.yml",
+    "Sundays, or by hand",
+    "The property tests at 100 times their usual size",
+    "2–3 h"
+   ],
+   [
+    "perf.yml",
+    "A /perf comment",
+    "Meant to benchmark a PR against its base",
+    "never worked on dev"
+   ],
+   [
+    "bench-compare.yml",
+    "A /bench-compare comment",
+    "Meant to compare two commits' stored benchmarks",
+    "never succeeded"
+   ],
+   [
+    "update_deps.yml",
+    "Daily",
+    "Updates dependencies in a PR",
+    "10–14 min"
+   ]
+  ]
+ },
+ {
+  "section": "Counts that can fail a build",
+  "section_id": "counts",
+  "columns": [
+   "Count",
+   "What a rise means",
+   "Where"
+  ],
+  "rows": [
+   [
+    "Evaluator steps actually taken",
+    "more evaluation, or reuse that stopped working",
+    "dev, with #2678"
+   ],
+   [
+    "Statics analyses per expression",
+    "an expression analyzed again, as module and livelit definitions were, twice each, until #2651",
+    "#2635: Test_StaticsPasses, with per-file budgets"
+   ],
+   [
+    "Work per edit: pieces reparsed, items re-analyzed",
+    "an edit recomputing more than it touched",
+    "#2635: Test_EditLocality, Test_BenchStatics"
+   ],
+   [
+    "Bytes: an elaboration's size; the worker's messages",
+    "larger values crossing between the threads (^report(5))",
+    "#2635: Test_ElabSize; messages measured by hand so far"
+   ]
+  ]
+ },
+ {
+  "section": "The first check: #2678",
+  "section_id": "gate",
+  "columns": [
+   "Case",
+   "Steps now",
+   "Budget"
+  ],
+  "rows": [
+   [
+    "A cold run: recursion, list traversals and case matches (a smaller bench/eval-bench.hz)",
+    "206,834",
+    "227,000"
+   ],
+   [
+    "A re-run after an edit to a literal nothing else reads; also under 5% of a cold run, whatever the budgets",
+    "378",
+    "420"
+   ]
+  ]
+ },
+ {
+  "section": "#2161: build on it, or start fresh?",
+  "section_id": "pr2161",
+  "columns": [
+   "",
+   "Build on #2161",
+   "Start fresh: counts in the test suite (#2678)"
+  ],
+  "rows": [
+   [
+    "Measures",
+    "Time per phase of the editor's syntax and statics",
+    "Work done: evaluator steps now; statics analyses and bytes next"
+   ],
+   [
+    "Can it fail a build?",
+    "No. Its threshold (10% and 0.5 ms) is the size of the runners' noise, and its comparison never fails",
+    "Yes, with no false alarms: a count over budget fails the test"
+   ],
+   [
+    "Covers where ^report(1)–^report(5) found the costs",
+    "Partly: statics, yes; evaluation, reuse, the worker and the page, no",
+    "Partly: evaluation and reuse now; statics once #2635's counts reach dev; the page, no"
+   ],
+   [
+    "Explains a regression",
+    "Yes: time by phase shows where it went",
+    "Partly: a count shows that work grew, and which test, not where the time goes"
+   ],
+   [
+    "Sees a step getting slower",
+    "Yes, given enough repetitions",
+    "No"
+   ],
+   [
+    "Programs",
+    "Synthetic let-chains",
+    "Small programs in the test; slides can be added"
+   ],
+   [
+    "Cost per run",
+    "A separate job building base and head, about 11 minutes, on request",
+    "Under a second, inside the tests every push already runs"
+   ],
+   [
+    "Safety",
+    "Ran a PR's code for any commenter",
+    "Only the normal CI"
+   ],
+   [
+    "State",
+    "A conflicting draft that mixes the harness with unrelated memoization changes; it would need splitting first",
+    "One small commit on today's dev"
+   ],
+   [
+    "Ownership",
+    "David's PR: reviving it is his call",
+    "Ours"
+   ]
+  ]
+ },
+ {
+  "section": "Update, later on 2026-10-12: a count is not a time",
+  "section_id": "update",
+  "columns": [
+   "Change",
+   "Steps",
+   "The view's time"
+  ],
+  "rows": [
+   [
+    "The points strings made more directly (a function call fewer per number, no check per point)",
+    "99,621 → 74,055 (−26%)",
+    "780 → 735, 726 ms (−6%)"
+   ],
+   [
+    "The view's call memo turned off, the woods, moving the figure to a new size",
+    "more: every reuse lost",
+    "about 700 → 555 ms (−25%)"
+   ],
+   [
+    "The memo turned off, the woods, back to a size drawn before",
+    "more",
+    "about 230 → 600 ms"
+   ],
+   [
+    "The memo turned off, Kids' Choice's face, an eye-size change",
+    "more",
+    "about 7–23 → 38–51 ms"
+   ]
+  ]
+ }
+]

@@ -1,0 +1,191 @@
+[
+ {
+  "name": "alien_fingers",
+  "flat": 0,
+  "flat_shapes": 49,
+  "tree": 0,
+  "tree_nodes": 82
+ },
+ {
+  "name": "arm_angle",
+  "flat": 30,
+  "flat_shapes": 49,
+  "tree": 8,
+  "tree_nodes": 82
+ },
+ {
+  "name": "arm_length",
+  "flat": 30,
+  "flat_shapes": 49,
+  "tree": 8,
+  "tree_nodes": 82
+ },
+ {
+  "name": "arm_width",
+  "flat": 6,
+  "flat_shapes": 49,
+  "tree": 6,
+  "tree_nodes": 82
+ },
+ {
+  "name": "claw_count",
+  "flat": 0,
+  "flat_shapes": 49,
+  "tree": 0,
+  "tree_nodes": 82
+ },
+ {
+  "name": "claw_length",
+  "flat": 0,
+  "flat_shapes": 49,
+  "tree": 0,
+  "tree_nodes": 82
+ },
+ {
+  "name": "eye_angle",
+  "flat": 2,
+  "flat_shapes": 49,
+  "tree": 2,
+  "tree_nodes": 82
+ },
+ {
+  "name": "eye_gap",
+  "flat": 4,
+  "flat_shapes": 49,
+  "tree": 2,
+  "tree_nodes": 82
+ },
+ {
+  "name": "eye_shape",
+  "flat": 2,
+  "flat_shapes": 49,
+  "tree": 2,
+  "tree_nodes": 82
+ },
+ {
+  "name": "eye_size",
+  "flat": 7,
+  "flat_shapes": 49,
+  "tree": 5,
+  "tree_nodes": 82
+ },
+ {
+  "name": "eye_whites",
+  "flat": 0,
+  "flat_shapes": 49,
+  "tree": 0,
+  "tree_nodes": 82
+ },
+ {
+  "name": "fingers",
+  "flat": null,
+  "flat_shapes": 49,
+  "tree": 104,
+  "tree_nodes": 82
+ },
+ {
+  "name": "hand_angle",
+  "flat": 24,
+  "flat_shapes": 49,
+  "tree": 2,
+  "tree_nodes": 82
+ },
+ {
+  "name": "hand_size",
+  "flat": 24,
+  "flat_shapes": 49,
+  "tree": 14,
+  "tree_nodes": 82
+ },
+ {
+  "name": "iris_size",
+  "flat": null,
+  "flat_shapes": 49,
+  "tree": 9,
+  "tree_nodes": 82
+ },
+ {
+  "name": "mouth_open",
+  "flat": null,
+  "flat_shapes": 49,
+  "tree": 6,
+  "tree_nodes": 82
+ },
+ {
+  "name": "neck_length",
+  "flat": 9,
+  "flat_shapes": 49,
+  "tree": 4,
+  "tree_nodes": 82
+ },
+ {
+  "name": "shine_size",
+  "flat": 2,
+  "flat_shapes": 49,
+  "tree": 2,
+  "tree_nodes": 82
+ },
+ {
+  "name": "shirt_height",
+  "flat": 9,
+  "flat_shapes": 49,
+  "tree": 5,
+  "tree_nodes": 82
+ },
+ {
+  "name": "shirt_width",
+  "flat": 39,
+  "flat_shapes": 49,
+  "tree": 13,
+  "tree_nodes": 82
+ },
+ {
+  "name": "shoe_size",
+  "flat": 4,
+  "flat_shapes": 49,
+  "tree": 2,
+  "tree_nodes": 82
+ },
+ {
+  "name": "smile",
+  "flat": 8,
+  "flat_shapes": 49,
+  "tree": 5,
+  "tree_nodes": 82
+ },
+ {
+  "name": "spikes",
+  "flat": 0,
+  "flat_shapes": 49,
+  "tree": 0,
+  "tree_nodes": 82
+ },
+ {
+  "name": "star_count",
+  "flat": 0,
+  "flat_shapes": 49,
+  "tree": 0,
+  "tree_nodes": 82
+ },
+ {
+  "name": "star_turn",
+  "flat": 0,
+  "flat_shapes": 49,
+  "tree": 0,
+  "tree_nodes": 82
+ },
+ {
+  "name": "tongue_length",
+  "flat": 0,
+  "flat_shapes": 49,
+  "tree": 0,
+  "tree_nodes": 82
+ },
+ {
+  "name": "tongue_width",
+  "flat": 0,
+  "flat_shapes": 49,
+  "tree": 0,
+  "tree_nodes": 82
+ }
+]

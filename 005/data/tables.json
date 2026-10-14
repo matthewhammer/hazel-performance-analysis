@@ -1,0 +1,158 @@
+[
+ {
+  "section": "Each fix so far, by thread",
+  "section_id": "fixes",
+  "columns": [
+   "Where",
+   "Fix",
+   "What it does"
+  ],
+  "rows": [
+   [
+    "Worker",
+    "e0a5b16555",
+    "The incremental cache stays in the worker, instead of crossing in every request and back in every answer: an answer of 332 KB became 0.9 KB."
+   ],
+   [
+    "Worker",
+    "5237161017, 97c910f69c (dev: #2673)",
+    "An unchanged expression is recognized by its Merkle hash, not by comparing it whole: about 410 → 145 ms per release."
+   ],
+   [
+    "Worker",
+    "9129cd2774",
+    "Reusing a result copies cache entries without walking function bodies: the worker's evaluation 47 → 25 ms."
+   ],
+   [
+    "Worker",
+    "25e515536d",
+    "Evaluation slices run back to back for up to 30 ms, not one per timer tick: the worker's time per woods change, 10.0–10.7 → 2.1–2.6 s."
+   ],
+   [
+    "Worker (found in statics)",
+    "4b964e6660 (dev: #2675)",
+    "A recursive let's own names are not free in it, so the code around it is reused."
+   ],
+   [
+    "Worker, for the page",
+    "a05f8e5791 (from #2469)",
+    "Streams of partial results come at most every 100–1000 ms, by program size, so they do not swamp the page: opening a 2,000-item program, the page's busy time 46.7 → 10.2 s. Correction, later on 2026-10-12: this commit made the interval grow with the program. The throttle itself came a day before, in c07bdacead, also from #2469: stream posts at most every 100 ms, and the page's projection of the program made lazy, so a streamed result no longer re-projects it (opening a 1,000-item program, 45.5 → 5.4 s). #2597 has neither; ^report(7) measures c07bdacead there."
+   ],
+   [
+    "Boundary",
+    "993e3d5f91",
+    "A request carries only what the worker does not have: 478 → 18.5 KB."
+   ],
+   [
+    "Boundary",
+    "90994d4443",
+    "An answer carries only what the page does not have: 393 → 16 KB. The worker's encoding 44 → 5 ms, the page's decoding 14 → 1 ms. Unchanged parts arrive as objects the page already holds, so its caches keyed by identity hit."
+   ],
+   [
+    "Boundary",
+    "b481a876e1",
+    "A release's answers reach the page in two actions, not four, so it redraws less often."
+   ],
+   [
+    "Boundary",
+    "6b7d53b3e8 (dev: #2652)",
+    "The page starts the worker at load, and does not time out an answer that is queued."
+   ],
+   [
+    "Main thread, views",
+    "4239ecf04f, c64c558e86, 126f595ce9",
+    "A view is evaluated again only when its definition or model changed. Inside it, calls whose inputs did not change are reused, and a function whose calls never repeat stops being remembered.Added later on 2026-10-13: calls of at least 40 steps, keyed by their content (^report(11)), at most 8 per function, and given up on after 24 misses per hit (^report(4))."
+   ],
+   [
+    "Main thread, views",
+    "dd892bc331 (dev: #2661), efaaee244f, d706d4d1ec",
+    "The evaluator runs views faster: types are compared by hash, the recursive Html type is unrolled once, and views are not run to the very end. These help the worker too, since it runs the same evaluator."
+   ],
+   [
+    "Main thread, redraws",
+    "51df91d5d7, cefa5c2c5c (dev: #2671)",
+    "Redraws that show nothing new reuse what they drew, and editing keeps unchanged pieces of the program as the same objects."
+   ],
+   [
+    "Main thread, statics",
+    "#2469; 8fbc86c644",
+    "Statics per item, and the worker's share of it updated rather than rebuilt per change, which also leaves fewer new objects to hash."
+   ],
+   [
+    "Main thread, scrolling",
+    "47f7f48397 (dev: #2672)",
+    "Measuring the font no longer scrolls the editor to the caret, which had swallowed a click."
+   ]
+  ]
+ },
+ {
+  "section": "Where a diff could go",
+  "section_id": "where",
+  "columns": [
+   "",
+   "A. At the boundary (done)",
+   "B. In the worker: views, diffed there",
+   "C. On the page: skip what is the same"
+  ],
+  "rows": [
+   [
+    "What changes",
+    "Messages carry new parts only, with hashes for the rest (ShareCodec).",
+    "The worker evaluates each livelit's view, keeps the last Html it sent for it, and posts patches to that Html.",
+    "Converting Html to virtual DOM is remembered per Html subterm, by identity, so an unchanged part gives back the same virtual DOM node."
+   ],
+   [
+    "Main-thread work saved",
+    "Decoding: 14 → 1 ms per answer.",
+    "Evaluating views (in the woods, about half the page's time), converting them, and the diff below unchanged parts.",
+    "Converting unchanged parts, and the diff below them, since the library skips an identical node at once."
+   ],
+   [
+    "What it needs",
+    "—",
+    "The view runner (ViewCmdRunner) in the worker; a patch format; on the page, an element that owns each livelit's DOM and applies patches (a virtual DOM \"widget\": none today); handlers dispatched by id.",
+    "A memo keyed by Html identity, and handlers that do not close over the model, so that a part stays the same when only the model changed; keys for children, so that one insertion does not shift its siblings."
+   ],
+   [
+    "Risks",
+    "The two sides' tables can drift (handled: the page asks again, and both start over).",
+    "An interaction redraws today on the page at once, from the page's own evaluation of the view. A view in the worker puts a round trip between the drag and the picture, unless the page keeps its own path for that, which means the view logic runs in two places.",
+    "Memory for the memo; handlers that capture the model would defeat it."
+   ]
+  ]
+ },
+ {
+  "section": "Update, later on 2026-10-12: the woods' redraw, split",
+  "section_id": "update",
+  "columns": [
+   "The page's main thread, during the two changes",
+   "Share"
+  ],
+  "rows": [
+   [
+    "Evaluating the view (eval_view, evaluate_open)",
+    "50%"
+   ],
+   [
+    "Garbage collection, most of it during that evaluation",
+    "21%"
+   ],
+   [
+    "The app's own update machinery: frame callbacks, recomputing its views",
+    "25%"
+   ],
+   [
+    "Converting Html to virtual DOM (HazelDOM)",
+    "1.1%"
+   ],
+   [
+    "The virtual DOM diff and patch",
+    "0.9%"
+   ],
+   [
+    "The browser's style, layout and paint",
+    "1.4%"
+   ]
+  ]
+ }
+]

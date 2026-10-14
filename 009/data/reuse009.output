@@ -1,0 +1,9 @@
+NAMES ==== FRESH (as today)
+REUSE full-body.hz (85 -> 120): checked 1187; by hash 943, by structure 105, different 139; reused 336 | incremental 756 479 502 510 502, median 502 | from scratch 458 435 446 461 451, median 451
+REUSE scenes.hz (70 -> 90): checked 247; by hash 110, by structure 106, different 31; reused 114 | incremental 1804 1499 1547 1548 1477, median 1547 | from scratch 1585 1579 1570 1545 1571, median 1571
+REUSE witch.hz (85 -> 120): checked 2539; by hash 2215, by structure 172, different 152; reused 663 | incremental 943 829 824 857 857, median 857 | from scratch 810 792 747 791 766, median 791
+NAMES ==== NAMED (the experiment)
+REUSE full-body.hz (85 -> 120): checked 1188; by hash 1002, by structure 46, different 140; reused 336 | incremental 735 505 499 536 527, median 527 | from scratch 480 446 467 493 480, median 480
+REUSE scenes.hz (70 -> 90): checked 249; by hash 130, by structure 86, different 33; reused 114 | incremental 1925 1619 1657 1630 1630, median 1630 | from scratch 1675 1660 1655 1692 1649, median 1660
+REUSE witch.hz (85 -> 120): checked 2540; by hash 2293, by structure 94, different 153; reused 663 | incremental 885 827 832 852 876, median 852 | from scratch 764 747 783 809 807, median 783
+ASSERT ran

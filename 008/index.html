@@ -196,6 +196,9 @@
   <li><b>B's set-up:</b> the outline switched to 🖼️ UX mode, then every GUI row's 🖼️ chip switched off except "arm_length" and "drawn", by clicking the outline's own controls.</li>
   <li><b>The reuse counts:</b> a temporary build of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (local branch <code>perf/2635-reuse-diag</code>, not pushed) that counted <code>IncrEval.reuse_check</code>'s outcomes and printed them per request. Firefox copied the worker's console to a file (<code>devtools.console.stdout.content</code>). Its own sampling (an id trace of a few large subterms per change) slowed it, so the times in this report come from builds without it.</li>
   <li><b>Profiles:</b> the Gecko profiler, sampling every 1 ms, over three changes per set-up, and six more each for B with the reuse check's fix and for C with the index's. The windows run from each <code>pointerup</code> to its redraw, from marks the page set. The worker's evaluation is <code>run_scheduled_slice</code>, and its reuse check <code>reuse_check</code>.</li>
+  <!-- data-line: begin -->
+  <li><b>The numbers, for programs too:</b> every table in this report, and what its numbers measure, is also in this page as JSON, in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset. The same, with any raw files that survive, is in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/008/data"><code>008/data/</code></a>.</li>
+  <!-- data-line: end -->
 </ul>
 
 </main>
@@ -466,6 +469,326 @@
 })();
 </script>
 <!-- pr-cards: end -->
-
+<!-- report-data: begin -->
+<script type="application/json" id="report-data">
+{
+ "report": 8,
+ "title": "One slider, three ways: what modular editing saves",
+ "date": "2026-10-12",
+ "question": "hazelgrove/hazel#2597 has no modular editing, and #2635 has it, from #2469 (modular editors). How long does one slider change take on a complex picture, the Livelit Playground's Full Body slide? The hypothesis: #2635 is much faster, especially in its UX outline mode, showing only the slider and the picture, because it doesn't reprocess the unrelated code. A third set-up separates the two halves of that hypothesis.",
+ "builds": [
+  {
+   "name": "A",
+   "pr": "hazelgrove/hazel#2597",
+   "commit": "a15c6f0b65",
+   "note": "no modular editing; has ^report(7)'s fix (c07bdacead), so its worker's stream messages are throttled as on #2635; the whole program on screen, with its livelits; dev build, served locally"
+  },
+  {
+   "name": "C",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "57c928cef4",
+   "note": "modular editing; the whole program on screen, with its livelits (the outline's dev mode); dev build, served locally"
+  },
+  {
+   "name": "B",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "57c928cef4",
+   "note": "modular editing; only two cells on screen, the slider and the picture (the outline's UX mode, every GUI row's chip switched off except 'arm_length' and 'drawn')"
+  },
+  {
+   "name": "B, fixed; C, fixed",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "57c928cef4 plus cbdab791f5",
+   "note": "the reuse check compares lexemes in the same memoized walk as structure; on #2635 as cbdab791f5"
+  },
+  {
+   "name": "C, with the index's fix",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "57c928cef4 plus cbdab791f5 and 8717564a5f",
+   "note": "the page's index of the elaboration stops at expressions; on #2635 as 8717564a5f"
+  },
+  {
+   "name": "reuse-diag",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "not stated in the report",
+   "note": "a temporary build on local branch perf/2635-reuse-diag, not pushed, that counted IncrEval.reuse_check's outcomes and printed them per request; its own sampling slowed it, so no time in the report comes from it"
+  }
+ ],
+ "runtime": "headless Firefox over WebDriver (the report states no version), a fresh profile per set-up, dev builds served locally; one set-up at a time, on one laptop. The Full Body slide's text is identical on both branches.",
+ "runs": "Twelve changes per set-up, after two warm-up changes, each a real pointer drag of the 'arm length' slider to a length not drawn before, the same twelve lengths in each set-up. Profiles: three changes per set-up, and six more each for B with the reuse check's fix and for C with the index's fix. Reuse counts: per slider change, steady state, from the reuse-diag build, its worker console copied to a file by Firefox (devtools.console.stdout.content).",
+ "measures": {
+  "release to redraw": "s: from the slider's pointerup to the first moment a large picture's markup differed from before the drag, checked every 200 ms in the page (so it works whether a picture is patched or rebuilt)",
+  "Against C": "ratio: a set-up's median over C's",
+  "Per change, profiled": "ms per change, from the Gecko profiler sampling every 1 ms, the page's main thread and the eval worker together; windows from each pointerup to its redraw, from marks the page set (13.3, 1.8, 4.2 and 2.2 s for A, C, B and B fixed). Rows overlap: a function's time includes what it calls. Profiled times run longer than the clock",
+  "statics": "ms, profiled: the page's statics",
+  "printing code (of_segment)": "ms, profiled: the code view in A and C, the autosave's text in B",
+  "segment_to_string": "ms, profiled: the program turned into text",
+  "save_current": "ms, profiled: the autosave",
+  "live_html": "ms, profiled: livelit views without their memo",
+  "memo_view": "ms, profiled: livelit views through their memo",
+  "Worker: the reuse check": "ms, profiled: reuse_check on the eval worker",
+  "Worker: evaluating": "ms, profiled: run_scheduled_slice on the eval worker, which includes most of the reuse check",
+  "Checks": "count per change: the reuse check's calls",
+  "the hash matches": "count per change: parts whose hash matched a cached entry (one lookup)",
+  "the slow path": "count per change: parts whose hash differs but which are equal; the hash covers ids as well as structure",
+  "time on the slow path": "ms per change: the slow path's time, structure (memoized) plus lexemes",
+  "Reused in the end": "count per change: parts reused",
+  "the index": "ms, profiled: the page's index of the elaboration (where each expression starts and ends), built once per change: 204 of C's 949 ms page update before 8717564a5f, 115 ms after (six changes)"
+ },
+ "times": "the in-page check every 200 ms bounds the clock's resolution; profiled times run long, so the profile's rows say where the time goes and the clock says how much",
+ "figures": {
+  "8.6 s": "A: #2597, no modular editing (median of 12)",
+  "1.2 s": "C: #2635, the whole program on screen (median of 12)",
+  "3.5 s": "B: #2635, only the slider and the picture (median of 12)",
+  "1.26 s": "B with the reuse check fixed (median of 12)"
+ },
+ "readings": {
+  "B with the fix, range": "1.06-1.9 s, with one change at 3.8 s (median 1.26 s of 12)",
+  "C with the fix, median": "1.23 s of 12",
+  "C with the index's fix, median": "1.37 s of 12, against 1.23 s before, 'inside the noise of a check that runs every 200 ms'",
+  "B, only the slider's cell open (reuse counts)": "slow-path checks fall from 122 to 4 per change"
+ },
+ "cited": [
+  {
+   "number": "3.5 s of statics against 16 ms per item",
+   "what": "a Kids' Choice release on #2597 and #2635",
+   "from": "^report(1)"
+  },
+  {
+   "number": "about 6,400 nodes; 122 enclosing lets",
+   "what": "the subterm each enclosing let traced in the slow path's lexeme comparison, which is quadratic",
+   "from": "the report's #reuse"
+  },
+  {
+   "number": "524, 46, 13, 6, 8",
+   "what": "tests passing with cbdab791f5: the Evaluator, Evaluator.Incremental, IncrSlides, CallMemo and Equality groups",
+   "from": "the report's #fix"
+  }
+ ],
+ "updates": "Corrected on 2026-10-13: #2597's terms carry no lexemes (they came to dev with 500c466b44, which #2597 lacks), so there is nothing to bring to #2597; dev compares lexemes by trace on every check (since 7de3875cd8), so the fix would suit it, with the hash shortcut. No new measurements.",
+ "provenance": "No raw file was kept with this report: the WebDriver driver's output, the Gecko profiles and the reuse-diag build's console file were not saved with it. Every number here exists only as printed in the report.",
+ "raw_files": {},
+ "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
+ "tables": [
+  {
+   "section": "The three set-ups",
+   "section_id": "setup",
+   "columns": [
+    "",
+    "Branch",
+    "On screen"
+   ],
+   "rows": [
+    [
+     "A",
+     "#2597, no modular editing",
+     "the whole program, with its livelits"
+    ],
+    [
+     "C",
+     "#2635, modular editing",
+     "the whole program, with its livelits (the outline's 🏗️ dev mode)"
+    ],
+    [
+     "B",
+     "#2635, modular editing",
+     "only two cells: the slider and the picture (the outline's 🖼️ UX mode, with every other GUI row switched off)"
+    ]
+   ]
+  },
+  {
+   "section": "How long a change takes",
+   "section_id": "times",
+   "columns": [
+    "",
+    "Median",
+    "Range",
+    "Against C"
+   ],
+   "rows": [
+    [
+     "A: #2597",
+     "8.6 s",
+     "7.4–10.5 s",
+     "7.2×"
+    ],
+    [
+     "C: #2635, whole program",
+     "1.2 s",
+     "0.9–1.8 s",
+     "1"
+    ],
+    [
+     "B: #2635, slider and picture only",
+     "3.5 s",
+     "2.9–5.0 s",
+     "2.9×"
+    ]
+   ]
+  },
+  {
+   "section": "Where the time goes",
+   "section_id": "where",
+   "columns": [
+    "Per change, profiled",
+    "A",
+    "C",
+    "B",
+    "B, fixed"
+   ],
+   "rows": [
+    [
+     "Release to redraw (the profiled window)",
+     "13,289",
+     "1,768",
+     "4,150",
+     "2,167"
+    ],
+    [
+     "Page: the whole update",
+     "12,719",
+     "949",
+     "2,264",
+     "1,457"
+    ],
+    [
+     "— statics",
+     "5,405",
+     "38",
+     "4",
+     "3"
+    ],
+    [
+     "— printing code (of_segment): the code view in A and C, the autosave's text in B",
+     "2,293",
+     "9",
+     "480",
+     "6"
+    ],
+    [
+     "— the program turned into text (segment_to_string)",
+     "1,522",
+     "—",
+     "472",
+     "2"
+    ],
+    [
+     "— the autosave (save_current)",
+     "—",
+     "—",
+     "547",
+     "—"
+    ],
+    [
+     "— livelit views without their memo (live_html)",
+     "840",
+     "—",
+     "463",
+     "449"
+    ],
+    [
+     "— livelit views through their memo (memo_view)",
+     "—",
+     "163",
+     "—",
+     "—"
+    ],
+    [
+     "Worker: the reuse check",
+     "22",
+     "51",
+     "2,210",
+     "6"
+    ],
+    [
+     "Worker: evaluating, including the reuse check",
+     "975",
+     "1,056",
+     "2,174",
+     "884"
+    ]
+   ]
+  },
+  {
+   "section": "The reuse check, counted",
+   "section_id": "reuse",
+   "columns": [
+    "Per change",
+    "C: whole",
+    "B: slider and picture open",
+    "B: only the slider open"
+   ],
+   "rows": [
+    [
+     "Checks",
+     "1,454",
+     "1,476",
+     "1,476"
+    ],
+    [
+     "— the hash matches (one lookup)",
+     "1,128",
+     "1,003",
+     "1,127"
+    ],
+    [
+     "— the hash differs, but the parts are equal (the slow path)",
+     "1",
+     "122",
+     "4"
+    ],
+    [
+     "— time on the slow path",
+     "0–3 ms",
+     "1,450–2,500 ms",
+     "350–375 ms"
+    ],
+    [
+     "Reused in the end",
+     "338",
+     "337",
+     "339"
+    ]
+   ]
+  },
+  {
+   "section": "A fix for the check, tried",
+   "section_id": "fix",
+   "columns": [
+    "Per change",
+    "B before",
+    "B with the fix",
+    "C with the fix"
+   ],
+   "rows": [
+    [
+     "Release to redraw (median of 12)",
+     "3.5 s",
+     "1.26 s",
+     "1.23 s"
+    ],
+    [
+     "The reuse check's slow path",
+     "1,450–2,500 ms",
+     "1–4 ms",
+     "0–1 ms"
+    ],
+    [
+     "Slow matches, and parts reused",
+     "122, 337",
+     "122, 337",
+     "1, 338"
+    ]
+   ]
+  }
+ ],
+ "files": [
+  "data/meta.json",
+  "data/tables.json"
+ ],
+ "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/008/data"
+}
+</script>
+<!-- report-data: end -->
 </body>
 </html>

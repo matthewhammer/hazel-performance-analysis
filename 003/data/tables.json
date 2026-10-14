@@ -1,0 +1,53 @@
+[
+ {
+  "section": "What it costs",
+  "section_id": "cost",
+  "columns": [
+   "Change",
+   "Hazel slide redraw",
+   "Game draw()"
+  ],
+  "rows": [
+   [
+    "Star points 5 → 8, star turn 0 → 50%",
+    "0.65 s, 0.46 s",
+    "1–2 ms"
+   ],
+   [
+    "Hand angle 0 → 90° (human); arm length 95 → 600",
+    "1.36 s; 1.39 s",
+    "1–2 ms"
+   ],
+   [
+    "Claws 4 → 20",
+    "2.11 s",
+    "3 ms at 100"
+   ],
+   [
+    "Claws 20 → 100; then claw length 100 → 900%",
+    "8.19 s; 7.52 s",
+    "3 ms at 100"
+   ],
+   [
+    "Alien fingers 3 → 20",
+    "6.21 s",
+    "2 ms"
+   ],
+   [
+    "Alien fingers 20 → 50",
+    "14.06 s",
+    ""
+   ],
+   [
+    "Alien fingers 50 → 99",
+    "32.30 s",
+    "5 ms"
+   ],
+   [
+    "Full Body: eye size 50 → 300, smile, mouth open",
+    "3.2–3.9 s",
+    "1–3 ms"
+   ]
+  ]
+ }
+]

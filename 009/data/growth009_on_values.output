@@ -1,0 +1,7 @@
+DERIVED hashing in the timed evaluation: on-object names: walked 1033746, reused 932980; ValueHash: walked 0, memo hits 0, no-hash 0; gensyms so far 114482
+DERIVED woods picture: gensyms per evaluation 14921, 14921; nodes 33847, sharing an id with the first run 33846; equal in structure true, by hash false; one evaluation 2205 ms
+DERIVED hashing in the timed evaluation: on-object names: walked 1033746, reused 932980; ValueHash: walked 0, memo hits 0, no-hash 0; gensyms so far 193242
+DERIVED woods picture: gensyms per evaluation 14921, 14921; nodes 33847, sharing an id with the first run 33846; equal in structure true, by hash false; one evaluation 2484 ms
+DERIVED hashing in the timed evaluation: on-object names: walked 1033746, reused 932980; ValueHash: walked 0, memo hits 0, no-hash 0; gensyms so far 272002
+DERIVED woods picture: gensyms per evaluation 14921, 14921; nodes 33847, sharing an id with the first run 33846; equal in structure true, by hash false; one evaluation 2221 ms
+ASSERT ran

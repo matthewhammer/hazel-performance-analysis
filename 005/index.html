@@ -216,6 +216,9 @@
 <ul>
   <li>The pipeline and the code facts: read from <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <a href="https://github.com/hazelgrove/hazel/commit/b18cef1f5a"><code>b18cef1f5a</code></a>, and from <code>virtual_dom</code>'s compiled diff.</li>
   <li>The numbers: from <a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a> and <a href="../004/"><code class="ref"><b>^report(</b>4<b>)</b></code></a>, and from the commit messages linked above. Nothing new was measured for this report.</li>
+  <!-- data-line: begin -->
+  <li><b>The numbers, for programs too:</b> every table in this report, and what its numbers measure, is also in this page as JSON, in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset. The same, with any raw files that survive, is in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/005/data"><code>005/data/</code></a>.</li>
+  <!-- data-line: end -->
 </ul>
 
 </main>
@@ -486,6 +489,255 @@
 })();
 </script>
 <!-- ref-cards: end -->
-
+<!-- report-data: begin -->
+<script type="application/json" id="report-data">
+{
+ "report": 5,
+ "title": "Two threads, one picture: the worker, the page, and diffing the view",
+ "date": "2026-10-12",
+ "question": "A question from a meeting with Cyrus: how do our performance fixes so far compare with a more principled approach, where the worker builds a virtual DOM of each view, diffs it against the last one, and sends the page only the patches? Did we already do some of this, and how far does the idea go? Can a worker even build real DOM nodes? And is it expensive to keep several representations of the same DOM?",
+ "builds": [
+  {
+   "name": "2635 as read",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "b18cef1f5a",
+   "note": "the pipeline and the code facts were read from this commit, and from virtual_dom's compiled diff"
+  },
+  {
+   "name": "2635 profiled (update)",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "b18cef1f5a",
+   "note": "the update, later on 2026-10-12: a Gecko profile of two figure-size changes in the woods was taken on this commit"
+  }
+ ],
+ "runtime": "the update's profile: Firefox, with the Gecko profiler (the report states no Firefox version). Nothing else in the report was measured for it.",
+ "runs": "The body of the report measured nothing new: its numbers come from ^report(1) and ^report(4), and from the commit messages linked in the table of fixes. The update (later on 2026-10-12): one Gecko profile of two figure-size changes in the woods; the two runs took 4.4 and 4.1 s under the profiler.",
+ "measures": {
+  "Share (the update's table)": "%: of the samples of the page's main thread during the two figure-size changes, each sample counted once, under the innermost of the table's rows that it was in",
+  "evaluating the view, with its garbage collection": "%: about 69%, 'counting the garbage collection it causes' (the table's rows are 50% for evaluating the view and 21% for garbage collection, 'most of it during that evaluation')",
+  "what C would save": "%: at most about 2%, the two rows 'Converting Html to virtual DOM (HazelDOM)' (1.1%) and 'The virtual DOM diff and patch' (0.9%)",
+  "the fixes table ('What it does')": "sizes in KB, times in ms or s, counts: each fix's effect as measured in ^report(1) to ^report(4) or stated in the commit message linked beside it (the report does not say which number came from which)",
+  "the diff table ('Main-thread work saved')": "ms per answer: decoding 14 -> 1 ms, the page's decoding of an answer before and after 90994d4443, as in the fixes table"
+ },
+ "times": "the update gives shares of profiler samples, not times: profiling 'makes code with many small calls look slower than it is, so read the shares, not the times'",
+ "figures": {
+  "One change, in eight steps": "a diagram of who does what for one change (the worker's steps, the boundary, and steps 6-8 on the main thread); it carries no measured numbers"
+ },
+ "cited": [
+  {
+   "number": "about 400 KB -> about 16 KB",
+   "what": "a Kids' Choice release's messages between the threads, before and after the boundary shares parts by hash",
+   "from": "the report's method: ^report(1), ^report(4) and the commit messages linked in its table of fixes"
+  },
+  {
+   "number": "8 ms of a 104 ms redraw",
+   "what": "converting the Kids' Choice face's Html to the page, profiled",
+   "from": "^report(1)"
+  },
+  {
+   "number": "about 30 ms of a 310 ms redraw",
+   "what": "the browser's own layout and DOM work, in an earlier Kids' Choice profile",
+   "from": "'an earlier profile' (the report's method: ^report(1) or ^report(4))"
+  },
+  {
+   "number": "about 600 shapes",
+   "what": "the shapes the woods' picture view evaluates on every change",
+   "from": "^report(4)"
+  },
+  {
+   "number": "about half the page's time",
+   "what": "evaluating views, in the woods",
+   "from": "the report's method: ^report(1) or ^report(4)"
+  },
+  {
+   "number": "200,000 entries",
+   "what": "the cap on each of the worker's and the page's tables of shared values (a code fact, not a measurement)",
+   "from": "the code on #2635 at b18cef1f5a"
+  },
+  {
+   "number": "median 2.20 s -> 1.41 s",
+   "what": "the woods' redraw, after three changes that made the view cheaper",
+   "from": "^report(4)'s update"
+  },
+  {
+   "number": "about nine tenths of a run from scratch",
+   "what": "the worker's update cost after a slider edit on the Playground's figure slides (added 2026-10-13)",
+   "from": "^report(10), ^report(11)"
+  },
+  {
+   "number": "about 92 MB per slider edit",
+   "what": "what a tab keeps after every slider edit on Full Body on #2597 (added 2026-10-14)",
+   "from": "^report(14)"
+  }
+ ],
+ "provenance": "No raw file was kept with this report. The update's shares exist only as printed (the table under #update); the Gecko profile they were read from is not in data/. The body's numbers are quoted from earlier reports and commit messages, and their data is with those reports.",
+ "raw_files": {},
+ "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
+ "tables": [
+  {
+   "section": "Each fix so far, by thread",
+   "section_id": "fixes",
+   "columns": [
+    "Where",
+    "Fix",
+    "What it does"
+   ],
+   "rows": [
+    [
+     "Worker",
+     "e0a5b16555",
+     "The incremental cache stays in the worker, instead of crossing in every request and back in every answer: an answer of 332 KB became 0.9 KB."
+    ],
+    [
+     "Worker",
+     "5237161017, 97c910f69c (dev: #2673)",
+     "An unchanged expression is recognized by its Merkle hash, not by comparing it whole: about 410 → 145 ms per release."
+    ],
+    [
+     "Worker",
+     "9129cd2774",
+     "Reusing a result copies cache entries without walking function bodies: the worker's evaluation 47 → 25 ms."
+    ],
+    [
+     "Worker",
+     "25e515536d",
+     "Evaluation slices run back to back for up to 30 ms, not one per timer tick: the worker's time per woods change, 10.0–10.7 → 2.1–2.6 s."
+    ],
+    [
+     "Worker (found in statics)",
+     "4b964e6660 (dev: #2675)",
+     "A recursive let's own names are not free in it, so the code around it is reused."
+    ],
+    [
+     "Worker, for the page",
+     "a05f8e5791 (from #2469)",
+     "Streams of partial results come at most every 100–1000 ms, by program size, so they do not swamp the page: opening a 2,000-item program, the page's busy time 46.7 → 10.2 s. Correction, later on 2026-10-12: this commit made the interval grow with the program. The throttle itself came a day before, in c07bdacead, also from #2469: stream posts at most every 100 ms, and the page's projection of the program made lazy, so a streamed result no longer re-projects it (opening a 1,000-item program, 45.5 → 5.4 s). #2597 has neither; ^report(7) measures c07bdacead there."
+    ],
+    [
+     "Boundary",
+     "993e3d5f91",
+     "A request carries only what the worker does not have: 478 → 18.5 KB."
+    ],
+    [
+     "Boundary",
+     "90994d4443",
+     "An answer carries only what the page does not have: 393 → 16 KB. The worker's encoding 44 → 5 ms, the page's decoding 14 → 1 ms. Unchanged parts arrive as objects the page already holds, so its caches keyed by identity hit."
+    ],
+    [
+     "Boundary",
+     "b481a876e1",
+     "A release's answers reach the page in two actions, not four, so it redraws less often."
+    ],
+    [
+     "Boundary",
+     "6b7d53b3e8 (dev: #2652)",
+     "The page starts the worker at load, and does not time out an answer that is queued."
+    ],
+    [
+     "Main thread, views",
+     "4239ecf04f, c64c558e86, 126f595ce9",
+     "A view is evaluated again only when its definition or model changed. Inside it, calls whose inputs did not change are reused, and a function whose calls never repeat stops being remembered.Added later on 2026-10-13: calls of at least 40 steps, keyed by their content (^report(11)), at most 8 per function, and given up on after 24 misses per hit (^report(4))."
+    ],
+    [
+     "Main thread, views",
+     "dd892bc331 (dev: #2661), efaaee244f, d706d4d1ec",
+     "The evaluator runs views faster: types are compared by hash, the recursive Html type is unrolled once, and views are not run to the very end. These help the worker too, since it runs the same evaluator."
+    ],
+    [
+     "Main thread, redraws",
+     "51df91d5d7, cefa5c2c5c (dev: #2671)",
+     "Redraws that show nothing new reuse what they drew, and editing keeps unchanged pieces of the program as the same objects."
+    ],
+    [
+     "Main thread, statics",
+     "#2469; 8fbc86c644",
+     "Statics per item, and the worker's share of it updated rather than rebuilt per change, which also leaves fewer new objects to hash."
+    ],
+    [
+     "Main thread, scrolling",
+     "47f7f48397 (dev: #2672)",
+     "Measuring the font no longer scrolls the editor to the caret, which had swallowed a click."
+    ]
+   ]
+  },
+  {
+   "section": "Where a diff could go",
+   "section_id": "where",
+   "columns": [
+    "",
+    "A. At the boundary (done)",
+    "B. In the worker: views, diffed there",
+    "C. On the page: skip what is the same"
+   ],
+   "rows": [
+    [
+     "What changes",
+     "Messages carry new parts only, with hashes for the rest (ShareCodec).",
+     "The worker evaluates each livelit's view, keeps the last Html it sent for it, and posts patches to that Html.",
+     "Converting Html to virtual DOM is remembered per Html subterm, by identity, so an unchanged part gives back the same virtual DOM node."
+    ],
+    [
+     "Main-thread work saved",
+     "Decoding: 14 → 1 ms per answer.",
+     "Evaluating views (in the woods, about half the page's time), converting them, and the diff below unchanged parts.",
+     "Converting unchanged parts, and the diff below them, since the library skips an identical node at once."
+    ],
+    [
+     "What it needs",
+     "—",
+     "The view runner (ViewCmdRunner) in the worker; a patch format; on the page, an element that owns each livelit's DOM and applies patches (a virtual DOM \"widget\": none today); handlers dispatched by id.",
+     "A memo keyed by Html identity, and handlers that do not close over the model, so that a part stays the same when only the model changed; keys for children, so that one insertion does not shift its siblings."
+    ],
+    [
+     "Risks",
+     "The two sides' tables can drift (handled: the page asks again, and both start over).",
+     "An interaction redraws today on the page at once, from the page's own evaluation of the view. A view in the worker puts a round trip between the drag and the picture, unless the page keeps its own path for that, which means the view logic runs in two places.",
+     "Memory for the memo; handlers that capture the model would defeat it."
+    ]
+   ]
+  },
+  {
+   "section": "Update, later on 2026-10-12: the woods' redraw, split",
+   "section_id": "update",
+   "columns": [
+    "The page's main thread, during the two changes",
+    "Share"
+   ],
+   "rows": [
+    [
+     "Evaluating the view (eval_view, evaluate_open)",
+     "50%"
+    ],
+    [
+     "Garbage collection, most of it during that evaluation",
+     "21%"
+    ],
+    [
+     "The app's own update machinery: frame callbacks, recomputing its views",
+     "25%"
+    ],
+    [
+     "Converting Html to virtual DOM (HazelDOM)",
+     "1.1%"
+    ],
+    [
+     "The virtual DOM diff and patch",
+     "0.9%"
+    ],
+    [
+     "The browser's style, layout and paint",
+     "1.4%"
+    ]
+   ]
+  }
+ ],
+ "files": [
+  "data/meta.json",
+  "data/tables.json"
+ ],
+ "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/005/data"
+}
+</script>
+<!-- report-data: end -->
 </body>
 </html>

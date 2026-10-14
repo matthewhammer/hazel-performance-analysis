@@ -1,0 +1,305 @@
+[
+ {
+  "section": "Statics, run again: what gets renamed",
+  "section_id": "statics",
+  "columns": [
+   "Slide",
+   "Nodes",
+   "Renamed, fresh ids",
+   "Renamed, named",
+   "Hash changed, fresh ids",
+   "Hash changed, named"
+  ],
+  "rows": [
+   [
+    "Full Body",
+    "111,462",
+    "667",
+    "85",
+    "692",
+    "247"
+   ],
+   [
+    "Witch",
+    "107,728",
+    "798",
+    "85",
+    "844",
+    "308"
+   ],
+   [
+    "Scenes",
+    "101,403",
+    "210",
+    "85",
+    "237",
+    "136"
+   ],
+   [
+    "Shirt and Pants",
+    "87,215",
+    "114",
+    "79",
+    "82",
+    "58"
+   ],
+   [
+    "Polygons",
+    "62,628",
+    "14",
+    "0",
+    "23",
+    "13"
+   ]
+  ]
+ },
+ {
+  "section": "What the eval worker reuses, and what it costs",
+  "section_id": "reuse",
+  "columns": [
+   "Slide (edit)",
+   "Ids",
+   "Same by hash",
+   "Same by structure",
+   "Different",
+   "Reused"
+  ],
+  "rows": [
+   [
+    "Full Body (smile 85 → 120)",
+    "fresh ids",
+    "943",
+    "105",
+    "139",
+    "336"
+   ],
+   [
+    "Full Body (smile 85 → 120)",
+    "named",
+    "1002",
+    "46",
+    "140",
+    "336"
+   ],
+   [
+    "Witch (smile 85 → 120)",
+    "fresh ids",
+    "2215",
+    "172",
+    "152",
+    "663"
+   ],
+   [
+    "Witch (smile 85 → 120)",
+    "named",
+    "2293",
+    "94",
+    "153",
+    "663"
+   ],
+   [
+    "Scenes (eye size 70 → 90)",
+    "fresh ids",
+    "110",
+    "106",
+    "31",
+    "114"
+   ],
+   [
+    "Scenes (eye size 70 → 90)",
+    "named",
+    "130",
+    "86",
+    "33",
+    "114"
+   ]
+  ]
+ },
+ {
+  "section": "What the eval worker reuses, and what it costs",
+  "section_id": "reuse",
+  "columns": [
+   "Slide",
+   "Incremental, ms",
+   "Median",
+   "From scratch, ms",
+   "Median",
+   "Named: incremental / scratch"
+  ],
+  "rows": [
+   [
+    "Full Body",
+    "621 476 494 500 499",
+    "499",
+    "448 457 464 484 469",
+    "464",
+    "552 / 508"
+   ],
+   [
+    "Witch",
+    "796 707 754 830 718",
+    "754",
+    "675 701 755 923 650",
+    "701",
+    "727 / 692"
+   ],
+   [
+    "Scenes",
+    "1522 1357 1416 1412 1455",
+    "1416",
+    "1453 1421 1444 1462 1464",
+    "1453",
+    "1416 / 1432"
+   ]
+  ]
+ },
+ {
+  "section": "Between the page and the worker",
+  "section_id": "wire",
+  "columns": [
+   "Direction",
+   "Messages",
+   "Slots sent",
+   "If equal values had equal ids",
+   "Ratio"
+  ],
+  "rows": [
+   [
+    "worker → page (results and streams)",
+    "32",
+    "387,625",
+    "347,920",
+    "1.11×"
+   ],
+   [
+    "page → worker (requests)",
+    "8",
+    "43,248",
+    "21,728",
+    "1.99×"
+   ]
+  ]
+ },
+ {
+  "section": "Caching in Hazel, in the paper's terms added later on 2026-10-13",
+  "section_id": "caching",
+  "columns": [
+   "",
+   "Hazel today",
+   "Incremental Computation with Names"
+  ],
+  "rows": [
+   [
+    "What is cached",
+    "Top-level nodes of the program",
+    "Any thunk, at any depth"
+   ],
+   [
+    "Identity",
+    "The editor's ids; a value's provenance (binding, path)",
+    "Names derived from the input names"
+   ],
+   [
+    "Dependencies",
+    "Static: the free variables statics finds",
+    "Dynamic: what each thunk forced, in order, with what it saw"
+   ],
+   [
+    "What invalidates",
+    "A dependency that was evaluated again",
+    "A dependency whose result changed"
+   ],
+   [
+    "Early cutoff",
+    "None",
+    "Yes: the observed result is compared"
+   ],
+   [
+    "Who decides",
+    "A re-run from the top, reusing what checks out",
+    "Demand: only what is dirty and asked for"
+   ],
+   [
+    "Correctness",
+    "Incremental agrees with fresh (the IncrSlides tests)",
+    "Proved: from-scratch consistency"
+   ]
+  ]
+ },
+ {
+  "section": "Derived names everywhere: an experiment added later on 2026-10-13",
+  "section_id": "derived",
+  "columns": [
+   "Slider edit",
+   "Statics, today",
+   "Statics, derived",
+   "Incremental evaluation, today",
+   "Incremental evaluation, derived"
+  ],
+  "rows": [
+   [
+    "Full Body (smile 85 → 120)",
+    "15,624",
+    "4,398",
+    "84,528",
+    "4,425"
+   ],
+   [
+    "Witch (smile 85 → 120)",
+    "18,637",
+    "4,995",
+    "147,081",
+    "6,842"
+   ],
+   [
+    "Scenes (eye size 70 → 90)",
+    "6,055",
+    "1,852",
+    "423,362",
+    "13,578"
+   ]
+  ]
+ },
+ {
+  "section": "Merkle names, kept on the values added later still on 2026-10-13",
+  "section_id": "merkle",
+  "columns": [
+   "",
+   "Fresh ids, as today",
+   "Derived names, kept on the values",
+   "Cost"
+  ],
+  "rows": [
+   [
+    "The woods, one evaluation",
+    "1,508 ms (1,489–1,780)",
+    "1,667 ms (1,629–1,785)",
+    "1.11×"
+   ],
+   [
+    "Full Body, from scratch",
+    "464 ms (448–484)",
+    "524 ms (503–535)",
+    "1.13×"
+   ],
+   [
+    "Witch, from scratch",
+    "701 ms (650–923)",
+    "852 ms (787–1,087)",
+    "1.22×"
+   ],
+   [
+    "Scenes, from scratch",
+    "1,453 ms (1,421–1,464)",
+    "1,897 ms (1,714–2,060)",
+    "1.31×"
+   ],
+   [
+    "The whole derived-names experiment, both modes, in one process",
+    "180 s, against 1,043 s with the side table",
+    "180 s, against 1,043 s with the side table",
+    ""
+   ]
+  ]
+ }
+]

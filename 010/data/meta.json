@@ -1,0 +1,41 @@
+{
+ "title": "What a slider change touches",
+ "date": "2026-10-13",
+ "question": "When a slider moves, which parts of the picture does it actually change, and which does it leave alone? And can Hazel tell the two apart? Measured on the Livelit Playground's slides with an oracle that names each call by where it is, as Incremental Computation with Names (OOPSLA 2015) names allocations in its interpreter.",
+ "builds": [
+  {"name": "measuring build", "pr": "hazelgrove/hazel#2635", "commit": "c4e64060f1", "note": "with measuring code on a local branch, not pushed: the oracle (CallNames), its hook at the evaluator's function call, a count of the steps taken, and ^report(9)'s experiments, switched off"}
+ ],
+ "runtime": "node, the test build. Versions not stated in the report.",
+ "programs": "the Livelit Playground's Full Body, Witch and Scenes slides, each parsed once (FastParse, MakeTerm) and analyzed with Statics.mk_unmemoized. The picture runs use each slide cut at its picture: the program up to the line that hands the picture to Drawing.^picture, ending with the picture's expression (Full Body skinned(outfit), Witch skinned(dressed(outfit)), Scenes Drawing.frame((x0, y0, x1, y1)) @ backdrop @ figure).",
+ "edits": "one integer literal replaced, the slider's model, keeping its id: Full Body smile 85 -> 120, Witch smile 85 -> 120, Scenes eye size 70 -> 90",
+ "runs": "The whole-slide runs evaluate the slide with Evaluator.evaluate: once before the edit, again unedited (the control), from scratch after the edit, and incrementally after it against the first run's cache, as the eval worker does. The picture runs evaluate the slide cut at its picture with Evaluator.evaluate_open, before and after. Steps are deterministic, the same in every run, so one run of each suffices; the control is the noise floor: zero (every call reusable on every slide).",
+ "measures": {
+  "steps": "count: the evaluator's own steps, counted by the oracle as they are taken (today's incremental run adds a reused binding's recorded steps to its count without taking them, so they are counted here directly)",
+  "in calls": "count: steps inside function calls (a call is the step from f(arg) to f's body; its steps include its callees')",
+  "calls": "count: function calls in the run",
+  "name of a call": "the caller's name, the call site's id, and how many times that site has been called in that caller; a call made at the top level takes the id of the top-level expression it is in instead of a caller's name",
+  "inputs of a call": "the values of the variables its body reads, the argument among them, and the body itself, each as a hash of an id-free form (the form the views' call memo, CallMemo, uses: every id the same, a function its code and the values of the variables its code reads)",
+  "reusable by name": "count: calls for which the evaluation before had a call of the same name with the same body and the same inputs",
+  "steps a memo by name skips": "count, and % of the run's steps: the steps of the outermost reusable calls (reusing a call skips its callees too)",
+  "by content": "count: the steps of the outermost calls whose body and inputs occurred anywhere before, under any name (the call memo's kind of key, with no limit on how many it keeps)",
+  "left to run": "count: steps less the steps a memo by name skips; in ^report(11)'s terms, the update cost of a memo keyed by position",
+  "shapes, changed": "count: the picture's shapes (a Polygon or a Path: a name, points, a stroke and a fill), and those not equal to the shape in the same place before the edit, compared by a hash of their id-free form (the picture diff, in ^report(11)'s terms)",
+  "functions that run again": "count: for the calls not reusable by name after today's reuse, by the function they are in: calls, and own steps (not their callees')",
+  "calls whose answer did not change": "count: calls that ran with changed inputs and returned what they returned before",
+  "new names": "count: names after the edit that the run before did not have (as many are gone)",
+  "trace distance": "^report(11)'s term: the fewest steps any update could evaluate again, under the best matching of the two runs; keying by content estimates it from above. Added to this report by a dated note."
+ },
+ "times": "not timed: counts of evaluation steps, not times, from an oracle that watches and reuses nothing (every check free). Steps are not time.",
+ "raw_files": {
+  "data/oracle010.output": "The oracle on the whole slides. Every line begins 'CALLNAMES <slide> <from>-><to> <run>:' where <run> is CONTROL (no edit, from scratch), FROM SCRATCH, or INCREMENTAL (after today's reuse). Per run: a summary, 'executed E steps, C in calls; calls N | same name, same name and body, reusable by name R (outermost save S steps, x% of steps) | input changed but result the same K | by content R2 (outermost save S2 steps, y%) | new names, vanished | costly (>=40 steps) and reusable by name, saving ... steps'; 'unhashable (counted as changed): inputs, results'; 'run again (not reusable by name), by function, own steps: <function> <calls> calls <steps> steps, ...' (a trailing + is part of the name as Hazel's call stack records it, and '?' a function without a name; the report's tables drop the +); 'input differs: <function>, <steps> steps, result the same|different; variables differing: ...' with the path at which each differing value first differs; and 'calls by steps: <10, 10-39, 40-399, 400-3999, >=4000'. The work table is its FROM SCRATCH and INCREMENTAL summaries; the table of what would still run is its INCREMENTAL 'run again' lines.",
+  "data/picture010.output": "The picture runs: per slide, 'PICTURE <slide> <from>-><to> (picture = <expression>): shapes B before, A after; the same in place P, the same somewhere Q, unhashable U', and the oracle's lines for the slide cut at its picture, '<slide> PICTURE ONLY, FROM SCRATCH', in the format above. The picture table's shape counts and Figure 3 are from this file.",
+  "data/oracle010_control_before_fix.output": "An earlier run of the oracle, before ids in module items (ModVal) were erased from the id-free form, in the same format. Its CONTROL lines are the not-clean control the #control section describes: with no edit, 14 calls on Full Body, 10 on Witch and 1,233 on Scenes had changed inputs and the same result. Its other numbers are superseded by oracle010.output.",
+  "data/picture010_full-body_after.json": "Full Body's picture after the edit, as exported: a JSON list, one entry per shape, {same, shape}. same: whether the shape equals the one in the same place before the edit. shape: a Drawing shape, {ctor: Polygon | Path, arg: {name, points: [{at: [x, y], label}], stroke: {width, color}, fill (a Polygon only)}}, in the picture's own coordinates. Figure 1 is drawn from it; the picture table's 'Changed, by name' counts the names of the shapes whose same is false.",
+  "data/picture010_witch_after.json": "Witch's picture after the edit, in the same format.",
+  "data/picture010_scenes_after.json": "Scenes's picture after the edit, in the same format."
+ },
+ "provenance": {
+  "dated notes": "The numbers in the dated notes added later on 2026-10-13 (keyed by position 1.3 to 4.9 points over content on the 6 slider edits that change how many shapes there are, by operand 0.0 to 1.3; lists as named cells 0.0 to 1.5 points on Scenes) are ^report(11)'s, from its ladder (011/data/ladder011.output).",
+  "clear_of_eyes": "The 41 points of the lip that clear_of_eyes recurses over is a fact of the slide's program; its 35,879 steps are in oracle010.output's 'input differs' lines."
+ }
+}

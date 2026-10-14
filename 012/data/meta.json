@@ -1,0 +1,39 @@
+{
+ "title": "Moving a group, not its points",
+ "date": "2026-10-13",
+ "question": "If the Drawing library's picture were a tree of groups, each with a transform, instead of a flat list of polygons, how much smaller would a slider's picture diff be, and would the computation follow? Built for one slide, Full Body, as ^report(11)'s What next, step 1 asked.",
+ "builds": [
+  {"name": "measuring build", "pr": "hazelgrove/hazel#2635", "commit": "c4e64060f1", "note": "with ^report(11)'s oracle on a local branch, not pushed, and two more of its modes: one exports each edit's picture, and one measures another expression in the picture's place (here, the tree instead of its flattening)"}
+ ],
+ "slide": "full-body-groups.hz, an experimental copy of the Livelit Playground's Full Body slide (not in the Hazel repository; it is in this report's folder, 012/full-body-groups.hz): a Scene type of leaves and groups, each group with an affine transform (a b c d e f, as SVG's matrix), a flatten that composes them, and the figure's parts placed, armed, handed and eyed as groups. Its picture is flatten(scene).",
+ "versions": {
+  "today's picture": "full-body.hz as it is: a flat list of 49 polygons, every point in absolute coordinates",
+  "groups, flattened": "full-body-groups.hz's picture, flatten(scene), as the slide shows it",
+  "groups, not flattened": "the tree itself (scene) measured in the picture's place: 82 nodes, 49 shapes and 33 groups; what a renderer that draws groups would take"
+ },
+ "runtime": "node, the test build. Versions not stated in the report.",
+ "edits": "the 27 slider edits of ^report(11) on Full Body, each moved by a fifth of its range; each edit's slider, label, old and new value are in its ladder line",
+ "runs": "The slide cut at its picture, analyzed with Statics.mk_unmemoized, evaluated from scratch and incrementally, as in ^report(11), for each of the three versions. Today's picture was measured again on the same build as the tree; it matches ^report(11)'s run step for step (its ladder lines are identical to the Full Body lines of 011/data/ladder011.output). Steps are deterministic, so one run of each suffices; every control is clean.",
+ "measures": {
+  "picture diff, today (shapes)": "count: the shapes of the flat picture (49) the edit changes; for an edit that changes how many shapes there are, no shape-by-shape count ('changes the count')",
+  "picture diff, groups (nodes)": "count: the nodes of the tree (82: 49 shapes and 33 groups) the edit changes. A group counts as changed when its transform does, a shape when its points or style do; a group's children are matched by their longest common subsequence, and a node on one side only counts with everything in it. Differences below 10^-9 count as none, in both pictures.",
+  "trace distance (steps)": "count: the fewest evaluation steps any update could take again, estimated from above by keying calls on their content, as in ^report(11): the incremental run's steps less the steps of its outermost calls matched by content. On today's picture, the tree flattened at the end, and the tree not flattened.",
+  "Hazel's update (steps)": "count: the steps of Hazel's incremental run after the edit, on today's picture and on the tree not flattened (the table's columns); the flattened tree's is in the text for an arm-angle edit (128,194) and in its ladder file for every edit",
+  "from scratch (steps)": "count: the steps to draw the figure from scratch: today's picture 121,973, the tree flattened 148,217, the tree alone 110,260",
+  "Hazel's update, as a share": "% of the version's own run from scratch, in the text only: 85.2 to 89.0% on today's picture and 81.5 to 87.7% on the tree not flattened, for the edits of Figure 2",
+  "flattened against today": "the largest coordinate difference, point by point, between the tree flattened and today's picture, over 28 pictures (before each edit and after): within 6x10^-14"
+ },
+ "times": "not timed: steps, counted as the evaluator takes them; in steps, not shares, since the three versions take different numbers of steps from scratch",
+ "raw_files": {
+  "data/ladder012_today.output": "Today's picture (full-body.hz) on the same build as the tree: a CONTROL line and the 27 edits as tab-separated LADDER lines, in ^report(11)'s format (011/data/meta.json describes it): 'LADDER <slide>', slider, label, old value, new value, 'shapes <before> <after> same <n>', then 'SCRATCH' and 'TODAY', each 'executed E in_calls C calls N content K' and, per naming scheme, '<scheme> skip S reads R cells L | equal a notEqual b onlyLeft c onlyRight d collisions e'. The trace distance is the TODAY run's E less its K; Hazel's update is the TODAY run's E.",
+  "data/ladder012_groups_flattened.output": "The same for full-body-groups.hz, its picture flatten(scene): the tree flattened at the end.",
+  "data/ladder012_groups_not_flattened.output": "The same for full-body-groups.hz with the tree itself (scene) measured in the picture's place. Its 'shapes 17 17 same 0' field compares the scene's 17 top-level items and reads 0 on every edit, even one that changes nothing; the report does not use it (the tree's picture diff is in picture_diff012.json).",
+  "data/picture_diff012.json": "The picture diff of each edit: a JSON list of {name, flat, flat_shapes, tree, tree_nodes}: the shapes the edit changes in the flat picture (null when it changes how many there are) out of flat_shapes (49), and the nodes it changes in the tree out of tree_nodes (82), compared as described under the measures. Made by a script from the exported pictures of every edit, flat and tree (2 x 28 JSON files, about 2.5 MB, not kept here). Figure 2 and the table's first two columns.",
+  "data/tree012_before.json": "The tree before any edit, as exported: a JSON list of the scene's 17 top-level items, {same, shape}, each shape a Group, {name, transform: {a, b, c, d, e, f}, children}, or a Leaf holding a Drawing shape ({ctor: Polygon | Path, arg: {name, points: [{at: [x, y], label}], stroke, fill}}), in the group's own coordinates. Figures 1, 3 and 4 are drawn from it.",
+  "data/tree012_drivers.json": "For each node of the tree, keyed by its path of child indices from the top-level item ('13,0,1,0'), the sliders whose edit changes it (a group's name or transform, a leaf's name, points, fill or stroke); '(new)' after a slider marks a node that exists only after its edit. Made from the exported pictures; Figures 1 and 3 say what places and shapes each part from it."
+ },
+ "provenance": {
+  "flattened against today": "Exists only as printed: the check that the flattened tree draws today's picture to within 6x10^-14 in all 28 pictures. The script that compared them printed its result; the exported pictures it compared are not kept here.",
+  "the slide": "012/full-body-groups.hz, next to this folder, is the experimental slide the tree versions were measured on."
+ }
+}

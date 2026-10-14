@@ -1,0 +1,55 @@
+{
+ "title": "One slider, three ways: what modular editing saves",
+ "date": "2026-10-12",
+ "question": "hazelgrove/hazel#2597 has no modular editing, and #2635 has it, from #2469 (modular editors). How long does one slider change take on a complex picture, the Livelit Playground's Full Body slide? The hypothesis: #2635 is much faster, especially in its UX outline mode, showing only the slider and the picture, because it doesn't reprocess the unrelated code. A third set-up separates the two halves of that hypothesis.",
+ "builds": [
+  {"name": "A", "pr": "hazelgrove/hazel#2597", "commit": "a15c6f0b65", "note": "no modular editing; has ^report(7)'s fix (c07bdacead), so its worker's stream messages are throttled as on #2635; the whole program on screen, with its livelits; dev build, served locally"},
+  {"name": "C", "pr": "hazelgrove/hazel#2635", "commit": "57c928cef4", "note": "modular editing; the whole program on screen, with its livelits (the outline's dev mode); dev build, served locally"},
+  {"name": "B", "pr": "hazelgrove/hazel#2635", "commit": "57c928cef4", "note": "modular editing; only two cells on screen, the slider and the picture (the outline's UX mode, every GUI row's chip switched off except 'arm_length' and 'drawn')"},
+  {"name": "B, fixed; C, fixed", "pr": "hazelgrove/hazel#2635", "commit": "57c928cef4 plus cbdab791f5", "note": "the reuse check compares lexemes in the same memoized walk as structure; on #2635 as cbdab791f5"},
+  {"name": "C, with the index's fix", "pr": "hazelgrove/hazel#2635", "commit": "57c928cef4 plus cbdab791f5 and 8717564a5f", "note": "the page's index of the elaboration stops at expressions; on #2635 as 8717564a5f"},
+  {"name": "reuse-diag", "pr": "hazelgrove/hazel#2635", "commit": "not stated in the report", "note": "a temporary build on local branch perf/2635-reuse-diag, not pushed, that counted IncrEval.reuse_check's outcomes and printed them per request; its own sampling slowed it, so no time in the report comes from it"}
+ ],
+ "runtime": "headless Firefox over WebDriver (the report states no version), a fresh profile per set-up, dev builds served locally; one set-up at a time, on one laptop. The Full Body slide's text is identical on both branches.",
+ "runs": "Twelve changes per set-up, after two warm-up changes, each a real pointer drag of the 'arm length' slider to a length not drawn before, the same twelve lengths in each set-up. Profiles: three changes per set-up, and six more each for B with the reuse check's fix and for C with the index's fix. Reuse counts: per slider change, steady state, from the reuse-diag build, its worker console copied to a file by Firefox (devtools.console.stdout.content).",
+ "measures": {
+  "release to redraw": "s: from the slider's pointerup to the first moment a large picture's markup differed from before the drag, checked every 200 ms in the page (so it works whether a picture is patched or rebuilt)",
+  "Against C": "ratio: a set-up's median over C's",
+  "Per change, profiled": "ms per change, from the Gecko profiler sampling every 1 ms, the page's main thread and the eval worker together; windows from each pointerup to its redraw, from marks the page set (13.3, 1.8, 4.2 and 2.2 s for A, C, B and B fixed). Rows overlap: a function's time includes what it calls. Profiled times run longer than the clock",
+  "statics": "ms, profiled: the page's statics",
+  "printing code (of_segment)": "ms, profiled: the code view in A and C, the autosave's text in B",
+  "segment_to_string": "ms, profiled: the program turned into text",
+  "save_current": "ms, profiled: the autosave",
+  "live_html": "ms, profiled: livelit views without their memo",
+  "memo_view": "ms, profiled: livelit views through their memo",
+  "Worker: the reuse check": "ms, profiled: reuse_check on the eval worker",
+  "Worker: evaluating": "ms, profiled: run_scheduled_slice on the eval worker, which includes most of the reuse check",
+  "Checks": "count per change: the reuse check's calls",
+  "the hash matches": "count per change: parts whose hash matched a cached entry (one lookup)",
+  "the slow path": "count per change: parts whose hash differs but which are equal; the hash covers ids as well as structure",
+  "time on the slow path": "ms per change: the slow path's time, structure (memoized) plus lexemes",
+  "Reused in the end": "count per change: parts reused",
+  "the index": "ms, profiled: the page's index of the elaboration (where each expression starts and ends), built once per change: 204 of C's 949 ms page update before 8717564a5f, 115 ms after (six changes)"
+ },
+ "times": "the in-page check every 200 ms bounds the clock's resolution; profiled times run long, so the profile's rows say where the time goes and the clock says how much",
+ "figures": {
+  "8.6 s": "A: #2597, no modular editing (median of 12)",
+  "1.2 s": "C: #2635, the whole program on screen (median of 12)",
+  "3.5 s": "B: #2635, only the slider and the picture (median of 12)",
+  "1.26 s": "B with the reuse check fixed (median of 12)"
+ },
+ "readings": {
+  "B with the fix, range": "1.06-1.9 s, with one change at 3.8 s (median 1.26 s of 12)",
+  "C with the fix, median": "1.23 s of 12",
+  "C with the index's fix, median": "1.37 s of 12, against 1.23 s before, 'inside the noise of a check that runs every 200 ms'",
+  "B, only the slider's cell open (reuse counts)": "slow-path checks fall from 122 to 4 per change"
+ },
+ "cited": [
+  {"number": "3.5 s of statics against 16 ms per item", "what": "a Kids' Choice release on #2597 and #2635", "from": "^report(1)"},
+  {"number": "about 6,400 nodes; 122 enclosing lets", "what": "the subterm each enclosing let traced in the slow path's lexeme comparison, which is quadratic", "from": "the report's #reuse"},
+  {"number": "524, 46, 13, 6, 8", "what": "tests passing with cbdab791f5: the Evaluator, Evaluator.Incremental, IncrSlides, CallMemo and Equality groups", "from": "the report's #fix"}
+ ],
+ "updates": "Corrected on 2026-10-13: #2597's terms carry no lexemes (they came to dev with 500c466b44, which #2597 lacks), so there is nothing to bring to #2597; dev compares lexemes by trace on every check (since 7de3875cd8), so the fix would suit it, with the hash shortcut. No new measurements.",
+ "provenance": "No raw file was kept with this report: the WebDriver driver's output, the Gecko profiles and the reuse-diag build's console file were not saved with it. Every number here exists only as printed in the report.",
+ "raw_files": {}
+}

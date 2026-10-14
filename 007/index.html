@@ -163,6 +163,9 @@
   <li><b>Times:</b> headless Firefox over WebDriver, a fresh profile per run, the slide opened at <code>/fresh</code>. A MutationObserver in the page recorded the time (since navigation) when an <code>svg</code> with more than 40 shapes first appeared. One run at a time on one laptop.</li>
   <li><b>Profiles:</b> the Gecko profiler, started before navigation and saved a few seconds after the first picture. Saving mid-load failed: the busy page could not hand over its samples, the same busyness finding 25 met. <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s six-minute load was sampled every 4 ms, the copy's every 1 ms. Shares are from the page's main thread. The message count is the page's <code>message</code> events from the worker, during the whole load.</li>
   <li><b>The cause</b> was first suggested by reading: the two branches' stream code differs in exactly this commit. Then the experiment confirmed it.</li>
+  <!-- data-line: begin -->
+  <li><b>The numbers, for programs too:</b> every table in this report, and what its numbers measure, is also in this page as JSON, in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset. The same, with any raw files that survive, is in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/007/data"><code>007/data/</code></a>.</li>
+  <!-- data-line: end -->
 </ul>
 
 </main>
@@ -433,6 +436,263 @@
 })();
 </script>
 <!-- pr-cards: end -->
-
+<!-- report-data: begin -->
+<script type="application/json" id="report-data">
+{
+ "report": 7,
+ "title": "Five minutes to the first picture",
+ "date": "2026-10-12",
+ "question": "On hazelgrove/hazel#2597, the full livelits branch, the Livelit Playground's Scenes slide has taken about five minutes to draw its first picture, and the Witch slide almost three; #2635 draws both in about 12 seconds. ^report(4) put this down to #2597 lacking the speedups of #2469 (modular editors). Is it really that long, and why? And a fix, tried.",
+ "builds": [
+  {
+   "name": "2597",
+   "pr": "hazelgrove/hazel#2597",
+   "commit": "1fa1384445",
+   "note": "dev build, served locally; measured on the evening of 2026-10-12"
+  },
+  {
+   "name": "2635",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "57c928cef4",
+   "note": "dev build, served locally; has all of #2469, so both c07bdacead and a05f8e5791"
+  },
+  {
+   "name": "2597 with c07bdacead",
+   "pr": "hazelgrove/hazel#2597",
+   "commit": "1fa1384445 plus c07bdacead (from #2469, by Andrew Blinn), as local commit 0f64f97a10",
+   "note": "local branch perf/2597-stream-throttle, not pushed; two small conflicts, resolved as #experiment describes"
+  },
+  {
+   "name": "2597 with the port (What next, step 1)",
+   "pr": "hazelgrove/hazel#2597",
+   "commit": "a15c6f0b65",
+   "note": "c07bdacead on #2597 itself, later on 2026-10-12, with the same resolution"
+  },
+  {
+   "name": "2597, earlier on 2026-10-12",
+   "pr": "hazelgrove/hazel#2597",
+   "commit": "not stated in the report",
+   "note": "the first four rows of the table under #really, from #2609's findings 25 and 28 and ^report(4): before and after the worker's slices ran back to back, after the view's casts were fixed, and with all three of the day's view fixes"
+  }
+ ],
+ "runtime": "headless Firefox over WebDriver (the report states no version), a fresh profile per run, dev builds served locally; one run at a time, on one laptop",
+ "runs": "Each run cold: the slide opened at /fresh in a fresh profile, so nothing saved was read. Printed per run: #2597 at 1fa1384445, one time per slide; #2635, three times on Scenes and one on Witch; the copy with c07bdacead, three times per slide; #2597 at a15c6f0b65, two on Scenes and one on Witch. Profiles: one load each of #2597 (sampled every 4 ms) and of the copy (every 1 ms), started before navigation and saved a few seconds after the first picture.",
+ "measures": {
+  "first picture": "s: the time since navigation when an svg with more than 40 shapes first appeared, recorded in the page by a MutationObserver, 'so the time is exact even while the page is too busy to answer the test script'",
+  "messages": "count: the page's message events from the worker, during the whole load (2,520 on #2597, 86 on the copy)",
+  "main thread busy": "s, profiled: the page's main thread over the whole load, from opening the slide until its first picture (353 s on #2597, 97% of it the app's update loop; on the copy, the app's code about 31 s)",
+  "per message": "ms, profiled: the page's work per message from the worker, about 140 ms on #2597; receiving all 2,520 took 0.5 s",
+  "worker idle": "%: of the load, the eval worker idle: 98.7% on #2597",
+  "Share of the main thread": "%: of the samples of the page's main thread during #2597's load; an indented ('of which') row is part of the row above it"
+ },
+ "times": "the page's MutationObserver timestamps, since navigation. Profiled times run long: under the profiler the first picture came at 348 s on #2597 and 29.5 s on the copy, against 287.5 and about 17 s without it.",
+ "figures": {
+  "287.5 s": "#2597, the Scenes slide's first picture",
+  "17.4 s": "the same, with c07bdacead (median of three: 17.6, 16.6, 17.4 s)",
+  "12.5 s": "#2635, which has all of #2469 (median of three: 11.4, 13.2, 12.5 s)",
+  "2,520 -> 86": "worker messages the page handled while opening Scenes, #2597 and the copy with c07bdacead"
+ },
+ "readings": {
+  "unit": "s, first picture",
+  "2597 at 1fa1384445": {
+   "Scenes": [
+    287.5
+   ],
+   "Witch": [
+    173.1
+   ]
+  },
+  "2597 at 1fa1384445 plus c07bdacead (0f64f97a10)": {
+   "Scenes": [
+    17.6,
+    16.6,
+    17.4
+   ],
+   "Witch": [
+    19.4,
+    18.9,
+    18.6
+   ]
+  },
+  "2635 at 57c928cef4": {
+   "Scenes": [
+    11.4,
+    13.2,
+    12.5
+   ],
+   "Witch": [
+    11.8
+   ]
+  },
+  "2597 at a15c6f0b65": {
+   "Scenes": [
+    16.7,
+    16.4
+   ],
+   "Witch": [
+    18.8
+   ]
+  },
+  "2597, earlier on 2026-10-12 (commits not stated)": {
+   "before the worker's slices ran back to back (finding 25)": {
+    "Scenes": [
+     297
+    ],
+    "Witch": [
+     172
+    ]
+   },
+   "after it (finding 25)": {
+    "Scenes": [
+     301
+    ]
+   },
+   "after the view's casts were fixed (finding 28)": {
+    "Scenes": [
+     286
+    ]
+   },
+   "with all three of the day's view fixes (^report(4))": {
+    "Scenes": [
+     281
+    ]
+   }
+  }
+ },
+ "cited": [
+  {
+   "number": "307 -> 28 messages; 45.5 s -> 5.4 s",
+   "what": "c07bdacead on a generated 1,000-item program: the stream messages after the slide was drawn, and the main thread's work after opening it",
+   "from": "Andrew Blinn's measurement, c07bdacead (#2469, 2026-08-25)"
+  },
+  {
+   "number": "46.7 s -> 10.2 s",
+   "what": "a05f8e5791's interval growing with the program, 100 ms up to 1 s, on a 2,000-item program",
+   "from": "a05f8e5791 (#2469)"
+  },
+  {
+   "number": "3.76 s against 0.35 s; 3.5 s profiled",
+   "what": "a Kids' Choice slider release on #2597 and #2635, and #2597's whole-program statics in it (the other #2597 slowness, not addressed here)",
+   "from": "^report(1)"
+  },
+  {
+   "number": "5,000 steps",
+   "what": "the size of the worker's evaluation slices, after each of which it can send partial results (a code fact)",
+   "from": "the report's #why"
+  }
+ ],
+ "provenance": "No raw file was kept with this report: the WebDriver driver's output and both Gecko profiles were not saved with it. Every number here exists only as printed in the report.",
+ "raw_files": {},
+ "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
+ "tables": [
+  {
+   "section": "Is it really that long?",
+   "section_id": "really",
+   "columns": [
+    "Build",
+    "Scenes, first picture",
+    "Witch, first picture",
+    "When"
+   ],
+   "rows": [
+    [
+     "#2597, before the worker's slices ran back to back",
+     "297 s",
+     "172 s",
+     "2026-10-12 morning (finding 25)"
+    ],
+    [
+     "#2597, after it",
+     "301 s",
+     "",
+     "finding 25"
+    ],
+    [
+     "#2597, after the view's casts were fixed",
+     "286 s",
+     "",
+     "finding 28"
+    ],
+    [
+     "#2597, with all three of the day's view fixes",
+     "281 s",
+     "",
+     "^report(4)"
+    ],
+    [
+     "#2597 at 1fa1384445, tonight",
+     "287.5 s",
+     "173.1 s",
+     "2026-10-12 evening"
+    ],
+    [
+     "#2635 at 57c928cef4, tonight",
+     "11.4, 13.2, 12.5 s",
+     "11.8 s",
+     "2026-10-12 evening"
+    ]
+   ]
+  },
+  {
+   "section": "Where the five minutes go",
+   "section_id": "why",
+   "columns": [
+    "Part of the page's work",
+    "Share of the main thread"
+   ],
+   "rows": [
+    [
+     "Rebuilding the code editor's view of the whole program (main_view)",
+     "77%"
+    ],
+    [
+     "— of which, turning every tile of the program into the view (of_segment)",
+     "58%"
+    ],
+    [
+     "Recalculating (calculate)",
+     "19%"
+    ],
+    [
+     "— of which, statics on the whole program, from scratch",
+     "15%"
+    ]
+   ]
+  },
+  {
+   "section": "The fix, tried on #2597",
+   "section_id": "experiment",
+   "columns": [
+    "Build",
+    "Scenes, first picture",
+    "Witch, first picture"
+   ],
+   "rows": [
+    [
+     "#2597",
+     "287.5 s",
+     "173.1 s"
+    ],
+    [
+     "#2597 with c07bdacead",
+     "17.6, 16.6, 17.4 s",
+     "19.4, 18.9, 18.6 s"
+    ],
+    [
+     "#2635",
+     "11.4, 13.2, 12.5 s",
+     "11.8 s"
+    ]
+   ]
+  }
+ ],
+ "files": [
+  "data/meta.json",
+  "data/tables.json"
+ ],
+ "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/007/data"
+}
+</script>
+<!-- report-data: end -->
 </body>
 </html>

@@ -1,0 +1,328 @@
+{
+ "title": "Slider Responsiveness",
+ "date": "2026-10-10",
+ "measured": "2026-10-09 to 2026-10-11",
+ "question": "Why isn't a slider instant yet? A slider release on the Kids' Choice slide costs under a millisecond in the plain-JS Dress Up app and 4.6 s in Hazel on 2026-10-09: this report collects every performance problem found and fixed this fall, then looks at where the remaining time of a release goes and what it would take to get to \"immediate\".",
+ "headline": [
+  {
+   "value": "< 1 ms",
+   "what": "Dress Up (plain JS): one slider change, update and re-render"
+  },
+  {
+   "value": "0.14 s",
+   "what": "Kids' Choice: a slider release until the face redraws (now; median of 12, two runs)"
+  },
+  {
+   "value": "4.6 s",
+   "what": "the same release, 2026-10-09 afternoon"
+  },
+  {
+   "value": "0.17–0.19 s",
+   "what": "Polygons: a click adding a point (was ~11 s)"
+  }
+ ],
+ "builds": [
+  {
+   "name": "#2635, every fix",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "31502d1e3d",
+   "note": "the live build was deployed from this commit, \"which has every fix below\"; the numbers were measured on local dev builds of the same commits. All the report's numbers are from this branch unless they say #2597 or dev."
+  },
+  {
+   "name": "#2597, every fix",
+   "pr": "hazelgrove/hazel#2597",
+   "commit": "5286ba3b10",
+   "note": "its live build; has the report's fixes but not #2469's, so a Kids' Choice release there takes about 3.2 s"
+  },
+  {
+   "name": "#2635, the 10-11 profile",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "9129cd2774",
+   "note": "the table in #now"
+  },
+  {
+   "name": "#2635, the 10-10 late profile",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "42902c2d2a",
+   "note": "the second table in #now"
+  },
+  {
+   "name": "#2635, the sort check, A/B/A",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "31502d1e3d, with the change, without it (rebuilt in place, about 11 s), then with it again",
+   "note": "release to face 132 / 134 / 130 ms (medians), 148 / 152 / 145 (means)"
+  },
+  {
+   "name": "#2635, before the diff requests (matched baseline)",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "9d9d40dae2",
+   "note": "\"the build just before, measured the same way the same evening\""
+  },
+  {
+   "name": "#2635, the diff requests",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "993e3d5f91",
+   "note": "on #2597 the same fix is 8cd828706e"
+  },
+  {
+   "name": "#2635, with and without the call memo",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "c64c558e86 (with); the build without it was measured in the same session, its commit not stated in the report",
+   "note": "on #2597 the same fix is 67eb9d92d6; the face's pictures were compared on both branches"
+  },
+  {
+   "name": "evaluator benchmark builds",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "7a5667e6f2 (before the constants fix), 857c293962, 2d35bb9e01, 602498d7aa",
+   "note": "all builds back to back, under node"
+  },
+  {
+   "name": "#2597, the 10x comparison",
+   "pr": "hazelgrove/hazel#2597",
+   "commit": "not stated in the report",
+   "note": "Kids' Choice release 3.76 s (median of 12) against about 0.35 s on #2635, same machine; one #2597 release profiled at 5.8 s"
+  },
+  {
+   "name": "dev, the reuse-check benchmark",
+   "pr": "hazelgrove/hazel#2673",
+   "commit": "not stated in the report",
+   "note": "three builds: before, hashing only, hashing + pair memo. The fix is #2673 to dev; on #2635 it is 5237161017 + 97c910f69c"
+  },
+  {
+   "name": "the progress chart's steps",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "one build per fix: d706d4d1ec, cefa5c2c5c, 4239ecf04f, 5237161017 + 97c910f69c, 993e3d5f91, then the evaluator, view and result-index fixes, then 90994d4443, 3c270617e2, 0560e5a124",
+   "note": "the 10-09 afternoon build's commit is not stated in the report; see figures.json"
+  }
+ ],
+ "runtime": "headless Firefox over WebDriver, a fresh profile per run, dev builds of #2635, on Matthew's laptop (the Firefox version is not stated in the report). The dev reuse-check benchmark and the evaluator benchmark ran under node, the same js_of_ocaml build as the tests.",
+ "runs": {
+  "release to face, with the debug panel (scripts/slider_timing.py)": "four runs per build; the progress chart's first five bars are medians of 4",
+  "release to face, without the debug panel (scripts/release_timing.py)": "twelve releases per build, cycling values, the median reported; most comparisons give two runs (two medians of 12)",
+  "A/B/A, for a small gain": "twelve releases with the change, twelve on the same commit without it (rebuilt in place), twelve with it again, back to back",
+  "CPU profiles (scripts/profile_interaction.py)": "six Kids' Choice releases, the first left out as a warm-up; the #2597 profile is one release",
+  "message timelines": "eight releases",
+  "face view evaluation probe": "on each release the view evaluated eight more times and the median of those eight logged; a build's number is the median of six releases' medians; baseline and change measured back to back",
+  "call memo probe": "each release's first face evaluation logged, 12 releases per build; the build without it in the same session",
+  "call memo correctness": "the face's SVG captured after each of 13 scripted slider changes on each build, and compared",
+  "view building per redraw": "median of 8 releases",
+  "dev reuse-check benchmark": "seven runs per build, under node",
+  "evaluator benchmark": "15 evaluations per run, two runs per build, all builds back to back",
+  "Dress Up": "sixty input events on its eye-size slider",
+  "tiles re-checked per commit": "counted by a temporary print in the test, on the mega-1k, mega-2k and mega-4k programs",
+  "redraws per release": "counted with a temporary probe logging each action and each view"
+ },
+ "measures": {
+  "release to face": "ms or s, wall time: from the slider's change event until the face's eyes redraw at the new size (Kids' Choice, the eye-size slider)",
+  "profiled stage times": "ms, profiled: CPU time per release in each part of the page and the worker, from the Gecko profiler; profiled times are about 1.5× real ones (the profile sections) or 1.7× (the method), and code made of many small calls looks several times costlier under the profiler",
+  "main-thread work per release": "ms, profiled",
+  "the worker's time per release": "ms, profiled: deciding what to reuse (reuse_check), evaluating, encoding",
+  "request and response size": "KB: the encoded message posted to or from the eval worker (Worker.prototype.postMessage wrapped after load; request sizes for the diff requests from a temporary probe on the encoded message in post_evaluate)",
+  "the face's view evaluation": "ms: one evaluation of the face livelit's view, warm (see runs)",
+  "the face's first evaluation after a release": "ms: with and without the call memo",
+  "view building per redraw": "ms: each redraw's own view building (preview, commit, face, final result)",
+  "redraws per release": "count",
+  "tiles re-checked per commit": "count, on mega-1k, mega-2k, mega-4k",
+  "re-evaluation after one edit (dev benchmark)": "ms: a 400-definition program, evaluated, then its last literal edited with every id kept; only the incremental re-evaluation is timed",
+  "evaluator benchmark": "ms, min and median of 15 evaluations: a program that builds a 2,000-element list of tuples through recursive helpers and recurses 3,000 deep, run through evaluate_open",
+  "loading a slide": "s: Shoes and Hair, Shirt and Pants",
+  "an edit on Shirt and Pants or Shoes and Hair": "s, the playground check",
+  "Dress Up slider change": "ms: one input event, update and re-render; median 0 ms, worst 2 ms, at Firefox's 1 ms timer resolution",
+  "Polygons click": "s: a click adding a point",
+  "the table of problems (#issues)": "each row's Measured cell, as printed, in its own unit. Many rows were measured on other slides and benchmarks (nested lets, a parser corpus, Shirt and Pants, Shoes and Hair, Polygons); the report gives no method for them beyond the row. Details and discussion: hazelgrove/hazel#2609, findings 10 and 11."
+ },
+ "times": "Wall times: from the slider's change event until the face's eyes redraw at the new size (scripts/slider_timing.py; scripts/release_timing.py without the debug panel). Timelines wrap the page's Worker.postMessage, listen to the worker's messages, and watch the face's eye with a MutationObserver, timing each against the release. Stage times: the Gecko profiler, started from Firefox's privileged context after load and bracketed with performance.mark (scripts/profile_interaction.py). Message sizes: scripts/worker_sizes.py. Firefox timers have 1 ms resolution.",
+ "provenance": "No raw readings of this report survive: every number exists only as printed in the page, in its tables (tables.json) and its drawn figures (figures, below). The CPU profiles behind the profiled tables are not in this repository, nor are the drivers named above (the report: untracked scripts in a local Hazel checkout).",
+ "figures": {
+  "note": "The numbers this page's drawn figures show, copied from the page's own SVG and script on 2026-10-14 (not a measurement log; no raw readings behind them survive). Times in ms unless a field says s.",
+  "race": {
+   "section_id": "race",
+   "what": "One Kids' Choice slider release, Hazel against Dress Up, animated in real time. Both lanes start when the slider is released and finish when the picture shows the new value.",
+   "lane_total_ms": {
+    "now": {
+     "label": "Hazel now (0.14 s)",
+     "ms": 141
+    },
+    "memo": {
+     "label": "before the last three steps (0.17 s)",
+     "ms": 171
+    },
+    "diff": {
+     "label": "with the diff requests (0.25 s)",
+     "ms": 250
+    },
+    "hash": {
+     "label": "before the diff requests (0.43 s)",
+     "ms": 430
+    },
+    "views": {
+     "label": "before the reuse-check fix (0.53 s)",
+     "ms": 530
+    },
+    "before": {
+     "label": "Hazel, 10-09 afternoon (4.6 s)",
+     "ms": 4600
+    }
+   },
+   "dress_up_ms": "under 1 (the lane is drawn as 1 ms)",
+   "lane_totals_are": "the median wall time without the profiler. The three newest (now, memo, diff) are each the mean of two twelve-release medians measured without the debug panel: 140 and 142 ms now; 163.5 and 179 ms before the last three steps; 229 and 273 ms with the diff requests.",
+   "stage_split_ms_profiled": [
+    [
+     "event",
+     16
+    ],
+    [
+     "re-build terms",
+     108
+    ],
+    [
+     "statics",
+     16
+    ],
+    [
+     "request",
+     62
+    ],
+    [
+     "worker: reuse check + eval",
+     410
+    ],
+    [
+     "results",
+     55
+    ],
+    [
+     "views",
+     167
+    ],
+    [
+     "redraws (view building)",
+     310
+    ]
+   ],
+   "stage_split_is": "the CPU profile of one release (ms, profiled), used only as proportions of the lane: the views lane as listed, the hash lane with the worker at 145 instead of 410 (the page's script). The now, memo, diff and before lanes are one colour: their stages were not split out the same way."
+  },
+  "pipeline": {
+   "section_id": "pipeline",
+   "what": "Hazel, one slider release, to scale (CPU profile; real time is about 1.7× shorter). The 10-10 afternoon profile, at 0.43 s a release, before the diff requests.",
+   "main_thread_ms_profiled": [
+    [
+     "handle the event: the livelit's update",
+     16
+    ],
+    [
+     "re-build terms for the changed item (MakeTerm)",
+     108
+    ],
+    [
+     "statics, per item",
+     16
+    ],
+    [
+     "build and encode the worker request: the whole program, 478 KB",
+     62
+    ],
+    [
+     "decode and merge the worker's results, up to 383 KB",
+     55
+    ],
+    [
+     "redraw: evaluate livelit views (now cached for unchanged models)",
+     167
+    ],
+    [
+     "redraw: Hazel rebuilding its view in JavaScript, over several redraws, and frame callbacks (the browser's own layout and DOM work is ~30 ms of it)",
+     310
+    ]
+   ],
+   "worker_ms_profiled": {
+    "decide what to reuse": "~26 (by Merkle hash; was ~280)",
+    "evaluate what changed": "~70",
+    "in all": "~145 (was ~410)"
+   },
+   "request_kb": 478,
+   "response_kb": "up to 383",
+   "dress_up": "input → update one field → re-render the SVG: under 1 ms, start to finish"
+  },
+  "reuse_check_worker": {
+   "section_id": "pipeline",
+   "what": "The eval worker, per Kids' Choice slider release (CPU profile), before the reuse-check fix.",
+   "ms_profiled": [
+    [
+     "deciding what to reuse",
+     "≈280"
+    ],
+    [
+     "…comparing expressions structurally",
+     "≈200"
+    ],
+    [
+     "evaluating what changed",
+     "≈180"
+    ],
+    [
+     "unpacking the 478 KB request",
+     "≈110"
+    ]
+   ]
+  },
+  "progress": {
+   "section_id": "progress",
+   "what": "Kids' Choice slider release, seconds (headless Firefox, no profiler, median of 4), after each fix.",
+   "bars_s": [
+    {
+     "step": "10-09 afternoon, after the fall's fixes",
+     "s": 4.6
+    },
+    {
+     "step": "+ livelits evaluated unfinished",
+     "s": 1.6,
+     "printed": "1.6 (1.5–1.7)",
+     "fix": "#2635 d706d4d1ec"
+    },
+    {
+     "step": "+ MapPiece keeps identity",
+     "s": 0.8,
+     "printed": "0.80 (0.72–0.88)",
+     "fix": "#2671; #2635 cefa5c2c5c"
+    },
+    {
+     "step": "+ views cached per model",
+     "s": 0.53,
+     "printed": "0.53 (0.45–0.61)",
+     "fix": "#2635 4239ecf04f"
+    },
+    {
+     "step": "+ reuse check by Merkle hash",
+     "s": 0.43,
+     "printed": "0.43 (0.34–0.47)",
+     "fix": "#2673; #2635 5237161017, 97c910f69c"
+    },
+    {
+     "step": "+ requests send only what changed*",
+     "s": 0.25,
+     "printed": "≈0.25 (0.23 and 0.27; baseline 0.36)",
+     "fix": "#2635 993e3d5f91"
+    },
+    {
+     "step": "+ evaluator, views, result index*",
+     "s": 0.17,
+     "printed": "≈0.17 (0.16 and 0.18)"
+    },
+    {
+     "step": "+ responses, layout, problems panel*",
+     "s": 0.14,
+     "printed": "≈0.14 (0.140 and 0.142)",
+     "fix": "#2635 90994d4443, 3c270617e2, 0560e5a124"
+    }
+   ],
+   "dress_up_s": "< 0.001",
+   "immediate_s": 0.1,
+   "immediate_is": "the usual threshold for an action to feel instant",
+   "starred_bars": "measured differently: without the debug panel, median of 12 releases, two runs (the two numbers in brackets); the build before the first of them measured 0.36 s the same way.",
+   "noise": "Runs vary by about ±0.07 s, so the reuse-check step is smaller than the noise in any one run; the worker's own time (410 → 145 ms profiled) is the steadier measure.",
+   "fix_column_from": "the report's table of problems (#issues), whose Measured cells give these steps: Kids' Choice 4.6 → 1.6 s, 1.6 → 0.8 s, 0.8 → 0.53 s; the request 478 → 18.5 KB with release to face 359 → 229–273 ms. The step '+ evaluator, views, result index' gathers several rows of that table (7a5667e6f2, 857c293962, 2d35bb9e01, 602498d7aa, c64c558e86, 42902c2d2a) and is left without a fix here."
+  }
+ },
+ "raw_files": {}
+}

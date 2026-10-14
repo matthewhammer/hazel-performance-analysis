@@ -1,0 +1,226 @@
+[
+ {
+  "section": "The Witch slide",
+  "section_id": null,
+  "columns": [
+   "Change",
+   "Witch slide",
+   "Full Body slide",
+   "Game draw()"
+  ],
+  "rows": [
+   [
+    "Load, to the first picture",
+    "14.5 s",
+    "14.7 s",
+    ""
+   ],
+   [
+    "Skin: mad red; peach; witch green",
+    "6.5 s; 6.2 s; 5.0 s",
+    "4.1 s; 3.3 s; 3.4 s",
+    "~1 ms, the witch with her cat and broom (3 ms on the beach)"
+   ],
+   [
+    "Cat on; broom on",
+    "6.9 s; 6.6 s",
+    "",
+    "~1 ms, the witch with her cat and broom (3 ms on the beach)"
+   ],
+   [
+    "Nose out; nose length 100 → 200",
+    "6.2 s; 6.2 s",
+    "",
+    "~1 ms, the witch with her cat and broom (3 ms on the beach)"
+   ],
+   [
+    "Dress, web, trim, boot and fur colors",
+    "6.2–7.3 s",
+    "",
+    "~1 ms, the witch with her cat and broom (3 ms on the beach)"
+   ],
+   [
+    "Cat size 100 → 400; broom size 100 → 300",
+    "6.1 s; 7.5 s",
+    "",
+    "~1 ms, the witch with her cat and broom (3 ms on the beach)"
+   ]
+  ]
+ },
+ {
+  "section": "The Scenes slide",
+  "section_id": null,
+  "columns": [
+   "Scene",
+   "Shapes",
+   "Points",
+   "Switching to it",
+   "Moving the figure (size 100 → 90 → 100 → 90 → 100)"
+  ],
+  "rows": [
+   [
+    "Forest",
+    "164",
+    "1,242",
+    "6.3 s",
+    "5.5, 3.5, 3.6, 3.7 s"
+   ],
+   [
+    "Under the sea",
+    "149",
+    "1,025",
+    "5.4 s",
+    ""
+   ],
+   [
+    "Beach",
+    "181",
+    "895",
+    "5.0 s",
+    ""
+   ],
+   [
+    "Witch's woods",
+    "570 (614 with legs)",
+    "2,558 (2,702)",
+    "12.0 s",
+    "15.5, 10.0, 12.0, 10.9 s"
+   ]
+  ]
+ },
+ {
+  "section": "Three experiments on the woods",
+  "section_id": null,
+  "columns": [
+   "Variant",
+   "Shapes",
+   "Points",
+   "Moving the figure, four runs"
+  ],
+  "rows": [
+   [
+    "As first built: the scene and the figure kept on the stage together",
+    "570",
+    "2,558",
+    "18.0, 10.3, 13.2, 11.2 s"
+   ],
+   [
+    "The scene and the figure kept on the stage apart (kept)",
+    "570",
+    "2,558",
+    "15.5, 10.0, 12.0, 10.9 s"
+   ],
+   [
+    "Each dead tree drawn as one line per fork level, retracing its limbs",
+    "372",
+    "3,416",
+    "18.3, 12.0, 14.4, 14.0 s"
+   ],
+   [
+    "The view's call memo keeping 1,024 calls per helper, not 8 (an engine change, not kept)",
+    "570",
+    "2,558",
+    "17.8, 11.5, 10.2, 10.6 s"
+   ]
+  ]
+ },
+ {
+  "section": "The worker's timeline, and a fix",
+  "section_id": "timeline",
+  "columns": [
+   "Moving the figure, four runs",
+   "Before",
+   "With the fix"
+  ],
+  "rows": [
+   [
+    "Witch's woods",
+    "15.5, 10.0, 12.0, 10.9 s",
+    "9.4, 3.6, 4.2, 5.0 s"
+   ],
+   [
+    "Forest",
+    "5.5, 3.5, 3.6, 3.7 s",
+    "3.6, 1.6, 2.4, 2.0 s"
+   ]
+  ]
+ },
+ {
+  "section": "Why nothing was reused, and a fix",
+  "section_id": "reuse",
+  "columns": [
+   "Woods, each change a new picture, four runs",
+   "Without the fix",
+   "With it"
+  ],
+  "rows": [
+   [
+    "Figure size (the woods unchanged)",
+    "8.4, 9.9, 9.0, 10.7 s",
+    "6.5, 6.1, 7.3, 6.2 s"
+   ],
+   [
+    "Skull eye size (the woods changed)",
+    "8.3, 10.2, 8.8, 10.3 s",
+    "8.3, 10.2, 9.2, 10.7 s"
+   ]
+  ]
+ },
+ {
+  "section": "The view's memo cost more than it saved, and a fix",
+  "section_id": "memo",
+  "columns": [
+   "Woods, figure size, each picture new, four runs",
+   "Release to redraw",
+   "Kids' Choice, median of 12"
+  ],
+  "rows": [
+   [
+    "The memo as it was",
+    "6.5, 6.1, 7.3, 6.2 s",
+    "125 ms"
+   ],
+   [
+    "Keeping 1,024 calls per function, not 8",
+    "10.3, 9.0, 9.7, 12.2 s",
+    ""
+   ],
+   [
+    "The memo off",
+    "2.4, 2.4, 2.6, 2.9 s",
+    "167.5 ms"
+   ],
+   [
+    "The memo giving up on a function that keeps missing (kept)",
+    "3.5, 3.2, 2.6, 3.3 s",
+    "130 ms"
+   ]
+  ]
+ },
+ {
+  "section": "Update, 2026-10-12: the picture's view, made cheaper",
+  "section_id": "update",
+  "columns": [
+   "Part of the view",
+   "Steps",
+   "Share"
+  ],
+  "rows": [
+   [
+    "The box (view_box): every point, to find the bounds",
+    "134,320",
+    "56%"
+   ],
+   [
+    "The points strings (coords)",
+    "92,703",
+    "39%"
+   ],
+   [
+    "The Html nodes and their attributes",
+    "about 6,600",
+    "3%"
+   ]
+  ]
+ }
+]

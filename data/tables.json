@@ -1,0 +1,532 @@
+[
+ {
+  "section": "Where a release's time goes now",
+  "section_id": "now",
+  "columns": [
+   "per release, profiled",
+   "where",
+   "ms"
+  ],
+  "rows": [
+   [
+    "The redraws (the commit's, then the result's)",
+    "main",
+    "104"
+   ],
+   [
+    "… livelit views: the face's evaluation 21, its Html to the page 8, probe sample views 7, the rest 8",
+    "",
+    "44"
+   ],
+   [
+    "… the code editor (view_chunked), mostly sorts_of (15); since fixed",
+    "",
+    "23"
+   ],
+   [
+    "… node views; footer; top bar",
+    "",
+    "10; 5; 5"
+   ],
+   [
+    "The commit: re-making the syntax (livelit placeholder shapes 9, of which gui_shape 7; per-item parsing 7)",
+    "main",
+    "26"
+   ],
+   [
+    "The commit: building the request, almost all hashing its new values (15)",
+    "main",
+    "17"
+   ],
+   [
+    "Statics; collecting the results; the after-display effect",
+    "main",
+    "6; 5; 3"
+   ],
+   [
+    "The worker: evaluating 25 (was 47), planning reuse 13, encoding 6",
+    "worker, off the face's path",
+    "45"
+   ]
+  ]
+ },
+ {
+  "section": "Where a release's time goes now",
+  "section_id": "now",
+  "columns": [
+   "per release, profiled",
+   "where",
+   "ms"
+  ],
+  "rows": [
+   [
+    "Redrawing the page, over the release's redraws",
+    "main",
+    "151"
+   ],
+   [
+    "… livelit views: the face's evaluation 19, its Html to the page 12, probe sample views 9, the rest 10",
+    "",
+    "50"
+   ],
+   [
+    "… the code editor (view_chunked, sorts_of lookups)",
+    "",
+    "19"
+   ],
+   [
+    "… the problems panel (incomplete_tiles_deep)",
+    "",
+    "19"
+   ],
+   [
+    "… node views; footer; top bar",
+    "",
+    "17; 7; 7"
+   ],
+   [
+    "The worker evaluating the change",
+    "worker",
+    "48"
+   ],
+   [
+    "The worker marshaling its response",
+    "worker",
+    "44"
+   ],
+   [
+    "The commit: re-making the syntax",
+    "main",
+    "30"
+   ],
+   [
+    "A layout-measuring effect that forces a synchronous style and layout flush (update_main_scroll_width, solve_container)",
+    "main",
+    "24"
+   ],
+   [
+    "The commit: building the request",
+    "main",
+    "17"
+   ],
+   [
+    "The worker planning reuse",
+    "worker",
+    "16"
+   ],
+   [
+    "Decoding the worker's responses",
+    "main",
+    "14"
+   ],
+   [
+    "Statics; collecting the results (was 44, fixed)",
+    "main",
+    "7; 6"
+   ]
+  ]
+ },
+ {
+  "section": "Incremental evaluation's reuse check cost more than it saved",
+  "section_id": null,
+  "columns": [
+   "Re-evaluation after one edit",
+   "before",
+   "hashing only",
+   "hashing + pair memo"
+  ],
+  "rows": [
+   [
+    "dev, 400 definitions, edit the last literal (node, median of 7)",
+    "2,743 ms",
+    "4,353 ms",
+    "410 ms"
+   ],
+   [
+    "Kids' Choice slider release: the worker (Firefox, profiled)",
+    "~410 ms",
+    "~135 ms",
+    "~145 ms"
+   ],
+   [
+    "Kids' Choice: reuse_check alone",
+    "~283 ms",
+    "~31 ms",
+    "~26 ms"
+   ]
+  ]
+ },
+ {
+  "section": "A view re-evaluated every call, though one input changed",
+  "section_id": null,
+  "columns": [
+   "#2635, same session",
+   "without",
+   "with"
+  ],
+  "rows": [
+   [
+    "the face's view, first evaluation after a release (median of 12)",
+    "43 ms",
+    "12.5 ms"
+   ],
+   [
+    "Kids' Choice, release until the face redraws (median of 12, two runs)",
+    "211.5, 239 ms",
+    "195, 203 ms"
+   ],
+   [
+    "loading Shoes and Hair / Shirt and Pants",
+    "~7.0 / ~6.3 s",
+    "~7.4 / ~6.6 s"
+   ]
+  ]
+ },
+ {
+  "section": "Every release sent the worker the whole program",
+  "section_id": null,
+  "columns": [
+   "Kids' Choice, one slider release",
+   "before",
+   "after"
+  ],
+  "rows": [
+   [
+    "the request, encoded",
+    "478 KB",
+    "18.5 KB (the first request after a load is still whole)"
+   ],
+   [
+    "release until the face redraws, median of 12 (no debug panel)",
+    "359 ms",
+    "228.5 and 272.5 ms (two runs)"
+   ],
+   [
+    "Shirt and Pants, one edit (playground check)",
+    "~0.9 s",
+    "0.1–0.2 s"
+   ],
+   [
+    "Shoes and Hair, first edit (playground check)",
+    "~1.0 s",
+    "0.3–0.5 s"
+   ]
+  ]
+ },
+ {
+  "section": "The full livelits branch is about 10× slower: it doesn't have #2469",
+  "section_id": null,
+  "columns": [
+   "part of a release on #2597",
+   "profiled",
+   "on #2635"
+  ],
+  "rows": [
+   [
+    "statics, from scratch, on the whole program (CachedStatics.init)",
+    "3.5 s",
+    "per item, only what changed: ~16 ms"
+   ],
+   [
+    "rebuilding the view",
+    "1.6 s",
+    "~0.37 s"
+   ],
+   [
+    "… livelit view samples run again (live_html)",
+    "0.57 s",
+    "not in the profile (unexplained: the code is the same)"
+   ],
+   [
+    "… the code view, with no cache",
+    "0.41 s",
+    "cached"
+   ],
+   [
+    "… the incremental-eval overlay, drawn though it is off",
+    "0.39 s",
+    "skipped when off"
+   ],
+   [
+    "parsing the whole program again",
+    "0.2 s",
+    "per item"
+   ]
+  ]
+ },
+ {
+  "section": "Every problem found this fall, and its fix",
+  "section_id": "issues",
+  "columns": [
+   "Problem",
+   "Kind",
+   "Fix",
+   "Status",
+   "Measured"
+  ],
+  "rows": [
+   [
+    "Every let-bound function took the recursive path; passes multiplied with nesting, 4depth",
+    "super-linear",
+    "#2603",
+    "open",
+    "nested lets 400 s → 0.6 s; statics 20–30% faster"
+   ],
+   [
+    "Jump to a projector walked the caret token by token",
+    "super-linear",
+    "#2602",
+    "merged",
+    "~190 ms per projector click → direct"
+   ],
+   [
+    "Loading text the fast parser rejects: quadratic fallback parser (finding 1)",
+    "super-linear",
+    "#2610, #2614",
+    "open",
+    "corpus 1,242 s → 433 s (both); Kids' Choice 227 → 93 s"
+   ],
+   [
+    "Each run shipped the whole incremental cache to and from the worker",
+    "data size",
+    "#2606",
+    "open",
+    "responses 86–98% smaller"
+   ],
+   [
+    "Elaborations carried the source's whitespace and comments",
+    "data size",
+    "#2608",
+    "open",
+    "requests 12–49% smaller"
+   ],
+   [
+    "A module's definition analyzed twice",
+    "repeated work",
+    "#2651",
+    "open",
+    "1.8 s of a slide's 4.2 s statics"
+   ],
+   [
+    "A livelit definition analyzed twice (synthesis, then analysis)",
+    "repeated work",
+    "#2635 76ecb91394",
+    "livelits",
+    "Shirt and Pants statics 4.3 → 2.8 s"
+   ],
+   [
+    "Firefox: worker couldn't start while the page was busy; late timers killed it",
+    "scheduling",
+    "#2652",
+    "open",
+    "\"Evaluation timed out\" slides now draw"
+   ],
+   [
+    "Statics re-ran 3× per edit (probe pins compared to the wrong keys)",
+    "repeated work",
+    "#2635 d42ae8193d",
+    "livelits",
+    "head-colour slider 20.6 s → ~2 s (10-01)"
+   ],
+   [
+    "The builtin Html type written out in every ascription; Macro uses closed over all builtins",
+    "data size",
+    "#2597 4eeebeaff3, 6b42a0e09a",
+    "livelits",
+    "a slide's request 609 → 224 KB"
+   ],
+   [
+    "Every livelit use evaluated the whole livelit definition, then copied it unshared",
+    "unshared copy",
+    "#2635 54543edc6b",
+    "livelits",
+    "Shoes and Hair analyze 4.3 → 2.0 s"
+   ],
+   [
+    "Statics analyzes some expressions 3× per multiplier: recursive lets, shadowing a builtin, a label on an unannotated parameter (finding 10)",
+    "super-linear",
+    "counted: --count-passes, CI group StaticsPasses",
+    "not fixed",
+    "B2T2 programs up to 12× per expression; 3d for nested recursion"
+   ],
+   [
+    "The evaluator compared two copies of the Html sum type, a full meet, at every node of a view",
+    "repeated work",
+    "#2661 (Merkle-hashed types)",
+    "open",
+    "Polygons click 15–17 → 2.0–2.2 s (profiled)"
+   ],
+   [
+    "Livelit definitions and views were \"finished\": every helper copied into every closure, per event and per redraw",
+    "unshared copy",
+    "#2635 d706d4d1ec",
+    "livelits",
+    "Kids' Choice 4.6 → 1.6 s; Polygons → 0.17–0.19 s"
+   ],
+   [
+    "A projector update re-made every piece of the program, so per-item parsing re-parsed all of it",
+    "identity lost",
+    "#2671; #2635 cefa5c2c5c",
+    "open",
+    "Kids' Choice 1.6 → 0.8 s"
+   ],
+   [
+    "Every redraw evaluated every livelit's view, changed or not",
+    "repeated work",
+    "#2635 4239ecf04f",
+    "livelits",
+    "Kids' Choice 0.8 → 0.53 s"
+   ],
+   [
+    "The worker's reuse check compared every cached expression with the new one structurally; an edit inside many lets was walked to once per enclosing let",
+    "super-linear repeated work",
+    "#2673; #2635 5237161017, 97c910f69c",
+    "open",
+    "worker 410 → ~145 ms per release (profiled); dev benchmark 2.7 → 0.41 s"
+   ],
+   [
+    "Each message from the eval worker was its own action, and the page rebuilds its view after every action: six redraws per slider release",
+    "repeated work scheduling",
+    "#2635 b481a876e1; #2597 d92f446112",
+    "livelits",
+    "6 → 4 redraws; main-thread work per release −15–30%"
+   ],
+   [
+    "Redraws that showed nothing new rebuilt sub-views from unchanged inputs: the code view (its cache keyed on a record rebuilt with every result), closed event handlers, printed probe values",
+    "repeated work identity lost",
+    "#2635 51df91d5d7; #2597 a15af020ea (without the code-view part, which is #2469’s)",
+    "livelits",
+    "view building per release 157 → 138.5 ms"
+   ],
+   [
+    "Cursor info rebuilt the program's source and compared it structurally on every redraw",
+    "repeated work",
+    "#2635 4d591fc2bc (Merkle hash, last answer kept)",
+    "livelits",
+    "~40 ms profiled per release"
+   ],
+   [
+    "The first slider release after a load re-parsed the whole program: loading filled a different parse cache from the one releases read",
+    "repeated work",
+    "#2635 9d9d40dae2 (per-item parsing is #2469's)",
+    "livelits",
+    "first release's commit 245 → 55–63 ms"
+   ],
+   [
+    "Every request sent the worker the whole program and its statics, though a release changes one value; the worker then had to find the unchanged parts again",
+    "data size identity lost",
+    "#2635 993e3d5f91; #2597 8cd828706e (Util.ShareCodec)",
+    "livelits",
+    "request 478 → 18.5 KB; release to face 359 → 229–273 ms"
+   ],
+   [
+    "Evaluation minted each id by copying a byte buffer and converting it to a string; ids, variable names and ints were compared with the polymorphic compare",
+    "unshared copy repeated work",
+    "#2635 7a5667e6f2; #2597 802d0eefd3",
+    "livelits",
+    "face view evaluation ~61 → ~60 ms median, ~58.5 → ~53.5 min"
+   ],
+   [
+    "Each recursive call of the evaluator re-applied it to the run's five constants: a closure per node, and every call through js_of_ocaml's generic path",
+    "repeated work",
+    "#2635 857c293962; #2597 960b3a21eb",
+    "livelits",
+    "face view evaluation ~60 → ~42.5 ms (−30%)"
+   ],
+   [
+    "The evaluator made its stages as eight fresh closures at every node, and two stages bound a step only to pass the value through",
+    "repeated work",
+    "#2635 2d35bb9e01, 602498d7aa; #2597 9d2ff96dc7, d51eaacfa6",
+    "livelits",
+    "call-heavy benchmark −16% (min), −25% (median)"
+   ],
+   [
+    "A view was evaluated whole after every change of its model, re-making the calls whose inputs had not changed",
+    "repeated work",
+    "#2635 c64c558e86; #2597 67eb9d92d6 (CallMemo)",
+    "livelits",
+    "face view's first evaluation 43 → 12.5 ms"
+   ],
+   [
+    "Collecting the worker's results re-indexed the whole program, function bodies and all, after every commit",
+    "repeated work",
+    "#2635 42902c2d2a (the collector is #2469's; not on #2597)",
+    "livelits",
+    "44 → 6 ms profiled per release; release to face 195 / 203 → 163.5 / 179 ms"
+   ],
+   [
+    "Each worker response was sent whole: a release's result was 393 KB, and marshaling it took as long as evaluating",
+    "data size identity lost",
+    "#2635 90994d4443; #2597 526200d05a",
+    "livelits",
+    "result 393 → 16 KB; worker encode 44 → 5 ms profiled; #2597 release ~3.9 → 3.2 s"
+   ],
+   [
+    "After each redraw, measuring the page forced three layouts and two document-wide style recalculations",
+    "repeated work scheduling",
+    "#2635 3c270617e2; #2597 99bb432fdb",
+    "livelits",
+    "after-display effect 24 → 3.6 ms profiled"
+   ],
+   [
+    "Finding incomplete tiles walked the whole program for each redraw with new syntax (problems panel, outline)",
+    "repeated work",
+    "#2635 0560e5a124; #2597 f2b519fa52",
+    "livelits",
+    "problems panel 13 → 3 ms profiled"
+   ],
+   [
+    "Reusing a cached result walked the whole reused code to copy its descendants' cache entries, though function bodies never have any",
+    "repeated work",
+    "#2635 9129cd2774; #2597 5286ba3b10",
+    "livelits",
+    "worker evaluation 47 → 25 ms profiled (off the face's path)"
+   ],
+   [
+    "The code editor re-checked every tile's sort on every commit, to decide which chunks to redraw, though only top-level and derivation tiles can change",
+    "repeated work",
+    "#2635 31502d1e3d (the chunked code view is #2469's; not on #2597)",
+    "livelits",
+    "code editor 26 → 8 ms profiled; release to face −3–5 ms; mega-4k 25,852 → 270 tiles per commit"
+   ],
+   [
+    "#2597 re-analyzes the whole program after every livelit commit; it doesn't have #2469’s per-item statics",
+    "repeated work",
+    "in #2469 and #2635, not in #2597",
+    "not fixed",
+    "3.5 s of a 5.8 s release (profiled)"
+   ]
+  ]
+ },
+ {
+  "section": "What limits a slider now, and what it would take",
+  "section_id": "next",
+  "columns": [
+   "evaluator, 15 evaluations per run",
+   "min",
+   "median"
+  ],
+  "rows": [
+   [
+    "before the constants fix (7a5667e6f2)",
+    "583–585 ms",
+    "638–673 ms"
+   ],
+   [
+    "constants bound once (857c293962)",
+    "499",
+    "607–644"
+   ],
+   [
+    "+ stages made once per run (2d35bb9e01)",
+    "450–469",
+    "529–541"
+   ],
+   [
+    "+ pass-through binds skipped (602498d7aa)",
+    "408–426",
+    "461–479"
+   ]
+  ]
+ }
+]

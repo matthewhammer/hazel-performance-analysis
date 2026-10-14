@@ -194,6 +194,9 @@
     <ul>
       <li>Several SVGs on one page share ids such as <code>leg-stripes</code>, so the rasterizer gives each its own. Before that, one picture drew with another's clip paths, and the tiger's arm stripes seemed to vanish.</li>
     </ul></li>
+  <!-- data-line: begin -->
+  <li><b>The numbers, for programs too:</b> every table in this report, and what its numbers measure, is also in this page as JSON, in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset. The same, with any raw files that survive, is in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/003/data"><code>003/data/</code></a>.</li>
+  <!-- data-line: end -->
 </ul>
 
 </main>
@@ -464,6 +467,119 @@
 })();
 </script>
 <!-- pr-cards: end -->
-
+<!-- report-data: begin -->
+<script type="application/json" id="report-data">
+{
+ "report": 3,
+ "title": "Requests from M and N",
+ "date": "2026-10-11",
+ "measured": "2026-10-11",
+ "question": "What did two players, M and N, ask for in Messed Up Dress Up in one day, which parts reached the Hazel slides that day, and what do those parts cost there, against the game itself?",
+ "headline": [
+  {
+   "value": "14",
+   "what": "deploys of the game between 14:39 and 16:10, each feature live as soon as it was ready"
+  },
+  {
+   "value": "1–5 ms",
+   "what": "the game redrawing its heaviest pictures (100 claws, 99 alien fingers, a scene)"
+  },
+  {
+   "value": "0.4–32 s",
+   "what": "a Hazel slide redrawing after one of today's hand sliders"
+  },
+  {
+   "value": "hands, mouth",
+   "what": "the features already formulated in the Hazel slides; costumes, stripes and backgrounds are next"
+  }
+ ],
+ "builds": [
+  {
+   "name": "#2635, served locally",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "not stated in the report",
+   "note": "the Hands and Full Body slides with the day's hand and mouth features; these reached both livelits branches (#2635 and #2597), and only #2635 was timed"
+  },
+  {
+   "name": "Messed Up Dress Up (the plain HTML/JS game)",
+   "commit": "not stated in the report",
+   "note": "the day's version; the before pictures are from earlier commits of the game"
+  }
+ ],
+ "runtime": "headless Firefox over WebDriver with a fresh profile, for both the Hazel slides and the game (the Firefox version is not stated in the report)",
+ "runs": "Hazel: single runs, one per change (\"read them as sizes rather than precise numbers\"; earlier reports saw a few tenths of a second between runs of the same change). Game: the median of 30 runs per setting.",
+ "measures": {
+  "Hazel slide redraw": "s: a script changes a slider (input and change events) or presses a button, then waits until the picture's SVG changes, up to 15–120 seconds. A change that draws the same picture never \"redraws\".",
+  "Game draw()": "ms: draw() plus a layout read (getBBox), the median of 30 runs per setting, to the nearest millisecond (Firefox rounds its timer to 1 ms)",
+  "per-finger cost": "s per finger: the alien hand's redraw grows about 0.3 s per finger; 100 claws cost about a quarter of that per claw (from the table, not profiled)",
+  "emoji reach": "eye-radii: measured in Firefox, a star or heart emoji reaches 1.97 eye-radii below its middle, not the 1.5 the game had assumed",
+  "deploys": "count: deploys of the game between 14:39 and 16:10"
+ },
+ "times": "Hazel: from the slider's input and change events, or a button press, until the picture's SVG changes. A first version gave up after 2 s when nothing was pending, but a Full Body slider shows nothing pending for most of its 2.4 s, so some early pictures were stale; the times here wait for the change. Game: draw() plus getBBox, timed in the page.",
+ "provenance": "No raw readings of this report survive: every number exists only as printed in the page, in its one table (tables.json) and its text. The pictures are the game's and the slides' own SVG, rasterized, and carry no numbers.",
+ "raw_files": {},
+ "tables_reading": "In the table, two Game draw() cells each span two rows in the page: \"1–2 ms\" covers the star row and the hand-angle and arm-length row, and \"3 ms at 100\" covers both claw rows. tables.json reads cell by cell, so the second row of each pair has two cells. The Game draw() cell for alien fingers 20 → 50 is empty in the page.",
+ "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
+ "tables": [
+  {
+   "section": "What it costs",
+   "section_id": "cost",
+   "columns": [
+    "Change",
+    "Hazel slide redraw",
+    "Game draw()"
+   ],
+   "rows": [
+    [
+     "Star points 5 → 8, star turn 0 → 50%",
+     "0.65 s, 0.46 s",
+     "1–2 ms"
+    ],
+    [
+     "Hand angle 0 → 90° (human); arm length 95 → 600",
+     "1.36 s; 1.39 s",
+     "1–2 ms"
+    ],
+    [
+     "Claws 4 → 20",
+     "2.11 s",
+     "3 ms at 100"
+    ],
+    [
+     "Claws 20 → 100; then claw length 100 → 900%",
+     "8.19 s; 7.52 s",
+     "3 ms at 100"
+    ],
+    [
+     "Alien fingers 3 → 20",
+     "6.21 s",
+     "2 ms"
+    ],
+    [
+     "Alien fingers 20 → 50",
+     "14.06 s",
+     ""
+    ],
+    [
+     "Alien fingers 50 → 99",
+     "32.30 s",
+     "5 ms"
+    ],
+    [
+     "Full Body: eye size 50 → 300, smile, mouth open",
+     "3.2–3.9 s",
+     "1–3 ms"
+    ]
+   ]
+  }
+ ],
+ "files": [
+  "data/meta.json",
+  "data/tables.json"
+ ],
+ "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/003/data"
+}
+</script>
+<!-- report-data: end -->
 </body>
 </html>

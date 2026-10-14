@@ -1,0 +1,55 @@
+LADDER full-body.hz	CONTROL	no edit	0	0	shapes 49 49 same 49	SCRATCH	executed 121973 in_calls 110882 calls 3564 content 110882	path skip 110882 reads 110882 cells 110882 | equal 3564 notEqual 0 onlyLeft 0 onlyRight 0 collisions 0	local skip 110882 reads 110882 cells 110882 | equal 3564 notEqual 0 onlyLeft 0 onlyRight 0 collisions 609	operand skip 110882 reads 110882 cells 110882 | equal 3564 notEqual 0 onlyLeft 0 onlyRight 0 collisions 1375	TODAY	executed 0 in_calls 0 calls 0 content 0	path skip 0 reads 0 cells 0 | equal 0 notEqual 0 onlyLeft 3564 onlyRight 0 collisions 0	local skip 0 reads 0 cells 0 | equal 0 notEqual 0 onlyLeft 3564 onlyRight 0 collisions 0	operand skip 0 reads 0 cells 0 | equal 0 notEqual 0 onlyLeft 3564 onlyRight 0 collisions 0
+LADDER full-body.hz	eye_size	eye size	50	117	shapes 49 49 same 42	SCRATCH	executed 121809 in_calls 110718 calls 3556 content 48456	path skip 48329 reads 48956 cells 50415 | equal 1529 notEqual 1599 onlyLeft 436 onlyRight 428 collisions 0	local skip 46163 reads 46163 cells 46220 | equal 1350 notEqual 63 onlyLeft 2151 onlyRight 2143 collisions 605	operand skip 48329 reads 48911 cells 48911 | equal 1529 notEqual 276 onlyLeft 1759 onlyRight 1751 collisions 1375	TODAY	executed 104025 in_calls 102958 calls 3201 content 42149	path skip 42149 reads 42756 cells 44215 | equal 1263 notEqual 1551 onlyLeft 750 onlyRight 387 collisions 0	local skip 40691 reads 40691 cells 40748 | equal 1105 notEqual 22 onlyLeft 2437 onlyRight 2074 collisions 572	operand skip 42144 reads 42711 cells 42711 | equal 1261 notEqual 231 onlyLeft 2072 onlyRight 1709 collisions 1325
+DIAG full-body.hz eye_size	go+	943 calls	29765 own steps	differing: go 557, first 557, qs 536, x2 495, x1 495
+DIAG full-body.hz eye_size	round_eye+	77 calls	6339 own steps	differing: x 77, r 77, px 72, py 67, y 22
+DIAG full-body.hz eye_size	shift_points+	174 calls	5724 own steps	differing: vs 162, tl 150, v 144, y 140, x 100
+DIAG full-body.hz eye_size	eye_need+	50 calls	4418 own steps	differing: eye_need 50, eye_half_w 50, eye_half_h 50, eye_dx 50, u 46
+DIAG full-body.hz eye_size	clear_of_eyes+	42 calls	2882 own steps	differing: eye_below 42, clear_of_eyes 42
+DIAG full-body.hz eye_size	scale_points+	36 calls	1634 own steps	differing: sy 36
+DIAG full-body.hz eye_size	skinned+	26 calls	1183 own steps	differing: ps 25, tl 24, p 7
+DIAG full-body.hz eye_size	on_head+	56 calls	1044 own steps	differing: ps 52, p 50, tl 48
+DIAG full-body.hz eye_size	to_head	50 calls	950 own steps	differing: u 50, v 48
+DIAG full-body.hz eye_size	below_poly	41 calls	943 own steps	differing: ps 41
+DIAG full-body.hz eye_size	eye_below	41 calls	779 own steps	differing: eye_outlines 41
+DIAG full-body.hz eye_size	fmax	127 calls	762 own steps	differing: x 73, y 41, (new name) 40
+LADDER full-body.hz	eye_gap	eye gap	38	78	shapes 49 49 same 45	SCRATCH	executed 120213 in_calls 109122 calls 3476 content 54416	path skip 54145 reads 54711 cells 55626 | equal 1722 notEqual 1374 onlyLeft 468 onlyRight 380 collisions 0	local skip 51414 reads 51414 cells 51525 | equal 1511 notEqual 55 onlyLeft 1998 onlyRight 1910 collisions 565	operand skip 54169 reads 54715 cells 54715 | equal 1726 notEqual 260 onlyLeft 1578 onlyRight 1490 collisions 1472	TODAY	executed 102429 in_calls 101362 calls 3121 content 48190	path skip 48046 reads 48587 cells 49502 | equal 1459 notEqual 1323 onlyLeft 782 onlyRight 339 collisions 0	local skip 46229 reads 46229 cells 46340 | equal 1275 notEqual 13 onlyLeft 2276 onlyRight 1833 collisions 532	operand skip 48065 reads 48591 cells 48591 | equal 1460 notEqual 213 onlyLeft 1891 onlyRight 1448 collisions 1422
+DIAG full-body.hz eye_gap	go+	943 calls	28685 own steps	differing: go 531, first 531, qs 512, x2 490, x1 490
+DIAG full-body.hz eye_gap	round_eye+	77 calls	6339 own steps	differing: x 77
+DIAG full-body.hz eye_gap	eye_need+	50 calls	4418 own steps	differing: eye_need 50, eye_dx 50, u 48, px 48, here 24
+DIAG full-body.hz eye_gap	shift_points+	112 calls	3680 own steps	differing: x 104, vs 104, v 104, tl 96
+DIAG full-body.hz eye_gap	clear_of_eyes+	42 calls	2882 own steps	differing: eye_below 42, clear_of_eyes 42
+DIAG full-body.hz eye_gap	skinned+	24 calls	1091 own steps	differing: ps 23, tl 22, p 4
+DIAG full-body.hz eye_gap	on_head+	56 calls	1044 own steps	differing: ps 52, p 52, tl 48
+DIAG full-body.hz eye_gap	to_head	52 calls	988 own steps	differing: u 52
+DIAG full-body.hz eye_gap	below_poly	41 calls	943 own steps	differing: ps 41
+DIAG full-body.hz eye_gap	eye_below	41 calls	779 own steps	differing: eye_outlines 41
+DIAG full-body.hz eye_gap	fmax	85 calls	510 own steps	differing: x 68, y 35, (new name) 4
+DIAG full-body.hz eye_gap	eye	2 calls	504 own steps	differing: x 2
+LADDER witch.hz	CONTROL	no edit	0	0	shapes 133 133 same 133	SCRATCH	executed 186699 in_calls 179939 calls 5947 content 179939	path skip 179939 reads 179939 cells 179939 | equal 5947 notEqual 0 onlyLeft 0 onlyRight 0 collisions 0	local skip 179939 reads 179939 cells 179939 | equal 5947 notEqual 0 onlyLeft 0 onlyRight 0 collisions 649	operand skip 179939 reads 179939 cells 179939 | equal 5947 notEqual 0 onlyLeft 0 onlyRight 0 collisions 2026	TODAY	executed 0 in_calls 0 calls 0 content 0	path skip 0 reads 0 cells 0 | equal 0 notEqual 0 onlyLeft 5947 onlyRight 0 collisions 0	local skip 0 reads 0 cells 0 | equal 0 notEqual 0 onlyLeft 5947 onlyRight 0 collisions 0	operand skip 0 reads 0 cells 0 | equal 0 notEqual 0 onlyLeft 5947 onlyRight 0 collisions 0
+LADDER witch.hz	eye_size	eye size	50	117	shapes 133 133 same 122	SCRATCH	executed 186535 in_calls 179775 calls 5939 content 101023	path skip 100867 reads 101583 cells 110724 | equal 3449 notEqual 2052 onlyLeft 446 onlyRight 438 collisions 0	local skip 95771 reads 95771 cells 95889 | equal 3011 notEqual 80 onlyLeft 2856 onlyRight 2848 collisions 645	operand skip 100867 reads 101513 cells 101513 | equal 3449 notEqual 366 onlyLeft 2132 onlyRight 2124 collisions 2024	TODAY	executed 170706 in_calls 168530 calls 5425 content 91600	path skip 91600 reads 92301 cells 101442 | equal 3041 notEqual 1997 onlyLeft 909 onlyRight 387 collisions 0	local skip 86909 reads 86909 cells 87027 | equal 2615 notEqual 29 onlyLeft 3303 onlyRight 2781 collisions 572	operand skip 91600 reads 92231 cells 92231 | equal 3035 notEqual 318 onlyLeft 2594 onlyRight 2072 collisions 1917
+DIAG witch.hz eye_size	go+	943 calls	29765 own steps	differing: go 557, first 557, qs 536, x2 495, x1 495
+DIAG witch.hz eye_size	shift_points+	253 calls	8346 own steps	differing: vs 237, tl 221, v 219, y 215, x 100
+DIAG witch.hz eye_size	round_eye+	77 calls	6339 own steps	differing: x 77, r 77, px 72, py 67, y 22
+DIAG witch.hz eye_size	dressed+	110 calls	5030 own steps	differing: ps 109, tl 108, p 11
+DIAG witch.hz eye_size	skinned+	110 calls	4699 own steps	differing: ps 109, tl 108, p 11
+DIAG witch.hz eye_size	eye_need+	50 calls	4418 own steps	differing: eye_need 50, eye_half_w 50, eye_half_h 50, eye_dx 50, u 46
+DIAG witch.hz eye_size	hat_verts+	79 calls	3131 own steps	differing: head_lift 79, hat_verts 79
+DIAG witch.hz eye_size	clear_of_eyes+	42 calls	2882 own steps	differing: eye_below 42, clear_of_eyes 42
+DIAG witch.hz eye_size	to_head	125 calls	2375 own steps	differing: v 123, u 50
+DIAG witch.hz eye_size	scale_points+	36 calls	1634 own steps	differing: sy 36
+DIAG witch.hz eye_size	on_head+	56 calls	1044 own steps	differing: ps 52, p 50, tl 48
+DIAG witch.hz eye_size	below_poly	41 calls	943 own steps	differing: ps 41
+LADDER witch.hz	eye_gap	eye gap	38	78	shapes 133 133 same 129	SCRATCH	executed 184939 in_calls 178179 calls 5859 content 115384	path skip 115084 reads 115688 cells 124035 | equal 3911 notEqual 1558 onlyLeft 478 onlyRight 390 collisions 0	local skip 109796 reads 109796 cells 109988 | equal 3473 notEqual 67 onlyLeft 2407 onlyRight 2319 collisions 605	operand skip 115108 reads 115692 cells 115692 | equal 3915 notEqual 268 onlyLeft 1764 onlyRight 1676 collisions 2123	TODAY	executed 169110 in_calls 166934 calls 5345 content 106042	path skip 105898 reads 106482 cells 114829 | equal 3506 notEqual 1500 onlyLeft 941 onlyRight 339 collisions 0	local skip 101221 reads 101221 cells 101413 | equal 3086 notEqual 15 onlyLeft 2846 onlyRight 2244 collisions 532	operand skip 105922 reads 106486 cells 106486 | equal 3503 notEqual 218 onlyLeft 2226 onlyRight 1624 collisions 2016
+DIAG witch.hz eye_gap	go+	943 calls	28685 own steps	differing: go 531, first 531, qs 512, x2 490, x1 490
+DIAG witch.hz eye_gap	round_eye+	77 calls	6339 own steps	differing: x 77
+DIAG witch.hz eye_gap	dressed+	100 calls	4546 own steps	differing: ps 99, tl 98, p 4
+DIAG witch.hz eye_gap	eye_need+	50 calls	4418 own steps	differing: eye_need 50, eye_dx 50, u 48, px 48, here 24
+DIAG witch.hz eye_gap	skinned+	100 calls	4245 own steps	differing: ps 99, tl 98, p 4
+DIAG witch.hz eye_gap	shift_points+	112 calls	3680 own steps	differing: x 104, vs 104, v 104, tl 96
+DIAG witch.hz eye_gap	clear_of_eyes+	42 calls	2882 own steps	differing: eye_below 42, clear_of_eyes 42
+DIAG witch.hz eye_gap	on_head+	56 calls	1044 own steps	differing: ps 52, p 52, tl 48
+DIAG witch.hz eye_gap	to_head	52 calls	988 own steps	differing: u 52
+DIAG witch.hz eye_gap	below_poly	41 calls	943 own steps	differing: ps 41
+DIAG witch.hz eye_gap	eye_below	41 calls	779 own steps	differing: eye_outlines 41
+DIAG witch.hz eye_gap	fmax	85 calls	510 own steps	differing: x 68, y 35, (new name) 4
+ASSERT ran
