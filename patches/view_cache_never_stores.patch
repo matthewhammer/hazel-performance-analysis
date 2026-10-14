@@ -1,0 +1,16 @@
+^report(14): ProjectorView's view cache never stores, so every projector view is made afresh. On #2597 at c4e411f9c2.
+
+diff --git a/src/web/app/common/ProjectorView.re b/src/web/app/common/ProjectorView.re
+index 68df1d0e6a..8c025edfaf 100644
+--- a/src/web/app/common/ProjectorView.re
++++ b/src/web/app/common/ProjectorView.re
+@@ -83,7 +83,8 @@ module ViewCache = {
+         ~font_metrics,
+         ~view,
+       ) =>
+-    Hashtbl.replace(
++    /* EXPERIMENT (^ticket(45)): never keep a view */
++    if (false) Hashtbl.replace(
+       cache,
+       id,
+       {

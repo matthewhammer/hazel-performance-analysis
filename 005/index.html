@@ -184,6 +184,7 @@
 <h2 id="copies">Is it expensive to keep several representations?</h2>
 <p>A view exists in up to five forms at once: the Html value (in the view memo); in the worker's and the page's tables of shared values; the virtual DOM tree the page last drew, kept for the next diff; the new virtual DOM tree, during a diff; and the DOM itself.</p>
 <p><b>In memory, sharing makes most of these cheap.</b> The Html value and the tables hold references to the same objects, not copies: the boundary returns the page's own objects for anything unchanged. The two virtual DOM trees exist together only during a diff. The DOM is the only full copy that cannot be avoided. What memory these take has not been measured. The tables are capped at 200,000 entries each.</p>
+<p class="note"><b>Update, later on 2026-10-14:</b> measured on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, in <a href="../014/"><code class="ref"><b>^report(</b>14<b>)</b></code></a>: a tab keeps about 92 MB more after every slider edit on Full Body, but not in these tables, which stay within their cap; what stays is whole versions of the editor's state.</p>
 <p><b>In time, the cost is rebuilding, not holding.</b> Today, steps 7 and 8 rebuild a view's virtual DOM and walk all of it whenever the view is drawn. That is a cost per representation per change, and C is what removes it. On Kids' Choice it is small: converting the face's Html to the page took 8 ms of a 104 ms redraw (profiled, <a href="../001/#now"><code class="ref"><b>^report(</b>1<b>)</b></code></a>), and in an earlier profile, the browser's own layout and DOM work was about 30 ms of a 310 ms redraw. In the woods, with about 600 shapes, the conversion and the diff are part of the half of the page's time that is not evaluating the view (<a href="../004/#cost"><code class="ref"><b>^report(</b>4<b>)</b></code></a>). How large a part has not been measured.</p>
 <p class="note"><b>Update, later on 2026-10-12:</b> measured: about 2% (<a href="#update">below</a>).</p>
 
@@ -309,6 +310,91 @@
   code.ref b { font-weight: 800; }
 </style>
 <!-- refs: end -->
+<!-- pr-cards: begin -->
+<style>
+  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 15, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-14T14:42:25Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-14T14:42:33Z"}, "hazelgrove/hazel#2609": {"author": "matthewhammer", "comments": 24, "created": "2026-09-28T13:34:18Z", "kind": "issues", "state": "open", "title": "Performance Challenges (Fall 2026)", "updated": "2026-10-14T19:50:20Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-14T14:42:21Z"}, "hazelgrove/hazel#2652": {"author": "matthewhammer", "comments": 1, "created": "2026-10-06T00:19:52Z", "kind": "pull", "state": "open", "title": "Eval worker in Firefox: start it at load, and do not time out a reply that is queued", "updated": "2026-10-06T00:46:51Z"}, "hazelgrove/hazel#2661": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T01:18:55Z", "kind": "pull", "state": "open", "title": "Types get a Merkle hash; the evaluator asks is_consistent once per pair", "updated": "2026-10-10T01:36:30Z"}, "hazelgrove/hazel#2671": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T13:59:41Z", "kind": "pull", "state": "open", "title": "MapPiece keeps unchanged pieces as the same objects", "updated": "2026-10-10T14:25:32Z"}, "hazelgrove/hazel#2672": {"author": "matthewhammer", "comments": 0, "created": "2026-10-10T16:32:57Z", "kind": "pull", "state": "open", "title": "Measuring the font no longer scrolls the editor to the caret", "updated": "2026-10-10T16:32:57Z"}, "hazelgrove/hazel#2673": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T17:19:02Z", "kind": "pull", "state": "open", "title": "Incremental evaluation recognizes an unchanged expression by its Merkle hash", "updated": "2026-10-13T12:02:53Z"}, "hazelgrove/hazel#2675": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T13:05:13Z", "kind": "pull", "state": "open", "title": "Incremental evaluation reuses expressions around a recursive let", "updated": "2026-10-12T13:27:15Z"}}, BUILT = "2026-10-14";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  const ask = key => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#");
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
+                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[2];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
 <!-- ref-cards: begin -->
 <style>
   .ref-card { position: absolute; z-index: 40; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
@@ -400,91 +486,6 @@
 })();
 </script>
 <!-- ref-cards: end -->
-<!-- pr-cards: begin -->
-<style>
-  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
-    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
-    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
-  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
-  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
-  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
-  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
-  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
-  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
-</style>
-<script>
-/* A card for each link to a GitHub PR or issue, on hover or focus: its
-   title, state, author, dates and comments, asked of GitHub live, once per
-   number per page load; if GitHub does not answer, what it said when the
-   page was built (tools/link_prs.py writes this block). */
-(() => {
-  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 15, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-14T14:42:25Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-14T14:42:33Z"}, "hazelgrove/hazel#2609": {"author": "matthewhammer", "comments": 24, "created": "2026-09-28T13:34:18Z", "kind": "issues", "state": "open", "title": "Performance Challenges (Fall 2026)", "updated": "2026-10-14T14:42:09Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-14T14:42:21Z"}, "hazelgrove/hazel#2652": {"author": "matthewhammer", "comments": 1, "created": "2026-10-06T00:19:52Z", "kind": "pull", "state": "open", "title": "Eval worker in Firefox: start it at load, and do not time out a reply that is queued", "updated": "2026-10-06T00:46:51Z"}, "hazelgrove/hazel#2661": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T01:18:55Z", "kind": "pull", "state": "open", "title": "Types get a Merkle hash; the evaluator asks is_consistent once per pair", "updated": "2026-10-10T01:36:30Z"}, "hazelgrove/hazel#2671": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T13:59:41Z", "kind": "pull", "state": "open", "title": "MapPiece keeps unchanged pieces as the same objects", "updated": "2026-10-10T14:25:32Z"}, "hazelgrove/hazel#2672": {"author": "matthewhammer", "comments": 0, "created": "2026-10-10T16:32:57Z", "kind": "pull", "state": "open", "title": "Measuring the font no longer scrolls the editor to the caret", "updated": "2026-10-10T16:32:57Z"}, "hazelgrove/hazel#2673": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T17:19:02Z", "kind": "pull", "state": "open", "title": "Incremental evaluation recognizes an unchanged expression by its Merkle hash", "updated": "2026-10-13T12:02:53Z"}, "hazelgrove/hazel#2675": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T13:05:13Z", "kind": "pull", "state": "open", "title": "Incremental evaluation reuses expressions around a recursive let", "updated": "2026-10-12T13:27:15Z"}}, BUILT = "2026-10-14";
-  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
-  const asked = new Map();
-  const ask = key => {
-    if (!asked.has(key)) {
-      const [repo, n] = key.split("#");
-      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
-        .then(r => r.ok ? r.json() : Promise.reject(r.status))
-        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
-                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
-                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
-        .catch(() => null));
-    }
-    return asked.get(key);
-  };
-  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-  const ago = iso => {
-    const s = (Date.now() - new Date(iso)) / 1000;
-    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
-      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
-    return "just now";
-  };
-  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const fill = (key, d, note) => {
-    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
-    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
-      `<div class="pr-title">${esc(d.title)}</div>` +
-      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
-      (note ? `<div class="pr-note">${note}</div>` : "");
-  };
-  let card = null, over = null, timer = null;
-  const place = a => {
-    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
-    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
-    const below = r.bottom + 6 + h < innerHeight;
-    card.style.left = (left + scrollX) + "px";
-    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
-  };
-  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
-  const show = a => {
-    const m = RX.exec(a.href);
-    if (!m) return;
-    const key = m[1] + "#" + m[2];
-    over = a; clearTimeout(timer);
-    timer = setTimeout(async () => {
-      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
-      const cached = CACHED[key];
-      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
-      card.hidden = false; place(a);
-      const d = await ask(key);
-      if (over !== a) return;
-      card.innerHTML = d ? fill(key, d, "")
-        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
-        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
-      place(a);
-    }, 250);
-  };
-  const linkOf = t => t && t.closest && t.closest("a[href]");
-  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
-  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
-  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
-  document.addEventListener("focusout", hide);
-  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
-  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
-})();
-</script>
-<!-- pr-cards: end -->
 
 </body>
 </html>

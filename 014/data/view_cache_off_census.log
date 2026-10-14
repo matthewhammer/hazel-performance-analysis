@@ -1,0 +1,22 @@
+loaded in 16.596 s
+
+== after 0 edits: live heap 398.7 MB
+Map [[121777,["222938353:1819426896","2741446435:3576831418","2944880086:3804920073"]],[20,["placeholder","disableHotkeys","hideBreadcrumbs"]],[12,["placeholder","disablehotkeys","hidebreadcrumbs"]],[4,["placeholder","hideBreadcrumbs","breadcrumbHome"]],[4,["placeholder","hidebreadcrumbs","breadcrumbhome"]],[3,["action","selected","hotKeysJoinedView"]]]
+Set [[119764,["3409988743:4107133231","2373106547:1414233871","2598837127:1317134605"]],[2,["bump","modal-content"]],[2,["bump","modal-content"]],[2,["selected","ninja-action"]],[1,["object"]],[1,["object"]]]
+WeakMap [67]
+edit 1 -> 67: redraw 6.69 s
+edit 2 -> 74: redraw 7.368 s
+edit 3 -> 81: redraw 6.625 s
+
+== after 3 edits: live heap 642.6 MB
+Map [[185965,["222938353:1819426896","2741446435:3576831418","2944880086:3804920073"]],[20,["placeholder","disableHotkeys","hideBreadcrumbs"]],[12,["placeholder","disablehotkeys","hidebreadcrumbs"]],[4,["placeholder","hideBreadcrumbs","breadcrumbHome"]],[4,["placeholder","hidebreadcrumbs","breadcrumbhome"]],[4,["data","_flatData","_actionMatches"]]]
+Set [[168522,["3409988743:4107133231","2373106547:1414233871","2598837127:1317134605"]],[2,["bump","modal-content"]],[2,["bump","modal-content"]],[2,["selected","ninja-action"]],[1,["object"]],[1,["object"]]]
+WeakMap [67]
+edit 4 -> 88: redraw 8.331 s
+edit 5 -> 95: redraw 7.32 s
+edit 6 -> 62: redraw 7.477 s
+
+== after 6 edits: live heap 896.3 MB
+Map [[140647,["3142444043:2217130976","1315268794:883820217","106433680:3596278329"]],[20,["placeholder","disableHotkeys","hideBreadcrumbs"]],[12,["placeholder","disablehotkeys","hidebreadcrumbs"]],[4,["placeholder","hideBreadcrumbs","breadcrumbHome"]],[4,["placeholder","hidebreadcrumbs","breadcrumbhome"]],[4,["data","_flatData","_actionMatches"]]]
+Set [[206106,["3409988743:4107133231","2373106547:1414233871","2598837127:1317134605"]],[2,["bump","modal-content"]],[2,["bump","modal-content"]],[2,["selected","ninja-action"]],[1,["object"]],[1,["object"]]]
+WeakMap [67]

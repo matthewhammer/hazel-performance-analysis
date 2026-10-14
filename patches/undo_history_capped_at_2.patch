@@ -1,0 +1,14 @@
+^report(14): the undo history capped at 2 states (from 250). On #2597 at c4e411f9c2.
+
+diff --git a/src/web/app/History.re b/src/web/app/History.re
+index 3de8c8cea7..782ac77baf 100644
+--- a/src/web/app/History.re
++++ b/src/web/app/History.re
+@@ -1,6 +1,6 @@
+ open Util;
+ 
+-let capped_undo_stack_size = 250;
++let capped_undo_stack_size = 2;
+ 
+ module Model = {
+   [@deriving (show({with_path: false}), sexp, yojson)]

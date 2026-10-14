@@ -1,0 +1,444 @@
+live sampled bytes allocated during the edits: 390.1 MB
+
+by allocating function:
+    65.6 MB  hash @520605
+    40.5 MB  caml_input_value_from_reader @9573
+    36.0 MB  set @0
+    17.5 MB  map @16595
+    15.1 MB  create @22984
+    11.8 MB  symbol @14491
+    11.8 MB  map @16037
+    11.7 MB  add @718550
+    10.2 MB  add_shard @958131
+     9.5 MB  (anon) @602701
+     8.2 MB  (anon) @546195
+     6.4 MB  mk$0 @584871
+     6.4 MB  add @23027
+     6.0 MB  (anon) @545996
+     5.6 MB  syn_ana_ok_common @690942
+     5.4 MB  (anon) @514641
+     5.3 MB  (anon) @602215
+     4.9 MB  (anon) @584897
+     4.9 MB  (anon) @957513
+     4.8 MB  bal @22992
+     4.8 MB  temp @598895
+     4.5 MB  add @538343
+     4.4 MB  (anon) @718625
+     3.8 MB  filter_map @17108
+     3.8 MB  mk @522910
+     3.6 MB  rec_call @586902
+     3.4 MB  add_secondary @958177
+     3.0 MB  read32u @4820
+     2.9 MB  collect_from_skel @923699
+     2.8 MB  exp_term @989958
+     2.8 MB  sequence @514652
+     2.6 MB  push_output @919416
+     2.6 MB  caml_call4 @987537
+     2.5 MB  (anon) @584882
+     2.4 MB  (anon) @989934
+     2.1 MB  normalize @601204
+     2.1 MB  add @727307
+     2.0 MB  update @520529
+     2.0 MB  (anon) @602117
+     1.7 MB  keep @540024
+
+heaviest stacks (innermost 14 frames):
+
+40.5 MB
+  caml_input_value_from_reader @9573
+  caml_input_value_from_bytes @9789
+  from_bytes @19624
+  from_string @19633
+  caml_call2 @763805
+  decode_response$0 @767027
+  caml_call1 @1189699
+  (anon) @1189895
+  caml_call1 @243935
+  (anon) @244005
+  caml_call_gen @7048
+  (anon) @10159
+  (root) @0
+
+32.0 MB
+  set @0
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+
+19.1 MB
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+
+5.6 MB
+  add @23027
+  caml_call3 @1172877
+  kv_save @1172954
+  caml_call2 @1323807
+  save_slide_kind @1326229
+  save_current @1326309
+  caml_call2 @1337974
+  save$0 @1339232
+  caml_call2 @1371883
+  save @1372521
+  caml_call1 @1371878
+  update @1373613
+  caml_call5 @1374604
+  update @1375036
+
+3.5 MB
+  set @0
+  keep @540024
+  keep @540024
+  keep @540024
+  keep @540024
+  keep @540024
+  keep @540024
+  keep @540024
+  keep @540024
+  keep @540024
+  keep @540024
+  keep @540024
+  keep @540024
+  keep @540024
+
+3.0 MB
+  read32u @4820
+  caml_input_value_from_reader @9573
+  caml_input_value_from_bytes @9789
+  from_bytes @19624
+  from_string @19633
+  caml_call2 @763805
+  decode_response$0 @767027
+  caml_call1 @1189699
+  (anon) @1189895
+  caml_call1 @243935
+  (anon) @244005
+  caml_call_gen @7048
+  (anon) @10159
+  (root) @0
+
+2.3 MB
+  (anon) @546195
+  map @16595
+  map @546189
+  caml_call2 @597699
+  subst @600062
+  subst @600062
+  (anon) @600151
+  map @16595
+  subst @600062
+  (anon) @600134
+  map @16037
+  g @7066
+  (anon) @546195
+  map @16595
+
+2.3 MB
+  (anon) @546195
+  map @16595
+  map @546189
+  caml_call2 @597699
+  subst @600062
+  subst @600062
+  (anon) @600151
+  map @16595
+  subst @600062
+  (anon) @600134
+  map @16037
+  g @7066
+  (anon) @546195
+  map @16595
+
+2.1 MB
+  map @16595
+  map @546189
+  caml_call2 @597699
+  subst @600062
+  subst @600062
+  (anon) @600151
+  map @16595
+  subst @600062
+  (anon) @600134
+  map @16037
+  g @7066
+  (anon) @546195
+  map @16595
+  map @546189
+
+1.8 MB
+  map @16595
+  map @546189
+  caml_call2 @597699
+  subst @600062
+  subst @600062
+  (anon) @600151
+  map @16595
+  subst @600062
+  (anon) @600134
+  map @16037
+  g @7066
+  (anon) @546195
+  map @16595
+  map @546189
+
+1.7 MB
+  map @16037
+  g @7066
+  (anon) @546195
+  map @16595
+  map @546189
+  caml_call2 @597699
+  subst @600062
+  subst @600062
+  (anon) @600151
+  map @16595
+  subst @600062
+  (anon) @600134
+  map @16037
+  g @7066
+
+1.6 MB
+  intern_rec @9621
+  caml_input_value_from_reader @9573
+  caml_input_value_from_bytes @9789
+  from_bytes @19624
+  from_string @19633
+  caml_call2 @763805
+  decode_response$0 @767027
+  caml_call1 @1189699
+  (anon) @1189895
+  caml_call1 @243935
+  (anon) @244005
+  caml_call_gen @7048
+  (anon) @10159
+  (root) @0
+
+1.4 MB
+  map @16037
+  g @7066
+  (anon) @546195
+  map @16595
+  map @546189
+  caml_call2 @597699
+  subst @600062
+  subst @600062
+  (anon) @600151
+  map @16595
+  subst @600062
+  (anon) @600134
+  map @16037
+  g @7066
+
+1.3 MB
+  add @0
+  encode @539967
+  caml_js_fun_call @10001
+  call @540053
+  encode @540065
+  caml_call1 @1189699
+  post_evaluate @1189805
+  request @1190138
+  caml_call5 @1273565
+  request @1273579
+  caml_call4 @1323817
+  calculate @1328223
+  caml_call5 @1337989
+  calculate @1339941
+
+1.2 MB
+  add @718550
+  (anon) @719922
+  fold_left2 @16822
+  caml_call4 @717343
+  tuple_case @719805
+  default_case @718894
+  uexp_to_info_map @718515
+  go @718718
+  parens_case @725567
+  default_case @718894
+  uexp_to_info_map @718515
+  go @718718
+  (anon) @718741
+  (anon) @690819
+
+0.8 MB
+  node @448555
+  t_to_js @449914
+  (anon) @449964
+  iter @45706
+  element @449959
+  span @450315
+  g @7066
+  caml_call_gen @7048
+  caml_call_gen @7048
+  caml_call_gen @7048
+  caml_call3 @1210925
+  view @1210954
+  caml_call8 @1214461
+  view @1215205
+
+0.7 MB
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+
+0.7 MB
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+
+0.7 MB
+  (anon) @602701
+  map @16037
+  let$1 @514700
+  (anon) @602693
+  bind @16031
+  meet_body @601919
+  meet$0 @601920
+  map2 @16716
+  map2_opt @522080
+  caml_call3 @597704
+  meet_body @601919
+  meet_body @601919
+  meet_body @601919
+  (anon) @602148
+
+0.7 MB
+  readstr @4837
+  intern_rec @9621
+  caml_input_value_from_reader @9573
+  caml_input_value_from_bytes @9789
+  from_bytes @19624
+  from_string @19633
+  caml_call2 @763805
+  decode_response$0 @767027
+  caml_call1 @1189699
+  (anon) @1189895
+  caml_call1 @243935
+  (anon) @244005
+  caml_call_gen @7048
+  (anon) @10159
+
+0.7 MB
+  (anon) @586952
+  map @16595
+  caml_call2 @584985
+  rec_call @586902
+  f @598900
+  g @7066
+  map_term$2 @586855
+  g @7066
+  caml_call1 @584980
+  rec_call @586902
+  f @598900
+  g @7066
+  map_term$2 @586855
+  g @7066
+
+0.7 MB
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+  hash @520605
+
+0.7 MB
+  to_raw @449118
+  raw_attrs @449972
+  force_lazy_block @15192
+  t_to_js @449914
+  (anon) @449964
+  iter @45706
+  element @449959
+  span @450315
+  g @7066
+  caml_call_gen @7048
+  caml_call_gen @7048
+  caml_call_gen @7048
+  caml_call3 @1210925
+  view @1210954
+
+0.6 MB
+  add @718550
+  atom_case @719180
+  default_case @718894
+  uexp_to_info_map @718515
+  go @718718
+  (anon) @719922
+  fold_left2 @16822
+  caml_call4 @717343
+  tuple_case @719805
+  default_case @718894
+  uexp_to_info_map @718515
+  go @718718
+  parens_case @725567
+  default_case @718894
+
+0.6 MB
+  add_shard @958131
+  (anon) @958322
+  fold_left @523071
+  caml_call3 @956782
+  of_piece @958311
+  (anon) @958326
+  fold_left @523071
+  caml_call3 @956782
+  of_piece @958311
+  (anon) @958326
+  fold_left @523071
+  caml_call3 @956782
+  of_piece @958311
+  (anon) @958326

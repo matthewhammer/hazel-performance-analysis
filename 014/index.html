@@ -1,0 +1,1571 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- theme: head begin -->
+<script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<!-- theme: head end -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What the Page Keeps</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+  .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi .v { font-size: 1.7em; font-weight: 700; }
+  .kpi .l { color: var(--muted); font-size: 0.9em; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure { margin: 18px 0; }
+  figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 10px; display: block; background: #ffffff; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 72ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .step { border-left: 3px solid var(--line); padding-left: 14px; }
+  .kicker { margin: 0; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8em; }
+  ol.ranked > li { margin: 10px 0; }
+  .dedicated { margin: 0 0 18px; font-style: italic; color: var(--muted); }
+  .dedication { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px; }
+  .dedication p { font-size: 1.05em; }
+
+  svg.chart { width: 100%; height: auto; display: block; font: 12.5px system-ui, sans-serif; color: var(--ink); }
+  svg.chart .ct { fill: var(--ink); font-weight: 600; font-size: 13.5px; }
+  svg.chart .cl { fill: var(--ink); }
+  svg.chart .cv { fill: var(--muted); }
+  svg.chart .rng { stroke: var(--ink); stroke-width: 1.2; opacity: 0.55; fill: none; }
+  .rr { color: var(--muted); font-size: 0.85em; }
+  svg.chart .cin { fill: #ffffff; font-size: 11px; font-weight: 600; }
+  svg.chart .box { fill: var(--paper); stroke: var(--line); stroke-width: 1.5; }
+  svg.chart .bt { fill: var(--ink); font-weight: 700; font-size: 14px; }
+  svg.chart .bs { fill: var(--muted); }
+  svg.chart .bn { font-weight: 700; font-size: 15px; }
+  svg.chart .good { fill: var(--good); } svg.chart .warn { fill: var(--warn); } svg.chart .bad { fill: var(--bad); }
+  .glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr)); gap: 14px; margin: 16px 0 6px; }
+  .glance figure, figure.fig { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 0; }
+  figure.fig { margin: 16px 0; }
+  .update { background: var(--paper); border-left: 4px solid var(--warn); padding: 10px 14px; border-radius: 6px; margin: 16px 0; }
+  .added { font-size: 0.6em; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; vertical-align: middle; margin-left: 6px; }
+  svg.chart .nb { stroke-width: 1.5; }
+  svg.chart .nb.ok { fill: color-mix(in srgb, var(--good) 22%, var(--paper)); stroke: var(--good); }
+  svg.chart .nb.in { fill: color-mix(in srgb, var(--warn) 28%, var(--paper)); stroke: var(--warn); }
+  svg.chart .nb.re { fill: color-mix(in srgb, var(--bad) 18%, var(--paper)); stroke: var(--bad); }
+  svg.chart .nl { fill: var(--ink); font-size: 12px; }
+  svg.chart .ar { stroke: var(--muted); stroke-width: 1.6; fill: none; }
+
+  .pics { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; justify-content: space-around; }
+  .pics > div { flex: 1 1 200px; max-width: 330px; }
+  svg.pic { width: 100%; height: auto; display: block; }
+  .pics .pl { margin: 0 0 6px; text-align: center; font-size: 0.95em; }
+  :root { --pic-grey: #e6e3dc; --pic-grey-line: #c9c4b8; --pic-mark: #d946ef; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --pic-grey: #2a2e33; --pic-grey-line: #3d434a; --pic-mark: #e879f9; } }
+  :root[data-theme="dark"] { --pic-grey: #2a2e33; --pic-grey-line: #3d434a; --pic-mark: #e879f9; }
+
+  :root { --accent2: #0e7490; --good2: #65a30d; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --accent2: #67e8f9; --good2: #bef264; } }
+  :root[data-theme="dark"] { --accent2: #67e8f9; --good2: #bef264; }
+  svg.chart .grid { stroke: var(--line); stroke-width: 1; }
+  svg.chart .diag { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 5 4; }
+  svg.chart .dot { stroke: var(--paper); stroke-width: 1; opacity: 0.9; }
+  table.sweep td, table.sweep th { padding: 2px 8px; font-size: 0.92em; }
+</style>
+</head>
+
+<body>
+<main>
+
+<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>14<b>)</b></code> · 2026-10-14</p>
+<h1>What the page keeps from one edit to the next</h1>
+<p class="sub">How much memory does a Hazel tab keep as you edit, and what keeps it? <a href="../005/"><code class="ref"><b>^report(</b>5<b>)</b></code></a> listed the forms a view takes on the page at once (its Html value, the tables of values shared with the evaluation worker, the virtual DOM tree last drawn, the DOM) and said that what memory these take had not been measured. This report measures a tab on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> (the full livelits branch) while one slider on the Livelit Playground's Full Body slide is moved again and again. The tab keeps about 90 MB more after every edit. The report says what that memory is, which of the page's caches and tables it is not, how that was found where the usual tool fails, and what is still open: which reference keeps it.</p>
+
+<div class="headline">
+<p><b>Short answers.</b> One slide, Full Body, on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> at <code>c4e411f9c2</code>, in headless Chromium; after each slider edit, two forced garbage collections and the page's live JavaScript heap. The method is <a href="#method">at the end</a>.</p>
+<ol>
+  <li><b>A tab keeps about 92 MB more after every slider edit, and does not level off.</b> Over 15 edits of one slider, the live heap went from 399 to 1,787 MB (+1,388 MB), steadily (<a href="#leak">Figure 1</a>). At that rate, about 25 more edits would pass 4 GB.</li>
+  <li><b>None of the caches is what keeps it.</b> Each was tried in a build of its own: the undo history capped at 2 states, still 92 MB per edit; the projector view cache turned off, 83; the whole-program memos held to one entry, 73; memos and undo together, 71 (<a href="#caches">Figure 2</a>). The memos account for about 19 MB per edit while they fill up to their bounds, and stop when they are full; nothing tried touches the rest.</li>
+  <li><b>No long-lived table grows.</b> A build that counts 14 of the page's tables after every edit (those keyed by ids, and HazelDB's cache) found each the same size after 8 edits as after the first, while the heap grew by 708 MB. ShareCodec's two tables of values shared with the worker rise and fall back as they reset at their cap of 200,000 entries (<a href="#tables">Figure 3</a>).</li>
+  <li><b>What stays is whole versions of the editor's state.</b> V8's sampling heap profiler, over four edits, keeping only what is still alive: 390 MB, made by every stage of an edit. Types and statics 119 MB, ValueHash's hashes of objects 98, terms and syntax 64, the worker's replies 46, layout 41, other 23 (<a href="#what">Figure 4</a>). Not one cache's entries: each edit's whole product.</li>
+  <li><b>Which reference keeps them is still open.</b> A heap snapshot would show the path from a root to each object kept, but taking one kills this tab's renderer, in two builds of Chromium 155. A test page with a WeakMap of two million live entries never finished its snapshot either, and ValueHash's memo is a WeakMap of about that size; a build without it may let a snapshot through (<a href="#snapshots">below</a>).</li>
+  <li><b>Every weak table here is a JavaScript WeakMap, and none is the cause.</b> A WeakMap's entry lives exactly as long as its key, so ValueHash's 98 MB measures how much old state is alive, not a leak of its own. The fix, once the holder is found, is an owner and a lifetime for what it holds, not a weaker reference (<a href="#weak">below</a>).</li>
+</ol>
+</div>
+
+<div class="glance">
+<figure id="fig-heap"><svg viewBox="0 0 460 300" role="img" class="chart" aria-label="A line rising steadily from 399 MB before the first edit to 1,787 MB after the fifteenth, about 92 MB per edit, with no levelling off."><text x="230.0" y="20" text-anchor="middle" class="ct">The page's live JS heap after each edit (MB)</text><line x1="58" y1="252.0" x2="440" y2="252.0" class="grid"/><text x="52" y="256.0" text-anchor="end" class="cv">0</text><line x1="58" y1="196.4" x2="440" y2="196.4" class="grid"/><text x="52" y="200.4" text-anchor="end" class="cv">500</text><line x1="58" y1="140.9" x2="440" y2="140.9" class="grid"/><text x="52" y="144.9" text-anchor="end" class="cv">1,000</text><line x1="58" y1="85.3" x2="440" y2="85.3" class="grid"/><text x="52" y="89.3" text-anchor="end" class="cv">1,500</text><text x="58.0" y="268" text-anchor="middle" class="cv">0</text><text x="185.3" y="268" text-anchor="middle" class="cv">5</text><text x="312.7" y="268" text-anchor="middle" class="cv">10</text><text x="440.0" y="268" text-anchor="middle" class="cv">15</text><text x="249.0" y="286" text-anchor="middle" class="cv">slider edits (Full Body, shirt width)</text><line x1="58.0" y1="209.6" x2="440.0" y2="56.9" class="diag"/><polyline points="58.0,207.7 83.5,198.3 108.9,189.4 134.4,179.0 159.9,168.6 185.3,159.7 210.8,150.6 236.3,138.7 261.7,129.8 287.2,116.7 312.7,107.8 338.1,98.8 363.6,90.0 389.1,81.6 414.5,62.4 440.0,53.4" fill="none" style="stroke: var(--bad)" stroke-width="2.4" stroke-linejoin="round"/><circle cx="58.0" cy="207.7" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="83.5" cy="198.3" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="108.9" cy="189.4" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="134.4" cy="179.0" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="159.9" cy="168.6" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="185.3" cy="159.7" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="210.8" cy="150.6" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="236.3" cy="138.7" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="261.7" cy="129.8" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="287.2" cy="116.7" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="312.7" cy="107.8" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="338.1" cy="98.8" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="363.6" cy="90.0" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="389.1" cy="81.6" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="414.5" cy="62.4" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="440.0" cy="53.4" r="3.4" class="dot" style="fill: var(--bad)"/><text x="66.0" y="225.7" class="cl">399</text><text x="185.3" y="149.7" text-anchor="middle" class="cl">831</text><text x="312.7" y="97.8" text-anchor="middle" class="cl">1,298</text><text x="436.0" y="43.4" text-anchor="end" class="cl">1,787</text><text x="88.6" y="113.1" class="bt" style="fill: var(--bad)">+92 MB per edit</text><text x="88.6" y="130.1" class="bs">#2597 at c4e411f9c2; least squares, dashed</text></svg><figcaption><b>Figure 1.</b> The page's live JavaScript heap after each slider edit on Full Body, as built: 399 MB loaded, 1,787 MB after 15 edits, about 92 MB per edit (the dashed line, least squares). Numbers in <a href="#leak">the table below</a>.</figcaption></figure>
+<figure id="fig-builds"><svg viewBox="0 0 460 300" role="img" class="chart" aria-label="Bars of growth per edit, in MB: as built 92; undo history capped at 2, 92; projector view cache off, 83; whole-program memos at one entry, 73; memos at one and undo at 2, 71. Every build still grows."><text x="230.0" y="20" text-anchor="middle" class="ct">Growth of the live heap per edit, by build (MB)</text><line x1="405.3" y1="40" x2="405.3" y2="274" class="diag"/><text x="214" y="60" text-anchor="end" class="cl" font-weight="700">As built</text><text x="214" y="75" text-anchor="end" class="cv" font-size="11">#2597 at c4e411f9c2</text><rect x="222" y="48" width="183.3" height="22" rx="3" style="fill: var(--bad)"/><text x="411.3" y="64" class="cl" font-weight="600">92</text><text x="214" y="108" text-anchor="end" class="cl">Undo history capped at 2</text><text x="214" y="123" text-anchor="end" class="cv" font-size="11">from 250 states</text><rect x="222" y="96" width="183.2" height="22" rx="3" style="fill: var(--warn)"/><text x="411.2" y="112" class="cl" font-weight="600">92</text><text x="214" y="156" text-anchor="end" class="cl">Projector view cache off</text><text x="214" y="171" text-anchor="end" class="cv" font-size="11">never stores a view (6 edits)</text><rect x="222" y="144" width="165.9" height="22" rx="3" style="fill: var(--warn)"/><text x="410.3" y="160" class="cl" font-weight="600">83</text><text x="214" y="204" text-anchor="end" class="cl">Whole-program memos at one entry</text><text x="214" y="219" text-anchor="end" class="cv" font-size="11">Statics.mk 16 → 1, MakeTerm 8 → 1</text><rect x="222" y="192" width="145.8" height="22" rx="3" style="fill: var(--warn)"/><text x="373.8" y="208" class="cl" font-weight="600">73</text><text x="214" y="252" text-anchor="end" class="cl">Memos at one and undo at 2</text><text x="214" y="267" text-anchor="end" class="cv" font-size="11">both together</text><rect x="222" y="240" width="142.7" height="22" rx="3" style="fill: var(--warn)"/><text x="370.7" y="256" class="cl" font-weight="600">71</text><text x="230.0" y="292" text-anchor="middle" class="cv">every build still grows; one run of 15 edits each, except as noted</text></svg><figcaption><b>Figure 2.</b> Growth per edit in builds that each remove a cache or hold it to one entry. Every one still grows; the dashed line is the build as it is. Numbers in <a href="#caches">the table below</a>.</figcaption></figure>
+<figure id="fig-tables"><svg viewBox="0 0 460 300" role="img" class="chart" aria-label="Over eight edits, relative to the page as loaded: the live heap rises to 2.8 times; ShareCodec's two tables of shared values rise and fall back as they reset at their cap; fourteen other tables stay flat at 1."><text x="230.0" y="20" text-anchor="middle" class="ct">After each edit, relative to the page as loaded</text><line x1="46" y1="250.0" x2="400" y2="250.0" class="grid"/><text x="40" y="254.0" text-anchor="end" class="cv">0×</text><line x1="46" y1="182.0" x2="400" y2="182.0" class="grid"/><text x="40" y="186.0" text-anchor="end" class="cv">1×</text><line x1="46" y1="114.0" x2="400" y2="114.0" class="grid"/><text x="40" y="118.0" text-anchor="end" class="cv">2×</text><line x1="46" y1="46.0" x2="400" y2="46.0" class="grid"/><text x="40" y="50.0" text-anchor="end" class="cv">3×</text><text x="46.0" y="266" text-anchor="middle" class="cv">0</text><text x="134.5" y="266" text-anchor="middle" class="cv">2</text><text x="223.0" y="266" text-anchor="middle" class="cv">4</text><text x="311.5" y="266" text-anchor="middle" class="cv">6</text><text x="400.0" y="266" text-anchor="middle" class="cv">8</text><text x="223.0" y="284" text-anchor="middle" class="cv">slider edits, in a build that counts its tables</text><polyline points="46.0,182.0 90.2,182.0 134.5,182.0 178.8,182.0 223.0,182.0 267.2,182.0 311.5,182.0 355.8,182.0 400.0,182.0" fill="none" style="stroke: var(--muted)" stroke-width="6" stroke-linejoin="round"/><polyline points="46.0,182.0 90.2,170.1 134.5,158.1 178.8,146.2 223.0,196.1 267.2,183.4 311.5,171.5 355.8,159.6 400.0,147.7" fill="none" style="stroke: var(--accent2)" stroke-width="2" stroke-linejoin="round"/><polyline points="46.0,182.0 90.2,170.3 134.5,162.1 178.8,154.9 223.0,145.2 267.2,137.1 311.5,128.9 355.8,182.0 400.0,170.8" fill="none" style="stroke: var(--warn)" stroke-width="2" stroke-linejoin="round" stroke-dasharray="5 3"/><polyline points="46.0,182.0 90.2,167.6 134.5,152.7 178.8,136.4 223.0,120.4 267.2,106.6 311.5,92.6 355.8,74.3 400.0,60.5" fill="none" style="stroke: var(--bad)" stroke-width="2.6" stroke-linejoin="round"/><text x="406.0" y="64.5" class="cl" style="fill: var(--bad)" font-weight="700">2.8×</text><text x="406.0" y="186.0" class="cl">1×</text><line x1="54" y1="44" x2="76" y2="44" style="stroke: var(--bad)" stroke-width="2.4"/><text x="82" y="48" class="cl" font-size="12">live heap, 397 → 1,105 MB</text><line x1="54" y1="61" x2="76" y2="61" style="stroke: var(--accent2)" stroke-width="2.4"/><text x="82" y="65" class="cl" font-size="12">ShareCodec: values received</text><line x1="54" y1="78" x2="76" y2="78" style="stroke: var(--warn)" stroke-width="2.4" stroke-dasharray="5 3"/><text x="82" y="82" class="cl" font-size="12">ShareCodec: hashes sent</text><line x1="54" y1="95" x2="76" y2="95" style="stroke: var(--muted)" stroke-width="6"/><text x="82" y="99" class="cl" font-size="12">14 other tables: flat</text></svg><figcaption><b>Figure 3.</b> A build that counts its tables, after each edit, relative to the page as loaded: the heap reaches 2.8 times its size; ShareCodec's two tables rise and reset at their cap; the 14 other tables do not grow. Numbers in <a href="#tables">the table below</a>.</figcaption></figure>
+<figure id="fig-what"><svg viewBox="0 0 460 300" role="img" class="chart" aria-label="Still alive after four edits, 390 MB by the code that made it: types and statics 119 MB, ValueHash's hashes 98, terms and syntax 64, the worker's replies 46, layout 41, other 23."><text x="230.0" y="20" text-anchor="middle" class="ct">Still alive after four edits: 390 MB, by the code that made it</text><text x="196" y="53" text-anchor="end" class="cl">Types and statics</text><text x="196" y="67" text-anchor="end" class="cv" font-size="10.5">ConstructorMap, Typ, Statics, …</text><rect x="204" y="42" width="208.4" height="20" rx="3" style="fill: var(--accent)"/><text x="418.4" y="57" class="cl" font-weight="600">119</text><text x="196" y="93" text-anchor="end" class="cl">ValueHash's hashes</text><text x="196" y="107" text-anchor="end" class="cv" font-size="10.5">the memo of each object's hash</text><rect x="204" y="82" width="170.8" height="20" rx="3" style="fill: var(--accent)"/><text x="380.8" y="97" class="cl" font-weight="600">98</text><text x="196" y="133" text-anchor="end" class="cl">Terms and syntax</text><text x="196" y="147" text-anchor="end" class="cv" font-size="10.5">MakeTerm, IdTagged, TermBase, …</text><rect x="204" y="122" width="111.1" height="20" rx="3" style="fill: var(--accent)"/><text x="321.1" y="137" class="cl" font-weight="600">64</text><text x="196" y="173" text-anchor="end" class="cl">The worker's replies, decoded</text><text x="196" y="187" text-anchor="end" class="cv" font-size="10.5">unmarshaled on the page</text><rect x="204" y="162" width="80.5" height="20" rx="3" style="fill: var(--accent)"/><text x="290.5" y="177" class="cl" font-weight="600">46</text><text x="196" y="213" text-anchor="end" class="cl">Layout</text><text x="196" y="227" text-anchor="end" class="cv" font-size="10.5">Measured, Point, Code</text><rect x="204" y="202" width="71.2" height="20" rx="3" style="fill: var(--accent)"/><text x="281.2" y="217" class="cl" font-weight="600">41</text><text x="196" y="253" text-anchor="end" class="cl">Other</text><text x="196" y="267" text-anchor="end" class="cv" font-size="10.5">OptUtil, ShareCodec, HazelDB, …</text><rect x="204" y="242" width="40.6" height="20" rx="3" style="fill: var(--muted)"/><text x="250.6" y="257" class="cl" font-weight="600">23</text><text x="230.0" y="292" text-anchor="middle" class="cv">every stage of an edit, not one cache: about 98 MB per edit</text></svg><figcaption><b>Figure 4.</b> What is still alive after four edits, by the code that allocated it (V8's sampling heap profiler, live objects only), grouped by Reason source file. Numbers in <a href="#what">the table below</a>.</figcaption></figure>
+</div>
+
+<h2 id="leak">A tab, edit by edit</h2>
+<p>The slide is the Livelit Playground's Full Body: a figure drawn with the Drawing library and posed by sliders, each a user-defined livelit. The build is <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> at <code>c4e411f9c2</code>, its head on 2026-10-14, in its development profile, which keeps function names (the profiler below needs them). A driver loads the slide in headless Chromium 155, with precise memory figures and garbage collection exposed, then sets the shirt-width slider to a new value and fires its input and change events, as letting go of a slider does. It waits until the picture has redrawn and four seconds more, forces two garbage collections and reads the page's live heap (<code>performance.memory.usedJSHeapSize</code>). The values run 67, 74, 81 and on, each 7 more, wrapping within 60 to 99, so no two edits in a row are the same.</p>
+<p>Every edit adds between 76 and 173 MB, most about 80 to 95, with no sign of levelling off (Figure 1). This is the page's main thread only: the evaluation worker has a heap of its own, not counted here.</p>
+<div class="scroll"><table><tr><th>Edit</th><th>Slider set to</th><th>Live heap, MB</th><th>Added, MB</th><th>Redraw, s</th></tr>
+<tr><td class="n">loaded</td><td class="n"></td><td class="n">399</td><td class="n"></td><td class="n"></td></tr>
+<tr><td class="n">1</td><td class="n">67</td><td class="n">483</td><td class="n">84</td><td class="n">1.87</td></tr>
+<tr><td class="n">2</td><td class="n">74</td><td class="n">564</td><td class="n">80</td><td class="n">1.93</td></tr>
+<tr><td class="n">3</td><td class="n">81</td><td class="n">657</td><td class="n">94</td><td class="n">2.26</td></tr>
+<tr><td class="n">4</td><td class="n">88</td><td class="n">751</td><td class="n">93</td><td class="n">6.8</td></tr>
+<tr><td class="n">5</td><td class="n">95</td><td class="n">831</td><td class="n">80</td><td class="n">2.18</td></tr>
+<tr><td class="n">6</td><td class="n">62</td><td class="n">912</td><td class="n">81</td><td class="n">5.97</td></tr>
+<tr><td class="n">7</td><td class="n">69</td><td class="n">1,020</td><td class="n">107</td><td class="n">1.77</td></tr>
+<tr><td class="n">8</td><td class="n">76</td><td class="n">1,100</td><td class="n">81</td><td class="n">7.14</td></tr>
+<tr><td class="n">9</td><td class="n">83</td><td class="n">1,218</td><td class="n">117</td><td class="n">2.51</td></tr>
+<tr><td class="n">10</td><td class="n">90</td><td class="n">1,298</td><td class="n">80</td><td class="n">2.32</td></tr>
+<tr><td class="n">11</td><td class="n">97</td><td class="n">1,379</td><td class="n">81</td><td class="n">2.31</td></tr>
+<tr><td class="n">12</td><td class="n">64</td><td class="n">1,458</td><td class="n">79</td><td class="n">2.06</td></tr>
+<tr><td class="n">13</td><td class="n">71</td><td class="n">1,533</td><td class="n">76</td><td class="n">3.31</td></tr>
+<tr><td class="n">14</td><td class="n">78</td><td class="n">1,706</td><td class="n">173</td><td class="n">3.87</td></tr>
+<tr><td class="n">15</td><td class="n">85</td><td class="n">1,787</td><td class="n">81</td><td class="n">7.47</td></tr>
+</table></div>
+<p class="note">One run. The run with the undo history capped at 2 (<a href="#caches">below</a>), which turns out to change nothing, read within 7 MB of this one at every edit and within 1 MB at the end: that is the noise between runs here, well below the differences that matter.</p>
+
+<h2 id="caches">Not the caches</h2>
+<p>The page has a few caches that could keep whole programs, and each was the first suspect. Each was tried in a build of its own on the same commit, measured over the same 15 edits:</p>
+<ul>
+  <li><b>The whole-program memos.</b> <code>Statics.mk</code> remembers the statics of the last 16 programs it saw, and MakeTerm's three memos the last 8 parses (<code>Core.Memo.general</code> with a <code>cache_size_bound</code>). Held to one entry each, the heap still grows 73 MB per edit, and every redraw takes 18 to 31 seconds, since nothing is reused. The difference, about 19 MB per edit, is these memos filling up to their bounds over the first 15 edits; it stops when they are full.</li>
+  <li><b>The undo history</b> keeps 250 states. Capped at 2, nothing changes: 92 MB per edit. Its states share structure, so they are cheap.</li>
+  <li><b>The projector view cache</b> (<code>ProjectorView.ViewCache</code>) keeps a view for each projector's id and is never pruned. Turned off, 83 MB per edit, over six edits read three times; within what the other runs vary by.</li>
+  <li><b>ShareCodec's tables.</b> To send the worker only what it does not have, the page keeps the hashes of values it has sent (a Set) and the values the worker has sent it, by hash (a Map). Counted after every edit (Figure 3), they rise, reach their cap of 200,000 entries and reset, while the heap keeps growing through each reset. A census of every Map and Set on the page (<code>Runtime.queryObjects</code>) found these two to be by far its largest; the next largest had 20 entries.</li>
+</ul>
+<div class="scroll"><table><tr><th>Build</th><th>What it changes</th><th>Patch</th><th>Edits</th><th>Growth per edit, MB</th><th>In all, MB</th><th>Redraw, s: median (range)</th></tr>
+<tr><td>As built</td><td>nothing: <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> at <code>c4e411f9c2</code></td><td>none</td><td class="n">15</td><td class="n">91.6</td><td class="n">+1,388</td><td class="n">2.3 (1.8–7.5)</td></tr>
+<tr><td>Undo history capped at 2</td><td><code>History.re</code> keeps 2 states, not 250</td><td><a href="https://github.com/matthewhammer/hazel-performance-analysis/blob/main/patches/undo_history_capped_at_2.patch"><code>undo_history_capped_at_2.patch</code></a></td><td class="n">15</td><td class="n">91.6</td><td class="n">+1,387</td><td class="n">2.5 (2.1–7.2)</td></tr>
+<tr><td>Whole-program memos at one entry</td><td><code>Statics.mk</code> from 16 entries to 1; MakeTerm's three memos from 8 to 1</td><td><a href="https://github.com/matthewhammer/hazel-performance-analysis/blob/main/patches/memos_at_one_entry.patch"><code>memos_at_one_entry.patch</code></a></td><td class="n">15</td><td class="n">72.9</td><td class="n">+1,101</td><td class="n">22.5 (18.2–31.3)</td></tr>
+<tr><td>Memos at one and undo at 2</td><td>both of the above</td><td>none</td><td class="n">15</td><td class="n">71.3</td><td class="n">+1,093</td><td class="n">22.8 (19.4–27.3)</td></tr>
+<tr><td>Projector view cache off</td><td><code>ProjectorView.ViewCache</code> never stores a view</td><td><a href="https://github.com/matthewhammer/hazel-performance-analysis/blob/main/patches/view_cache_never_stores.patch"><code>view_cache_never_stores.patch</code></a></td><td class="n">6 (read after 0, 3 and 6)</td><td class="n">82.9</td><td class="n">+498</td><td class="n">6.6–8.3, another driver</td></tr>
+</table></div>
+<p class="note">Redraw: from setting the slider to the picture's markup changing. The view-cache run used the DevTools-protocol driver (<a href="#method">below</a>), whose redraws are not comparable with the others'.</p>
+
+<h2 id="tables">Not a table keyed by ids</h2>
+<p>If no cache keeps the versions, something else does. A read of every module-level store on the page's main thread (in <code>src/web</code>, <code>src/haz3lcore</code>, <code>src/language</code> and <code>src/util</code> at <code>c4e411f9c2</code>: every <code>ref</code>, <code>Hashtbl</code>, map in a <code>ref</code>, memo and WeakMap) found that nothing on the ordinary editing path adds a version per edit by its construction. Every store sized like a program holds one version and is replaced by the next. Nor does any version keep the one before it: <code>CachedSyntax</code> keeps the inputs it was made from, never an earlier <code>CachedSyntax</code>; the editor's old statics are arguments, never stored; an evaluation result's streaming fields are cleared when the result lands; and the evaluator's state and its incremental cache refer to each other, but <code>replay_state</code> unties the two, so caches do not chain.</p>
+<p>That left tables keyed by ids: an entry is replaced when its id comes again, but if ids change from edit to edit, old entries stay. A probe build registers each such table with a counter, and the driver reads all of them after every edit (the probe is <a href="https://github.com/matthewhammer/hazel-performance-analysis/blob/main/patches/count_id_keyed_tables.patch"><code>count_id_keyed_tables.patch</code></a>). None grows:</p>
+<div class="scroll"><table><tr><th>Table</th><th>Key: what it holds</th><th>Loaded</th><th>After 1 edit</th><th>After 8 edits</th></tr>
+<tr><td><code>Statics.module_livelits</code></td><td>a module's id: the livelits it binds, each with its elaborated definition</td><td class="n">6</td><td class="n">6</td><td class="n">6</td></tr>
+<tr><td>LivelitProj: <code>last_good_shape</code></td><td>a livelit's id: its last good shape</td><td class="n">43</td><td class="n">43</td><td class="n">43</td></tr>
+<tr><td>LivelitProj: <code>shape_samples</code></td><td>a livelit's id: shapes sampled</td><td class="n">43</td><td class="n">43</td><td class="n">43</td></tr>
+<tr><td>LivelitProj: <code>computed_shapes</code></td><td>a livelit's id: its computed shape</td><td class="n">9</td><td class="n">9</td><td class="n">9</td></tr>
+<tr><td>LivelitProj: <code>optimistic</code></td><td>a livelit's id: a value shown before the worker answers</td><td class="n">0</td><td class="n">1</td><td class="n">1</td></tr>
+<tr><td>LivelitProj: <code>warned_ephemeral</code></td><td>ids already warned about</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><td>LivelitProj: <code>last_good_view</code></td><td>a livelit's id: its last good virtual DOM, whose handlers close over the statics and the dynamics</td><td class="n">43</td><td class="n">43</td><td class="n">43</td></tr>
+<tr><td>LivelitProj: <code>view_memo</code></td><td>a livelit's id: its definition's elaboration and view</td><td class="n">42</td><td class="n">42</td><td class="n">42</td></tr>
+<tr><td>MakeTerm: <code>map</code></td><td>the last parse's ids to terms</td><td class="n">3</td><td class="n">3</td><td class="n">3</td></tr>
+<tr><td>MakeTerm: <code>term_data</code></td><td>the last parse's term data</td><td class="n">3</td><td class="n">3</td><td class="n">3</td></tr>
+<tr><td>MakeTerm: <code>projectors</code></td><td>the last parse's projectors</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><td>HazelDB's cache</td><td>a saved key: its value (5,730 KB throughout)</td><td class="n">6</td><td class="n">6</td><td class="n">6</td></tr>
+<tr><td><code>ProjectorView.ViewCache</code></td><td>a projector's id: its view (never pruned)</td><td class="n">43</td><td class="n">43</td><td class="n">43</td></tr>
+<tr><td><code>AppStore</code></td><td>a projector's id: an app's model, update and view (its <code>gc</code> is never called)</td><td class="n">0</td><td class="n">0</td><td class="n">0</td></tr>
+<tr><td>ShareCodec: values received from the worker, by hash</td><td>reset at 200,000 entries</td><td class="n">121,706</td><td class="n">143,082</td><td class="n">183,160 (max 185,747)</td></tr>
+<tr><td>ShareCodec: hashes of values sent to the worker</td><td>reset at 200,000 entries</td><td class="n">119,765</td><td class="n">140,359</td><td class="n">139,512 (max 213,234)</td></tr>
+<tr><td><b>Live heap, MB</b></td><td></td><td class="n">397</td><td class="n">480</td><td class="n"><b>1,105</b></td></tr>
+</table></div>
+<p class="note">One run of 8 edits on the probe build. <code>optimistic</code> goes from 0 to 1 at the first edit and stays there.</p>
+
+<h2 id="what">What stays</h2>
+<p>With every table ruled out, the question becomes what the kept memory is. V8's sampling heap profiler answers by who made it: started after two warm-up edits (<code>HeapProfiler.startSampling</code>, one sample per 32 KB on average, dropping whatever the garbage collector frees) and stopped after four more, it reports the objects still alive, each with the stack that allocated it. The development build's bundle marks each function with its Reason source location, so each stack's innermost Hazel frame names a source file.</p>
+<div class="scroll"><table><tr><th>Made by</th><th>MB</th><th>Share</th><th>Source files, largest first (MB)</th></tr>
+<tr><td>Types and statics</td><td class="n">119</td><td class="n">31%</td><td><code>ConstructorMap.re</code> 39.0, <code>Typ.re</code> 28.0, <code>Statics.re</code> 26.7, <code>StaticsBase.re</code> 10.9, <code>VarMap.re</code> 3.9, <code>CoCtx.re</code> 2.7</td></tr>
+<tr><td>ValueHash's hashes</td><td class="n">98</td><td class="n">25%</td><td><code>ValueHash.re</code> 97.6</td></tr>
+<tr><td>Terms and syntax</td><td class="n">64</td><td class="n">16%</td><td><code>MakeTerm.re</code> 19.6, <code>IdTagged.re</code> 14.7, <code>TermBase.re</code> 6.9, <code>Skel.re</code> 5.9, <code>TermMap.re</code> 4.8, <code>Aba.re</code> 3.8</td></tr>
+<tr><td>The worker's replies, decoded</td><td class="n">46</td><td class="n">12%</td><td><code>WorkerServer.re</code> 46.0</td></tr>
+<tr><td>Layout</td><td class="n">41</td><td class="n">10%</td><td><code>Measured.re</code> 32.3, <code>Point.re</code> 4.5, <code>Code.re</code> 3.7</td></tr>
+<tr><td>Other</td><td class="n">23</td><td class="n">6%</td><td><code>OptUtil.re</code> 8.7, <code>ShareCodec.re</code> 7.4, <code>HazelDB.re</code> 5.6, <code>ListUtil.re</code> 0.3, and the rest under 0.5 MB each</td></tr>
+<tr><td><b>In all</b></td><td class="n"><b>390</b></td><td class="n">100%</td><td>over four edits</td></tr></table></div>
+<p>The 390 MB, about 98 MB per edit, is the growth itself, and it comes from every stage of an edit: the parse into terms, the statics and the types they make, the layout of the code, the evaluation worker's reply as decoded on the page, and the hashes of all of these. Nothing one cache would hold; rather, the editor's whole state as of each edit, kept. The profiler says who made what stays, not who holds it. That takes a heap snapshot.</p>
+
+<h2 id="snapshots">Why not a heap snapshot</h2>
+<p>A heap snapshot (<code>HeapProfiler.takeHeapSnapshot</code>, the DevTools Memory panel) records every object and every reference, so it would show the chain of references from a root to the kept versions, and with it the holder. On this page it does not work:</p>
+<div class="scroll"><table>
+<tr><th>Page</th><th>Result</th></tr>
+<tr><td>Full Body on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, as loaded (about 400 MB)</td><td class="bad">the tab's renderer dies at once</td></tr>
+<tr><td>Full Body after two edits (about 560 MB)</td><td class="bad">the tab's renderer dies at once</td></tr>
+<tr><td>A trivial page</td><td class="good">snapshot taken</td></tr>
+<tr><td>A page holding a chain of arrays a million deep</td><td class="good">snapshot taken</td></tr>
+<tr><td>A page holding a WeakMap with two million live entries</td><td class="warn">not finished after 400 seconds</td></tr>
+</table></div>
+<p>The same in snap's Chromium 155.0.8059.39 and in Chrome for Testing's headless shell 155.0.8059.79, with the renderer's hang monitor off. The last row is the lead: ValueHash's memo is a WeakMap, and by its 98 MB in the profile it holds roughly two million entries (an estimate from bytes per entry, not a count). A build with that memo off, or bounded, may let a snapshot through, and the snapshot would name the holder.</p>
+
+<h2 id="weak">The weak tables</h2>
+<p>Weak references are the usual suspect when memory is kept by a cache, so all of them were checked. Every weak structure in <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> is a JavaScript WeakMap, used through js_of_ocaml; there is no OCaml <code>Weak</code> or <code>Ephemeron</code> anywhere.</p>
+<div class="scroll"><table>
+<tr><th>Where</th><th>Key and value</th><th>Verdict</th></tr>
+<tr><td>ValueHash's memo (<code>util/ValueHash.re</code>)</td><td>any block, and its hash</td><td>small values; its 98 MB above is a symptom of the objects living</td></tr>
+<tr><td><code>ValueHash.Pairs</code> (<code>Equality.re</code>)</td><td>a term, and the term compared with it and the answer: it holds the other term strongly</td><td>made fresh for each equality check, so it goes with the check</td></tr>
+<tr><td><code>TypHash</code> (<code>term/TypHash.re</code>)</td><td>a type, and its hash</td><td>small</td></tr>
+<tr><td><code>IdentityTable</code> in <code>CallMemo</code> (<code>dynamics/CallMemo.re</code>)</td><td>a function body, and its id-free form or its remembered calls (8 per body)</td><td>bounded per body; an entry's inputs could reach an environment</td></tr>
+<tr><td><code>IdentityTable</code> in <code>Ascriptions</code></td><td>a type, and its unrolling; a value, and a short list (reset)</td><td>small</td></tr>
+<tr><td><code>IdentityMemo</code> (<code>util/IdentityMemo.re</code>)</td><td>an object, and a function's result on it</td><td>fine for a pure function; non-objects are not kept</td></tr>
+</table></div>
+<p>A WeakMap's entry lives exactly as long as its key. That is the trouble with weak tables in general: what they keep depends on what keeps their keys, and that is written nowhere. So the fix, once the holder is found, is not a weaker reference. It is an owner and a lifetime: entries for the program shown now, dropped when the program moves on. Matthew's lesson from Adapton is the same: working within OCaml's garbage collector through weak pointers was a headache and error-prone, and the later memo system, with its demanded computation graphs, was built in Rust, with no garbage collector to work around.</p>
+
+<h2 id="side">Found on the way</h2>
+<p>The read of every store turned up five things that do not cause this growth but are worth a look of their own:</p>
+<ul>
+  <li><b>A memo with no bound,</b> in derivation mode only: <code>stitch_term</code> (<code>derivation/DerivationExercise.re</code>) keeps whole editors through <code>Core.Memo.general</code> without a <code>cache_size_bound</code>.</li>
+  <li><b><code>AppStore.gc</code> is never called;</b> a TODO in <code>Page.re</code> says so. Where an MVU app's projector ids change, its model, update and view closures stay.</li>
+  <li><b>StructureShareSexp's two maps</b> are reset after each root, but not if a converter raises, and then they grow for good.</li>
+  <li><b>HazelDB opens an IndexedDB connection for every save</b> and never closes it.</li>
+  <li><b>An agent's tool results keep two whole-program segments per edit</b> in its chat.</li>
+</ul>
+
+<h2 id="next">What next</h2>
+<ol>
+  <li><b>Snapshot without ValueHash's memo.</b> Build <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> with the memo off (or bounded), check that the growth is unchanged, and take a heap snapshot after a few edits. If it completes, its retainer paths from a kept version to a root name the holder.</li>
+  <li><b>Find a smaller slide that grows the same way,</b> so that a snapshot fits even with the memo: one whose slider edits a livelit's model, measured as here.</li>
+  <li><b>Look outside the program's values:</b> closures the browser holds on the render path (event listeners, timers, observers) keep everything they close over, and a snapshot would show them as roots.</li>
+  <li><b>Measure the same on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a></b> (livelits with modular editors) and on <code>dev</code>, to see whether the growth is <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s own.</li>
+  <li><b>Fix it with an owner and a lifetime</b> for whatever holds the versions, and measure the same 15 edits again.</li>
+</ol>
+
+<h2 id="method">How this was put together</h2>
+<ul>
+  <li><b>Build:</b> <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> at <a href="https://github.com/hazelgrove/hazel/commit/c4e411f9c2"><code>c4e411f9c2</code></a>, development profile. Each experiment is one build of that commit with one patch from this repository's <code>patches/</code>: <code>memos_at_one_entry.patch</code>, <code>undo_history_capped_at_2.patch</code> (and both together), <code>view_cache_never_stores.patch</code>, and the probe, <code>count_id_keyed_tables.patch</code>. Each applies to <code>c4e411f9c2</code> as it is.</li>
+  <li><b>Browsers:</b> snap's Chromium 155.0.8059.39, headless, with <code>--enable-precise-memory-info</code> and <code>--js-flags=--expose-gc</code>; for the snapshot tests also Chrome for Testing's headless shell 155.0.8059.79.</li>
+  <li><b>Drivers</b> (in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/014/drivers"><code>014/drivers/</code></a>): <code>heap_per_edit.py</code>, Python over chromedriver, for the 15-edit runs; and, in node 22 over the DevTools protocol with its built-in WebSocket, <code>count_tables.mjs</code> (the probe's counts), <code>census_maps_sets.mjs</code> (every Map and Set, with the view-cache run), <code>sample_live_heap.mjs</code> (the sampling profile) and <code>snapshot_test.mjs</code>. <code>live_heap_by_file.py</code> groups the profile by source file.</li>
+  <li><b>Runs:</b> one per build: 15 edits each, except the view-cache run (6, read after 0, 3 and 6), the probe (8) and the profile (2 to warm up, then 4). The heap is the page's main thread's, read after two forced collections and four seconds after the picture redrew. The two runs expected to match, as built and undo capped at 2, agree within 7 MB at every edit.</li>
+  <li><b>The profile's grouping:</b> each sample is counted under the innermost frame on its stack that lies in Hazel's own code, skipping js_of_ocaml's runtime helpers (<code>caml_*</code>), and that frame is named by the Reason source location the bundle gives just above it. Generic helpers (<code>OptUtil</code>, <code>ListUtil</code>) count as their own file, under "other". The raw profile is 31 MB and not kept here; its summaries are in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/014/data"><code>014/data/</code></a>, with every run's numbers.</li>
+  <li><b>The audit</b> of every store and weak table read the source at <code>c4e411f9c2</code>; it is the basis of the tables in <a href="#tables">Not a table keyed by ids</a> and <a href="#weak">The weak tables</a>.</li>
+  <li><b>The numbers, for programs too:</b> every number behind the figures and tables is also in this page, as JSON in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset: each run's readings, the probe's counts, the census, the profile by file and the snapshot tests. The same numbers, and the profile's summaries, are files in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/014/data"><code>014/data/</code></a>.</li>
+  <li>Matthew Hammer and Claude, 2026-10-14.</li>
+</ul>
+
+</main>
+<script type="application/json" id="report-data">
+{
+ "report": 14,
+ "title": "What the page keeps from one edit to the next",
+ "date": "2026-10-14",
+ "build": {
+  "pr": "hazelgrove/hazel#2597",
+  "commit": "c4e411f9c2",
+  "profile": "dev"
+ },
+ "browsers": [
+  "Chromium 155.0.8059.39 (snap), headless",
+  "Chrome for Testing headless shell 155.0.8059.79 (snapshot tests)"
+ ],
+ "slide": "Livelit Playground: Full Body; the slider edited is 'shirt width', set to 60 + (7 * edit) % 40",
+ "heap": "performance.memory.usedJSHeapSize of the page (main thread), after two forced GCs, 4 s after the picture redrew; MB = 2^20 bytes",
+ "redraw_s": "seconds from setting the slider to the picture's SVG markup changing",
+ "runs": {
+  "as_built": {
+   "patch": null,
+   "growth_mb_per_edit": 91.64,
+   "total_mb": 1388.2,
+   "readings": [
+    {
+     "edit": 0,
+     "slider": null,
+     "heap_mb": 399.1,
+     "redraw_s": null
+    },
+    {
+     "edit": 1,
+     "slider": 67,
+     "heap_mb": 483.3,
+     "redraw_s": 1.87
+    },
+    {
+     "edit": 2,
+     "slider": 74,
+     "heap_mb": 563.6,
+     "redraw_s": 1.93
+    },
+    {
+     "edit": 3,
+     "slider": 81,
+     "heap_mb": 657.4,
+     "redraw_s": 2.26
+    },
+    {
+     "edit": 4,
+     "slider": 88,
+     "heap_mb": 750.6,
+     "redraw_s": 6.8
+    },
+    {
+     "edit": 5,
+     "slider": 95,
+     "heap_mb": 831.1,
+     "redraw_s": 2.18
+    },
+    {
+     "edit": 6,
+     "slider": 62,
+     "heap_mb": 912.3,
+     "redraw_s": 5.97
+    },
+    {
+     "edit": 7,
+     "slider": 69,
+     "heap_mb": 1019.6,
+     "redraw_s": 1.77
+    },
+    {
+     "edit": 8,
+     "slider": 76,
+     "heap_mb": 1100.1,
+     "redraw_s": 7.14
+    },
+    {
+     "edit": 9,
+     "slider": 83,
+     "heap_mb": 1217.5,
+     "redraw_s": 2.51
+    },
+    {
+     "edit": 10,
+     "slider": 90,
+     "heap_mb": 1297.9,
+     "redraw_s": 2.32
+    },
+    {
+     "edit": 11,
+     "slider": 97,
+     "heap_mb": 1378.9,
+     "redraw_s": 2.31
+    },
+    {
+     "edit": 12,
+     "slider": 64,
+     "heap_mb": 1457.7,
+     "redraw_s": 2.06
+    },
+    {
+     "edit": 13,
+     "slider": 71,
+     "heap_mb": 1533.3,
+     "redraw_s": 3.31
+    },
+    {
+     "edit": 14,
+     "slider": 78,
+     "heap_mb": 1706.1,
+     "redraw_s": 3.87
+    },
+    {
+     "edit": 15,
+     "slider": 85,
+     "heap_mb": 1787.3,
+     "redraw_s": 7.47
+    }
+   ]
+  },
+  "undo_at_2": {
+   "patch": "https://github.com/matthewhammer/hazel-performance-analysis/blob/main/patches/undo_history_capped_at_2.patch",
+   "growth_mb_per_edit": 91.58,
+   "total_mb": 1386.6,
+   "readings": [
+    {
+     "edit": 0,
+     "slider": null,
+     "heap_mb": 399.4,
+     "redraw_s": null
+    },
+    {
+     "edit": 1,
+     "slider": 67,
+     "heap_mb": 483.2,
+     "redraw_s": 2.25
+    },
+    {
+     "edit": 2,
+     "slider": 74,
+     "heap_mb": 563.4,
+     "redraw_s": 7.25
+    },
+    {
+     "edit": 3,
+     "slider": 81,
+     "heap_mb": 664.6,
+     "redraw_s": 2.51
+    },
+    {
+     "edit": 4,
+     "slider": 88,
+     "heap_mb": 750.1,
+     "redraw_s": 2.5
+    },
+    {
+     "edit": 5,
+     "slider": 95,
+     "heap_mb": 831.4,
+     "redraw_s": 2.09
+    },
+    {
+     "edit": 6,
+     "slider": 62,
+     "heap_mb": 912.5,
+     "redraw_s": 2.22
+    },
+    {
+     "edit": 7,
+     "slider": 69,
+     "heap_mb": 1019.7,
+     "redraw_s": 2.54
+    },
+    {
+     "edit": 8,
+     "slider": 76,
+     "heap_mb": 1100.8,
+     "redraw_s": 2.31
+    },
+    {
+     "edit": 9,
+     "slider": 83,
+     "heap_mb": 1218.6,
+     "redraw_s": 3.94
+    },
+    {
+     "edit": 10,
+     "slider": 90,
+     "heap_mb": 1298.9,
+     "redraw_s": 2.51
+    },
+    {
+     "edit": 11,
+     "slider": 97,
+     "heap_mb": 1379.6,
+     "redraw_s": 2.46
+    },
+    {
+     "edit": 12,
+     "slider": 64,
+     "heap_mb": 1458.2,
+     "redraw_s": 2.27
+    },
+    {
+     "edit": 13,
+     "slider": 71,
+     "heap_mb": 1537.3,
+     "redraw_s": 2.43
+    },
+    {
+     "edit": 14,
+     "slider": 78,
+     "heap_mb": 1704.6,
+     "redraw_s": 3.3
+    },
+    {
+     "edit": 15,
+     "slider": 85,
+     "heap_mb": 1786.0,
+     "redraw_s": 2.95
+    }
+   ]
+  },
+  "memos_at_1": {
+   "patch": "https://github.com/matthewhammer/hazel-performance-analysis/blob/main/patches/memos_at_one_entry.patch",
+   "growth_mb_per_edit": 72.92,
+   "total_mb": 1100.6,
+   "readings": [
+    {
+     "edit": 0,
+     "slider": null,
+     "heap_mb": 445.3,
+     "redraw_s": null
+    },
+    {
+     "edit": 1,
+     "slider": 67,
+     "heap_mb": 520.0,
+     "redraw_s": 18.18
+    },
+    {
+     "edit": 2,
+     "slider": 74,
+     "heap_mb": 588.7,
+     "redraw_s": 20.96
+    },
+    {
+     "edit": 3,
+     "slider": 81,
+     "heap_mb": 656.4,
+     "redraw_s": 21.18
+    },
+    {
+     "edit": 4,
+     "slider": 88,
+     "heap_mb": 725.0,
+     "redraw_s": 18.77
+    },
+    {
+     "edit": 5,
+     "slider": 95,
+     "heap_mb": 797.2,
+     "redraw_s": 21.11
+    },
+    {
+     "edit": 6,
+     "slider": 62,
+     "heap_mb": 866.1,
+     "redraw_s": 22.54
+    },
+    {
+     "edit": 7,
+     "slider": 69,
+     "heap_mb": 923.4,
+     "redraw_s": 24.73
+    },
+    {
+     "edit": 8,
+     "slider": 76,
+     "heap_mb": 987.6,
+     "redraw_s": 20.9
+    },
+    {
+     "edit": 9,
+     "slider": 83,
+     "heap_mb": 1057.2,
+     "redraw_s": 27.25
+    },
+    {
+     "edit": 10,
+     "slider": 90,
+     "heap_mb": 1178.9,
+     "redraw_s": 23.33
+    },
+    {
+     "edit": 11,
+     "slider": 97,
+     "heap_mb": 1248.0,
+     "redraw_s": 31.3
+    },
+    {
+     "edit": 12,
+     "slider": 64,
+     "heap_mb": 1318.3,
+     "redraw_s": 26.94
+    },
+    {
+     "edit": 13,
+     "slider": 71,
+     "heap_mb": 1386.5,
+     "redraw_s": 21.89
+    },
+    {
+     "edit": 14,
+     "slider": 78,
+     "heap_mb": 1453.7,
+     "redraw_s": 29.51
+    },
+    {
+     "edit": 15,
+     "slider": 85,
+     "heap_mb": 1545.9,
+     "redraw_s": 24.05
+    }
+   ]
+  },
+  "both": {
+   "patch": [
+    "https://github.com/matthewhammer/hazel-performance-analysis/blob/main/patches/memos_at_one_entry.patch",
+    "https://github.com/matthewhammer/hazel-performance-analysis/blob/main/patches/undo_history_capped_at_2.patch"
+   ],
+   "growth_mb_per_edit": 71.34,
+   "total_mb": 1093.0,
+   "readings": [
+    {
+     "edit": 0,
+     "slider": null,
+     "heap_mb": 445.9,
+     "redraw_s": null
+    },
+    {
+     "edit": 1,
+     "slider": 67,
+     "heap_mb": 520.8,
+     "redraw_s": 23.57
+    },
+    {
+     "edit": 2,
+     "slider": 74,
+     "heap_mb": 589.3,
+     "redraw_s": 22.07
+    },
+    {
+     "edit": 3,
+     "slider": 81,
+     "heap_mb": 657.9,
+     "redraw_s": 22.8
+    },
+    {
+     "edit": 4,
+     "slider": 88,
+     "heap_mb": 739.7,
+     "redraw_s": 23.95
+    },
+    {
+     "edit": 5,
+     "slider": 95,
+     "heap_mb": 809.1,
+     "redraw_s": 23.48
+    },
+    {
+     "edit": 6,
+     "slider": 62,
+     "heap_mb": 879.2,
+     "redraw_s": 23.34
+    },
+    {
+     "edit": 7,
+     "slider": 69,
+     "heap_mb": 935.2,
+     "redraw_s": 24.8
+    },
+    {
+     "edit": 8,
+     "slider": 76,
+     "heap_mb": 998.6,
+     "redraw_s": 19.38
+    },
+    {
+     "edit": 9,
+     "slider": 83,
+     "heap_mb": 1068.8,
+     "redraw_s": 21.61
+    },
+    {
+     "edit": 10,
+     "slider": 90,
+     "heap_mb": 1162.4,
+     "redraw_s": 22.76
+    },
+    {
+     "edit": 11,
+     "slider": 97,
+     "heap_mb": 1230.9,
+     "redraw_s": 22.8
+    },
+    {
+     "edit": 12,
+     "slider": 64,
+     "heap_mb": 1301.0,
+     "redraw_s": 22.52
+    },
+    {
+     "edit": 13,
+     "slider": 71,
+     "heap_mb": 1369.0,
+     "redraw_s": 21.9
+    },
+    {
+     "edit": 14,
+     "slider": 78,
+     "heap_mb": 1437.3,
+     "redraw_s": 22.41
+    },
+    {
+     "edit": 15,
+     "slider": 85,
+     "heap_mb": 1538.9,
+     "redraw_s": 27.26
+    }
+   ]
+  }
+ },
+ "view_cache_off": {
+  "patch": "https://github.com/matthewhammer/hazel-performance-analysis/blob/main/patches/view_cache_never_stores.patch",
+  "growth_mb_per_edit": 82.93,
+  "census": [
+   {
+    "after_edits": 0,
+    "heap_mb": 398.7,
+    "Map": [
+     [
+      121777,
+      [
+       "222938353:1819426896",
+       "2741446435:3576831418",
+       "2944880086:3804920073"
+      ]
+     ],
+     [
+      20,
+      [
+       "placeholder",
+       "disableHotkeys",
+       "hideBreadcrumbs"
+      ]
+     ],
+     [
+      12,
+      [
+       "placeholder",
+       "disablehotkeys",
+       "hidebreadcrumbs"
+      ]
+     ],
+     [
+      4,
+      [
+       "placeholder",
+       "hideBreadcrumbs",
+       "breadcrumbHome"
+      ]
+     ],
+     [
+      4,
+      [
+       "placeholder",
+       "hidebreadcrumbs",
+       "breadcrumbhome"
+      ]
+     ],
+     [
+      3,
+      [
+       "action",
+       "selected",
+       "hotKeysJoinedView"
+      ]
+     ]
+    ],
+    "Set": [
+     [
+      119764,
+      [
+       "3409988743:4107133231",
+       "2373106547:1414233871",
+       "2598837127:1317134605"
+      ]
+     ],
+     [
+      2,
+      [
+       "bump",
+       "modal-content"
+      ]
+     ],
+     [
+      2,
+      [
+       "bump",
+       "modal-content"
+      ]
+     ],
+     [
+      2,
+      [
+       "selected",
+       "ninja-action"
+      ]
+     ],
+     [
+      1,
+      [
+       "object"
+      ]
+     ],
+     [
+      1,
+      [
+       "object"
+      ]
+     ]
+    ],
+    "WeakMap": [
+     67
+    ]
+   },
+   {
+    "after_edits": 3,
+    "heap_mb": 642.6,
+    "Map": [
+     [
+      185965,
+      [
+       "222938353:1819426896",
+       "2741446435:3576831418",
+       "2944880086:3804920073"
+      ]
+     ],
+     [
+      20,
+      [
+       "placeholder",
+       "disableHotkeys",
+       "hideBreadcrumbs"
+      ]
+     ],
+     [
+      12,
+      [
+       "placeholder",
+       "disablehotkeys",
+       "hidebreadcrumbs"
+      ]
+     ],
+     [
+      4,
+      [
+       "placeholder",
+       "hideBreadcrumbs",
+       "breadcrumbHome"
+      ]
+     ],
+     [
+      4,
+      [
+       "placeholder",
+       "hidebreadcrumbs",
+       "breadcrumbhome"
+      ]
+     ],
+     [
+      4,
+      [
+       "data",
+       "_flatData",
+       "_actionMatches"
+      ]
+     ]
+    ],
+    "Set": [
+     [
+      168522,
+      [
+       "3409988743:4107133231",
+       "2373106547:1414233871",
+       "2598837127:1317134605"
+      ]
+     ],
+     [
+      2,
+      [
+       "bump",
+       "modal-content"
+      ]
+     ],
+     [
+      2,
+      [
+       "bump",
+       "modal-content"
+      ]
+     ],
+     [
+      2,
+      [
+       "selected",
+       "ninja-action"
+      ]
+     ],
+     [
+      1,
+      [
+       "object"
+      ]
+     ],
+     [
+      1,
+      [
+       "object"
+      ]
+     ]
+    ],
+    "WeakMap": [
+     67
+    ]
+   },
+   {
+    "after_edits": 6,
+    "heap_mb": 896.3,
+    "Map": [
+     [
+      140647,
+      [
+       "3142444043:2217130976",
+       "1315268794:883820217",
+       "106433680:3596278329"
+      ]
+     ],
+     [
+      20,
+      [
+       "placeholder",
+       "disableHotkeys",
+       "hideBreadcrumbs"
+      ]
+     ],
+     [
+      12,
+      [
+       "placeholder",
+       "disablehotkeys",
+       "hidebreadcrumbs"
+      ]
+     ],
+     [
+      4,
+      [
+       "placeholder",
+       "hideBreadcrumbs",
+       "breadcrumbHome"
+      ]
+     ],
+     [
+      4,
+      [
+       "placeholder",
+       "hidebreadcrumbs",
+       "breadcrumbhome"
+      ]
+     ],
+     [
+      4,
+      [
+       "data",
+       "_flatData",
+       "_actionMatches"
+      ]
+     ]
+    ],
+    "Set": [
+     [
+      206106,
+      [
+       "3409988743:4107133231",
+       "2373106547:1414233871",
+       "2598837127:1317134605"
+      ]
+     ],
+     [
+      2,
+      [
+       "bump",
+       "modal-content"
+      ]
+     ],
+     [
+      2,
+      [
+       "bump",
+       "modal-content"
+      ]
+     ],
+     [
+      2,
+      [
+       "selected",
+       "ninja-action"
+      ]
+     ],
+     [
+      1,
+      [
+       "object"
+      ]
+     ],
+     [
+      1,
+      [
+       "object"
+      ]
+     ]
+    ],
+    "WeakMap": [
+     67
+    ]
+   }
+  ]
+ },
+ "table_counts": {
+  "patch": "https://github.com/matthewhammer/hazel-performance-analysis/blob/main/patches/count_id_keyed_tables.patch",
+  "per_edit": [
+   {
+    "label": "load",
+    "heap_mb": 396.6,
+    "sizes": {
+     "ShareCodec client (hashes sent)": 119765,
+     "ShareCodec worker (values kept)": 121706,
+     "Statics.module_livelits": 6,
+     "LivelitProj.last_good_shape": 43,
+     "LivelitProj.shape_samples": 43,
+     "LivelitProj.computed_shapes": 9,
+     "LivelitProj.optimistic": 0,
+     "LivelitProj.warned_ephemeral": 0,
+     "LivelitProj.last_good_view": 43,
+     "LivelitProj.view_memo": 42,
+     "MakeTerm.map": 3,
+     "MakeTerm.term_data": 3,
+     "MakeTerm.projectors": 0,
+     "HazelDB.cache keys": 6,
+     "HazelDB.cache KB": 5730,
+     "ProjectorView.ViewCache": 43,
+     "AppStore apps (last installed)": 0
+    }
+   },
+   {
+    "label": "edit 1",
+    "heap_mb": 480.5,
+    "sizes": {
+     "ShareCodec client (hashes sent)": 140359,
+     "ShareCodec worker (values kept)": 143082,
+     "Statics.module_livelits": 6,
+     "LivelitProj.last_good_shape": 43,
+     "LivelitProj.shape_samples": 43,
+     "LivelitProj.computed_shapes": 9,
+     "LivelitProj.optimistic": 1,
+     "LivelitProj.warned_ephemeral": 0,
+     "LivelitProj.last_good_view": 43,
+     "LivelitProj.view_memo": 42,
+     "MakeTerm.map": 3,
+     "MakeTerm.term_data": 3,
+     "MakeTerm.projectors": 0,
+     "HazelDB.cache keys": 6,
+     "HazelDB.cache KB": 5730,
+     "ProjectorView.ViewCache": 43,
+     "AppStore apps (last installed)": 0
+    }
+   },
+   {
+    "label": "edit 2",
+    "heap_mb": 567.7,
+    "sizes": {
+     "ShareCodec client (hashes sent)": 154755,
+     "ShareCodec worker (values kept)": 164417,
+     "Statics.module_livelits": 6,
+     "LivelitProj.last_good_shape": 43,
+     "LivelitProj.shape_samples": 43,
+     "LivelitProj.computed_shapes": 9,
+     "LivelitProj.optimistic": 1,
+     "LivelitProj.warned_ephemeral": 0,
+     "LivelitProj.last_good_view": 43,
+     "LivelitProj.view_memo": 42,
+     "MakeTerm.map": 3,
+     "MakeTerm.term_data": 3,
+     "MakeTerm.projectors": 0,
+     "HazelDB.cache keys": 6,
+     "HazelDB.cache KB": 5730,
+     "ProjectorView.ViewCache": 43,
+     "AppStore apps (last installed)": 0
+    }
+   },
+   {
+    "label": "edit 3",
+    "heap_mb": 662.7,
+    "sizes": {
+     "ShareCodec client (hashes sent)": 167561,
+     "ShareCodec worker (values kept)": 185747,
+     "Statics.module_livelits": 6,
+     "LivelitProj.last_good_shape": 43,
+     "LivelitProj.shape_samples": 43,
+     "LivelitProj.computed_shapes": 9,
+     "LivelitProj.optimistic": 1,
+     "LivelitProj.warned_ephemeral": 0,
+     "LivelitProj.last_good_view": 43,
+     "LivelitProj.view_memo": 42,
+     "MakeTerm.map": 3,
+     "MakeTerm.term_data": 3,
+     "MakeTerm.projectors": 0,
+     "HazelDB.cache keys": 6,
+     "HazelDB.cache KB": 5730,
+     "ProjectorView.ViewCache": 43,
+     "AppStore apps (last installed)": 0
+    }
+   },
+   {
+    "label": "edit 4",
+    "heap_mb": 756.1,
+    "sizes": {
+     "ShareCodec client (hashes sent)": 184520,
+     "ShareCodec worker (values kept)": 96515,
+     "Statics.module_livelits": 6,
+     "LivelitProj.last_good_shape": 43,
+     "LivelitProj.shape_samples": 43,
+     "LivelitProj.computed_shapes": 9,
+     "LivelitProj.optimistic": 1,
+     "LivelitProj.warned_ephemeral": 0,
+     "LivelitProj.last_good_view": 43,
+     "LivelitProj.view_memo": 42,
+     "MakeTerm.map": 3,
+     "MakeTerm.term_data": 3,
+     "MakeTerm.projectors": 0,
+     "HazelDB.cache keys": 6,
+     "HazelDB.cache KB": 5730,
+     "ProjectorView.ViewCache": 43,
+     "AppStore apps (last installed)": 0
+    }
+   },
+   {
+    "label": "edit 5",
+    "heap_mb": 836.6,
+    "sizes": {
+     "ShareCodec client (hashes sent)": 198767,
+     "ShareCodec worker (values kept)": 119172,
+     "Statics.module_livelits": 6,
+     "LivelitProj.last_good_shape": 43,
+     "LivelitProj.shape_samples": 43,
+     "LivelitProj.computed_shapes": 9,
+     "LivelitProj.optimistic": 1,
+     "LivelitProj.warned_ephemeral": 0,
+     "LivelitProj.last_good_view": 43,
+     "LivelitProj.view_memo": 42,
+     "MakeTerm.map": 3,
+     "MakeTerm.term_data": 3,
+     "MakeTerm.projectors": 0,
+     "HazelDB.cache keys": 6,
+     "HazelDB.cache KB": 5730,
+     "ProjectorView.ViewCache": 43,
+     "AppStore apps (last installed)": 0
+    }
+   },
+   {
+    "label": "edit 6",
+    "heap_mb": 918.2,
+    "sizes": {
+     "ShareCodec client (hashes sent)": 213234,
+     "ShareCodec worker (values kept)": 140500,
+     "Statics.module_livelits": 6,
+     "LivelitProj.last_good_shape": 43,
+     "LivelitProj.shape_samples": 43,
+     "LivelitProj.computed_shapes": 9,
+     "LivelitProj.optimistic": 1,
+     "LivelitProj.warned_ephemeral": 0,
+     "LivelitProj.last_good_view": 43,
+     "LivelitProj.view_memo": 42,
+     "MakeTerm.map": 3,
+     "MakeTerm.term_data": 3,
+     "MakeTerm.projectors": 0,
+     "HazelDB.cache keys": 6,
+     "HazelDB.cache KB": 5730,
+     "ProjectorView.ViewCache": 43,
+     "AppStore apps (last installed)": 0
+    }
+   },
+   {
+    "label": "edit 7",
+    "heap_mb": 1024.7,
+    "sizes": {
+     "ShareCodec client (hashes sent)": 119766,
+     "ShareCodec worker (values kept)": 161826,
+     "Statics.module_livelits": 6,
+     "LivelitProj.last_good_shape": 43,
+     "LivelitProj.shape_samples": 43,
+     "LivelitProj.computed_shapes": 9,
+     "LivelitProj.optimistic": 1,
+     "LivelitProj.warned_ephemeral": 0,
+     "LivelitProj.last_good_view": 43,
+     "LivelitProj.view_memo": 42,
+     "MakeTerm.map": 3,
+     "MakeTerm.term_data": 3,
+     "MakeTerm.projectors": 0,
+     "HazelDB.cache keys": 6,
+     "HazelDB.cache KB": 5730,
+     "ProjectorView.ViewCache": 43,
+     "AppStore apps (last installed)": 0
+    }
+   },
+   {
+    "label": "edit 8",
+    "heap_mb": 1105.1,
+    "sizes": {
+     "ShareCodec client (hashes sent)": 139512,
+     "ShareCodec worker (values kept)": 183160,
+     "Statics.module_livelits": 6,
+     "LivelitProj.last_good_shape": 43,
+     "LivelitProj.shape_samples": 43,
+     "LivelitProj.computed_shapes": 9,
+     "LivelitProj.optimistic": 1,
+     "LivelitProj.warned_ephemeral": 0,
+     "LivelitProj.last_good_view": 43,
+     "LivelitProj.view_memo": 42,
+     "MakeTerm.map": 3,
+     "MakeTerm.term_data": 3,
+     "MakeTerm.projectors": 0,
+     "HazelDB.cache keys": 6,
+     "HazelDB.cache KB": 5730,
+     "ProjectorView.ViewCache": 43,
+     "AppStore apps (last installed)": 0
+    }
+   }
+  ]
+ },
+ "live_heap_by_file": {
+  "warmup_edits": 2,
+  "sampled_edits": 4,
+  "sampling_interval_bytes": 32768,
+  "total_mb": 390.1,
+  "by_category_mb": {
+   "Types and statics": 119.1,
+   "ValueHash's hashes": 97.6,
+   "Terms and syntax": 63.5,
+   "The worker's replies, decoded": 46.0,
+   "Layout": 40.7,
+   "Other": 23.2
+  },
+  "by_file_mb": {
+   "src/util/ValueHash.re": 97.6,
+   "src/web/util/WorkerServer.re": 46.0,
+   "src/language/statics/ConstructorMap.re": 39.0,
+   "src/haz3lcore/derived/Measured.re": 32.3,
+   "src/language/term/Typ.re": 28.0,
+   "src/language/statics/Statics.re": 26.7,
+   "src/haz3lcore/lang/MakeTerm.re": 19.6,
+   "src/language/term/IdTagged.re": 14.7,
+   "src/language/statics/StaticsBase.re": 10.9,
+   "src/util/OptUtil.re": 8.7,
+   "src/util/ShareCodec.re": 7.4,
+   "src/language/term/TermBase.re": 6.9,
+   "src/haz3lcore/tiles/Skel.re": 5.9,
+   "src/web/HazelDB.re": 5.6,
+   "src/haz3lcore/derived/TermMap.re": 4.8,
+   "src/util/Point.re": 4.5,
+   "src/util/VarMap.re": 3.9,
+   "src/util/Aba.re": 3.8,
+   "src/web/app/editors/code/Code.re": 3.7,
+   "src/haz3lcore/tiles/Segment.re": 3.5,
+   "src/language/statics/CoCtx.re": 2.7,
+   "src/language/statics/UserLivelit.re": 1.8,
+   "src/util/Id.re": 1.3,
+   "src/language/term/LabeledTuple.re": 1.2,
+   "src/language/term/Sig.re": 1.0,
+   "src/language/statics/Ctx.re": 1.0,
+   "src/language/statics/LabeledTupleStaticsHelpers.re": 0.9,
+   "src/language/term/TypHash.re": 0.8,
+   "src/language/statics/SubexpProbeTargets.re": 0.7,
+   "src/language/term/Operators.re": 0.6,
+   "src/language/term/Exp.re": 0.6,
+   "src/haz3lcore/tiles/Secondary.re": 0.5,
+   "src/haz3lcore/zipper/Siblings.re": 0.4,
+   "src/language/term/Annotated.re": 0.4,
+   "src/language/statics/LabeledTupleHelpers.re": 0.3,
+   "src/util/ListUtil.re": 0.3,
+   "src/haz3lcore/zipper/ZipperBase.re": 0.3,
+   "src/language/term/Grammar.re": 0.2,
+   "src/language/statics/ModuleHelpers.re": 0.2,
+   "src/haz3lcore/projectors/HazelDOM.re": 0.2
+  }
+ },
+ "snapshots": [
+  {
+   "page": "Full Body on #2597, as loaded (about 400 MB)",
+   "result": "renderer killed"
+  },
+  {
+   "page": "Full Body on #2597, after two edits (about 560 MB)",
+   "result": "renderer killed"
+  },
+  {
+   "page": "a trivial page",
+   "result": "snapshot taken"
+  },
+  {
+   "page": "a chain of arrays a million deep",
+   "result": "snapshot taken"
+  },
+  {
+   "page": "a WeakMap with two million live entries",
+   "result": "not finished after 400 s"
+  }
+ ],
+ "files": [
+  "data/count_tables.log",
+  "data/heap_per_edit_as_built.json",
+  "data/heap_per_edit_both.json",
+  "data/heap_per_edit_memos_at_1.json",
+  "data/heap_per_edit_undo_at_2.json",
+  "data/live_heap_by_file.txt",
+  "data/live_heap_by_function.txt",
+  "data/view_cache_off_census.log"
+ ]
+}
+</script>
+<!-- theme: begin -->
+<style>
+  .theme-toggle { position: fixed; top: 10px; right: 10px; z-index: 30; font: 13px system-ui, sans-serif; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--muted, GrayText);
+    cursor: pointer; opacity: 0.85; }
+  .theme-toggle:hover { opacity: 1; color: var(--ink, CanvasText); }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+/* The theme switch: Auto (the system's choice), Light, Dark; remembered for this site. */
+(() => {
+  const order = ["auto", "light", "dark"], label = { auto: "◐ auto", light: "☀ light", dark: "☾ dark" };
+  const get = () => { try { return localStorage.getItem("theme") || "auto"; } catch (_) { return "auto"; } };
+  const apply = m => m === "auto" ? document.documentElement.removeAttribute("data-theme")
+                                  : document.documentElement.setAttribute("data-theme", m);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "theme-toggle";
+  const show = () => { const m = get(); b.textContent = label[m] || label.auto;
+    b.title = "Theme: " + m + ". Click for " + order[(order.indexOf(m) + 1) % 3] + "; remembered on this site."; };
+  b.addEventListener("click", () => {
+    const m = order[(order.indexOf(get()) + 1) % 3];
+    try { m === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", m); } catch (_) {}
+    apply(m); show();
+  });
+  window.addEventListener("storage", e => { if (e.key === "theme") { apply(get()); show(); } });
+  show(); document.body.append(b);
+})();
+</script>
+<!-- theme: end -->
+<!-- steps: begin -->
+<style>
+  button.mint { margin-left: 4px; font: inherit; font-size: 0.75em; padding: 0 6px; border: 1px solid var(--line, #ccc);
+    border-radius: 4px; background: transparent; color: var(--muted, #666); cursor: pointer; vertical-align: 1px; }
+  button.mint:hover { color: inherit; }
+  button.mint.done { color: var(--good, #15803d); border-color: var(--good, #15803d); }
+  a.step-link { color: var(--muted, #666); text-decoration: none; font-size: 0.85em; margin-left: 4px; }
+  a.step-link:hover { text-decoration: underline; }
+  li:target { background: color-mix(in srgb, var(--good, #15803d) 12%, transparent); border-radius: 6px; }
+</style>
+<script>
+/* Each "What next" step: a link to it, and a button copying a request to
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
+(() => {
+  const h = document.getElementById("next");
+  if (!h) return;
+  let list = h.nextElementSibling;
+  while (list && !/^(OL|UL)$/.test(list.tagName)) {
+    if (list.tagName === "H2") return;
+    list = list.nextElementSibling;
+  }
+  if (!list) return;
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
+  [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
+    const n = i + 1;
+    if (!li.id) li.id = "step-" + n;
+    const b = li.querySelector("b, strong");
+    const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
+    const url = base + "#" + li.id;
+    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
+    const a = document.createElement("a");
+    a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "mint"; btn.textContent = "copy for a ticket";
+    btn.title = "Copies a request to mint a ticket for this step, to paste to Claude";
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) {
+        const t = document.createElement("textarea"); t.value = text; document.body.append(t);
+        t.select(); document.execCommand("copy"); t.remove();
+      }
+      btn.textContent = "copied"; btn.classList.add("done");
+      setTimeout(() => { btn.textContent = "copy for a ticket"; btn.classList.remove("done"); }, 1500);
+    });
+    li.append(" ", a, " ", btn);
+  });
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+})();
+</script>
+<!-- steps: end -->
+<!-- pr-cards: begin -->
+<style>
+  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-14T14:42:33Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-14T14:42:21Z"}}, BUILT = "2026-10-14";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  const ask = key => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#");
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
+                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[2];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
+<!-- ref-cards: begin -->
+<style>
+  .ref-card { position: absolute; z-index: 40; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
+  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
+    vertical-align: 1px; background: #6e7781; }
+  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
+  .rc-state.done { background: #8250df; }
+</style>
+<script>
+/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
+   ticket from the work dashboard's data (its area, its status, its first
+   line), carried by the dashboard's own pages and read live from the
+   published data anywhere else; a report from its own page, live (its
+   title, date and opening). Once per page load each. */
+(() => {
+  const PUBLIC = "http://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
+  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
+  /* the dashboard itself carries its tickets (made with the page, changed
+     with it); any other page asks the published data */
+  const EMBED = null;
+  let data = EMBED ? Promise.resolve(EMBED) : null;
+  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
+  const pages = new Map();
+  const loadReport = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
+      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
+      let p = h1 && h1.nextElementSibling;
+      while (p && p.tagName !== "P") p = p.nextElementSibling;
+      const label = (doc.querySelector(".series") || {}).textContent || "";
+      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
+               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
+    }).catch(() => null));
+    return pages.get(url);
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
+  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
+  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
+  const ticketCard = (n, d) => {
+    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
+    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
+    const q = (d.queue || []).indexOf(n);
+    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
+      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
+      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
+    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
+      `<div class="rc-title">${esc(lead(t.text))}</div>` +
+      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
+      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
+  };
+  const reportCard = (n, r) => r
+    ? `<div class="rc-head">^report(${n}) · Hazel performance analysis${r.date ? " · " + esc(r.date) : ""}</div>` +
+      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
+    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
+    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = (a, ref) => {
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
+      card.hidden = false; place(a);
+      let html;
+      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
+      else html = reportCard(ref.n, await loadReport(a.href));
+      if (over !== a) return;
+      card.innerHTML = html; place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- ref-cards: end -->
+
+</body>
+</html>

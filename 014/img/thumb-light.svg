@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 300" width="450" height="300" font-family="system-ui, 'DejaVu Sans', sans-serif" font-size="13">
+<style>
+  .ink { fill: #1f2328; } .muted { fill: #5b6470; } .grid { stroke: #e3e0d8; } .flat { stroke: #9aa1ab; } .heap { stroke: #b91c1c; } .dot { fill: #b91c1c; } .hot { fill: #b91c1c; }
+</style>
+<text x="225.0" y="26" text-anchor="middle" class="ink" font-weight="700" font-size="15">a tab's live heap, edit by edit (MB)</text>
+<line x1="40" y1="250.0" x2="420" y2="250.0" class="grid" stroke-width="1"/>
+<line x1="40" y1="200.0" x2="420" y2="200.0" class="grid" stroke-width="1"/>
+<line x1="40" y1="150.0" x2="420" y2="150.0" class="grid" stroke-width="1"/>
+<line x1="40" y1="100.0" x2="420" y2="100.0" class="grid" stroke-width="1"/>
+<line x1="40" y1="210.1" x2="420" y2="210.1" class="flat" stroke-width="7" stroke-linecap="round" opacity="0.7"/>
+<text x="420" y="234.1" text-anchor="end" class="muted" font-size="12">every cache and id-keyed table: flat</text>
+<polyline points="40.0,210.1 65.3,201.7 90.7,193.6 116.0,184.3 141.3,174.9 166.7,166.9 192.0,158.8 217.3,148.0 242.7,140.0 268.0,128.2 293.3,120.2 318.7,112.1 344.0,104.2 369.3,96.7 394.7,79.4 420.0,71.3" fill="none" class="heap" stroke-width="3" stroke-linejoin="round"/>
+<circle cx="40.0" cy="210.1" r="3.6" class="dot"/>
+<circle cx="65.3" cy="201.7" r="3.6" class="dot"/>
+<circle cx="90.7" cy="193.6" r="3.6" class="dot"/>
+<circle cx="116.0" cy="184.3" r="3.6" class="dot"/>
+<circle cx="141.3" cy="174.9" r="3.6" class="dot"/>
+<circle cx="166.7" cy="166.9" r="3.6" class="dot"/>
+<circle cx="192.0" cy="158.8" r="3.6" class="dot"/>
+<circle cx="217.3" cy="148.0" r="3.6" class="dot"/>
+<circle cx="242.7" cy="140.0" r="3.6" class="dot"/>
+<circle cx="268.0" cy="128.2" r="3.6" class="dot"/>
+<circle cx="293.3" cy="120.2" r="3.6" class="dot"/>
+<circle cx="318.7" cy="112.1" r="3.6" class="dot"/>
+<circle cx="344.0" cy="104.2" r="3.6" class="dot"/>
+<circle cx="369.3" cy="96.7" r="3.6" class="dot"/>
+<circle cx="394.7" cy="79.4" r="3.6" class="dot"/>
+<circle cx="420.0" cy="71.3" r="3.6" class="dot"/>
+<text x="40.0" y="198.1" class="ink" font-size="12">399</text>
+<text x="420.0" y="59.3" text-anchor="end" class="ink" font-size="12">1,787</text>
+<text x="55.2" y="120.0" class="hot" font-weight="700" font-size="17">+92 MB per edit</text>
+<text x="230.0" y="286" text-anchor="middle" class="muted" font-size="12">15 slider edits, Full Body, #2597</text>
+</svg>

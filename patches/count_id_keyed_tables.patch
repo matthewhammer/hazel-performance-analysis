@@ -1,0 +1,200 @@
+^report(14): a probe that counts the page's long-lived tables keyed by ids (and ShareCodec's two), read as window.__hazel45() after each edit. On #2597 at c4e411f9c2.
+
+diff --git a/src/haz3lcore/lang/MakeTerm.re b/src/haz3lcore/lang/MakeTerm.re
+index c35a8c13a9..665d68a126 100644
+--- a/src/haz3lcore/lang/MakeTerm.re
++++ b/src/haz3lcore/lang/MakeTerm.re
+@@ -175,12 +175,14 @@ let kids_of_unsorted =
+ // not just the ones recognized in Statics.
+ // TODO unhack
+ let map: ref(TermMap.t) = ref(Id.Map.empty);
++let () = Util.DebugSizes.register("MakeTerm.map", () => Id.Map.cardinal(map^));
+ let return = (wrap, ids, tm) => {
+   map := TermMap.add_all(ids, wrap(tm), map^);
+   tm;
+ };
+ 
+ let term_data: ref(TermData.t) = ref(Id.Map.empty);
++let () = Util.DebugSizes.register("MakeTerm.term_data", () => Id.Map.cardinal(term_data^));
+ let record_term_data = (sort: Sort.t, seg: Segment.t, skel: Skel.t): unit =>
+   term_data :=
+     Aba.get_as(Aba.map_a(List.nth(seg), Skel.root(skel)))
+@@ -192,6 +194,7 @@ let record_term_data = (sort: Sort.t, seg: Segment.t, skel: Skel.t): unit =>
+ 
+ /* Map to collect projector ids */
+ let projectors: ref(Id.Map.t(Piece.projector)) = ref(Id.Map.empty);
++let () = Util.DebugSizes.register("MakeTerm.projectors", () => Id.Map.cardinal(projectors^));
+ let projector_list: ref(list(Id.t)) = ref([]);
+ 
+ /* Map from tile IDs to their outer secondary (before, after) */
+diff --git a/src/haz3lcore/projectors/implementations/LivelitProj.re b/src/haz3lcore/projectors/implementations/LivelitProj.re
+index 3b5852187a..38d22ba434 100644
+--- a/src/haz3lcore/projectors/implementations/LivelitProj.re
++++ b/src/haz3lcore/projectors/implementations/LivelitProj.re
+@@ -444,6 +444,7 @@ module M: Projector = {
+      jump the layout. Reuse the last known shape instead. */
+   let last_good_shape: Hashtbl.t(Id.t, ProjectorCore.Shape.t) =
+     Hashtbl.create(16);
++  let () = Util.DebugSizes.register("LivelitProj.last_good_shape", () => Hashtbl.length(last_good_shape));
+ 
+   /* Widen the author's declared shape by what its splices actually hold.
+      The author sizes the widget for its controls; the client decides how
+@@ -541,6 +542,7 @@ module M: Projector = {
+      sample exists; the static shape stands in then. */
+   let shape_samples: Hashtbl.t(Id.t, (int, option(ProjectorShape.t))) =
+     Hashtbl.create(16);
++  let () = Util.DebugSizes.register("LivelitProj.shape_samples", () => Hashtbl.length(shape_samples));
+   let model_shape =
+       (info: info, def_elab: TermBase.Exp.t, model: TermBase.Exp.t)
+       : option(ProjectorShape.t) => {
+@@ -628,6 +630,7 @@ module M: Projector = {
+   let computed_shapes:
+     Hashtbl.t(Id.t, (TermBase.Exp.t, option(ProjectorShape.t))) =
+     Hashtbl.create(16);
++  let () = Util.DebugSizes.register("LivelitProj.computed_shapes", () => Hashtbl.length(computed_shapes));
+   let computed_shape =
+       (info: info, def_elab: TermBase.Exp.t): option(ProjectorShape.t) =>
+     switch (Hashtbl.find_opt(computed_shapes, info.id)) {
+@@ -956,10 +959,12 @@ module M: Projector = {
+     opt_ephemeral: bool,
+   };
+   let optimistic: Hashtbl.t(Id.t, optimistic_entry) = Hashtbl.create(16);
++  let () = Util.DebugSizes.register("LivelitProj.optimistic", () => Hashtbl.length(optimistic));
+ 
+   /* One console warning per projector id: an unserializable model is a
+      standing property of the definition, not per-event news. */
+   let warned_ephemeral: Hashtbl.t(Id.t, unit) = Hashtbl.create(4);
++  let () = Util.DebugSizes.register("LivelitProj.warned_ephemeral", () => Hashtbl.length(warned_ephemeral));
+   let warn_ephemeral = (~id: Id.t, ~ll_name: string) =>
+     if (!Hashtbl.mem(warned_ephemeral, id)) {
+       Hashtbl.add(warned_ephemeral, id, ());
+@@ -1165,6 +1170,7 @@ module M: Projector = {
+      edit). Display-only cache; entries overwrite on every successful
+      render. */
+   let last_good_view: Hashtbl.t(Id.t, Node.t) = Hashtbl.create(16);
++  let () = Util.DebugSizes.register("LivelitProj.last_good_view", () => Hashtbl.length(last_good_view));
+ 
+   /* Each use's last evaluated view: its definition, the model value it was
+      drawn from, and the Html. A view is a function of those two -- a
+@@ -1178,6 +1184,7 @@ module M: Projector = {
+   let view_memo:
+     Hashtbl.t(Id.t, (TermBase.Exp.t, TermBase.Exp.t, TermBase.Exp.t)) =
+     Hashtbl.create(16);
++  let () = Util.DebugSizes.register("LivelitProj.view_memo", () => Hashtbl.length(view_memo));
+   let memo_view =
+       (
+         ~id: Id.t,
+diff --git a/src/language/statics/Statics.re b/src/language/statics/Statics.re
+index a05362e83d..4b88b58114 100644
+--- a/src/language/statics/Statics.re
++++ b/src/language/statics/Statics.re
+@@ -36,6 +36,7 @@ let pass_counts: ref(option(Hashtbl.t(Id.t, (int, Exp.t)))) = ref(None);
+    never leave the body: a module's type carries values, not livelits. */
+ let module_livelits: Hashtbl.t(Id.t, list(LivelitCtx.raw_livelit)) =
+   Hashtbl.create(8);
++let () = Util.DebugSizes.register("Statics.module_livelits", () => Hashtbl.length(module_livelits));
+ 
+ let rec any_to_info_map =
+         (
+diff --git a/src/util/ShareCodec.re b/src/util/ShareCodec.re
+index 2c4ed384b4..d85b37953a 100644
+--- a/src/util/ShareCodec.re
++++ b/src/util/ShareCodec.re
+@@ -127,3 +127,7 @@ module Worker = {
+   let reset = (): unit => call("resetWorker", [||]);
+   let size = (): int => call("workerSize", [||]);
+ };
++
++/* PROBE (^ticket(45), local only) */
++let () = DebugSizes.register("ShareCodec client (hashes sent)", () => Client.size());
++let () = DebugSizes.register("ShareCodec worker (values kept)", () => Worker.size());
+diff --git a/src/util/Util.re b/src/util/Util.re
+index c7bcabc339..241aefe102 100644
+--- a/src/util/Util.re
++++ b/src/util/Util.re
+@@ -1,4 +1,5 @@
+ module Aba = Aba;
++module DebugSizes = DebugSizes;
+ module BonsaiUtil = BonsaiUtil;
+ module Bigint = BigInt;
+ module Direction = Direction;
+diff --git a/src/web/HazelDB.re b/src/web/HazelDB.re
+index 3e30d08704..d35912949c 100644
+--- a/src/web/HazelDB.re
++++ b/src/web/HazelDB.re
+@@ -41,6 +41,8 @@ let with_db = (f): unit => {
+ 
+ let cache: ref(Util.Maps.StringMap.t(string)) =
+   ref(Util.Maps.StringMap.empty);
++let () = Util.DebugSizes.register("HazelDB.cache keys", () => Util.Maps.StringMap.cardinal(cache^));
++let () = Util.DebugSizes.register("HazelDB.cache KB", () => Util.Maps.StringMap.fold((_, v, n) => n + String.length(v), cache^, 0) / 1024);
+ 
+ /* === KV operations === */
+ 
+diff --git a/src/web/Main.re b/src/web/Main.re
+index f225267951..9e96752f8e 100644
+--- a/src/web/Main.re
++++ b/src/web/Main.re
+@@ -390,3 +390,21 @@ switch (JsUtil.Fragment.get_current()) {
+     );
+   });
+ };
++
++/* PROBE (^ticket(45), local only): window.__hazel45() gives each registered table's
++   size (Util.DebugSizes), for a driver to read after every edit. */
++let () =
++  Js_of_ocaml.Js.Unsafe.set(
++    Js_of_ocaml.Js.Unsafe.global,
++    "__hazel45",
++    Js_of_ocaml.Js.wrap_callback(() =>
++      Js_of_ocaml.Js.Unsafe.obj(
++        Array.of_list(
++          List.map(
++            ((name, n)) => (name, Js_of_ocaml.Js.Unsafe.inject(n)),
++            Util.DebugSizes.all(),
++          ),
++        ),
++      )
++    ),
++  );
+diff --git a/src/web/app/common/ProjectorView.re b/src/web/app/common/ProjectorView.re
+index 68df1d0e6a..eb2d50e95f 100644
+--- a/src/web/app/common/ProjectorView.re
++++ b/src/web/app/common/ProjectorView.re
+@@ -37,6 +37,7 @@ module ViewCache = {
+     view: View.t,
+   };
+   let cache: Hashtbl.t(Id.t, entry) = Hashtbl.create(64);
++  let () = Util.DebugSizes.register("ProjectorView.ViewCache", () => Hashtbl.length(cache));
+ 
+   let lookup =
+       (
+diff --git a/src/web/app/globals/AppBridgeInstall.re b/src/web/app/globals/AppBridgeInstall.re
+index 05e262e1c4..114f1a589f 100644
+--- a/src/web/app/globals/AppBridgeInstall.re
++++ b/src/web/app/globals/AppBridgeInstall.re
+@@ -44,7 +44,10 @@ let ensure_app =
+     };
+   };
+ 
++let probe_apps = ref(0);
++let () = Util.DebugSizes.register("AppStore apps (last installed)", () => probe_apps^);
+ let install = (~globals: Globals.t): unit => {
++  probe_apps := Id.Map.cardinal(globals.apps);
+   AppBridge.ensure_app := ensure_app(~globals);
+   AppBridge.current_html :=
+     (
+diff --git a/src/util/DebugSizes.re b/src/util/DebugSizes.re
+new file mode 100644
+index 0000000000..c2e8197e5c
+--- /dev/null
++++ b/src/util/DebugSizes.re
+@@ -0,0 +1,8 @@
++/* PROBE (^ticket(45), local only): the sizes of long-lived tables, by name, read
++   from the page as window.__hazel45() after each edit, to find the one
++   that grows. Each table registers a function returning its size. */
++let table: ref(list((string, unit => int))) = ref([]);
++let register = (name: string, size: unit => int): unit =>
++  table := [(name, size), ...table^];
++let all = (): list((string, int)) =>
++  List.rev_map(((name, size)) => (name, size()), table^);
