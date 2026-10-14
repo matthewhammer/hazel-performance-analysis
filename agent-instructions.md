@@ -50,7 +50,7 @@ The series is **not our working record.** That is `hazel-work-notes`, a private 
 
 ## Corrections and updates
 
-A published report is never rewritten. To correct or extend it:
+A published report's story is never rewritten. **Pictures that only illustrate what it already says** (a diagram of a structure it describes, a figure of numbers it already gives) **go into the report in place**, with no dated update: they do not change the story (Matthew, 2026-10-14). They still wait for his review before they are published. To correct or extend the story itself:
 
 - add a **dated update box** under the short answers (`Update, later on 2026-10-12: ...`) when the change matters to its answers;
 - add a **dated note after each claim it explains or supersedes**, linking where the new answer is;
