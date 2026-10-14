@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- theme: head begin -->
+<script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<!-- theme: head end -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moving a Group, Not Its Points</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 16px 0; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0; }
+  .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+  .kpi .v { font-size: 1.7em; font-weight: 700; }
+  .kpi .l { color: var(--muted); font-size: 0.9em; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure { margin: 18px 0; }
+  figure img { max-width: 100%; border: 1px solid var(--line); border-radius: 10px; display: block; background: #ffffff; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 72ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .step { border-left: 3px solid var(--line); padding-left: 14px; }
+  .kicker { margin: 0; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8em; }
+  ol.ranked > li { margin: 10px 0; }
+  .dedicated { margin: 0 0 18px; font-style: italic; color: var(--muted); }
+  .dedication { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 22px; }
+  .dedication p { font-size: 1.05em; }
+
+  svg.chart { width: 100%; height: auto; display: block; font: 12.5px system-ui, sans-serif; color: var(--ink); }
+  svg.chart .ct { fill: var(--ink); font-weight: 600; font-size: 13.5px; }
+  svg.chart .cl { fill: var(--ink); }
+  svg.chart .cv { fill: var(--muted); }
+  svg.chart .rng { stroke: var(--ink); stroke-width: 1.2; opacity: 0.55; fill: none; }
+  .rr { color: var(--muted); font-size: 0.85em; }
+  svg.chart .cin { fill: #ffffff; font-size: 11px; font-weight: 600; }
+  svg.chart .box { fill: var(--paper); stroke: var(--line); stroke-width: 1.5; }
+  svg.chart .bt { fill: var(--ink); font-weight: 700; font-size: 14px; }
+  svg.chart .bs { fill: var(--muted); }
+  svg.chart .bn { font-weight: 700; font-size: 15px; }
+  svg.chart .good { fill: var(--good); } svg.chart .warn { fill: var(--warn); } svg.chart .bad { fill: var(--bad); }
+  .glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 430px), 1fr)); gap: 14px; margin: 16px 0 6px; }
+  .glance figure, figure.fig { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 0; }
+  figure.fig { margin: 16px 0; }
+  .update { background: var(--paper); border-left: 4px solid var(--warn); padding: 10px 14px; border-radius: 6px; margin: 16px 0; }
+  .added { font-size: 0.6em; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; vertical-align: middle; margin-left: 6px; }
+  svg.chart .nb { stroke-width: 1.5; }
+  svg.chart .nb.ok { fill: color-mix(in srgb, var(--good) 22%, var(--paper)); stroke: var(--good); }
+  svg.chart .nb.in { fill: color-mix(in srgb, var(--warn) 28%, var(--paper)); stroke: var(--warn); }
+  svg.chart .nb.re { fill: color-mix(in srgb, var(--bad) 18%, var(--paper)); stroke: var(--bad); }
+  svg.chart .nl { fill: var(--ink); font-size: 12px; }
+  svg.chart .ar { stroke: var(--muted); stroke-width: 1.6; fill: none; }
+
+  .pics { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; justify-content: space-around; }
+  .pics > div { flex: 1 1 200px; max-width: 330px; }
+  svg.pic { width: 100%; height: auto; display: block; }
+  .pics .pl { margin: 0 0 6px; text-align: center; font-size: 0.95em; }
+  :root { --pic-grey: #e6e3dc; --pic-grey-line: #c9c4b8; --pic-mark: #d946ef; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --pic-grey: #2a2e33; --pic-grey-line: #3d434a; --pic-mark: #e879f9; } }
+  :root[data-theme="dark"] { --pic-grey: #2a2e33; --pic-grey-line: #3d434a; --pic-mark: #e879f9; }
+
+  :root { --accent2: #0e7490; --good2: #65a30d; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --accent2: #67e8f9; --good2: #bef264; } }
+  :root[data-theme="dark"] { --accent2: #67e8f9; --good2: #bef264; }
+  svg.chart .grid { stroke: var(--line); stroke-width: 1; }
+  svg.chart .diag { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 5 4; }
+  svg.chart .dot { stroke: var(--paper); stroke-width: 1; opacity: 0.9; }
+  table.sweep td, table.sweep th { padding: 2px 8px; font-size: 0.92em; }
+</style>
+</head>
+
+<body>
+<main>
+
+<p class="series"><a href="../">Hazel performance analysis</a> · Issue 012 · 2026-10-13</p>
+<h1>Moving a group, not its points</h1>
+<div class="update" style="border-left-color: var(--bad)"><p><b>Draft, 2026-10-13 20:27 MDT: not published.</b> All runs are in; waiting for review.</p></div>
+<p class="sub">If the Drawing library's picture were a tree of groups, each with a transform, instead of a flat list of polygons, how much smaller would a slider's picture diff be, and would the computation follow? <a href="../011/#representation">Issue 011</a> estimated the first from the shapes alone, and its <a href="../011/#step-1">What next, step 1</a> asked for the real thing. This issue builds it for one slide, Full Body, and measures both.</p>
+
+<div class="headline">
+<p><b>Short answers.</b> One slide, Full Body, rebuilt as a picture of groups; the same 27 slider edits as issue 011; the same three measures (<a href="../011/#terms">011's terms</a>): the <b>picture diff</b> (what the edit changed in the picture), the <b>trace distance</b> (the fewest evaluation steps any update could take again) and the <b>update cost</b> (the steps an actual update takes again). Steps, not time, and in steps, not shares: today's picture, the tree and the tree flattened each take a different number of steps from scratch.</p>
+<ol>
+  <li><b>The tree draws today's picture exactly.</b> Flattened, its points are today's to within 6&times;10<sup>&minus;14</sup>, in all 28 pictures (before each edit and after).</li>
+  <li><b>The picture diff falls to at most 14 nodes</b> on the edits that change the picture (it was up to 39 shapes), and is never larger than before: arm angle 30 shapes to 8 nodes, hand angle 24 shapes to 2 nodes, shirt width 39 shapes to 13 nodes (<a href="#picture">Figure 1</a>).</li>
+  <li><b>What a transform cannot carry, it does not:</b> a hand's outline is a band of fixed width, so it is made at the hand's size, not grown with it (hand size 24 shapes to 14 nodes); bigger eyes widen the head and lift the hair, by design (eye size 7 shapes to 5 nodes).</li>
+  <li><b>The tree alone is cheaper to build than today's picture; flattening it is not:</b> drawn from scratch, the tree takes 110,260 evaluation steps, 10% fewer than today's picture's 121,973, since placing a part is one transform instead of moving every point; flattening it takes 37,957 steps more, 148,217 in all (<a href="#scratch">Figure 3</a>).</li>
+  <li><b>Not flattened, the computation follows the picture diff:</b> moving or turning a part costs about what an edit that changes nothing costs (4,249 steps). Trace distance, in steps, today's picture to the tree: arm angle 20,206 to 5,104, hand angle 25,026 to 4,807, neck 10,887 to 5,154; widening the shirt 25,506 to 9,196; growing a hand 28,484 to 14,108. The eye edits gain least (eye size 61,876 to 50,937): most of their steps are the check that keeps the mouth clear of the eyes, which the tree does not change (<a href="#trace">Figure 4</a>).</li>
+  <li><b>Flattened at the end, the gain is gone:</b> flattening walks the whole tree and puts the flat list together again after every edit, 3,247 to 28,018 steps more than the tree alone, so most edits cost more than today (arm angle 20,206 to 28,849); the eye edits come out about even.</li>
+  <li><b>Some of the tree's work is redone whatever the edit:</b> an edit that changes nothing in the picture costs 4,249 steps in the tree, 1,085 today. Which work that is, is not broken down here (<a href="#next">What next</a>).</li>
+  <li><b>Hazel's update today does not change:</b> it evaluates the figure again whole, 85.2 to 89.0% of a run from scratch on today's picture and 81.5 to 87.7% on the tree (104,193 and 90,238 steps for an arm-angle edit). The figure is one top-level binding, so the smaller diffs help only an update that can keep parts of a run (<a href="../011/#naming">issue 011</a>).</li>
+</ol>
+</div>
+
+<h2 id="picture">The picture diff</h2>
+<figure class="fig"><svg viewBox="0 0 560 738" role="img" class="chart"><text x="0" y="16" class="ct">Picture diff for each slider edit that changes the picture</text><text x="142" y="45.5" text-anchor="end" class="cl">shirt width</text><rect x="150" y="26" width="340.0" height="14" rx="2" style="fill: var(--muted)"/><text x="495.0" y="37" class="cv">39</text><rect x="150" y="43" width="113.3" height="14" rx="2" style="fill: var(--accent)"/><text x="268.3" y="54" class="cv">13</text><text x="142" y="91.5" text-anchor="end" class="cl">arms (up / down)</text><rect x="150" y="72" width="261.5" height="14" rx="2" style="fill: var(--muted)"/><text x="416.5" y="83" class="cv">30</text><rect x="150" y="89" width="69.7" height="14" rx="2" style="fill: var(--accent)"/><text x="224.7" y="100" class="cv">8</text><text x="142" y="137.5" text-anchor="end" class="cl">arm length</text><rect x="150" y="118" width="261.5" height="14" rx="2" style="fill: var(--muted)"/><text x="416.5" y="129" class="cv">30</text><rect x="150" y="135" width="69.7" height="14" rx="2" style="fill: var(--accent)"/><text x="224.7" y="146" class="cv">8</text><text x="142" y="183.5" text-anchor="end" class="cl">hand size</text><rect x="150" y="164" width="209.2" height="14" rx="2" style="fill: var(--muted)"/><text x="364.2" y="175" class="cv">24</text><rect x="150" y="181" width="122.1" height="14" rx="2" style="fill: var(--accent)"/><text x="277.1" y="192" class="cv">14</text><text x="142" y="229.5" text-anchor="end" class="cl">hand angle</text><rect x="150" y="210" width="209.2" height="14" rx="2" style="fill: var(--muted)"/><text x="364.2" y="221" class="cv">24</text><rect x="150" y="227" width="17.4" height="14" rx="2" style="fill: var(--accent)"/><text x="172.4" y="238" class="cv">2</text><text x="142" y="275.5" text-anchor="end" class="cl">shirt height</text><rect x="150" y="256" width="78.5" height="14" rx="2" style="fill: var(--muted)"/><text x="233.5" y="267" class="cv">9</text><rect x="150" y="273" width="43.6" height="14" rx="2" style="fill: var(--accent)"/><text x="198.6" y="284" class="cv">5</text><text x="142" y="321.5" text-anchor="end" class="cl">neck</text><rect x="150" y="302" width="78.5" height="14" rx="2" style="fill: var(--muted)"/><text x="233.5" y="313" class="cv">9</text><rect x="150" y="319" width="34.9" height="14" rx="2" style="fill: var(--accent)"/><text x="189.9" y="330" class="cv">4</text><text x="142" y="367.5" text-anchor="end" class="cl">smile</text><rect x="150" y="348" width="69.7" height="14" rx="2" style="fill: var(--muted)"/><text x="224.7" y="359" class="cv">8</text><rect x="150" y="365" width="43.6" height="14" rx="2" style="fill: var(--accent)"/><text x="198.6" y="376" class="cv">5</text><text x="142" y="413.5" text-anchor="end" class="cl">eye size</text><rect x="150" y="394" width="61.0" height="14" rx="2" style="fill: var(--muted)"/><text x="216.0" y="405" class="cv">7</text><rect x="150" y="411" width="43.6" height="14" rx="2" style="fill: var(--accent)"/><text x="198.6" y="422" class="cv">5</text><text x="142" y="459.5" text-anchor="end" class="cl">arm width</text><rect x="150" y="440" width="52.3" height="14" rx="2" style="fill: var(--muted)"/><text x="207.3" y="451" class="cv">6</text><rect x="150" y="457" width="52.3" height="14" rx="2" style="fill: var(--accent)"/><text x="207.3" y="468" class="cv">6</text><text x="142" y="505.5" text-anchor="end" class="cl">shoe size</text><rect x="150" y="486" width="34.9" height="14" rx="2" style="fill: var(--muted)"/><text x="189.9" y="497" class="cv">4</text><rect x="150" y="503" width="17.4" height="14" rx="2" style="fill: var(--accent)"/><text x="172.4" y="514" class="cv">2</text><text x="142" y="551.5" text-anchor="end" class="cl">eye gap</text><rect x="150" y="532" width="34.9" height="14" rx="2" style="fill: var(--muted)"/><text x="189.9" y="543" class="cv">4</text><rect x="150" y="549" width="17.4" height="14" rx="2" style="fill: var(--accent)"/><text x="172.4" y="560" class="cv">2</text><text x="142" y="597.5" text-anchor="end" class="cl">eye shape (round / narrow)</text><rect x="150" y="578" width="17.4" height="14" rx="2" style="fill: var(--muted)"/><text x="172.4" y="589" class="cv">2</text><rect x="150" y="595" width="17.4" height="14" rx="2" style="fill: var(--accent)"/><text x="172.4" y="606" class="cv">2</text><text x="142" y="643.5" text-anchor="end" class="cl">eye angle</text><rect x="150" y="624" width="17.4" height="14" rx="2" style="fill: var(--muted)"/><text x="172.4" y="635" class="cv">2</text><rect x="150" y="641" width="17.4" height="14" rx="2" style="fill: var(--accent)"/><text x="172.4" y="652" class="cv">2</text><text x="142" y="689.5" text-anchor="end" class="cl">shine size</text><rect x="150" y="670" width="17.4" height="14" rx="2" style="fill: var(--muted)"/><text x="172.4" y="681" class="cv">2</text><rect x="150" y="687" width="17.4" height="14" rx="2" style="fill: var(--accent)"/><text x="172.4" y="698" class="cv">2</text><rect x="150" y="714" width="12" height="12" rx="2" style="fill: var(--muted)"/><text x="167" y="724" class="cl">today: shapes changed, of 49</text><rect x="350" y="714" width="12" height="12" rx="2" style="fill: var(--accent)"/><text x="367" y="724" class="cl">groups: nodes changed, of 82</text></svg><figcaption>Figure 1. Each of the 15 slider edits on Full Body that changes the picture without changing how many shapes it has: the shapes it changes in today's picture, a flat list of 49 polygons, against the nodes it changes in the tree of groups, 82 nodes (49 shapes and 33 groups). A group counts as changed when its transform does, a shape when its points or style do; a group's children are matched by their longest common subsequence, and a node on one side only counts with everything in it. Differences below 10<sup>&minus;9</sup> count as none, in both: turning a shine and turning it back moves it 9&times;10<sup>&minus;16</sup>.</figcaption></figure>
+<p>Today the Drawing library places a part of the figure by moving every one of its points, so a slider that moves a part changes every shape in it: the arm-angle slider moves both arms and both hands, 30 shapes. In the tree, a part is a group: its shapes stay in its own coordinates, and its transform puts it in its parent's. The arm-angle slider changes the transforms of the two arms, their sleeves, the sleeves' joins to the shirt and the two hands, and no shape at all: 8 nodes. The same goes for the other placements: the neck on the body, the face on the neck, the hair on the face, the shoes on the feet.</p>
+<figure class="fig"><svg viewBox="0 0 600 222" role="img" class="chart"><rect x="10" y="10" width="285" height="36" rx="6" style="fill: var(--bg); stroke: var(--accent)"/><text x="20" y="25" class="cl" font-weight="700">hand</text><text x="20" y="40" class="cv">at the arm&#x27;s end, turned with the arm</text><rect x="28" y="52" width="267" height="36" rx="6" style="fill: var(--bg); stroke: var(--accent)"/><text x="38" y="67" class="cl" font-weight="700">turned</text><text x="38" y="82" class="cv">the hand angle</text><rect x="46" y="94" width="249" height="36" rx="6" style="fill: var(--paper); stroke: var(--line)"/><text x="56" y="109" class="cl" font-weight="700">outline (6 shapes)</text><text x="56" y="124" class="cv">a band 2.5 wide, at the hand&#x27;s size</text><rect x="46" y="136" width="249" height="36" rx="6" style="fill: var(--bg); stroke: var(--accent)"/><text x="56" y="151" class="cl" font-weight="700">grown</text><text x="56" y="166" class="cv">the hand size, as a scale</text><rect x="64" y="178" width="231" height="36" rx="6" style="fill: var(--paper); stroke: var(--line)"/><text x="74" y="193" class="cl" font-weight="700">fill (6 shapes)</text><text x="74" y="208" class="cv">made once, at size 14</text><rect x="310" y="10" width="285" height="36" rx="6" style="fill: var(--bg); stroke: var(--accent)"/><text x="320" y="25" class="cl" font-weight="700">eye</text><text x="320" y="40" class="cv">its place and its size, one transform</text><rect x="328" y="52" width="267" height="36" rx="6" style="fill: var(--bg); stroke: var(--accent)"/><text x="338" y="67" class="cl" font-weight="700">turned</text><text x="338" y="82" class="cv">the eye angle and shape</text><rect x="346" y="94" width="249" height="36" rx="6" style="fill: var(--paper); stroke: var(--line)"/><text x="356" y="109" class="cl" font-weight="700">pupil (1 shape)</text><text x="356" y="124" class="cv">a circle of radius 10</text><rect x="328" y="136" width="267" height="36" rx="6" style="fill: var(--paper); stroke: var(--line)"/><text x="338" y="151" class="cl" font-weight="700">shine (1 shape)</text><text x="338" y="166" class="cv">not turned: toward the light</text></svg><figcaption>Figure 2. A hand and an eye as groups. The hand is placed at the end of its arm and turned with it; inside, it is turned by the hand angle, and its fill is made once, at size 14, and grown to its size by a group's scale. The eye is placed and sized by one transform; inside, it is turned and narrowed by another, and its pupil is a circle of radius 10. A leaf (white) is a shape; a group (shaded) a transform.</figcaption></figure>
+
+<h2 id="limits">What a transform cannot carry</h2>
+<p>A transform moves, turns and scales a group as a whole. Three things in Full Body are not a whole moved, turned or scaled, and the tree keeps them as shapes made at their own size:</p>
+<ul>
+  <li><b>A hand's outline.</b> A hand with fingers is drawn twice: its outline, the same hand grown 2.5 units all round and drawn underneath, and then its fill. The fill grows with the hand; the outline's width does not, so it cannot be the same group scaled. The hand-size slider changes the two fills' groups and the twelve outline shapes: 24 shapes to 14 nodes. A renderer's stroke of fixed width (SVG's <code>vector-effect: non-scaling-stroke</code>) could carry it; the picture would then be drawn a little differently, and this issue keeps to today's picture.</li>
+  <li><b>An eye's whites and iris.</b> They are a band past the pupil, of a width set by their own sliders, not the pupil grown; they are drawn at their own size inside the eye's group. (Full Body's default eyes have neither.)</li>
+  <li><b>The head, round the eyes.</b> Bigger or wider-set eyes widen the head and lift its top, and the hair grows with it, by design: the face makes room for its eyes. The eye-size slider changes the two eyes' groups, the head's outline and the hair's two groups: 7 shapes to 5 nodes.</li>
+</ul>
+<p>The arm-width slider changes the arms' and sleeves' outlines, a reshaping, not a move: 6 shapes either way.</p>
+
+<h2 id="scratch">Building the groups</h2>
+<figure class="fig"><svg viewBox="0 0 560 119" role="img" class="chart"><text x="0" y="16" class="ct">Steps to draw the figure from scratch</text><text x="142" y="39.0" text-anchor="end" class="cl">today&#x27;s picture</text><rect x="150" y="26" width="249.8" height="18" rx="2" style="fill: var(--muted)"/><text x="404.8" y="41" class="cv">121,973</text><text x="142" y="72.0" text-anchor="end" class="cl">groups, flattened</text><rect x="150" y="59" width="303.6" height="18" rx="2" style="fill: var(--warn)"/><text x="458.6" y="74" class="cv">148,217</text><text x="142" y="105.0" text-anchor="end" class="cl">groups, not flattened</text><rect x="150" y="92" width="225.8" height="18" rx="2" style="fill: var(--accent)"/><text x="380.8" y="107" class="cv">110,260</text></svg><figcaption>Figure 3. The evaluation steps to draw Full Body from scratch: today's picture; the tree flattened at the end, as the slide shows it; and the tree alone, not flattened. Steps, counted as the evaluator takes them; deterministic, one run each.</figcaption></figure>
+<p>Today the library places a part by moving every one of its points. The tree places a part with one transform, so the tree alone takes 10% fewer steps than today's picture. Flattening it composes every group's transform with its parents' and applies it to every point, and builds the flat list again, list by list: 37,957 steps, more than the tree saved.</p>
+
+<h2 id="trace">The trace distance and the update cost</h2>
+<figure class="fig"><svg viewBox="0 0 560 1092" role="img" class="chart"><text x="0" y="16" class="ct">Trace distance, in evaluation steps (estimated by content)</text><text x="142" y="54.0" text-anchor="end" class="cl">shirt width</text><rect x="150" y="26" width="129.8" height="14" rx="2" style="fill: var(--muted)"/><text x="284.8" y="37" class="cv">25,506</text><rect x="150" y="43" width="189.3" height="14" rx="2" style="fill: var(--warn)"/><text x="344.3" y="54" class="cv">37,214</text><rect x="150" y="60" width="46.8" height="14" rx="2" style="fill: var(--accent)"/><text x="201.8" y="71" class="cv">9,196</text><text x="142" y="117.0" text-anchor="end" class="cl">arms (up / down)</text><rect x="150" y="89" width="102.8" height="14" rx="2" style="fill: var(--muted)"/><text x="257.8" y="100" class="cv">20,206</text><rect x="150" y="106" width="146.8" height="14" rx="2" style="fill: var(--warn)"/><text x="301.8" y="117" class="cv">28,849</text><rect x="150" y="123" width="26.0" height="14" rx="2" style="fill: var(--accent)"/><text x="181.0" y="134" class="cv">5,104</text><text x="142" y="180.0" text-anchor="end" class="cl">arm length</text><rect x="150" y="152" width="102.7" height="14" rx="2" style="fill: var(--muted)"/><text x="257.7" y="163" class="cv">20,190</text><rect x="150" y="169" width="148.7" height="14" rx="2" style="fill: var(--warn)"/><text x="303.7" y="180" class="cv">29,229</text><rect x="150" y="186" width="33.1" height="14" rx="2" style="fill: var(--accent)"/><text x="188.1" y="197" class="cv">6,498</text><text x="142" y="243.0" text-anchor="end" class="cl">hand size</text><rect x="150" y="215" width="144.9" height="14" rx="2" style="fill: var(--muted)"/><text x="299.9" y="226" class="cv">28,484</text><rect x="150" y="232" width="178.5" height="14" rx="2" style="fill: var(--warn)"/><text x="333.5" y="243" class="cv">35,085</text><rect x="150" y="249" width="71.8" height="14" rx="2" style="fill: var(--accent)"/><text x="226.8" y="260" class="cv">14,108</text><text x="142" y="306.0" text-anchor="end" class="cl">hand angle</text><rect x="150" y="278" width="127.3" height="14" rx="2" style="fill: var(--muted)"/><text x="282.3" y="289" class="cv">25,026</text><rect x="150" y="295" width="131.7" height="14" rx="2" style="fill: var(--warn)"/><text x="286.7" y="306" class="cv">25,890</text><rect x="150" y="312" width="24.5" height="14" rx="2" style="fill: var(--accent)"/><text x="179.5" y="323" class="cv">4,807</text><text x="142" y="369.0" text-anchor="end" class="cl">shirt height</text><rect x="150" y="341" width="33.3" height="14" rx="2" style="fill: var(--muted)"/><text x="188.3" y="352" class="cv">6,553</text><rect x="150" y="358" width="74.7" height="14" rx="2" style="fill: var(--warn)"/><text x="229.7" y="369" class="cv">14,678</text><rect x="150" y="375" width="45.3" height="14" rx="2" style="fill: var(--accent)"/><text x="200.3" y="386" class="cv">8,901</text><text x="142" y="432.0" text-anchor="end" class="cl">neck</text><rect x="150" y="404" width="55.4" height="14" rx="2" style="fill: var(--muted)"/><text x="210.4" y="415" class="cv">10,887</text><rect x="150" y="421" width="80.6" height="14" rx="2" style="fill: var(--warn)"/><text x="235.6" y="432" class="cv">15,837</text><rect x="150" y="438" width="26.2" height="14" rx="2" style="fill: var(--accent)"/><text x="181.2" y="449" class="cv">5,154</text><text x="142" y="495.0" text-anchor="end" class="cl">smile</text><rect x="150" y="467" width="95.7" height="14" rx="2" style="fill: var(--muted)"/><text x="250.7" y="478" class="cv">18,817</text><rect x="150" y="484" width="122.0" height="14" rx="2" style="fill: var(--warn)"/><text x="277.0" y="495" class="cv">23,983</text><rect x="150" y="501" width="69.5" height="14" rx="2" style="fill: var(--accent)"/><text x="224.5" y="512" class="cv">13,652</text><text x="142" y="558.0" text-anchor="end" class="cl">eye size</text><rect x="150" y="530" width="314.8" height="14" rx="2" style="fill: var(--muted)"/><text x="469.8" y="541" class="cv">61,876</text><rect x="150" y="547" width="305.2" height="14" rx="2" style="fill: var(--warn)"/><text x="460.2" y="558" class="cv">59,984</text><rect x="150" y="564" width="259.2" height="14" rx="2" style="fill: var(--accent)"/><text x="414.2" y="575" class="cv">50,937</text><text x="142" y="621.0" text-anchor="end" class="cl">arm width</text><rect x="150" y="593" width="14.9" height="14" rx="2" style="fill: var(--muted)"/><text x="169.9" y="604" class="cv">2,927</text><rect x="150" y="610" width="50.2" height="14" rx="2" style="fill: var(--warn)"/><text x="205.2" y="621" class="cv">9,859</text><rect x="150" y="627" width="31.7" height="14" rx="2" style="fill: var(--accent)"/><text x="186.7" y="638" class="cv">6,236</text><text x="142" y="684.0" text-anchor="end" class="cl">shoe size</text><rect x="150" y="656" width="20.6" height="14" rx="2" style="fill: var(--muted)"/><text x="175.6" y="667" class="cv">4,056</text><rect x="150" y="673" width="44.4" height="14" rx="2" style="fill: var(--warn)"/><text x="199.4" y="684" class="cv">8,723</text><rect x="150" y="690" width="24.6" height="14" rx="2" style="fill: var(--accent)"/><text x="179.6" y="701" class="cv">4,838</text><text x="142" y="747.0" text-anchor="end" class="cl">eye gap</text><rect x="150" y="719" width="276.0" height="14" rx="2" style="fill: var(--muted)"/><text x="431.0" y="730" class="cv">54,239</text><rect x="150" y="736" width="256.5" height="14" rx="2" style="fill: var(--warn)"/><text x="411.5" y="747" class="cv">50,411</text><rect x="150" y="753" width="227.2" height="14" rx="2" style="fill: var(--accent)"/><text x="382.2" y="764" class="cv">44,664</text><text x="142" y="810.0" text-anchor="end" class="cl">eye shape (round / narrow)</text><rect x="150" y="782" width="259.6" height="14" rx="2" style="fill: var(--muted)"/><text x="414.6" y="793" class="cv">51,031</text><rect x="150" y="799" width="254.5" height="14" rx="2" style="fill: var(--warn)"/><text x="409.5" y="810" class="cv">50,027</text><rect x="150" y="816" width="233.2" height="14" rx="2" style="fill: var(--accent)"/><text x="388.2" y="827" class="cv">45,830</text><text x="142" y="873.0" text-anchor="end" class="cl">eye angle</text><rect x="150" y="845" width="259.0" height="14" rx="2" style="fill: var(--muted)"/><text x="414.0" y="856" class="cv">50,899</text><rect x="150" y="862" width="272.4" height="14" rx="2" style="fill: var(--warn)"/><text x="427.4" y="873" class="cv">53,543</text><rect x="150" y="879" width="244.2" height="14" rx="2" style="fill: var(--accent)"/><text x="399.2" y="890" class="cv">47,992</text><text x="142" y="936.0" text-anchor="end" class="cl">shine size</text><rect x="150" y="908" width="37.1" height="14" rx="2" style="fill: var(--muted)"/><text x="192.1" y="919" class="cv">7,297</text><rect x="150" y="925" width="50.2" height="14" rx="2" style="fill: var(--warn)"/><text x="205.2" y="936" class="cv">9,861</text><rect x="150" y="942" width="33.7" height="14" rx="2" style="fill: var(--accent)"/><text x="188.7" y="953" class="cv">6,614</text><text x="142" y="999.0" text-anchor="end" class="cl">an edit that changes nothing</text><rect x="150" y="971" width="5.5" height="14" rx="2" style="fill: var(--muted)"/><text x="160.5" y="982" class="cv">1,085</text><rect x="150" y="988" width="30.6" height="14" rx="2" style="fill: var(--warn)"/><text x="185.6" y="999" class="cv">6,012</text><rect x="150" y="1005" width="21.6" height="14" rx="2" style="fill: var(--accent)"/><text x="176.6" y="1016" class="cv">4,249</text><rect x="150" y="1032" width="12" height="12" rx="2" style="fill: var(--muted)"/><text x="167" y="1042" class="cl">today&#x27;s picture</text><rect x="150" y="1050" width="12" height="12" rx="2" style="fill: var(--warn)"/><text x="167" y="1060" class="cl">groups, flattened at the end</text><rect x="150" y="1068" width="12" height="12" rx="2" style="fill: var(--accent)"/><text x="167" y="1078" class="cl">groups, not flattened</text></svg><figcaption>Figure 4. The trace distance of each edit of Figure 1, and of an edit that changes nothing in the picture, in evaluation steps, estimated from above by keying calls on their content (as in <a href="../011/#terms">issue 011</a>): on today's picture, on the tree flattened at the end, and on the tree not flattened. For scale: today's picture takes 121,973 steps from scratch.</figcaption></figure>
+<p>A smaller picture diff is a smaller diff of the result. The trace distance is a diff of the computation; on the tree not flattened, it follows the picture diff:</p>
+<ul>
+  <li><b>Moving or turning a part:</b> arm angle 20,206 to 5,104 steps, arm length 20,190 to 6,498, hand angle 25,026 to 4,807, neck 10,887 to 5,154. The edit changes a few transforms, and the shapes inside are made from the same inputs as before, so their steps can be kept; what is left is near the floor below.</li>
+  <li><b>Widening the shirt:</b> 25,506 to 9,196. The shirt is stretched by a group, and the arms, sleeves and hands move out with the shoulders: 13 transforms and no shape, yet about twice the floor's steps, which is not broken down here.</li>
+  <li><b>Growing a part:</b> hand size 28,484 to 14,108; its outlines are still made at the hand's size (<a href="#limits">above</a>).</li>
+  <li><b>The eyes:</b> eye size 61,876 to 50,937, eye gap 54,239 to 44,664, an iris 70,275 to 55,568. The eyes' shapes are now made from inputs the eye sliders do not change, and the sliders reach them only through their groups' transforms; but most of the eye sliders' steps are the check that keeps the mouth clear of the eyes, as <a href="../011/#eyes">issue 011</a> found, and the tree does not change it.</li>
+  <li><b>Reshaping a part:</b> arm width 2,927 to 6,236, shirt height 6,553 to 8,901, shoe size 4,056 to 4,838: a little more than today, near the floor.</li>
+  <li><b>The floor:</b> an edit that changes nothing in the picture costs 4,249 steps in the tree, 1,085 today: some of the tree's work is redone whatever the edit.</li>
+</ul>
+<p>Flattened at the end, every edit pays for the flattening again (3,247 to 28,018 steps more than the tree alone), and the tree's gains are gone: arm angle 20,206 to 28,849, shirt width 25,506 to 37,214, an edit that changes nothing 6,012. Not flattened, the tree is what a renderer that draws groups (SVG's <code>&lt;g transform&gt;</code>, a scene graph) would take.</p>
+<p><b>Hazel's update today:</b> 85.2 to 89.0% of a run from scratch on today's picture, 81.5 to 87.7% on the tree, for the edits of Figure 1; for an arm-angle edit, 104,193 steps on today's picture, 128,194 on the tree flattened, 90,238 on the tree alone. The whole figure is one top-level binding, and Hazel's reuse is by binding (<a href="../010/">issue 010</a>), so it is evaluated again whole whatever its representation; it takes fewer steps on the tree alone only because the tree is cheaper to build. The smaller diffs help an update that can keep parts of a run, a memo keyed by names, as <a href="../011/#naming">issue 011</a> measured; they do not help today's.</p>
+
+<h2 id="table">Every edit</h2>
+<div class="scroll"><table class="sweep">
+<thead><tr><th>slider</th><th>picture diff, today (shapes)</th><th>picture diff, groups (nodes)</th><th>trace distance, today (steps)</th><th>trace distance, groups flattened</th><th>trace distance, groups not flattened</th><th>Hazel's update, today (steps)</th><th>Hazel's update, groups not flattened</th></tr></thead>
+<tbody>
+<tr><td>shirt width</td><td>39</td><td>13</td><td>25,506</td><td>37,214</td><td>9,196</td><td>108,558</td><td>96,741</td></tr>
+<tr><td>arms (up / down)</td><td>30</td><td>8</td><td>20,206</td><td>28,849</td><td>5,104</td><td>104,193</td><td>90,238</td></tr>
+<tr><td>arm length</td><td>30</td><td>8</td><td>20,190</td><td>29,229</td><td>6,498</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>hand size</td><td>24</td><td>14</td><td>28,484</td><td>35,085</td><td>14,108</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>hand angle</td><td>24</td><td>2</td><td>25,026</td><td>25,890</td><td>4,807</td><td>110,025</td><td>90,263</td></tr>
+<tr><td>shirt height</td><td>9</td><td>5</td><td>6,553</td><td>14,678</td><td>8,901</td><td>108,048</td><td>96,147</td></tr>
+<tr><td>neck</td><td>9</td><td>4</td><td>10,887</td><td>15,837</td><td>5,154</td><td>105,197</td><td>91,277</td></tr>
+<tr><td>smile</td><td>8</td><td>5</td><td>18,817</td><td>23,983</td><td>13,652</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>eye size</td><td>7</td><td>5</td><td>61,876</td><td>59,984</td><td>50,937</td><td>104,025</td><td>90,070</td></tr>
+<tr><td>arm width</td><td>6</td><td>6</td><td>2,927</td><td>9,859</td><td>6,236</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>shoe size</td><td>4</td><td>2</td><td>4,056</td><td>8,723</td><td>4,838</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>eye gap</td><td>4</td><td>2</td><td>54,239</td><td>50,411</td><td>44,664</td><td>102,429</td><td>88,474</td></tr>
+<tr><td>eye shape (round / narrow)</td><td>2</td><td>2</td><td>51,031</td><td>50,027</td><td>45,830</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>eye angle</td><td>2</td><td>2</td><td>50,899</td><td>53,543</td><td>47,992</td><td>104,029</td><td>90,074</td></tr>
+<tr><td>shine size</td><td>2</td><td>2</td><td>7,297</td><td>9,861</td><td>6,614</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>human fingers</td><td>changes the count</td><td>104</td><td>100,391</td><td>152,596</td><td>80,353</td><td>184,214</td><td>153,124</td></tr>
+<tr><td>iris size</td><td>changes the count</td><td>9</td><td>70,275</td><td>67,269</td><td>55,568</td><td>112,424</td><td>94,701</td></tr>
+<tr><td>mouth open</td><td>changes the count</td><td>6</td><td>41,530</td><td>43,498</td><td>33,068</td><td>134,282</td><td>111,148</td></tr>
+<tr><td>alien fingers</td><td>0</td><td>0</td><td>1,085</td><td>6,012</td><td>4,249</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>star points</td><td>0</td><td>0</td><td>1,085</td><td>6,012</td><td>4,249</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>star turn (% to the next point)</td><td>0</td><td>0</td><td>1,085</td><td>6,012</td><td>4,249</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>claws</td><td>0</td><td>0</td><td>1,085</td><td>6,012</td><td>4,249</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>claw length</td><td>0</td><td>0</td><td>1,085</td><td>6,012</td><td>4,249</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>eye whites</td><td>0</td><td>0</td><td>1,574</td><td>5,995</td><td>4,232</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>spiky teeth</td><td>0</td><td>0</td><td>1,070</td><td>5,995</td><td>4,232</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>tongue length</td><td>0</td><td>0</td><td>1,944</td><td>6,869</td><td>5,106</td><td>104,189</td><td>90,234</td></tr>
+<tr><td>tongue width</td><td>0</td><td>0</td><td>1,987</td><td>6,912</td><td>5,149</td><td>104,189</td><td>90,234</td></tr>
+</tbody></table></div>
+<p class="note">Steps, counted as the evaluator takes them. From scratch: today's picture 121,973, the tree flattened 148,217, the tree alone 110,260. Edits that change how many shapes there are (the number of fingers, an iris, opening the mouth) change which calls are made; their picture diff in the flat picture is not a shape-by-shape count. Edits whose picture diff is 0 move a slider of a style Full Body is not wearing (claws, stars, alien fingers, spiky teeth, a tongue), or eye whites, which show only with an iris.</p>
+
+<h2 id="next">What next</h2>
+<ol>
+  <li><b>Draw the groups.</b> Let the Drawing library's <code>^picture</code> take a tree and render it as SVG groups, so the picture diff of Figure 1 reaches the page, and time a slider release against today's.</li>
+  <li><b>Find the floor.</b> Break down the 4,249 steps an edit that changes nothing costs in the tree (against 1,085 today), with issue 011's diagnosis of which calls' inputs differ.</li>
+  <li><b>Flatten only what changed.</b> A flattening that keeps each group's flat shapes, keyed by the group and its composed transform, would not put the whole list together again after an edit; measure its trace distance against the tree's.</li>
+  <li><b>The other slides.</b> Rebuild Witch and Scenes as groups, where issue 011 found the largest flat diffs (the witch's woods, the red eyes, a shared symbol for repeated shapes).</li>
+  <li><b>An outline that a group can scale.</b> Try a fixed-width stroke for hand outlines and measure the hand-size slider again, with the picture checked by eye.</li>
+</ol>
+
+<h2 id="method">How this was put together</h2>
+<ul>
+  <li><b>Build:</b> #2635 at <a href="https://github.com/hazelgrove/hazel/commit/c4e64060f1"><code>c4e64060f1</code></a>, with issue 011's oracle on a local branch, not pushed, and two more of its modes: one exports each edit's picture, and one measures another expression in the picture's place (here, the tree instead of its flattening).</li>
+  <li><b>The slide:</b> <a href="full-body-groups.hz"><code>full-body-groups.hz</code></a>, an experimental copy of the Livelit Playground's Full Body slide (not in the Hazel repository): a <code>Scene</code> type of leaves and groups, each group with an affine transform (<code>a b c d e f</code>, as SVG's <code>matrix</code>), a <code>flatten</code> that composes them, and the figure's parts placed, armed, handed and eyed as groups. Its picture is <code>flatten(scene)</code>.</li>
+  <li><b>Checks:</b> each flattened picture against today's slide's, point by point (all 28 within 6&times;10<sup>&minus;14</sup>); trees compared node by node, children matched by their longest common subsequence, numbers within 10<sup>&minus;9</sup> counted equal, and the flat pictures counted with the same tolerance.</li>
+  <li><b>Edits and runs:</b> the 27 slider edits of issue 011 on Full Body, each moved by a fifth of its range; the slide cut at its picture, analyzed with <code>Statics.mk_unmemoized</code>, evaluated from scratch and incrementally, as in <a href="../011/#method">issue 011</a>. Today's picture was measured again on the same build as the tree; it matches issue 011's run step for step. Steps are deterministic, so one run of each suffices; every control is clean.</li>
+</ul>
+
+</main>
+<!-- theme: begin -->
+<style>
+  .theme-toggle { position: fixed; top: 10px; right: 10px; z-index: 30; font: 13px system-ui, sans-serif; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--muted, GrayText);
+    cursor: pointer; opacity: 0.85; }
+  .theme-toggle:hover { opacity: 1; color: var(--ink, CanvasText); }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+/* The theme switch: Auto (the system's choice), Light, Dark; remembered for this site. */
+(() => {
+  const order = ["auto", "light", "dark"], label = { auto: "◐ auto", light: "☀ light", dark: "☾ dark" };
+  const get = () => { try { return localStorage.getItem("theme") || "auto"; } catch (_) { return "auto"; } };
+  const apply = m => m === "auto" ? document.documentElement.removeAttribute("data-theme")
+                                  : document.documentElement.setAttribute("data-theme", m);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "theme-toggle";
+  const show = () => { const m = get(); b.textContent = label[m] || label.auto;
+    b.title = "Theme: " + m + ". Click for " + order[(order.indexOf(m) + 1) % 3] + "; remembered on this site."; };
+  b.addEventListener("click", () => {
+    const m = order[(order.indexOf(get()) + 1) % 3];
+    try { m === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", m); } catch (_) {}
+    apply(m); show();
+  });
+  window.addEventListener("storage", e => { if (e.key === "theme") { apply(get()); show(); } });
+  show(); document.body.append(b);
+})();
+</script>
+<!-- theme: end -->
+<!-- steps: begin -->
+<style>
+  button.mint { margin-left: 4px; font: inherit; font-size: 0.75em; padding: 0 6px; border: 1px solid var(--line, #ccc);
+    border-radius: 4px; background: transparent; color: var(--muted, #666); cursor: pointer; vertical-align: 1px; }
+  button.mint:hover { color: inherit; }
+  button.mint.done { color: var(--good, #15803d); border-color: var(--good, #15803d); }
+  a.step-link { color: var(--muted, #666); text-decoration: none; font-size: 0.85em; margin-left: 4px; }
+  a.step-link:hover { text-decoration: underline; }
+  li:target { background: color-mix(in srgb, var(--good, #15803d) 12%, transparent); border-radius: 6px; }
+</style>
+<script>
+/* Each "What next" step: a link to it, and a button copying a request to
+   mint a ticket for it (to paste to Claude): the issue, the step, its URL. */
+(() => {
+  const h = document.getElementById("next");
+  if (!h) return;
+  let list = h.nextElementSibling;
+  while (list && !/^(OL|UL)$/.test(list.tagName)) {
+    if (list.tagName === "H2") return;
+    list = list.nextElementSibling;
+  }
+  if (!list) return;
+  const m = (document.querySelector(".series") || document.body).textContent.match(/Issue (\d{3})/);
+  const issue = m ? m[1] : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + issue + "/";
+  [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
+    const n = i + 1;
+    if (!li.id) li.id = "step-" + n;
+    const b = li.querySelector("b, strong");
+    const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
+    const url = base + "#" + li.id;
+    const text = "Mint a ticket for this step: Hazel performance analysis, issue " + issue +
+      ", What next, step " + n + ': "' + title + '". ' + url;
+    const a = document.createElement("a");
+    a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "mint"; btn.textContent = "copy for a ticket";
+    btn.title = "Copies a request to mint a ticket for this step, to paste to Claude";
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) {
+        const t = document.createElement("textarea"); t.value = text; document.body.append(t);
+        t.select(); document.execCommand("copy"); t.remove();
+      }
+      btn.textContent = "copied"; btn.classList.add("done");
+      setTimeout(() => { btn.textContent = "copy for a ticket"; btn.classList.remove("done"); }, 1500);
+    });
+    li.append(" ", a, " ", btn);
+  });
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+})();
+</script>
+<!-- steps: end -->
+</body>
+</html>
