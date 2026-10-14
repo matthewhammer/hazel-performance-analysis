@@ -61,9 +61,9 @@
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · Issue 006 · 2026-10-12</p>
+<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>6<b>)</b></code> · 2026-10-12</p>
 <h1>Catching performance regressions in CI</h1>
-<p class="sub">The second question from a meeting with Cyrus: issues 001–005 found and fixed performance problems by hand, one profile at a time. What stops them coming back? This issue covers what Hazel's CI checks today and why its two benchmark workflows never worked. It explains why a time can't fail a build on GitHub's runners and a count can, and describes the first count-based check (<a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a>). It also weighs building on <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>, an earlier benchmarking PR, against starting fresh.</p>
+<p class="sub">The second question from a meeting with Cyrus: <a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a>–<a href="../005/"><code class="ref"><b>^report(</b>5<b>)</b></code></a> found and fixed performance problems by hand, one profile at a time. What stops them coming back? This report covers what Hazel's CI checks today and why its two benchmark workflows never worked. It explains why a time can't fail a build on GitHub's runners and a count can, and describes the first count-based check (<a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a>). It also weighs building on <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>, an earlier benchmarking PR, against starting fresh.</p>
 
 <div class="headline">
 <p><b>Short answers.</b></p>
@@ -121,7 +121,7 @@
 <tr><td><b>Evaluator steps actually taken</b></td><td>more evaluation, or reuse that stopped working</td><td><code>dev</code>, with <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a></td></tr>
 <tr><td><b>Statics analyses per expression</b></td><td>an expression analyzed again, as module and livelit definitions were, twice each, until <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a></td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <code>Test_StaticsPasses</code>, with per-file budgets</td></tr>
 <tr><td><b>Work per edit:</b> pieces reparsed, items re-analyzed</td><td>an edit recomputing more than it touched</td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <code>Test_EditLocality</code>, <code>Test_BenchStatics</code></td></tr>
-<tr><td><b>Bytes:</b> an elaboration's size; the worker's messages</td><td>larger values crossing between the threads (issue 005)</td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <code>Test_ElabSize</code>; messages measured by hand so far</td></tr>
+<tr><td><b>Bytes:</b> an elaboration's size; the worker's messages</td><td>larger values crossing between the threads (<a href="../005/"><code class="ref"><b>^report(</b>5<b>)</b></code></a>)</td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <code>Test_ElabSize</code>; messages measured by hand so far</td></tr>
 </table>
 </div>
 <p><b>What counts miss:</b> a step that got slower, and the page's own costs (virtual DOM, layout), which need a browser. Those stay with timings.</p>
@@ -138,7 +138,7 @@
 <tr><td>A re-run after an edit to a literal nothing else reads; also under 5% of a cold run, whatever the budgets</td><td class="n">378</td><td class="n">420</td></tr>
 </table>
 </div>
-<p><b>It catches what it is for.</b> With reuse switched off in <code>IncrEval.reuse_check</code>, the re-run takes 206,834 steps, and the test fails: "over its budget of 420. A performance regression". This is the failure issues 004 and 005 kept finding by hand, a change re-evaluating everything, invisible to tests that only check the answer. The counts are the same on every run.</p>
+<p><b>It catches what it is for.</b> With reuse switched off in <code>IncrEval.reuse_check</code>, the re-run takes 206,834 steps, and the test fails: "over its budget of 420. A performance regression". This is the failure <a href="../004/"><code class="ref"><b>^report(</b>4<b>)</b></code></a> and <a href="../005/"><code class="ref"><b>^report(</b>5<b>)</b></code></a> kept finding by hand, a change re-evaluating everything, invisible to tests that only check the answer. The counts are the same on every run.</p>
 
 <h2 id="pr2161"><a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>: build on it, or start fresh?</h2>
 <p><a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>, "Performance benchmarking", by David Moon, is a draft opened on 2026-03-05. Its last commit is from 2026-03-13, and it conflicts with <code>dev</code>. It has 48 commits: +2,376 and −323 lines in 30 files.</p>
@@ -148,7 +148,7 @@
 <tr><th></th><th>Build on <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a></th><th>Start fresh: counts in the test suite (<a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a>)</th></tr>
 <tr><td><b>Measures</b></td><td>Time per phase of the editor's syntax and statics</td><td>Work done: evaluator steps now; statics analyses and bytes next</td></tr>
 <tr><td><b>Can it fail a build?</b></td><td><span class="bad">No.</span> Its threshold (10% and 0.5 ms) is the size of the runners' noise, and its comparison never fails</td><td><span class="good">Yes,</span> with no false alarms: a count over budget fails the test</td></tr>
-<tr><td><b>Covers where 001–005 found the costs</b></td><td><span class="warn">Partly:</span> statics, yes; evaluation, reuse, the worker and the page, no</td><td><span class="warn">Partly:</span> evaluation and reuse now; statics once <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s counts reach <code>dev</code>; the page, no</td></tr>
+<tr><td><b>Covers where <a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a>–<a href="../005/"><code class="ref"><b>^report(</b>5<b>)</b></code></a> found the costs</b></td><td><span class="warn">Partly:</span> statics, yes; evaluation, reuse, the worker and the page, no</td><td><span class="warn">Partly:</span> evaluation and reuse now; statics once <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s counts reach <code>dev</code>; the page, no</td></tr>
 <tr><td><b>Explains a regression</b></td><td><span class="good">Yes:</span> time by phase shows where it went</td><td><span class="warn">Partly:</span> a count shows that work grew, and which test, not where the time goes</td></tr>
 <tr><td><b>Sees a step getting slower</b></td><td><span class="good">Yes</span>, given enough repetitions</td><td><span class="bad">No</span></td></tr>
 <tr><td><b>Programs</b></td><td>Synthetic let-chains</td><td>Small programs in the test; slides can be added</td></tr>
@@ -161,7 +161,7 @@
 <p><b>The decision:</b> counts for the check that fails a build, so we started fresh. <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>'s timings by phase are the right shape for the other half: a report on a PR that shows where time went, run on one runner for base and head, repeated, and read by a person. If David wants that, the harness could be split out of <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a> for it.</p>
 
 <h2 id="update">Update, later on 2026-10-12: a count is not a time</h2>
-<p>Later the same day, work on the woods' picture view (<a href="../005/">issue 005</a>) measured steps and time side by side. Times are of the view's own evaluation on the page: a timer around it, on one build, comparing variants in turn. Changes in the whole redraw were too noisy to see.</p>
+<p>Later the same day, work on the woods' picture view (<a href="../005/"><code class="ref"><b>^report(</b>5<b>)</b></code></a>) measured steps and time side by side. Times are of the view's own evaluation on the page: a timer around it, on one build, comparing variants in turn. Changes in the whole redraw were too noisy to see.</p>
 <div class="scroll">
 <table>
 <tr><th>Change</th><th class="n">Steps</th><th class="n">The view's time</th></tr>
@@ -171,7 +171,7 @@
 <tr><td>The memo turned off, Kids' Choice's face, an eye-size change</td><td class="n">more</td><td class="n">about 7–23 → 38–51 ms</td></tr>
 </table>
 </div>
-<p><b>Why they disagree.</b> Steps are not equal: a variable lookup is cheap, a pattern match or a cast through the recursive Html type is not. And some work is no step at all. The call memo builds a key for each call it might reuse, putting the call's inputs in a comparable form and hashing them. In the woods those keys copied the whole picture three times on every change, about a quarter of the view's time, and none of it counted as a step. Statics, the page's drawing, garbage collection and memory are no steps either. Nor is copying. Giving a value a type rebuilt the whole value in one step: the woods' picture, 15,500 nodes, at every typed parameter it crossed. Removing that copying made the view 20–25% faster without changing its step count much (<a href="../004/#update">issue 004's update</a>, <a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a>).</p>
+<p><b>Why they disagree.</b> Steps are not equal: a variable lookup is cheap, a pattern match or a cast through the recursive Html type is not. And some work is no step at all. The call memo builds a key for each call it might reuse, putting the call's inputs in a comparable form and hashing them. In the woods those keys copied the whole picture three times on every change, about a quarter of the view's time, and none of it counted as a step. Statics, the page's drawing, garbage collection and memory are no steps either. Nor is copying. Giving a value a type rebuilt the whole value in one step: the woods' picture, 15,500 nodes, at every typed parameter it crossed. Removing that copying made the view 20–25% faster without changing its step count much (<a href="../004/#update"><code class="ref"><b>^report(</b>4<b>)</b></code>'s update</a>, <a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a>).</p>
 <p><b>So a step budget can be wrong both ways.</b></p>
 <ul>
   <li><b>A false improvement:</b> a memo whose hits remove steps, while its keys cost more time than the hits save. More garbage for the collector, fewer steps, is another.</li>
@@ -209,7 +209,7 @@
 </style>
 <script>
 /* Each "What next" step: a link to it, and a button copying a request to
-   mint a ticket for it (to paste to Claude): the issue, the step, its URL. */
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
 (() => {
   const h = document.getElementById("next");
   if (!h) return;
@@ -219,17 +219,19 @@
     list = list.nextElementSibling;
   }
   if (!list) return;
-  const m = (document.querySelector(".series") || document.body).textContent.match(/Issue (\d{3})/);
-  const issue = m ? m[1] : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + issue + "/";
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, issue " + issue +
-      ", What next, step " + n + ': "' + title + '". ' + url;
+    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
     const btn = document.createElement("button");
@@ -279,6 +281,13 @@
 })();
 </script>
 <!-- theme: end -->
+
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
 <!-- pr-cards: begin -->
 <style>
   .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;

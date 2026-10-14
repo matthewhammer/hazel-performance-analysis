@@ -60,9 +60,9 @@
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · Issue 004 · 2026-10-11</p>
+<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>4<b>)</b></code> · 2026-10-11</p>
 <h1>The witch and her woods, ported to Hazel</h1>
-<p class="sub">M's witch went into Messed Up Dress Up first (<a href="../003/">issue 003</a>). Now she is a slide in the Livelit Playground, on branch <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), kept in step on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> (user-defined livelits). Her woods and three more of the game's backgrounds followed, as a Scenes slide. This issue covers what the two slides do, two layout bugs the port turned up, and what a redraw costs, with a first look at why the woods cost so much.</p>
+<p class="sub">M's witch went into Messed Up Dress Up first (<a href="../003/"><code class="ref"><b>^report(</b>3<b>)</b></code></a>). Now she is a slide in the Livelit Playground, on branch <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), kept in step on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> (user-defined livelits). Her woods and three more of the game's backgrounds followed, as a Scenes slide. This report covers what the two slides do, two layout bugs the port turned up, and what a redraw costs, with a first look at why the woods cost so much.</p>
 
 <figure><img src="img/hz-witch.png" alt="The Witch slide's picture five ways: the default purple witch with green skin and a hooked nose; with a tuxedo cat on her shoulder and a broom in her hand; her nose pointing straight out at twice its length; in black with white webs, purple trim, red boots and a ginger cat; and with the cat at 400% and the broom at 300%.">
 <figcaption>The Witch slide, by its own livelits: the default; the cat and the broom turned on; the nose pointing out, at 200; other colors; the cat at 400% and the broom at 300%.</figcaption></figure>
@@ -114,7 +114,7 @@
 <p>Four of the game's backgrounds, with all their sliders: the forest; under the sea, with the sharks at their picnic table, forks in their fins; the beach; and the witch's woods. A paper doll in the game's usual look stands in for the figure. The slides before this one draw the real figure, and drawing it here would make every redraw pay for both. Three sliders size the doll about its feet and move it across and up or down the stage.</p>
 <figure><img src="img/hz-scenes.png" alt="The paper doll in each of four scenes: a sunny forest with pines, sunshafts, flowers and round trees; under the sea with a shipwreck, seaweed, fish and two sharks at a picnic table; a beach with palms, umbrellas, chairs, blankets and sand castles; and the witch's woods at dusk, with dead trees, a skull-topped fence, skeletons and a bubbling cauldron.">
 <figcaption>The four scenes, each as the slide first draws it.</figcaption></figure>
-<p>The woods have the game's newest controls (<a href="../003/">issue 003</a>):</p>
+<p>The woods have the game's newest controls (<a href="../003/"><code class="ref"><b>^report(</b>3<b>)</b></code></a>):</p>
 <ul>
   <li><b>Chicken legs</b> under the hut, off to start, as M wants them, with their size (20–300%).</li>
   <li><b>Hut nearer:</b> the hut comes down toward the fence and grows, and always stays behind it.</li>
@@ -158,7 +158,7 @@
   <li><b>Full Body's skin presses:</b> 1.8, 1.5 and 1.6 s.</li>
   <li><b>Kids' Choice:</b> a release still takes about 0.13 s, a median of 130 ms over 12.</li>
 </ul>
-<p class="note">These are single runs, one per change, so read them as sizes rather than precise numbers. Earlier issues saw a few tenths of a second between runs of the same change.</p>
+<p class="note">These are single runs, one per change, so read them as sizes rather than precise numbers. Earlier reports saw a few tenths of a second between runs of the same change.</p>
 
 <h3>The Scenes slide</h3>
 <div class="scroll"><table>
@@ -194,7 +194,7 @@
 <p class="note">Profiled times run longer than real ones: these two changes took 14.8 and 19.7 s under the profiler, against 10–15.5 s without it. Read the split as shares, not times.</p>
 
 <h3 id="timeline">The worker's timeline, and a fix</h3>
-<p>A message timeline of the woods followed, as in issue 001. It covered the page's posts to the eval worker and the worker's replies, with their sizes and times. The worker logged, per request, how its time went and what it reused; that logging was temporary. Two figure-size changes, two eye-size changes, then the same in the forest:</p>
+<p>A message timeline of the woods followed, as in <a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a>. It covered the page's posts to the eval worker and the worker's replies, with their sizes and times. The worker logged, per request, how its time went and what it reused; that logging was temporary. Two figure-size changes, two eye-size changes, then the same in the forest:</p>
 <ul>
   <li><b>The worker was idle more than half the time.</b> A woods change took the worker about 10 s from request to result. Only 3.9–4.4 s of that was evaluating; 5.8–6.2 s was between slices.
     <ul>
@@ -220,9 +220,9 @@
 <tr><td>Witch's woods</td><td class="n">15.5, 10.0, 12.0, 10.9 s</td><td class="n">9.4, 3.6, 4.2, 5.0 s</td></tr>
 <tr><td>Forest</td><td class="n">5.5, 3.5, 3.6, 3.7 s</td><td class="n">3.6, 1.6, 2.4, 2.0 s</td></tr>
 </table></div>
-<p>Kids' Choice, issue 001's slider, is unchanged: release to face has a median of 138 ms over 12 releases. On that slide the worker is not on the face's path.</p>
+<p>Kids' Choice, <a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a>'s slider, is unchanged: release to face has a median of 138 ms over 12 releases. On that slide the worker is not on the face's path.</p>
 <p class="note">On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, which lacks <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>'s speedups, the Scenes slide takes about 5 minutes to draw its first picture, with or without the fix (297 and 301 s). The page is too busy even to answer a script. The Witch slide takes 172 s there. That is the main thread, not the worker.</p>
-<p class="note"><b>Later on 2026-10-12:</b> still true, measured again cold (Scenes 287.5 s, Witch 173.1 s), and now explained in <a href="../007/">issue 007</a>. On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> the page runs a full update for every partial result the worker streams, re-projecting the whole program each time, and the worker streams after every slice. One commit from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>, <a href="https://github.com/hazelgrove/hazel/commit/c07bdacead"><code>c07bdacead</code></a>, brings Scenes to about 17 s and Witch to about 19 s in a copy of <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>.</p>
+<p class="note"><b>Later on 2026-10-12:</b> still true, measured again cold (Scenes 287.5 s, Witch 173.1 s), and now explained in <a href="../007/"><code class="ref"><b>^report(</b>7<b>)</b></code></a>. On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> the page runs a full update for every partial result the worker streams, re-projecting the whole program each time, and the worker streams after every slice. One commit from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>, <a href="https://github.com/hazelgrove/hazel/commit/c07bdacead"><code>c07bdacead</code></a>, brings Scenes to about 17 s and Witch to about 19 s in a copy of <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>.</p>
 
 <h3 id="reuse">Why nothing was reused, and a fix</h3>
 <p>The next question was which variable broke reuse. The worker logged, again only for this, every top-level binding it evaluated again, and why its definition's reuse check failed. Followed back from the woods, the chain started at the top of the slide:</p>
@@ -290,9 +290,9 @@
 
 <h3>Earlier lessons, checked against this slide</h3>
 <ul>
-  <li><b>The worker reuses what did not change (<a href="../001/">issue 001</a>).</b> Moving the figure leaves the scene's code and its inputs as they were, so the woods should come from the cache. They weren't: every change evaluated all 610,670 steps again, because a recursive helper's name leaked out of its <code>let</code> (above). Fixed, a figure-size change now re-evaluates only the figure.</li>
-  <li><b>A view re-evaluates only the calls whose inputs changed (001).</b> This was made for Kids' Choice, whose face is a few helper calls, and it keeps the last 8 calls of each helper. The picture's view calls its shape helper about 600 times. Keeping 1,024 calls didn't help. What did was giving up on a function that keeps missing (above).</li>
-  <li><b>Profiled times overstate code made of many small calls (001).</b> It held here too, as the note above shows.</li>
+  <li><b>The worker reuses what did not change (<a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a>).</b> Moving the figure leaves the scene's code and its inputs as they were, so the woods should come from the cache. They weren't: every change evaluated all 610,670 steps again, because a recursive helper's name leaked out of its <code>let</code> (above). Fixed, a figure-size change now re-evaluates only the figure.</li>
+  <li><b>A view re-evaluates only the calls whose inputs changed (<a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a>).</b> This was made for Kids' Choice, whose face is a few helper calls, and it keeps the last 8 calls of each helper. The picture's view calls its shape helper about 600 times. Keeping 1,024 calls didn't help. What did was giving up on a function that keeps missing (above).</li>
+  <li><b>Profiled times overstate code made of many small calls (<a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a>).</b> It held here too, as the note above shows.</li>
   <li><b>A trap in the measuring harness.</b> Timed in node, incremental evaluation came out 7–15 times slower than fresh on Hands and Eyes.
     <ul>
       <li>The test re-ran statics from scratch, which gives the elaboration new ids. So the reuse check could not match terms by hash, and compared them in full: every subterm, walked again for every node it checked.</li>
@@ -314,7 +314,7 @@
 <p>Three changes followed, each measured before and after. They are on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> and <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, and the third is also a <code>dev</code> PR, <a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a>:</p>
 <ol class="ranked">
   <li><b>A frame sets the box.</b> Most playground pictures already had a <code>Drawing.frame</code>, there so the box holds still. Now the box is the frame's, with the same margin, and the view no longer walks every point. Anything drawn outside the frame is cut off. The Witch's and Full Body's frames were raised to take in the hat and the hair as the slides open, so every slide opens with the box it had before. The view went from 238,781 to 99,621 steps. The redraw of a figure move went from a median of 2.20 s to 1.52 s, 8 changes each, with the same pictures.</li>
-  <li><b>Cheaper points strings.</b> <code>to_fixed</code> called directly, and a space after every point. Steps 99,621 → 74,055, but the view's own time only about 6% less, measured on one build: 26% fewer steps, 6% less time. Steps are not equal; see <a href="../006/#update">issue 006's update</a>.</li>
+  <li><b>Cheaper points strings.</b> <code>to_fixed</code> called directly, and a space after every point. Steps 99,621 → 74,055, but the view's own time only about 6% less, measured on one build: 26% fewer steps, 6% less time. Steps are not equal; see <a href="../006/#update"><code class="ref"><b>^report(</b>6<b>)</b></code>'s update</a>.</li>
   <li><b>No copy at a typed boundary.</b> Giving a value a type, as a typed parameter does, rebuilt the value, every list cell and tuple field, even when nothing inside changed. The picture was copied whole, 15,500 nodes, at <code>view_box(pic : Picture)</code> and again elsewhere. The copies cost time and garbage, and, being new objects, they made the view's call memo redo its keys: about a quarter of the view on every redraw. Now a value that already has the type comes back as itself. The view on a move to a new size went from about 725–830 ms to 520–650 ms. Revisiting a size the view has drawn still takes about 210 ms, and Kids' Choice is unchanged. The whole redraw, in the same session, went from a median of 1.62 s to 1.41 s.</li>
 </ol>
 <p>What is left of the view is the evaluator's own work, about 500 ms: variable lookups, pattern matching, fresh ids. That is the next target.</p>
@@ -323,12 +323,12 @@
 <ul>
   <li><b>A fix for <code>dev</code>:</b> the same one-line statics change, with its two tests.</li>
   <li><b>The page's redraw of a new picture</b>, still most of a woods change: the picture's view builds an Html node for each of ~600 shapes on every change (<a href="#casts">above</a>).</li>
-  <li><b><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>:</b> the Scenes slide still takes about 5 minutes to draw its first picture there (281 s with all three fixes). That is the main thread, without <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>'s speedups. <i>Later on 2026-10-12: why, and a one-commit fix (287.5 → about 17 s), in <a href="../007/">issue 007</a>.</i></li>
+  <li><b><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>:</b> the Scenes slide still takes about 5 minutes to draw its first picture there (281 s with all three fixes). That is the main thread, without <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>'s speedups. <i>Later on 2026-10-12: why, and a one-commit fix (287.5 → about 17 s), in <a href="../007/"><code class="ref"><b>^report(</b>7<b>)</b></code></a>.</i></li>
   <li><b>A cheaper <code>^picture</code> view:</b> less work per shape, or an unchanged shape's SVG element reused. <i>Done 2026-10-12, though the work was per point, not per shape (<a href="#update">above</a>).</i></li>
   <li><b>A profile of a Witch slide redraw</b>, to find where its extra 2–3 s over Full Body goes.</li>
   <li><b>Full Body's shoe labels</b>, so they fit their line.</li>
 </ul>
-<p>Since then: the shoe labels fit. A <code>^choice</code> now wraps its buttons into rows and is as many lines tall as they take (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <code>af826fcb46</code>, <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> <code>fc9cadab07</code>). The page's side of a redraw, and how it compares with diffing the view in the worker, is <a href="../005/">issue 005</a>.</p>
+<p>Since then: the shoe labels fit. A <code>^choice</code> now wraps its buttons into rows and is as many lines tall as they take (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <code>af826fcb46</code>, <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> <code>fc9cadab07</code>). The page's side of a redraw, and how it compares with diffing the view in the worker, is <a href="../005/"><code class="ref"><b>^report(</b>5<b>)</b></code></a>.</p>
 
 <h2 id="measured">How these were measured</h2>
 <ul>
@@ -358,7 +358,7 @@
 </style>
 <script>
 /* Each "What next" step: a link to it, and a button copying a request to
-   mint a ticket for it (to paste to Claude): the issue, the step, its URL. */
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
 (() => {
   const h = document.getElementById("next");
   if (!h) return;
@@ -368,17 +368,19 @@
     list = list.nextElementSibling;
   }
   if (!list) return;
-  const m = (document.querySelector(".series") || document.body).textContent.match(/Issue (\d{3})/);
-  const issue = m ? m[1] : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + issue + "/";
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, issue " + issue +
-      ", What next, step " + n + ': "' + title + '". ' + url;
+    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
     const btn = document.createElement("button");
@@ -428,6 +430,13 @@
 })();
 </script>
 <!-- theme: end -->
+
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
 <!-- pr-cards: begin -->
 <style>
   .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;

@@ -60,9 +60,9 @@
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · Issue 003 · 2026-10-11</p>
+<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>3<b>)</b></code> · 2026-10-11</p>
 <h1>A day of requests from M and N</h1>
-<p class="sub">Two players asked for features in Messed Up Dress Up today: M (my daughter) and N (my son). As in <a href="../002/">issue 002</a>, each one went first into the game, a single HTML/JS file they play with, and only then toward the Hazel slides. This issue is what they asked for, what it looks like, which parts reached Hazel today, and what those parts cost there.</p>
+<p class="sub">Two players asked for features in Messed Up Dress Up today: M (my daughter) and N (my son). As in <a href="../002/"><code class="ref"><b>^report(</b>2<b>)</b></code></a>, each one went first into the game, a single HTML/JS file they play with, and only then toward the Hazel slides. This report is what they asked for, what it looks like, which parts reached Hazel today, and what those parts cost there.</p>
 
 <figure><img src="img/hero.png" alt="Three scenes: a green witch with a hooked nose, a tuxedo cat on her shoulder and a broom, on a beach with palms and sand castles; a tiger costume with wrapped stripes in a forest meadow under sunshafts; a deer costume under water beside a shipwreck and two sharks at a picnic table, forks in their fins.">
 <figcaption>Today's game: a witch at the beach, a tiger in the forest, a deer under the sea.</figcaption></figure>
@@ -152,7 +152,7 @@
 <figure><img src="img/hz-hands-2.png" alt="The Hands slide: a one-point star, human hands turned 90°, alien hands with 30 fingers turned 180°, and arms 600 long."><figcaption>A 1-point star; human hands at 90°; 30 alien fingers at 180°; arms at 600.</figcaption></figure>
 <figure><img src="img/hz-mouth.png" alt="Full Body slide heads: the default; plain eyes at 300 with a smile, then open; iris and whites; star eyes; heart eyes; X eyes. The mouth sits below the eyes in each."><figcaption>Full Body in Hazel: the default face, then big eyes of each style, the mouth below them.</figcaption></figure>
 <p>A new test checks that every playground slide comes out of statics with no error marks. The port also turned up a stale cap: Hazel's alien hand still stopped at 99 fingers, so 100 drew the same picture as 99.</p>
-<p>Not yet in Hazel: the wrapped stripes, the witch, wolf and deer, the backgrounds, full screen, the left hand's own style, the noses, and the cat. The witch, her nose and her cat, and the skins, have since reached Hazel: see <a href="../004/">issue 004</a>.</p>
+<p>Not yet in Hazel: the wrapped stripes, the witch, wolf and deer, the backgrounds, full screen, the left hand's own style, the noses, and the cat. The witch, her nose and her cat, and the skins, have since reached Hazel: see <a href="../004/"><code class="ref"><b>^report(</b>4<b>)</b></code></a>.</p>
 
 <h2 id="cost">What it costs</h2>
 <p>The game redraws the heaviest of today's pictures in a few milliseconds. The Hazel slides take from under half a second to half a minute, and the cost grows with how many shapes a hand has.</p>
@@ -167,8 +167,8 @@
 <tr><td>Alien fingers 50 → 99</td><td class="n bad">32.30 s</td><td class="n">5 ms</td></tr>
 <tr><td>Full Body: eye size 50 → 300, smile, mouth open</td><td class="n">3.2–3.9 s</td><td class="n">1–3 ms</td></tr>
 </table></div>
-<p>The alien hand is the clearest case. Each finger is a capsule and a round pad, built point by point and drawn twice, outline and fill, on each of two hands. The redraw grows with the finger count, about 0.3 s per finger. 100 claws cost about a quarter of that per claw. This hasn't been profiled yet, so where that time goes is the next question. Issue 002 found the heaviest slide spending its time printing points; whether that holds here is what a profile would tell.</p>
-<p class="note">These are single runs, one per change, so read them as sizes rather than precise numbers. Earlier issues saw a few tenths of a second between runs of the same change.</p>
+<p>The alien hand is the clearest case. Each finger is a capsule and a round pad, built point by point and drawn twice, outline and fill, on each of two hands. The redraw grows with the finger count, about 0.3 s per finger. 100 claws cost about a quarter of that per claw. This hasn't been profiled yet, so where that time goes is the next question. <a href="../002/"><code class="ref"><b>^report(</b>2<b>)</b></code></a> found the heaviest slide spending its time printing points; whether that holds here is what a profile would tell.</p>
+<p class="note">These are single runs, one per change, so read them as sizes rather than precise numbers. Earlier reports saw a few tenths of a second between runs of the same change.</p>
 
 <h2 id="next">What next</h2>
 <ul>
@@ -209,7 +209,7 @@
 </style>
 <script>
 /* Each "What next" step: a link to it, and a button copying a request to
-   mint a ticket for it (to paste to Claude): the issue, the step, its URL. */
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
 (() => {
   const h = document.getElementById("next");
   if (!h) return;
@@ -219,17 +219,19 @@
     list = list.nextElementSibling;
   }
   if (!list) return;
-  const m = (document.querySelector(".series") || document.body).textContent.match(/Issue (\d{3})/);
-  const issue = m ? m[1] : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + issue + "/";
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, issue " + issue +
-      ", What next, step " + n + ': "' + title + '". ' + url;
+    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
     const btn = document.createElement("button");
@@ -279,6 +281,13 @@
 })();
 </script>
 <!-- theme: end -->
+
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
 <!-- pr-cards: begin -->
 <style>
   .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;

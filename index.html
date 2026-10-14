@@ -90,7 +90,7 @@
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · Issue 001 · 2026-10-10</p>
+<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>1<b>)</b></code> · 2026-10-10</p>
 <h1>Why a slider isn't instant yet</h1>
 <p class="sub">Hazel livelits, on the playground slides, measured 2026-10-09 to 11. Branch <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), dev builds, headless Firefox.</p>
 
@@ -154,7 +154,7 @@
     <tr><td>The worker: evaluating 25 (was 47), planning reuse 13, encoding 6</td><td>worker, off the face's path</td><td>45</td></tr>
   </tbody>
 </table></div>
-<p class="note"><b>Added later on 2026-10-14:</b> measured part by part (in node, release by release), the hashing was the smaller share of building the request, 1 to 4 ms. Most of it was building the request's projection of the statics, by walking the last statics map and the new one, whole; that now takes under a millisecond on every Livelit Playground slide. <a href="../013/">Issue 013</a>.</p>
+<p class="note"><b>Added later on 2026-10-14:</b> measured part by part (in node, release by release), the hashing was the smaller share of building the request, 1 to 4 ms. Most of it was building the request's projection of the statics, by walking the last statics map and the new one, whole; that now takes under a millisecond on every Livelit Playground slide. <a href="../013/"><code class="ref"><b>^report(</b>13<b>)</b></code></a>.</p>
 <p><b>Fixed with this profile: reusing an evaluation walked the reused code.</b> When the worker reuses a cached result, it copies the cache entry of every node below it into the new cache, and it walked the whole reused subtree to find them: on a slider release, nearly the whole program, 16 ms of its 47 ms evaluation. Entries are recorded only for nodes evaluated outside any call, so the walk now stops at function bodies, as the result collector's index does (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/9129cd2774"><code>9129cd2774</code></a>, <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> <a href="https://github.com/hazelgrove/hazel/commit/5286ba3b10"><code>5286ba3b10</code></a>). The worker's evaluation went from 47 to 25 ms and its work per release from 69 to 45 ms. Release to face did not move (154 / 143.5 against 140 / 142 ms), since the worker is no longer on the face's path. On real caches (275 entries on <code>mega-1k</code>; a generated program on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>) the copy equals the full walk, kept in the tests as the reference.</p>
 <p id="sorts"><b>Fixed since: the code editor re-checked every tile's sort on every commit.</b> The code editor draws the program in chunks of whole lines and reuses a chunk's drawing while the sorts its tiles show (the colours) are unchanged. Every commit brings new statics, and that re-checked every tile of every chunk: a lookup and a mold rebuilt per tile, over the whole program. A tile shows two sorts, and each can move only for some tiles: the parser's only for a chunk's top-level tiles, since below them sorts follow the code itself; and the one statics refine only for derivation tiles. A chunk now lists those tiles once, when it is drawn, and a commit re-checks only them (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <a href="https://github.com/hazelgrove/hazel/commit/31502d1e3d"><code>31502d1e3d</code></a>; the chunked code view is <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>'s, so there's nothing to port to <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>). Tiles re-checked per commit: <code>mega-1k</code> 4,115 → 36, <code>mega-2k</code> 11,624 → 114, <code>mega-4k</code> 25,852 → 270. On a Kids' Choice release, profiled: the check 16 → 0.3 ms, the code editor 26 → 8 ms. But release to face, twelve releases each, with the change, without it, then with it again: medians 132 / 134 / 130 ms, means 148 / 152 / 145. That's 3–5 ms, inside the spread of single releases (107–206 ms). A test checks over 36 real edits that the narrow check never reuses a chunk the full one would redraw, and that it does redraw when a sort moves. In the browser, an edited derivation program drew the same classes, token for token, as a fresh load of the same text.</p>
 <p><b>Next, by payoff:</b> find which of the request's values are new on each commit, probably the elaboration's spine down to the changed item and the statics table's changed paths, and keep their identity (15 ms of hashing, profiled; started); and make the redraw of the commit cheaper, since the face's redraw waits for it. After the sort check, take these profiled numbers as upper bounds: code made of many small calls looks several times costlier under the profiler than it is.</p>
@@ -255,7 +255,7 @@
 <p class="kicker">Finding · fixed</p>
 <h3>Incremental evaluation's reuse check cost more than it saved</h3>
 <p>The eval worker does evaluate incrementally: it keeps the last run's results and reuses them (<a href="https://github.com/hazelgrove/hazel/pull/2606">#2606</a>). But before each run it decides what it can reuse by comparing each cached entry's expression with the new program <em>structurally</em>, which is O(program) on every request. On a slider release that checking costs more than the re-evaluation it avoids:</p><!-- note011:0 -->
-<p class="note"><b>Added later on 2026-10-13:</b> what it keeps and reuses is a top-level binding's result, named by the editor's id of that binding and found the same by its content (a Merkle hash, ids included). After a slider release it evaluates again every binding that uses the slider; on the Playground's figure slides that is the whole picture: its <a href="../011/#terms">update cost</a> is about nine tenths of a run from scratch, though the release changes a few of the picture's shapes (<a href="../010/">issue 010</a>). What names inside the picture could reuse is the subject of issues 010 and <a href="../011/">011</a>.</p><!-- /note011:0 -->
+<p class="note"><b>Added later on 2026-10-13:</b> what it keeps and reuses is a top-level binding's result, named by the editor's id of that binding and found the same by its content (a Merkle hash, ids included). After a slider release it evaluates again every binding that uses the slider; on the Playground's figure slides that is the whole picture: its <a href="../011/#terms">update cost</a> is about nine tenths of a run from scratch, though the release changes a few of the picture's shapes (<a href="../010/"><code class="ref"><b>^report(</b>10<b>)</b></code></a>). What names inside the picture could reuse is the subject of <a href="../010/"><code class="ref"><b>^report(</b>10<b>)</b></code></a> and <a href="../011/"><code class="ref"><b>^report(</b>11<b>)</b></code></a>.</p><!-- /note011:0 -->
 <svg viewBox="0 0 600 226" width="100%" style="max-width:640px" role="img" aria-label="The eval worker's time per slider release: about 280 ms deciding what to reuse, 200 ms of it structural comparison, against about 180 ms of evaluation and 110 ms unpacking the request."><text x="0" y="16" font-weight="700" font-size="15" fill="var(--ink)">The eval worker, per Kids' Choice slider release (CPU profile)</text><text x="0" y="40" font-size="15" fill="var(--ink)">deciding what to reuse</text><rect x="0" y="47" width="364" height="16" rx="3" fill="var(--worker)"/><text x="372" y="61" font-size="15" font-weight="700" fill="var(--ink)">≈280 ms</text><text x="0" y="86" font-size="15" fill="var(--ink)">…comparing expressions structurally</text><rect x="0" y="93" width="260" height="16" rx="3" fill="var(--bad)"/><text x="268" y="107" font-size="15" font-weight="700" fill="var(--ink)">≈200 ms</text><text x="0" y="132" font-size="15" fill="var(--ink)">evaluating what changed</text><rect x="0" y="139" width="234" height="16" rx="3" fill="var(--good)"/><text x="242" y="153" font-size="15" font-weight="700" fill="var(--ink)">≈180 ms</text><text x="0" y="178" font-size="15" fill="var(--ink)">unpacking the 478 KB request</text><rect x="0" y="185" width="143" height="16" rx="3" fill="var(--s4)"/><text x="151" y="199" font-size="15" font-weight="700" fill="var(--ink)">≈110 ms</text></svg>
 <p>This is the same shape as the problem <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a> fixed for types, where the evaluator compared two copies of the Html type at every node. It has the same fix: <b>Merkle hashes on expressions</b>, so that recognizing an unchanged expression is O(1).</p>
 <h4>The fix, and why hashing alone wasn't enough</h4>
@@ -280,7 +280,7 @@
 <h3>A view re-evaluated every call, though one input changed</h3>
 <p>A livelit's view is evaluated again after each change of its model, and most of its calls are the calls of the last evaluation, made again. A new eye size on Kids' Choice changes the arguments of the face's two <code>eye</code> calls; <code>sides_of</code>, <code>pieces</code>, the brow, the mouth, <code>teeth_of</code>, <code>sick_pile</code>, <code>mood</code> and the face's three own sliders are called with what they were called with before.</p>
 <p>Now a view's evaluation remembers its calls (<code>Language.CallMemo</code>). A call is identified by its function's body and the values of the variables that body reads, compared by structure with ids left out, since each evaluation mints new ones. A closure among those values compares by its code and the values <em>it</em> reads, not its whole environment, which holds the new model even for a helper that never reads it. "The variables a body reads" is every name that occurs in it as a variable: more than it reads, which can only cost a reuse, never give a wrong one. Only calls that took at least 40 steps are looked up or remembered. Only view evaluation uses it: a view's evaluation is pure (randomness and effects are commands, run after).</p><!-- note011:1 -->
-<p class="note"><b>Added later on 2026-10-13:</b> in the terms of <a href="../011/#naming">issue 011</a>, the memo keys a call by its content (its code and the id-free values its code mentions), not by a name. Two kinds of id stay in the key: those of types, as said below, and those of a module value's items, which each evaluation mints afresh, so a call whose inputs hold a module value made by another evaluation is not recognized (<a href="../010/#control">issue 010</a>).</p><!-- /note011:1 -->
+<p class="note"><b>Added later on 2026-10-13:</b> in the terms of <a href="../011/#naming"><code class="ref"><b>^report(</b>11<b>)</b></code></a>, the memo keys a call by its content (its code and the id-free values its code mentions), not by a name. Two kinds of id stay in the key: those of types, as said below, and those of a module value's items, which each evaluation mints afresh, so a call whose inputs hold a module value made by another evaluation is not recognized (<a href="../010/#control"><code class="ref"><b>^report(</b>10<b>)</b></code></a>).</p><!-- /note011:1 -->
 <div class="scroll"><table>
   <thead><tr><th><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, same session</th><th>without</th><th>with</th></tr></thead>
   <tbody>
@@ -412,7 +412,7 @@
 <p>Per character, re-process the whole run. Per <code>let</code>, re-analyze the whole definition. Per click, walk the whole program. Per use, evaluate the whole definition. Per variable, copy in its whole value. Per redraw, evaluate every view. Each is linear on its own; inside a loop it becomes quadratic, and nested it becomes exponential.</p>
 <h3>Caches that key on object identity break silently</h3>
 <p>Per-item parsing, the layout cache and the statics cache reuse work when they see the same objects as last time. One helper that re-made every object (MapPiece) turned all of them off at once, with no error, just slowness. A hash of the content (TypHash) survives copies. Identity is cheaper when it holds; a hash is safer when something upstream might copy.</p><!-- note011:2 -->
-<p class="note"><b>Added later on 2026-10-13:</b> identity or content is one axis of a design space of names: what each cache is keyed by, and what that key survives. <a href="../011/#naming">Issue 011</a> sets it out for the evaluator, with Fumola's rule: what is edited gets a name that stays put while its value changes, and what is derived is found by its content.</p><!-- /note011:2 -->
+<p class="note"><b>Added later on 2026-10-13:</b> identity or content is one axis of a design space of names: what each cache is keyed by, and what that key survives. <a href="../011/#naming"><code class="ref"><b>^report(</b>11<b>)</b></code></a> sets it out for the evaluator, with Fumola's rule: what is edited gets a name that stays put while its value changes, and what is derived is found by its content.</p><!-- /note011:2 -->
 <h3>Measure where the user is</h3>
 <p>Node said statics took 4 s on slides that froze Firefox for 30–108 s. The fixes that mattered most were found by profiling Firefox itself, one interaction at a time (<code>scripts/profile_interaction.py</code>), and by counting work instead of timing it (<code>--count-passes</code>).</p>
 
@@ -517,7 +517,7 @@ play();
 </style>
 <script>
 /* Each "What next" step: a link to it, and a button copying a request to
-   mint a ticket for it (to paste to Claude): the issue, the step, its URL. */
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
 (() => {
   const h = document.getElementById("next");
   if (!h) return;
@@ -527,17 +527,19 @@ play();
     list = list.nextElementSibling;
   }
   if (!list) return;
-  const m = (document.querySelector(".series") || document.body).textContent.match(/Issue (\d{3})/);
-  const issue = m ? m[1] : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + issue + "/";
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, issue " + issue +
-      ", What next, step " + n + ': "' + title + '". ' + url;
+    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
     const btn = document.createElement("button");
@@ -587,6 +589,13 @@ play();
 })();
 </script>
 <!-- theme: end -->
+
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
 <!-- pr-cards: begin -->
 <style>
   .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;

@@ -61,7 +61,7 @@
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · Issue 008 · 2026-10-12</p>
+<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>8<b>)</b></code> · 2026-10-12</p>
 <h1>One slider, three ways: what modular editing saves</h1>
 <p class="sub">A question about the two livelits branches. <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> has no modular editing, and <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> has it, from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> (modular editors). How long does one slider change take on a complex picture, the Livelit Playground's Full Body slide? The hypothesis: <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> is much faster, especially in its UX outline mode, showing only the slider and the picture, because it doesn't reprocess the unrelated code. A third set-up separates the two halves of that hypothesis.</p>
 
@@ -107,7 +107,7 @@
 <tr><td><b>C</b>: <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, whole program</td><td class="n"><b>1.2 s</b></td><td class="n">0.9–1.8 s</td><td class="n">1</td></tr>
 <tr><td><b>B</b>: <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, slider and picture only</td><td class="n"><b>3.5 s</b></td><td class="n">2.9–5.0 s</td><td class="n">2.9×</td></tr>
 </table></div>
-<p>The ranges don't overlap, so the order is not noise. A has <a href="../007/"><code>c07bdacead</code></a> (issue 007), so its worker's stream messages are throttled as on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>.</p>
+<p>The ranges don't overlap, so the order is not noise. A has <a href="../007/"><code>c07bdacead</code></a> (<a href="../007/"><code class="ref"><b>^report(</b>7<b>)</b></code></a>), so its worker's stream messages are throttled as on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>.</p>
 
 <h2 id="where">Where the time goes</h2>
 <p>Three changes in each set-up were profiled, the page's main thread and the eval worker together, and six more in B with the reuse check's fix (<a href="#fix">below</a>). Times are milliseconds per change, profiled, so they run longer than the clock (the windows were 13.3, 1.8, 4.2 and 2.2 s). Rows overlap: a function's time includes what it calls.</p>
@@ -127,7 +127,7 @@
 <p class="note">The worker checks for reuse during the evaluation, so its evaluating row includes most of the check. B's extra worker time is the check, not more evaluation (<a href="#reuse">below</a>).</p>
 
 <h3 id="a">A: the whole program, analyzed again</h3>
-<p>On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, a slider change edits the program's text, since the livelit's model lives in it, and the page then runs statics on the whole program from scratch. That is 5.4 s of a 13.3 s profiled change. The page also rebuilds the whole code view (2.3 s) and turns the whole program into text (1.5 s). The worker's part, about a second, is the same as on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>. This is the cost <a href="../001/">issue 001</a> found on the much smaller Kids' Choice slide, where it was 3.5 s of statics against <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s per-item 16 ms.</p>
+<p>On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, a slider change edits the program's text, since the livelit's model lives in it, and the page then runs statics on the whole program from scratch. That is 5.4 s of a 13.3 s profiled change. The page also rebuilds the whole code view (2.3 s) and turns the whole program into text (1.5 s). The worker's part, about a second, is the same as on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>. This is the cost <a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a> found on the much smaller Kids' Choice slide, where it was 3.5 s of statics against <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s per-item 16 ms.</p>
 
 <h3 id="b">B: what dividing the program costs</h3>
 <p>The UX outline mode shows a GUI by opening its row as a cell: a small editor of its own. With cells open, the program is <i>divided</i>: the cells hold their items, and the rest stays in a base, and on every change the whole document is assembled again from them. Three costs follow, and none of them is in C:</p>
@@ -165,7 +165,7 @@
 <tr><td>Slow matches, and parts reused</td><td class="n">122, 337</td><td class="n">122, 337</td><td class="n">1, 338</td></tr>
 </table></div>
 <p>The decisions are identical; only their cost changed. With the check cheap, a change in B also finishes before the autosave fires, so the save stopped landing in the middle of it. B's range was 1.06–1.9 s, with one change at 3.8 s.</p>
-<p>Profiled again with the fix (six changes, the last column of the <a href="#where">table</a>), the worker's part of a change in B is now smaller than in C (884 ms against 1,056), and the autosave and the text conversion are gone from the change. What B still spends beyond C is on the page: the cells' livelit views without their memo (449 ms against C's 163) and collecting the stream's state (340 against 204). Profiled, B's window is still 1.2× C's, though on the clock the two are within 3%: the profiler slows some code more than other code (as in <a href="../004/#cost">issue 004</a>), so these rows say where the time goes, and the clock says how much.</p>
+<p>Profiled again with the fix (six changes, the last column of the <a href="#where">table</a>), the worker's part of a change in B is now smaller than in C (884 ms against 1,056), and the autosave and the text conversion are gone from the change. What B still spends beyond C is on the page: the cells' livelit views without their memo (449 ms against C's 163) and collecting the stream's state (340 against 204). Profiled, B's window is still 1.2× C's, though on the clock the two are within 3%: the profiler slows some code more than other code (as in <a href="../004/#cost"><code class="ref"><b>^report(</b>4<b>)</b></code></a>), so these rows say where the time goes, and the clock says how much.</p>
 <p>The fix is on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> as <a href="https://github.com/hazelgrove/hazel/commit/cbdab791f5"><code>cbdab791f5</code></a>. It adds a test that the one-walk check agrees with the trace check (the same term with new ids: equal; a lexeme-only edit: not; a real change: not). The existing test that a lexeme-only edit invalidates reuse still passes, as do the <code>Evaluator</code> (524), <code>Evaluator.Incremental</code> (46), <code>IncrSlides</code> (13), <code>CallMemo</code> (6) and <code>Equality</code> (8) groups.</p>
 <p><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> has no lexeme comparison in its check: it predates <a href="https://github.com/hazelgrove/hazel/commit/7de3875cd8"><code>7de3875cd8</code></a>, which added the comparison to <code>dev</code> after an in-place edit of <code>@@</code> to <code>@@@</code> showed the old operator's result. So <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> has neither this cost nor that protection. <i><b>Corrected on 2026-10-13:</b> <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> doesn't need that protection. Its terms carry no lexemes at all (they came to <code>dev</code> with <a href="https://github.com/hazelgrove/hazel/commit/500c466b44"><code>500c466b44</code></a>, which <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> lacks), and it turns an unknown operator such as <code>@@</code> into a hole of its operands alone. So <code>@@</code> and <code>@@@</code> make the same term and the same result, and nothing can go stale. Its check is already the cheap one: the hash lookup, then the memoized structural walk.</i> <code>dev</code> compares lexemes by trace on every check, and without the hash shortcut, so the same fix would suit it, together with the shortcut.</p>
 
@@ -191,10 +191,10 @@
 
 <h2 id="method">How this was put together</h2>
 <ul>
-  <li><b>Builds:</b> <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> at <a href="https://github.com/hazelgrove/hazel/commit/a15c6f0b65"><code>a15c6f0b65</code></a> (with issue 007's fix) and <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <a href="https://github.com/hazelgrove/hazel/commit/57c928cef4"><code>57c928cef4</code></a>, then with <a href="https://github.com/hazelgrove/hazel/commit/cbdab791f5"><code>cbdab791f5</code></a> and <a href="https://github.com/hazelgrove/hazel/commit/8717564a5f"><code>8717564a5f</code></a>, dev builds, served locally. The Full Body slide's text is identical on both.</li>
+  <li><b>Builds:</b> <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> at <a href="https://github.com/hazelgrove/hazel/commit/a15c6f0b65"><code>a15c6f0b65</code></a> (with <a href="../007/"><code class="ref"><b>^report(</b>7<b>)</b></code></a>'s fix) and <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <a href="https://github.com/hazelgrove/hazel/commit/57c928cef4"><code>57c928cef4</code></a>, then with <a href="https://github.com/hazelgrove/hazel/commit/cbdab791f5"><code>cbdab791f5</code></a> and <a href="https://github.com/hazelgrove/hazel/commit/8717564a5f"><code>8717564a5f</code></a>, dev builds, served locally. The Full Body slide's text is identical on both.</li>
   <li><b>Times:</b> headless Firefox over WebDriver, a fresh profile per set-up, the slide opened at <code>/fresh</code>. Each change was a real drag of the "arm length" slider to a new length, the same twelve lengths in each set-up. The time runs from the slider's <code>pointerup</code> to the first moment a large picture's markup differed from before the drag, checked every 200 ms in the page. One set-up at a time, on one laptop.</li>
   <li><b>B's set-up:</b> the outline switched to 🖼️ UX mode, then every GUI row's 🖼️ chip switched off except "arm_length" and "drawn", by clicking the outline's own controls.</li>
-  <li><b>The reuse counts:</b> a temporary build of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (local branch <code>perf/2635-reuse-diag</code>, not pushed) that counted <code>IncrEval.reuse_check</code>'s outcomes and printed them per request. Firefox copied the worker's console to a file (<code>devtools.console.stdout.content</code>). Its own sampling (an id trace of a few large subterms per change) slowed it, so the times in this issue come from builds without it.</li>
+  <li><b>The reuse counts:</b> a temporary build of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (local branch <code>perf/2635-reuse-diag</code>, not pushed) that counted <code>IncrEval.reuse_check</code>'s outcomes and printed them per request. Firefox copied the worker's console to a file (<code>devtools.console.stdout.content</code>). Its own sampling (an id trace of a few large subterms per change) slowed it, so the times in this report come from builds without it.</li>
   <li><b>Profiles:</b> the Gecko profiler, sampling every 1 ms, over three changes per set-up, and six more each for B with the reuse check's fix and for C with the index's. The windows run from each <code>pointerup</code> to its redraw, from marks the page set. The worker's evaluation is <code>run_scheduled_slice</code>, and its reuse check <code>reuse_check</code>.</li>
 </ul>
 
@@ -211,7 +211,7 @@
 </style>
 <script>
 /* Each "What next" step: a link to it, and a button copying a request to
-   mint a ticket for it (to paste to Claude): the issue, the step, its URL. */
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
 (() => {
   const h = document.getElementById("next");
   if (!h) return;
@@ -221,17 +221,19 @@
     list = list.nextElementSibling;
   }
   if (!list) return;
-  const m = (document.querySelector(".series") || document.body).textContent.match(/Issue (\d{3})/);
-  const issue = m ? m[1] : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + issue + "/";
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, issue " + issue +
-      ", What next, step " + n + ': "' + title + '". ' + url;
+    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
     const btn = document.createElement("button");
@@ -281,6 +283,13 @@
 })();
 </script>
 <!-- theme: end -->
+
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
 <!-- pr-cards: begin -->
 <style>
   .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;

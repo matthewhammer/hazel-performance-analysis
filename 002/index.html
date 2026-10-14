@@ -60,7 +60,7 @@
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · Issue 002 · 2026-10-11</p>
+<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>2<b>)</b></code> · 2026-10-11</p>
 <h1>From a game to a slide deck: Messed Up Dress Up in Hazel</h1>
 <p class="dedicated">Dedicated to a resonance between research and play &mdash; <a href="#dedication">see the dedication at the end</a>.</p>
 <p class="sub">How a plain HTML/JS prototype, played by real players, became Hazel slides you can use: hair on the head, a neck, arms, a shirt with a style and a size, hands, eyes and a mouth. Branch <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), with the slides kept in step on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>. Measured 2026-10-11 on dev builds, in headless Firefox.</p>
@@ -72,7 +72,7 @@
   <div class="kpi"><div class="v bad">1–2.5 s</div><div class="l">a change on Hands, the heaviest: 1 s for round hands, 2.5 s for seven alien fingers</div></div>
 </div>
 
-<p class="headline"><b>In short:</b> <a href="../001/">Issue 001</a> took a livelit slider release from 4.6 s to about 0.13 s. That made the slides worth building out, so we did: each feature was tried first in Messed Up Dress Up, a one-file HTML/JS game, by its players, and then formulated in Hazel, on the Livelit Playground slides. The formulations work and look like the game. They also show the next performance problem plainly: a slide's cost now grows with the number of points it draws, because the picture is computed, and then turned into SVG text, by Hazel code, one point at a time.</p>
+<p class="headline"><b>In short:</b> <a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a> took a livelit slider release from 4.6 s to about 0.13 s. That made the slides worth building out, so we did: each feature was tried first in Messed Up Dress Up, a one-file HTML/JS game, by its players, and then formulated in Hazel, on the Livelit Playground slides. The formulations work and look like the game. They also show the next performance problem plainly: a slide's cost now grows with the number of points it draws, because the picture is computed, and then turned into SVG text, by Hazel code, one point at a time.</p>
 
 <h2 id="method">The method: prototype in HTML/JS, formulate in Hazel</h2>
 <p>Messed Up Dress Up is one HTML file: a friend to dress, and tabs of controls for the face, the eyes, the hair, the neck, arms and legs, the shirt, the hands, the pants, swimwear, the feet and costumes. It is quick to change, and it has players, who say what they want next and what is confusing. HTML/JS is still the lighter-weight place to prototype, in a lot of ways.</p>
@@ -151,7 +151,7 @@
     <tr><td>Mouth</td><td>the smile; opening, teeth, tongue</td><td class="n">0.8–1.7 s</td></tr>
   </tbody>
 </table></div>
-<p>For comparison, a Kids' Choice release is about 0.13 s (<a href="../001/">issue 001</a>), and the game itself takes under a millisecond. The difference is in what is drawn: Kids' Choice's face is a hand-written view, while these slides compute their pictures, polygon by polygon and point by point, in Hazel, and then print every point.</p>
+<p>For comparison, a Kids' Choice release is about 0.13 s (<a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a>), and the game itself takes under a millisecond. The difference is in what is drawn: Kids' Choice's face is a hand-written view, while these slides compute their pictures, polygon by polygon and point by point, in Hazel, and then print every point.</p>
 
 <h2 id="next">What next</h2>
 <ol class="ranked">
@@ -176,7 +176,7 @@
 
 <h2 id="dedication">Dedication</h2>
 <div class="dedication">
-<p>We dedicate this issue to a resonance: a recurring set of good feelings and thoughts that comes from helping Hazel while being playful and creative with kids.</p>
+<p>We dedicate this report to a resonance: a recurring set of good feelings and thoughts that comes from helping Hazel while being playful and creative with kids.</p>
 <p>It involves people, Matthew's kids most of all. Messed Up Dress Up is theirs: they play it, they named it, and much of what is in it, and so in these slides, began as something they asked for. Here the research and the play turned out to be one activity, and it has been, in Matthew's words, a very rewarding experience.</p>
 <p>We hope others can find it too, if it is their desire.</p>
 </div>
@@ -194,7 +194,7 @@
 </style>
 <script>
 /* Each "What next" step: a link to it, and a button copying a request to
-   mint a ticket for it (to paste to Claude): the issue, the step, its URL. */
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
 (() => {
   const h = document.getElementById("next");
   if (!h) return;
@@ -204,17 +204,19 @@
     list = list.nextElementSibling;
   }
   if (!list) return;
-  const m = (document.querySelector(".series") || document.body).textContent.match(/Issue (\d{3})/);
-  const issue = m ? m[1] : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + issue + "/";
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, issue " + issue +
-      ", What next, step " + n + ': "' + title + '". ' + url;
+    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
     const btn = document.createElement("button");
@@ -264,6 +266,13 @@
 })();
 </script>
 <!-- theme: end -->
+
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
 <!-- pr-cards: begin -->
 <style>
   .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;

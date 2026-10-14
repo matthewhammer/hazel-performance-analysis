@@ -99,9 +99,9 @@
 </head>
 <body>
 <main>
-<p class="series"><a href="../">Hazel performance analysis</a> · Issue 013 · 2026-10-14</p>
+<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>13<b>)</b></code> · 2026-10-14</p>
 <h1>Telling the Request What Changed</h1>
-<p class="sub">On <a href="https://github.com/hazelgrove/hazel/pull/2635">hazelgrove/hazel#2635</a> (livelits × modular editors), two commits pushed on 2026-10-14 make a slider release's request to the evaluation worker cheaper to build. This issue measures them, and asks how to carry them to the branches that have diverged from <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <a href="https://github.com/hazelgrove/hazel/pull/2469">hazelgrove/hazel#2469</a> (Andrew Blinn's modular editors, where the per-item statics they rest on come from), <code>dev</code>, and <a href="https://github.com/hazelgrove/hazel/pull/2597">hazelgrove/hazel#2597</a> (the full livelits branch). It follows <a href="../001/#now">issue 001's profile</a> of a release, which put about 15 ms on building the request.</p>
+<p class="sub">On <a href="https://github.com/hazelgrove/hazel/pull/2635">hazelgrove/hazel#2635</a> (livelits × modular editors), two commits pushed on 2026-10-14 make a slider release's request to the evaluation worker cheaper to build. This report measures them, and asks how to carry them to the branches that have diverged from <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <a href="https://github.com/hazelgrove/hazel/pull/2469">hazelgrove/hazel#2469</a> (Andrew Blinn's modular editors, where the per-item statics they rest on come from), <code>dev</code>, and <a href="https://github.com/hazelgrove/hazel/pull/2597">hazelgrove/hazel#2597</a> (the full livelits branch). It follows <a href="../001/#now"><code class="ref"><b>^report(</b>1<b>)</b></code>'s profile</a> of a release, which put about 15 ms on building the request.</p>
 
 <div class="headline">
 <p><b>Short answers.</b> Medians in node of slider releases made as the editor makes them, on the Livelit Playground slides; each build measured twice. The method is <a href="#method">at the end</a>.</p>
@@ -118,7 +118,7 @@
 
 <h2 id="question">What a release sends</h2>
 <p>When a livelit's model changes (a slider released, a button pressed), the editor analyses the program again and sends the evaluation worker a request: the elaborated program and <code>EvalInfo</code>, the part of the statics the evaluator needs (for each expression, its elaboration, its co-context and its probe targets). On <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> the request goes through <code>ShareCodec</code>, which replaces each value the worker already has with a small reference, found by its Merkle hash (<code>ValueHash</code>, remembered per object). So a request costs three things on the main thread: building <code>EvalInfo</code>, hashing what is new in the request, and encoding it.</p>
-<p>Issue 001's profile of a Kids' Choice release put about 15 ms on "building the request, almost all hashing its new values". Measured part by part, the hashing is the smaller share: on Full Body, building <code>EvalInfo</code> took 11.9 ms per release, hashing about 4 and encoding 2 to 11. Since <code>8fbc86c644</code>, <code>EvalInfo</code> keeps each program's last projection and updates it, but to find what to update it walked both statics maps in key order, the last and the new, whole: some hundred thousand entries for the few hundred that change.</p>
+<p><a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a>'s profile of a Kids' Choice release put about 15 ms on "building the request, almost all hashing its new values". Measured part by part, the hashing is the smaller share: on Full Body, building <code>EvalInfo</code> took 11.9 ms per release, hashing about 4 and encoding 2 to 11. Since <code>8fbc86c644</code>, <code>EvalInfo</code> keeps each program's last projection and updates it, but to find what to update it walked both statics maps in key order, the last and the new, whole: some hundred thousand entries for the few hundred that change.</p>
 
 <h2 id="change">The change, in three steps</h2>
 <figure class="fig"><svg viewBox="0 0 600 242" role="img" class="chart" aria-label="A chain of four boxes: per-item statics, then the kept projection, DefStatics&#x27; note, and kept spine roots; beside it, which branches have them."><rect x="10" y="10" width="250" height="44" rx="6" style="fill: var(--paper); stroke: var(--line)"/><text x="20" y="28" class="cl" font-weight="700">per-item statics (DefStatics)</text><text x="20" y="45" class="cv">Andrew Blinn, b0fa4d7d6a, #2469</text><rect x="10" y="68" width="250" height="44" rx="6" style="fill: var(--bg); stroke: var(--accent)"/><text x="20" y="86" class="cl" font-weight="700">1. the kept projection</text><text x="20" y="103" class="cv">8fbc86c644: update, not rebuild</text><line x1="135.0" y1="54" x2="135.0" y2="68" style="stroke: var(--line)"/><rect x="10" y="126" width="250" height="44" rx="6" style="fill: var(--bg); stroke: var(--accent)"/><text x="20" y="144" class="cl" font-weight="700">2. DefStatics&#x27; note</text><text x="20" y="161" class="cv">043508921b: the keys it changed</text><line x1="135.0" y1="112" x2="135.0" y2="126" style="stroke: var(--line)"/><rect x="10" y="184" width="250" height="44" rx="6" style="fill: var(--bg); stroke: var(--accent)"/><text x="20" y="202" class="cl" font-weight="700">3. spine roots kept</text><text x="20" y="219" class="cv">9fb2bdf067: unchanged roots reused</text><line x1="135.0" y1="170" x2="135.0" y2="184" style="stroke: var(--line)"/><text x="284" y="22" class="cl" font-weight="700">Where each branch stands</text><text x="284" y="48" class="cl" font-weight="700">#2635</text><text x="336" y="48" class="cv">all three, pushed 2026-10-14</text><text x="284" y="72" class="cl" font-weight="700">#2469</text><text x="336" y="72" class="cv">per-item statics; the three</text><text x="284" y="96" class="cl" font-weight="700"></text><text x="336" y="96" class="cv">carried locally, one change each</text><text x="284" y="132" class="cl" font-weight="700">#2597</text><text x="336" y="132" class="cv">no per-item statics yet</text><text x="284" y="156" class="cl" font-weight="700">dev</text><text x="336" y="156" class="cv">no per-item statics yet</text></svg><figcaption>Figure 2. The three steps, each resting on the one before, all on per-item statics; and where each branch stands.</figcaption></figure>
@@ -167,11 +167,11 @@
 
 <h2 id="next">What next</h2>
 <ol>
-<li>Offer the three ports to <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>, from the local branch, with this issue's numbers.</li>
+<li>Offer the three ports to <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>, from the local branch, with this report's numbers.</li>
 <li>A spine root need not carry the whole program below it for the request: find what the evaluator's reuse check needs from a root's suffix (its identity, or its hash), and send only that, so a release low in the program costs what one high up does.</li>
 <li>Per-item statics on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, so that it can take the three steps.</li>
 <li>Time a release in the browser, on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, before and after, to see these node numbers in the page.</li>
-<li>The other half of issue 001's commit path: the commit's redraw.</li>
+<li>The other half of <a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a>'s commit path: the commit's redraw.</li>
 </ol>
 
 <h2 id="method">How this was put together</h2>
@@ -191,7 +191,7 @@
 </style>
 <script>
 /* Each "What next" step: a link to it, and a button copying a request to
-   mint a ticket for it (to paste to Claude): the issue, the step, its URL. */
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
 (() => {
   const h = document.getElementById("next");
   if (!h) return;
@@ -201,17 +201,19 @@
     list = list.nextElementSibling;
   }
   if (!list) return;
-  const m = (document.querySelector(".series") || document.body).textContent.match(/Issue (\d{3})/);
-  const issue = m ? m[1] : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + issue + "/";
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, issue " + issue +
-      ", What next, step " + n + ': "' + title + '". ' + url;
+    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
     const btn = document.createElement("button");
@@ -262,6 +264,13 @@
 </script>
 <!-- theme: end -->
 
+
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
 <!-- pr-cards: begin -->
 <style>
   .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;

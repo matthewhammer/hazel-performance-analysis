@@ -1,10 +1,10 @@
 # Hazel performance analysis
 
-A series of issues on making [Hazel](https://hazel.org) responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed, and what's left. By Matthew Hammer, working with Claude, for Cyrus, the Hazel team and anyone following the work.
+A series of reports on making [Hazel](https://hazel.org) responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed, and what's left. By Matthew Hammer, working with Claude, for Cyrus, the Hazel team and anyone following the work.
 
 **Read it at http://matthewhammer.org/hazel/performance-analysis/** (HTTP only, for now).
 
-| Issue | |
+| Report | |
 |---|---|
 | [001](index.html) | Why a slider isn't instant yet |
 | [002](002/) | From a game to a slide deck: Messed Up Dress Up in Hazel |
@@ -20,10 +20,10 @@ The performance tracking issue is [hazelgrove/hazel#2609](https://github.com/haz
 
 ## What's here
 
-- `NNN/index.html`: an issue, with its images in `NNN/img/`. Issue 001 is the root `index.html`, since the series began as that one report.
-- `series/index.html`: the series' index, a card per issue, as published. `series/NNN` link to the issues.
-- `patches/`: changes that were tried and not kept, each named for what it does. The issues give their numbers.
-- `agent-instructions.md`: how the series is written, for whoever writes the next issue.
+- `NNN/index.html`: a report, with its images in `NNN/img/`. `^report(1)` is the root `index.html`, since the series began as that one report.
+- `series/index.html`: the series' index, a card per report, as published. `series/NNN` link to the reports.
+- `patches/`: changes that were tried and not kept, each named for what it does. The reports give their numbers.
+- `agent-instructions.md`: how the series is written, for whoever writes the next report.
 
 To read it locally, serve the repository and open `/series/`:
 

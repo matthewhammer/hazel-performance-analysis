@@ -93,21 +93,21 @@
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · Issue 010 · 2026-10-13</p>
+<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>10<b>)</b></code> · 2026-10-13</p>
 <h1>What a slider change touches</h1>
-<p class="sub">When a slider moves, which parts of the picture does it actually change, and which does it leave alone? And can Hazel tell the two apart? <a href="../009/#reuse">Issue 009's Figure 5</a> found that evaluating a slide incrementally after a slider edit is no faster than starting over: the edit's dependents are evaluated again whatever they compute. This issue measures what is inside them, on the Livelit Playground's slides, with an oracle that names each call the way <a href="https://arxiv.org/abs/1503.07792">Incremental Computation with Names</a> (OOPSLA 2015) names allocations in its interpreter: by where it is.</p>
+<p class="sub">When a slider moves, which parts of the picture does it actually change, and which does it leave alone? And can Hazel tell the two apart? <a href="../009/#reuse"><code class="ref"><b>^report(</b>9<b>)</b></code>'s Figure 5</a> found that evaluating a slide incrementally after a slider edit is no faster than starting over: the edit's dependents are evaluated again whatever they compute. This report measures what is inside them, on the Livelit Playground's slides, with an oracle that names each call the way <a href="https://arxiv.org/abs/1503.07792">Incremental Computation with Names</a> (OOPSLA 2015) names allocations in its interpreter: by where it is.</p>
 
 <div class="headline">
 <p><b>Short answers.</b> Preliminary: counts of evaluation steps, not times, from an oracle that watches and reuses nothing.</p>
 <ol>
   <li><b>A slider changes a small part of the picture:</b> Full Body's smile edit changes 8 of its picture's 49 shapes, Witch's 16 of 133, and Scenes' eye-size edit 26 of 570 (Figure 1). Everything else in the picture is the same, value for value.</li>
-  <li><b>Today Hazel evaluates the whole picture again.</b> Its reuse is per top-level binding, and the picture is one binding that depends on the slider. Of the steps a from-scratch evaluation takes, today's incremental run skips 8 to 14%, and <a href="../009/#reuse">issue 009</a> found it no faster in time.</li>
+  <li><b>Today Hazel evaluates the whole picture again.</b> Its reuse is per top-level binding, and the picture is one binding that depends on the slider. Of the steps a from-scratch evaluation takes, today's incremental run skips 8 to 14%, and <a href="../009/#reuse"><code class="ref"><b>^report(</b>9<b>)</b></code></a> found it no faster in time.</li>
   <li><b>Named by position, the calls tell the parts apart.</b> Giving each call a name from its caller's name, its call site and its count there, and comparing it with the call of the same name before the edit: 75 to 84% of the steps today's run takes are in calls whose inputs did not change (Figure 2). A memo keyed by those names could skip them, if checking cost nothing.</li>
   <li><b>What would still run is more than the shapes that changed:</b> Full Body, 16% of the shapes changed and 25% of the picture's evaluation would run; Witch, 12% of the shapes changed and 23% of the picture's evaluation would run; Scenes, 5% of the shapes changed and 13% of the picture's evaluation would run (Figure 3). The rest is the walks over the picture's lists, which run again down to the last changed shape, and the functions that read the slider.</li>
-  <li><b>Names or content, the same reuse:</b> keyed by a call's body and inputs instead of its name, a memo finds the same calls, to within 0.1% of the steps. Names by position are stable under a slider edit: after the edit, 43 of Full Body's 3,712 calls, 53 of Witch's 6,639 calls, 10 of Scenes's 31,613 calls have a name the run before did not. The difference between them is what a lookup costs, which this oracle does not measure. <i><b>Added later on 2026-10-13:</b> on slider edits that change only values. On the 6 slider edits that change how many shapes there are, and so which calls are made, an update keyed by position costs 1.3 to 4.9 points of a run from scratch more than one keyed by content, the estimated trace distance, and one keyed by operand 0.0 to 1.3 (<a href="../011/#naming">issue 011</a>).</i></li>
+  <li><b>Names or content, the same reuse:</b> keyed by a call's body and inputs instead of its name, a memo finds the same calls, to within 0.1% of the steps. Names by position are stable under a slider edit: after the edit, 43 of Full Body's 3,712 calls, 53 of Witch's 6,639 calls, 10 of Scenes's 31,613 calls have a name the run before did not. The difference between them is what a lookup costs, which this oracle does not measure. <i><b>Added later on 2026-10-13:</b> on slider edits that change only values. On the 6 slider edits that change how many shapes there are, and so which calls are made, an update keyed by position costs 1.3 to 4.9 points of a run from scratch more than one keyed by content, the estimated trace distance, and one keyed by operand 0.0 to 1.3 (<a href="../011/#naming"><code class="ref"><b>^report(</b>11<b>)</b></code></a>).</i></li>
   <li><b>The oracle's control is clean:</b> the same program evaluated twice gives every call the same name and the same inputs. Getting there meant erasing the ids that evaluation mints inside types and module values, which an id-free comparison had kept (<a href="#control">below</a>).</li>
 </ol>
-<p class="note"><b>Terms, added later on 2026-10-13:</b> <a href="../011/#terms">issue 011</a> names what this issue measures. What it calls the shapes the edit changed is the <b>picture diff</b>, a diff of the result. The steps an actual update evaluates again, given its cache and how it names what it keeps, are its <b>update cost</b>: this issue's "left to run" and "what would still run" are the update cost of a memo keyed by position. The fewest steps any update could evaluate again, under the best matching of the two runs, is the <b>trace distance</b>, which keying by content estimates from above: a diff of the computation, which need not follow the picture diff. Both as a share of a run from scratch.</p>
+<p class="note"><b>Terms, added later on 2026-10-13:</b> <a href="../011/#terms"><code class="ref"><b>^report(</b>11<b>)</b></code></a> names what this report measures. What it calls the shapes the edit changed is the <b>picture diff</b>, a diff of the result. The steps an actual update evaluates again, given its cache and how it names what it keeps, are its <b>update cost</b>: this report's "left to run" and "what would still run" are the update cost of a memo keyed by position. The fewest steps any update could evaluate again, under the best matching of the two runs, is the <b>trace distance</b>, which keying by content estimates from above: a diff of the computation, which need not follow the picture diff. Both as a share of a run from scratch.</p>
 </div>
 
 <h2 id="glance">At a glance</h2>
@@ -118,11 +118,11 @@
 </div>
 
 <h2 id="question">The question</h2>
-<p>Moving a slider changes one literal in the program, a livelit's model, and keeps its id. Hazel's incremental evaluator reuses the cached result of each top-level binding whose code and free variables are unchanged (<a href="../009/#caching">issue 009</a>), so after the edit it evaluates again the binding the slider is in and every binding that uses it, and the picture uses it. Inside the picture, nothing is reused: a call made again is a call evaluated again. <a href="../009/#reuse">Issue 009</a> measured the result: incremental evaluation no faster than starting over.</p>
+<p>Moving a slider changes one literal in the program, a livelit's model, and keeps its id. Hazel's incremental evaluator reuses the cached result of each top-level binding whose code and free variables are unchanged (<a href="../009/#caching"><code class="ref"><b>^report(</b>9<b>)</b></code></a>), so after the edit it evaluates again the binding the slider is in and every binding that uses it, and the picture uses it. Inside the picture, nothing is reused: a call made again is a call evaluated again. <a href="../009/#reuse"><code class="ref"><b>^report(</b>9<b>)</b></code></a> measured the result: incremental evaluation no faster than starting over.</p>
 <p>That says nothing about how much of the picture the slider actually changes. If it changes most of it, there is nothing to save; if it changes a little, an evaluator that could recognize the rest would save most of the work. Two measurements answer it: the picture compared shape by shape, before and after the edit, and every call in the evaluation compared with its counterpart in the run before.</p>
 
 <h2 id="picture">The picture, shape by shape</h2>
-<p>Each slide was cut at its picture, as issue 009 cut the woods: the program up to the line that hands the picture to <code>Drawing.^picture</code>, ending with the picture's expression. It was evaluated before and after the edit, and each shape of the resulting list compared with the shape in the same place by a hash of its id-free form (<a href="#oracle">below</a>). A shape is a <code>Polygon</code> or a <code>Path</code>: a name, points, a stroke and a fill.</p>
+<p>Each slide was cut at its picture, as <a href="../009/"><code class="ref"><b>^report(</b>9<b>)</b></code></a> cut the woods: the program up to the line that hands the picture to <code>Drawing.^picture</code>, ending with the picture's expression. It was evaluated before and after the edit, and each shape of the resulting list compared with the shape in the same place by a hash of its id-free form (<a href="#oracle">below</a>). A shape is a <code>Polygon</code> or a <code>Path</code>: a name, points, a stroke and a fill.</p>
 <div class="scroll"><table>
 <tr><th>Slide (edit)</th><th>The picture</th><th>Shapes</th><th>Changed</th><th>Changed, by name</th></tr>
 <tr><td>Full Body (smile 85 → 120)</td><td><code>skinned(outfit)</code></td><td class="n">49</td><td class="n">8</td><td>long, head, eye (4), mouth, long top</td></tr>
@@ -180,15 +180,15 @@
 
 <h2 id="next">What next</h2>
 <ol class="ranked">
-  <li><b>Time a memo by name.</b> <i><b>Added later on 2026-10-13:</b> <a href="../011/#naming">issue 011</a> suggests which name: the call site and the argument, a call named for its operand.</i> Build it at the call boundary, where the views' call memo hooks in: look a call up by its name, compare its inputs by hash, reuse its result. Checking costs a hash of each call's inputs; with issue 009's Merkle names kept on the values, a value's hash is already there, for 11 to 31% more evaluation time to keep them. Measure real time against today's incremental run and against a run from scratch, on the three slides and in the browser.</li>
+  <li><b>Time a memo by name.</b> <i><b>Added later on 2026-10-13:</b> <a href="../011/#naming"><code class="ref"><b>^report(</b>11<b>)</b></code></a> suggests which name: the call site and the argument, a call named for its operand.</i> Build it at the call boundary, where the views' call memo hooks in: look a call up by its name, compare its inputs by hash, reuse its result. Checking costs a hash of each call's inputs; with <a href="../009/"><code class="ref"><b>^report(</b>9<b>)</b></code></a>'s Merkle names kept on the values, a value's hash is already there, for 11 to 31% more evaluation time to keep them. Measure real time against today's incremental run and against a run from scratch, on the three slides and in the browser.</li>
   <li><b>Replay what a reused call recorded.</b> A top-level binding's cache entry replays its probe samples and tests; a reused call would have to as well, or the probes inside it would go blank.</li>
-  <li><b>Names for list cells,</b> so that a walk over a list stops at the changed cells instead of running again down its spine: the paper's remedy, and the largest part of what is left on Scenes. <i><b>Corrected later on 2026-10-13:</b> not the largest part; the table above already shows the walk's own steps are a fraction of what is left. <a href="../011/#cells">Issue 011</a> measures lists as named cells on every Scenes slider: they lower the update cost by 0.0 to 1.5 points of a run from scratch.</i></li>
+  <li><b>Names for list cells,</b> so that a walk over a list stops at the changed cells instead of running again down its spine: the paper's remedy, and the largest part of what is left on Scenes. <i><b>Corrected later on 2026-10-13:</b> not the largest part; the table above already shows the walk's own steps are a fraction of what is left. <a href="../011/#cells"><code class="ref"><b>^report(</b>11<b>)</b></code></a> measures lists as named cells on every Scenes slider: they lower the update cost by 0.0 to 1.5 points of a run from scratch.</i></li>
   <li><b>Reads instead of mentions.</b> Record what each call actually reads, so that a function that mentions the slider on a path it does not take is not counted as reading it: the paper's graph of what was demanded.</li>
 </ol>
 
 <h2 id="method">How this was put together</h2>
 <ul>
-  <li><b>Build:</b> <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <a href="https://github.com/hazelgrove/hazel/commit/c4e64060f1"><code>c4e64060f1</code></a>, with measuring code on a local branch, not pushed: the oracle (<code>CallNames</code>), its hook at the evaluator's function call, a count of the steps taken, and issue 009's experiments, switched off.</li>
+  <li><b>Build:</b> <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <a href="https://github.com/hazelgrove/hazel/commit/c4e64060f1"><code>c4e64060f1</code></a>, with measuring code on a local branch, not pushed: the oracle (<code>CallNames</code>), its hook at the evaluator's function call, a count of the steps taken, and <a href="../009/"><code class="ref"><b>^report(</b>9<b>)</b></code></a>'s experiments, switched off.</li>
   <li><b>Programs:</b> the Livelit Playground's Full Body, Witch and Scenes slides, each parsed once (<code>FastParse</code>, <code>MakeTerm</code>) and analyzed with <code>Statics.mk_unmemoized</code>; the edit replaces one integer literal, the slider's model, keeping its id. The whole-slide runs evaluate the slide with <code>Evaluator.evaluate</code>: once before the edit, again unedited (the control), from scratch after the edit, and incrementally after it against the first run's cache. The picture runs evaluate the slide cut at its picture with <code>Evaluator.evaluate_open</code>, before and after.</li>
   <li><b>Counts:</b> node, the test build. Steps are counted by the oracle as the evaluator takes them; they are deterministic, the same in every run, so one run of each suffices, and the control is the noise floor: zero.</li>
   <li><b>Drawing:</b> Figure 1 is drawn from the shapes the evaluation produced, exported as JSON: points, strokes and fills as the Drawing library would hand them to SVG.</li>
@@ -207,7 +207,7 @@
 </style>
 <script>
 /* Each "What next" step: a link to it, and a button copying a request to
-   mint a ticket for it (to paste to Claude): the issue, the step, its URL. */
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
 (() => {
   const h = document.getElementById("next");
   if (!h) return;
@@ -217,17 +217,19 @@
     list = list.nextElementSibling;
   }
   if (!list) return;
-  const m = (document.querySelector(".series") || document.body).textContent.match(/Issue (\d{3})/);
-  const issue = m ? m[1] : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + issue + "/";
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, issue " + issue +
-      ", What next, step " + n + ': "' + title + '". ' + url;
+    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
     const btn = document.createElement("button");
@@ -277,6 +279,13 @@
 })();
 </script>
 <!-- theme: end -->
+
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
 <!-- pr-cards: begin -->
 <style>
   .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;

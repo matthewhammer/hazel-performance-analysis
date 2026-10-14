@@ -1,4 +1,4 @@
-"""Every PR or issue number in an issue is a link (Matthew's rule,
+"""Every PR or issue number in a report is a link (Matthew's rule,
 2026-10-14). Links each bare `#N` (hazelgrove/hazel) or `owner/repo#N` in
 the page's text to GitHub, as /pull/N or /issues/N by what the number is
 (asked of GitHub once, remembered in tools/pr_kinds.json). Leaves alone

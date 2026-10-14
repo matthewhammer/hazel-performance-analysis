@@ -61,7 +61,7 @@
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · Issue 005 · 2026-10-12</p>
+<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>5<b>)</b></code> · 2026-10-12</p>
 <h1>Two threads, one picture: the worker, the page, and diffing the view</h1>
 <p class="sub">Hazel evaluates a program in a web worker and draws it on the page's main thread. A question from a meeting with Cyrus: how do our performance fixes so far compare with a more principled approach, where the worker builds a virtual DOM of each view, diffs it against the last one, and sends the page only the patches? Did we already do some of this, and how far does the idea go? Can a worker even build real DOM nodes? And is it expensive to keep several representations of the same DOM?</p>
 
@@ -121,7 +121,7 @@
   <text x="950" y="290" text-anchor="end" fill="var(--bad)" font-size="12">red: done whole for every changed view</text>
 </svg></div>
 <figcaption>One change, in eight steps. The worker's steps (green) and the boundary already work only on what changed. Steps 6–8 (red) are done whole for every view that changed, all on the main thread.</figcaption><!-- note011:0 -->
-<p class="note"><b>Added later on 2026-10-13:</b> the boundary does. The worker's reuse is per top-level binding: a binding that uses the edited value is evaluated again whole. After a slider edit on the Playground's figure slides, the worker's <a href="../011/#terms">update cost</a> is about nine tenths of a run from scratch, though the edit changes a few of the picture's shapes (<a href="../010/">issue 010</a>; <a href="../011/">issue 011</a> for every slider).</p><!-- /note011:0 -->
+<p class="note"><b>Added later on 2026-10-13:</b> the boundary does. The worker's reuse is per top-level binding: a binding that uses the edited value is evaluated again whole. After a slider edit on the Playground's figure slides, the worker's <a href="../011/#terms">update cost</a> is about nine tenths of a run from scratch, though the edit changes a few of the picture's shapes (<a href="../010/"><code class="ref"><b>^report(</b>10<b>)</b></code></a>; <a href="../011/"><code class="ref"><b>^report(</b>11<b>)</b></code></a> for every slider).</p><!-- /note011:0 -->
 </figure>
 
 <ol>
@@ -141,7 +141,7 @@
 <p>A worker <em>could</em> build virtual DOM: the library is plain OCaml data, and the worker already links its types. But it could not send that tree to the page. A virtual DOM node holds its event handlers as functions, and a function cannot cross from the worker's program to the page's. What can cross is a description of the DOM whose handlers are data. Hazel has one already: <b>an Html value is exactly that</b>, a Hazel value whose handlers are Hazel expressions. So a worker-side diff would diff Html values and send patches to Html, and the page would still build the virtual DOM, or the DOM, from them.</p>
 
 <h2 id="fixes">Each fix so far, by thread</h2>
-<p>The fixes from issues 001–004 and <a href="https://github.com/hazelgrove/hazel/issues/2609">#2609</a>, grouped by where they act. Commits are on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>; most also have a <code>dev</code> PR or a port on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>.</p>
+<p>The fixes from <a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a>–<a href="../004/"><code class="ref"><b>^report(</b>4<b>)</b></code></a> and <a href="https://github.com/hazelgrove/hazel/issues/2609">#2609</a>, grouped by where they act. Commits are on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>; most also have a <code>dev</code> PR or a port on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>.</p>
 <div class="scroll">
 <table>
 <tr><th>Where</th><th>Fix</th><th>What it does</th></tr>
@@ -150,12 +150,12 @@
 <tr><td>Worker</td><td><a href="https://github.com/hazelgrove/hazel/commit/9129cd2774"><code>9129cd2774</code></a></td><td>Reusing a result copies cache entries without walking function bodies: the worker's evaluation 47 → 25 ms.</td></tr>
 <tr><td>Worker</td><td><a href="https://github.com/hazelgrove/hazel/commit/25e515536d"><code>25e515536d</code></a></td><td>Evaluation slices run back to back for up to 30 ms, not one per timer tick: the worker's time per woods change, 10.0–10.7 → 2.1–2.6 s.</td></tr>
 <tr><td>Worker (found in statics)</td><td><a href="https://github.com/hazelgrove/hazel/commit/4b964e6660"><code>4b964e6660</code></a> (<code>dev</code>: <a href="https://github.com/hazelgrove/hazel/pull/2675">#2675</a>)</td><td>A recursive let's own names are not free in it, so the code around it is reused.</td></tr>
-<tr><td>Worker, for the page</td><td><a href="https://github.com/hazelgrove/hazel/commit/a05f8e5791"><code>a05f8e5791</code></a> (from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>)</td><td>Streams of partial results come at most every 100–1000 ms, by program size, so they do not swamp the page: opening a 2,000-item program, the page's busy time 46.7 → 10.2 s. <span class="note"><b>Correction, later on 2026-10-12:</b> this commit made the interval grow with the program. The throttle itself came a day before, in <a href="https://github.com/hazelgrove/hazel/commit/c07bdacead"><code>c07bdacead</code></a>, also from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>: stream posts at most every 100 ms, and the page's projection of the program made lazy, so a streamed result no longer re-projects it (opening a 1,000-item program, 45.5 → 5.4 s). <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> has neither; <a href="../007/">issue 007</a> measures <code>c07bdacead</code> there.</span></td></tr>
+<tr><td>Worker, for the page</td><td><a href="https://github.com/hazelgrove/hazel/commit/a05f8e5791"><code>a05f8e5791</code></a> (from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>)</td><td>Streams of partial results come at most every 100–1000 ms, by program size, so they do not swamp the page: opening a 2,000-item program, the page's busy time 46.7 → 10.2 s. <span class="note"><b>Correction, later on 2026-10-12:</b> this commit made the interval grow with the program. The throttle itself came a day before, in <a href="https://github.com/hazelgrove/hazel/commit/c07bdacead"><code>c07bdacead</code></a>, also from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>: stream posts at most every 100 ms, and the page's projection of the program made lazy, so a streamed result no longer re-projects it (opening a 1,000-item program, 45.5 → 5.4 s). <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> has neither; <a href="../007/"><code class="ref"><b>^report(</b>7<b>)</b></code></a> measures <code>c07bdacead</code> there.</span></td></tr>
 <tr><td><b>Boundary</b></td><td><a href="https://github.com/hazelgrove/hazel/commit/993e3d5f91"><code>993e3d5f91</code></a></td><td>A request carries only what the worker does not have: 478 → 18.5 KB.</td></tr>
 <tr><td>Boundary</td><td><a href="https://github.com/hazelgrove/hazel/commit/90994d4443"><code>90994d4443</code></a></td><td>An answer carries only what the page does not have: 393 → 16 KB. The worker's encoding 44 → 5 ms, the page's decoding 14 → 1 ms. Unchanged parts arrive as objects the page already holds, so its caches keyed by identity hit.</td></tr>
 <tr><td>Boundary</td><td><a href="https://github.com/hazelgrove/hazel/commit/b481a876e1"><code>b481a876e1</code></a></td><td>A release's answers reach the page in two actions, not four, so it redraws less often.</td></tr>
 <tr><td>Boundary</td><td><a href="https://github.com/hazelgrove/hazel/commit/6b7d53b3e8"><code>6b7d53b3e8</code></a> (<code>dev</code>: <a href="https://github.com/hazelgrove/hazel/pull/2652">#2652</a>)</td><td>The page starts the worker at load, and does not time out an answer that is queued.</td></tr>
-<tr><td><b>Main thread</b>, views</td><td><a href="https://github.com/hazelgrove/hazel/commit/4239ecf04f"><code>4239ecf04f</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/c64c558e86"><code>c64c558e86</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/126f595ce9"><code>126f595ce9</code></a></td><td>A view is evaluated again only when its definition or model changed. Inside it, calls whose inputs did not change are reused, and a function whose calls never repeat stops being remembered.<!-- note011:3 --><br><i><b>Added later on 2026-10-13:</b> calls of at least 40 steps, keyed by their content (<a href="../011/#naming">issue 011</a>), at most 8 per function, and given up on after 24 misses per hit (<a href="../004/#memo">issue 004</a>).</i><!-- /note011:3 --></td></tr>
+<tr><td><b>Main thread</b>, views</td><td><a href="https://github.com/hazelgrove/hazel/commit/4239ecf04f"><code>4239ecf04f</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/c64c558e86"><code>c64c558e86</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/126f595ce9"><code>126f595ce9</code></a></td><td>A view is evaluated again only when its definition or model changed. Inside it, calls whose inputs did not change are reused, and a function whose calls never repeat stops being remembered.<!-- note011:3 --><br><i><b>Added later on 2026-10-13:</b> calls of at least 40 steps, keyed by their content (<a href="../011/#naming"><code class="ref"><b>^report(</b>11<b>)</b></code></a>), at most 8 per function, and given up on after 24 misses per hit (<a href="../004/#memo"><code class="ref"><b>^report(</b>4<b>)</b></code></a>).</i><!-- /note011:3 --></td></tr>
 <tr><td>Main thread, views</td><td><a href="https://github.com/hazelgrove/hazel/commit/dd892bc331"><code>dd892bc331</code></a> (<code>dev</code>: <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>), <a href="https://github.com/hazelgrove/hazel/commit/efaaee244f"><code>efaaee244f</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/d706d4d1ec"><code>d706d4d1ec</code></a></td><td>The evaluator runs views faster: types are compared by hash, the recursive Html type is unrolled once, and views are not run to the very end. These help the worker too, since it runs the same evaluator.</td></tr>
 <tr><td>Main thread, redraws</td><td><a href="https://github.com/hazelgrove/hazel/commit/51df91d5d7"><code>51df91d5d7</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/cefa5c2c5c"><code>cefa5c2c5c</code></a> (<code>dev</code>: <a href="https://github.com/hazelgrove/hazel/pull/2671">#2671</a>)</td><td>Redraws that show nothing new reuse what they drew, and editing keeps unchanged pieces of the program as the same objects.</td></tr>
 <tr><td>Main thread, statics</td><td><a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>; <a href="https://github.com/hazelgrove/hazel/commit/8fbc86c644"><code>8fbc86c644</code></a></td><td>Statics per item, and the worker's share of it updated rather than rebuilt per change, which also leaves fewer new objects to hash.</td></tr>
@@ -163,11 +163,11 @@
 </table>
 </div>
 <p><b>The pattern:</b> the worker and the boundary have had the most work, and now handle only what changed. The page's own work after the answer, steps 6–8, has had memos added in front of it, but each step that runs still runs whole.</p><!-- note011:1 -->
-<p class="note"><b>Added later on 2026-10-13:</b> the worker, per top-level binding (see the note above, and <a href="../010/">issue 010</a>).</p><!-- /note011:1 -->
+<p class="note"><b>Added later on 2026-10-13:</b> the worker, per top-level binding (see the note above, and <a href="../010/"><code class="ref"><b>^report(</b>10<b>)</b></code></a>).</p><!-- /note011:1 -->
 
 <h2 id="where">Where a diff could go</h2>
 <p>Diffing two trees exactly is expensive in general: the best algorithms for the smallest edit between two trees take time cubic in their size. Virtual DOM libraries settle for something linear. They walk both trees together, keep a node when its tag and key match, and replace it otherwise. Hazel can do better than linear on the parts that did not change, because its values carry Merkle hashes and keep their identity when unchanged. An unchanged subtree can be recognized in one step and skipped. A diff then costs about the size of what changed, plus the path down to it, not the size of the tree. That is the principled version, and there are three places it could go.</p><!-- note011:2 -->
-<p class="note"><b>Corrected later on 2026-10-13:</b> values do not carry their hashes: <code>ValueHash</code> computes a value's hash when asked and keeps it in a side table (<a href="../009/#merkle">issue 009</a>). And a value evaluated again is a new object, with fresh ids: equal in structure, not in identity. Only what the worker reuses, or the boundary shares, keeps its identity. Keeping a name on each value, so that an unchanged part could be recognized in one step, is <a href="../011/#naming">issue 011</a>'s design question.</p><!-- /note011:2 -->
+<p class="note"><b>Corrected later on 2026-10-13:</b> values do not carry their hashes: <code>ValueHash</code> computes a value's hash when asked and keeps it in a side table (<a href="../009/#merkle"><code class="ref"><b>^report(</b>9<b>)</b></code></a>). And a value evaluated again is a new object, with fresh ids: equal in structure, not in identity. Only what the worker reuses, or the boundary shares, keeps its identity. Keeping a name on each value, so that an unchanged part could be recognized in one step, is <a href="../011/#naming"><code class="ref"><b>^report(</b>11<b>)</b></code></a>'s design question.</p><!-- /note011:2 -->
 
 <div class="scroll">
 <table>
@@ -184,7 +184,7 @@
 <h2 id="copies">Is it expensive to keep several representations?</h2>
 <p>A view exists in up to five forms at once: the Html value (in the view memo); in the worker's and the page's tables of shared values; the virtual DOM tree the page last drew, kept for the next diff; the new virtual DOM tree, during a diff; and the DOM itself.</p>
 <p><b>In memory, sharing makes most of these cheap.</b> The Html value and the tables hold references to the same objects, not copies: the boundary returns the page's own objects for anything unchanged. The two virtual DOM trees exist together only during a diff. The DOM is the only full copy that cannot be avoided. What memory these take has not been measured. The tables are capped at 200,000 entries each.</p>
-<p><b>In time, the cost is rebuilding, not holding.</b> Today, steps 7 and 8 rebuild a view's virtual DOM and walk all of it whenever the view is drawn. That is a cost per representation per change, and C is what removes it. On Kids' Choice it is small: converting the face's Html to the page took 8 ms of a 104 ms redraw (profiled, <a href="../001/#now">issue 001</a>), and in an earlier profile, the browser's own layout and DOM work was about 30 ms of a 310 ms redraw. In the woods, with about 600 shapes, the conversion and the diff are part of the half of the page's time that is not evaluating the view (<a href="../004/#cost">issue 004</a>). How large a part has not been measured.</p>
+<p><b>In time, the cost is rebuilding, not holding.</b> Today, steps 7 and 8 rebuild a view's virtual DOM and walk all of it whenever the view is drawn. That is a cost per representation per change, and C is what removes it. On Kids' Choice it is small: converting the face's Html to the page took 8 ms of a 104 ms redraw (profiled, <a href="../001/#now"><code class="ref"><b>^report(</b>1<b>)</b></code></a>), and in an earlier profile, the browser's own layout and DOM work was about 30 ms of a 310 ms redraw. In the woods, with about 600 shapes, the conversion and the diff are part of the half of the page's time that is not evaluating the view (<a href="../004/#cost"><code class="ref"><b>^report(</b>4<b>)</b></code></a>). How large a part has not been measured.</p>
 <p class="note"><b>Update, later on 2026-10-12:</b> measured: about 2% (<a href="#update">below</a>).</p>
 
 <h2 id="update">Update, later on 2026-10-12: the woods' redraw, split</h2>
@@ -201,7 +201,7 @@
 </table>
 </div>
 <p>Counting the garbage collection it causes, evaluating the view is about 69% of the time. C can save only the two small rows, about 2%. It would also be harder than <a href="#where">above</a> assumed. The view's call memo misses on the woods' ~600 shapes, so each shape's Html is a new object on every change, even when nothing in it changed. A memo would need a content hash as its key, not identity. And each event handler holds the state it was drawn with, so a remembered node would need handlers that look the state up when the event fires.</p>
-<p>So the order changes: first make the view cheaper to evaluate, per shape and in the evaluator's general overhead (done the same day, in three changes: the woods' redraw from a median of 2.20 s to 1.41 s, <a href="../004/#update">issue 004's update</a>). Then consider moving it off the main thread (B), weighing the round trip it would add to each interaction. C waits. On Kids' Choice the conversion was 8 of 104 ms (<a href="../001/#now">issue 001</a>), a larger share but a small time.</p>
+<p>So the order changes: first make the view cheaper to evaluate, per shape and in the evaluator's general overhead (done the same day, in three changes: the woods' redraw from a median of 2.20 s to 1.41 s, <a href="../004/#update"><code class="ref"><b>^report(</b>4<b>)</b></code>'s update</a>). Then consider moving it off the main thread (B), weighing the round trip it would add to each interaction. C waits. On Kids' Choice the conversion was 8 of 104 ms (<a href="../001/#now"><code class="ref"><b>^report(</b>1<b>)</b></code></a>), a larger share but a small time.</p>
 
 <h2 id="next">What to measure next</h2>
 <ul>
@@ -214,7 +214,7 @@
 <h2 id="method">How this was put together</h2>
 <ul>
   <li>The pipeline and the code facts: read from <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <a href="https://github.com/hazelgrove/hazel/commit/b18cef1f5a"><code>b18cef1f5a</code></a>, and from <code>virtual_dom</code>'s compiled diff.</li>
-  <li>The numbers: from issues <a href="../001/">001</a> and <a href="../004/">004</a>, and from the commit messages linked above. Nothing new was measured for this issue.</li>
+  <li>The numbers: from <a href="../001/"><code class="ref"><b>^report(</b>1<b>)</b></code></a> and <a href="../004/"><code class="ref"><b>^report(</b>4<b>)</b></code></a>, and from the commit messages linked above. Nothing new was measured for this report.</li>
 </ul>
 
 </main>
@@ -230,7 +230,7 @@
 </style>
 <script>
 /* Each "What next" step: a link to it, and a button copying a request to
-   mint a ticket for it (to paste to Claude): the issue, the step, its URL. */
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
 (() => {
   const h = document.getElementById("next");
   if (!h) return;
@@ -240,17 +240,19 @@
     list = list.nextElementSibling;
   }
   if (!list) return;
-  const m = (document.querySelector(".series") || document.body).textContent.match(/Issue (\d{3})/);
-  const issue = m ? m[1] : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + issue + "/";
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, issue " + issue +
-      ", What next, step " + n + ': "' + title + '". ' + url;
+    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
     const btn = document.createElement("button");
@@ -300,6 +302,13 @@
 })();
 </script>
 <!-- theme: end -->
+
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
 <!-- pr-cards: begin -->
 <style>
   .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
