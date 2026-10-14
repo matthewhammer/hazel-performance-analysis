@@ -210,7 +210,7 @@
     </ul></li>
   <li><b>Then the page.</b> The result was about 1 MB. After it arrived, the page took 5.7–6.6 s to redraw a picture it had not drawn before. Going back to one it had drawn took 0.6–1.1 s.</li>
 </ul>
-<p><b>Fixed: the worker now runs slices back to back for up to 30 ms before it yields</b> (#2635 <code>25e515536d</code>, #2597 <code>74f8056646</code>). A new request still gets in within those 30 ms.</p>
+<p><b>Fixed: the worker now runs slices back to back for up to 30 ms before it yields</b> (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <code>25e515536d</code>, <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> <code>74f8056646</code>). A new request still gets in within those 30 ms.</p>
 <ul>
   <li><b>The worker per woods change:</b> 10.0–10.7 s down to 2.1–2.6 s. Evaluating takes 1.8–2.1 s and the gaps between slices 0.23–0.26 s.</li>
   <li><b>Loading the Scenes slide:</b> 23.5–26.3 s down to 17.2–17.4 s.</li>
@@ -221,8 +221,8 @@
 <tr><td>Forest</td><td class="n">5.5, 3.5, 3.6, 3.7 s</td><td class="n">3.6, 1.6, 2.4, 2.0 s</td></tr>
 </table></div>
 <p>Kids' Choice, issue 001's slider, is unchanged: release to face has a median of 138 ms over 12 releases. On that slide the worker is not on the face's path.</p>
-<p class="note">On #2597, which lacks #2469's speedups, the Scenes slide takes about 5 minutes to draw its first picture, with or without the fix (297 and 301 s). The page is too busy even to answer a script. The Witch slide takes 172 s there. That is the main thread, not the worker.</p>
-<p class="note"><b>Later on 2026-10-12:</b> still true, measured again cold (Scenes 287.5 s, Witch 173.1 s), and now explained in <a href="../007/">issue 007</a>. On #2597 the page runs a full update for every partial result the worker streams, re-projecting the whole program each time, and the worker streams after every slice. One commit from #2469, <a href="https://github.com/hazelgrove/hazel/commit/c07bdacead"><code>c07bdacead</code></a>, brings Scenes to about 17 s and Witch to about 19 s in a copy of #2597.</p>
+<p class="note">On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, which lacks <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>'s speedups, the Scenes slide takes about 5 minutes to draw its first picture, with or without the fix (297 and 301 s). The page is too busy even to answer a script. The Witch slide takes 172 s there. That is the main thread, not the worker.</p>
+<p class="note"><b>Later on 2026-10-12:</b> still true, measured again cold (Scenes 287.5 s, Witch 173.1 s), and now explained in <a href="../007/">issue 007</a>. On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> the page runs a full update for every partial result the worker streams, re-projecting the whole program each time, and the worker streams after every slice. One commit from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>, <a href="https://github.com/hazelgrove/hazel/commit/c07bdacead"><code>c07bdacead</code></a>, brings Scenes to about 17 s and Witch to about 19 s in a copy of <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>.</p>
 
 <h3 id="reuse">Why nothing was reused, and a fix</h3>
 <p>The next question was which variable broke reuse. The worker logged, again only for this, every top-level binding it evaluated again, and why its definition's reuse check failed. Followed back from the woods, the chain started at the top of the slide:</p>
@@ -232,7 +232,7 @@
   <li><b>The woods' own function failed the same way,</b> on <code>grow</code>, its dead trees' recursive helper.</li>
 </ul>
 <p>The cause is in statics, which works out each expression's free variables, the ones the reuse check compares. A recursive function is compiled into a fixpoint that binds its own name. Statics already dropped that name from the fixpoint's free variables, with a comment saying that leaving it in breaks reuse. But the <code>let</code> around the fixpoint still took its definition's free variables whole, so the name leaked into every expression around it. A slide's library is such an expression, and every slide has one.</p>
-<p><b>Fixed</b> (#2635 <code>4b964e6660</code>, #2597 <code>a1a148278e</code>): a recursive <code>let</code>'s free variables drop the names its fixpoint binds.</p>
+<p><b>Fixed</b> (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <code>4b964e6660</code>, <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> <code>a1a148278e</code>): a recursive <code>let</code>'s free variables drop the names its fixpoint binds.</p>
 <ul>
   <li><b>What's left to evaluate:</b> after a figure-size change, the worker now re-evaluates 5 bindings, the figure and what reads it. Before, it was everything after the library.</li>
   <li><b>Tests:</b> two new tests reuse a module with a recursive member, and a function with a recursive helper inside, after an unrelated edit. Both fail without the fix.</li>
@@ -257,7 +257,7 @@
 <tr><td>The memo giving up on a function that keeps missing (kept)</td><td class="n">3.5, 3.2, 2.6, 3.3 s</td><td class="n">130 ms</td></tr>
 </table></div>
 <p>A bigger memo was slower, since a lookup scans the stored entries. With the memo off, the woods were fast but Kids' Choice lost the 40 ms the memo was made to save.</p>
-<p><b>Fixed</b> (#2635 <code>126f595ce9</code>, #2597 <code>498cf299ea</code>): once a function has missed 24 times for each time it hit, it is no longer looked up or recorded. A function that hits stays memoized.</p>
+<p><b>Fixed</b> (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <code>126f595ce9</code>, <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> <code>498cf299ea</code>): once a function has missed 24 times for each time it hit, it is no longer looked up or recorded. A function that hits stays memoized.</p>
 <ul>
   <li><b>The woods:</b> about as fast as with the memo off. Changing the woods themselves went from 8.3–10.7 s to 5.2–6.4 s.</li>
   <li><b>Kids' Choice:</b> keeps its reuse.</li>
@@ -278,7 +278,7 @@
   <li><b>Unrolling <code>Html</code>:</b> every Html node a view builds carries the <code>Html</code> type. Each time, the evaluator unrolled that recursive type of 47 constructors again, substituting through all of it: a sixth of the page's time in the woods.</li>
   <li><b>An uncached check:</b> a check on each bare constructor was redone every time, while its neighbour's was cached. Another 5%.</li>
 </ul>
-<p><b>Fixed</b> (#2635 <code>efaaee244f</code>, #2597 <code>abadface30</code>): unrolling is remembered per type, and the check is cached by hash like its neighbour's.</p>
+<p><b>Fixed</b> (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <code>efaaee244f</code>, <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> <code>abadface30</code>): unrolling is remembered per type, and the check is cached by hash like its neighbour's.</p>
 <ul>
   <li><b>Woods, figure size, each picture new:</b> 3.5, 3.2, 2.6, 3.3 s → 3.1, 2.0, 2.1, 2.7 s.</li>
   <li><b>Woods, eyes:</b> 4.9–6.2 s.</li>
@@ -323,16 +323,16 @@
 <ul>
   <li><b>A fix for <code>dev</code>:</b> the same one-line statics change, with its two tests.</li>
   <li><b>The page's redraw of a new picture</b>, still most of a woods change: the picture's view builds an Html node for each of ~600 shapes on every change (<a href="#casts">above</a>).</li>
-  <li><b>#2597:</b> the Scenes slide still takes about 5 minutes to draw its first picture there (281 s with all three fixes). That is the main thread, without #2469's speedups. <i>Later on 2026-10-12: why, and a one-commit fix (287.5 → about 17 s), in <a href="../007/">issue 007</a>.</i></li>
+  <li><b><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>:</b> the Scenes slide still takes about 5 minutes to draw its first picture there (281 s with all three fixes). That is the main thread, without <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>'s speedups. <i>Later on 2026-10-12: why, and a one-commit fix (287.5 → about 17 s), in <a href="../007/">issue 007</a>.</i></li>
   <li><b>A cheaper <code>^picture</code> view:</b> less work per shape, or an unchanged shape's SVG element reused. <i>Done 2026-10-12, though the work was per point, not per shape (<a href="#update">above</a>).</i></li>
   <li><b>A profile of a Witch slide redraw</b>, to find where its extra 2–3 s over Full Body goes.</li>
   <li><b>Full Body's shoe labels</b>, so they fit their line.</li>
 </ul>
-<p>Since then: the shoe labels fit. A <code>^choice</code> now wraps its buttons into rows and is as many lines tall as they take (#2635 <code>af826fcb46</code>, #2597 <code>fc9cadab07</code>). The page's side of a redraw, and how it compares with diffing the view in the worker, is <a href="../005/">issue 005</a>.</p>
+<p>Since then: the shoe labels fit. A <code>^choice</code> now wraps its buttons into rows and is as many lines tall as they take (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> <code>af826fcb46</code>, <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> <code>fc9cadab07</code>). The page's side of a redraw, and how it compares with diffing the view in the worker, is <a href="../005/">issue 005</a>.</p>
 
 <h2 id="measured">How these were measured</h2>
 <ul>
-  <li><b>Hazel:</b> dev builds of #2635 on Matthew's laptop, in headless Firefox over WebDriver with a fresh profile per run.
+  <li><b>Hazel:</b> dev builds of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> on Matthew's laptop, in headless Firefox over WebDriver with a fresh profile per run.
     <ul>
       <li>A script sets a slider (input and change events) or presses a button by its label. Repeated labels, such as "black", are pressed by their place in the slide.</li>
       <li>It then waits until the <code>^picture</code>'s SVG changes, up to 60 s.</li>
@@ -428,5 +428,91 @@
 })();
 </script>
 <!-- theme: end -->
+<!-- pr-cards: begin -->
+<style>
+  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 15, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-14T14:42:25Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-14T14:42:33Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-14T14:42:21Z"}, "hazelgrove/hazel#2679": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T20:45:04Z", "kind": "pull", "state": "open", "title": "An ascription pushed through a value gives the value back when it already has the type", "updated": "2026-10-12T21:10:16Z"}}, BUILT = "2026-10-14";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  const ask = key => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#");
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
+                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[2];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
 </body>
 </html>

@@ -63,23 +63,23 @@
 
 <p class="series"><a href="../">Hazel performance analysis</a> · Issue 007 · 2026-10-12</p>
 <h1>Five minutes to the first picture</h1>
-<p class="sub">On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, the full livelits branch, the Livelit Playground's Scenes slide has taken about five minutes to draw its first picture, and the Witch slide almost three. <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> draws both in about 12 seconds. <a href="../004/">Issue 004</a> reported this, and put it down to #2597 lacking the speedups of <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> (modular editors). This issue asks whether it is really that long, and why, and tries a fix.</p>
+<p class="sub">On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, the full livelits branch, the Livelit Playground's Scenes slide has taken about five minutes to draw its first picture, and the Witch slide almost three. <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> draws both in about 12 seconds. <a href="../004/">Issue 004</a> reported this, and put it down to <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> lacking the speedups of <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> (modular editors). This issue asks whether it is really that long, and why, and tries a fix.</p>
 
 <div class="headline">
 <p><b>Short answers.</b></p>
 <ol>
-  <li><b>Yes, it really is that long.</b> Cold, in a fresh headless Firefox, the Scenes slide's first picture came 287.5 s after the page was opened on #2597, and the Witch slide's 173.1 s. On #2635 they came in 11.4 s and 11.8 s. Earlier measurements agree, and today's three fixes to the picture's view (<a href="../004/#update">issue 004</a>) did not change it.</li>
-  <li><b>Why: the page redraws everything for every message from the worker, and #2597's worker sends one after every slice of its evaluation.</b> Opening Scenes, the page received 2,520 messages, and each cost it about 140 ms. About three quarters of that time went to rebuilding the code editor's view of the whole program, and most of the rest to statics, from scratch. The worker was idle 98.7% of the time. It had finished, and the page took five minutes catching up.</li>
-  <li><b>The fix already exists, in one commit from #2469:</b> <a href="https://github.com/hazelgrove/hazel/commit/c07bdacead"><code>c07bdacead</code></a>, by Andrew Blinn. The worker sends at most one partial result every 100 ms, and the page stops re-projecting the whole program for each one. In a copy of #2597 with only this commit, Scenes took 16.6–17.6 s instead of 287.5 s, and Witch 18.6–19.4 s instead of 173.1 s (three runs each). The page received 86 messages instead of 2,520.</li>
-  <li><b>What's left, 5–7 s against #2635, is #2469's other work:</b> a cadence that slows as programs grow, a code view built in cached chunks, and statics per item. Those have not been measured one at a time.</li>
-  <li><b>This is not the slowness <a href="../001/">issue 001</a> found.</b> There, a Kids' Choice slider release took 3.76 s on #2597 against 0.35 s on #2635, because #2597 runs statics on the whole program for every release. This commit does not address that.</li>
+  <li><b>Yes, it really is that long.</b> Cold, in a fresh headless Firefox, the Scenes slide's first picture came 287.5 s after the page was opened on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, and the Witch slide's 173.1 s. On <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> they came in 11.4 s and 11.8 s. Earlier measurements agree, and today's three fixes to the picture's view (<a href="../004/#update">issue 004</a>) did not change it.</li>
+  <li><b>Why: the page redraws everything for every message from the worker, and <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s worker sends one after every slice of its evaluation.</b> Opening Scenes, the page received 2,520 messages, and each cost it about 140 ms. About three quarters of that time went to rebuilding the code editor's view of the whole program, and most of the rest to statics, from scratch. The worker was idle 98.7% of the time. It had finished, and the page took five minutes catching up.</li>
+  <li><b>The fix already exists, in one commit from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>:</b> <a href="https://github.com/hazelgrove/hazel/commit/c07bdacead"><code>c07bdacead</code></a>, by Andrew Blinn. The worker sends at most one partial result every 100 ms, and the page stops re-projecting the whole program for each one. In a copy of <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> with only this commit, Scenes took 16.6–17.6 s instead of 287.5 s, and Witch 18.6–19.4 s instead of 173.1 s (three runs each). The page received 86 messages instead of 2,520.</li>
+  <li><b>What's left, 5–7 s against <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, is <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>'s other work:</b> a cadence that slows as programs grow, a code view built in cached chunks, and statics per item. Those have not been measured one at a time.</li>
+  <li><b>This is not the slowness <a href="../001/">issue 001</a> found.</b> There, a Kids' Choice slider release took 3.76 s on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> against 0.35 s on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, because <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> runs statics on the whole program for every release. This commit does not address that.</li>
 </ol>
 </div>
 
 <div class="kpis">
-  <div class="kpi"><div class="v bad">287.5 s</div><div class="l">#2597, the Scenes slide's first picture</div></div>
+  <div class="kpi"><div class="v bad">287.5 s</div><div class="l"><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, the Scenes slide's first picture</div></div>
   <div class="kpi"><div class="v good">17.4 s</div><div class="l">the same, with <code>c07bdacead</code> (median of three)</div></div>
-  <div class="kpi"><div class="v">12.5 s</div><div class="l">#2635, which has all of #2469 (median of three)</div></div>
+  <div class="kpi"><div class="v">12.5 s</div><div class="l"><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, which has all of <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> (median of three)</div></div>
   <div class="kpi"><div class="v">2,520 → 86</div><div class="l">worker messages the page handled while opening Scenes</div></div>
 </div>
 
@@ -87,18 +87,18 @@
 <p>Each run opened the slide in a fresh headless Firefox at <code>/fresh</code>, so nothing saved was read. A watcher in the page noted the moment a picture with more than 40 shapes appeared, so the time is exact even while the page is too busy to answer the test script. One heavy job ran at a time.</p>
 <div class="scroll"><table>
 <tr><th>Build</th><th>Scenes, first picture</th><th>Witch, first picture</th><th>When</th></tr>
-<tr><td>#2597, before the worker's slices ran back to back</td><td class="n">297 s</td><td class="n">172 s</td><td>2026-10-12 morning (finding 25)</td></tr>
-<tr><td>#2597, after it</td><td class="n">301 s</td><td class="n"></td><td>finding 25</td></tr>
-<tr><td>#2597, after the view's casts were fixed</td><td class="n">286 s</td><td class="n"></td><td>finding 28</td></tr>
-<tr><td>#2597, with all three of the day's view fixes</td><td class="n">281 s</td><td class="n"></td><td><a href="../004/#update">issue 004</a></td></tr>
-<tr><td><b>#2597</b> at <code>1fa1384445</code>, tonight</td><td class="n"><b>287.5 s</b></td><td class="n"><b>173.1 s</b></td><td>2026-10-12 evening</td></tr>
-<tr><td><b>#2635</b> at <code>57c928cef4</code>, tonight</td><td class="n">11.4, 13.2, 12.5 s</td><td class="n">11.8 s</td><td>2026-10-12 evening</td></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, before the worker's slices ran back to back</td><td class="n">297 s</td><td class="n">172 s</td><td>2026-10-12 morning (finding 25)</td></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, after it</td><td class="n">301 s</td><td class="n"></td><td>finding 25</td></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, after the view's casts were fixed</td><td class="n">286 s</td><td class="n"></td><td>finding 28</td></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, with all three of the day's view fixes</td><td class="n">281 s</td><td class="n"></td><td><a href="../004/#update">issue 004</a></td></tr>
+<tr><td><b><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a></b> at <code>1fa1384445</code>, tonight</td><td class="n"><b>287.5 s</b></td><td class="n"><b>173.1 s</b></td><td>2026-10-12 evening</td></tr>
+<tr><td><b><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a></b> at <code>57c928cef4</code>, tonight</td><td class="n">11.4, 13.2, 12.5 s</td><td class="n">11.8 s</td><td>2026-10-12 evening</td></tr>
 </table></div>
 <p>So it is about five minutes for Scenes and three for Witch, and has been all day, whatever was fixed in the picture's view.</p>
 
 <h2 id="why">Where the five minutes go</h2>
 <p>Hazel evaluates a program in a web worker, and the page draws it on the main thread (<a href="../005/">issue 005</a>). The worker evaluates in slices of 5,000 steps, and after each slice it can send the page the partial results it has so far, so that probes and livelits fill in while the rest is still running. Every message the page receives is an action: the page updates its model, recalculates, and redraws.</p>
-<p>A profile of the whole load on #2597, from opening the slide until its first picture, sampled every 4 ms:</p>
+<p>A profile of the whole load on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, from opening the slide until its first picture, sampled every 4 ms:</p>
 <ul>
   <li><b>The page's main thread was busy for all of it, 353 s.</b> 97% of that was the app's update loop, one update after another.</li>
   <li><b>The page handled 2,520 messages from the worker,</b> about 140 ms of work each. Receiving them took only 0.5 s in all. The time went to the update each one set off.</li>
@@ -114,54 +114,54 @@
 </table></div>
 <p>The Scenes slide's program is large, so each of these is expensive. Done 2,520 times, it comes to five minutes. That is also why the day's fixes didn't move it: they made the <i>picture's</i> view cheaper, and this is the <i>code editor's</i> view, redrawn for every message.</p>
 
-<h2 id="fix">The fix, from #2469</h2>
+<h2 id="fix">The fix, from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a></h2>
 <p>Andrew Blinn found and fixed the same thing on the modular-editors branch on 2026-08-25, in <a href="https://github.com/hazelgrove/hazel/commit/c07bdacead"><code>c07bdacead</code></a>, "eval streaming: kill the post-load main-thread burn". On a generated 1,000-item program, the slide was drawn at about 5 s, and the main thread then worked for 40 s more on 307 stream messages. The commit does two things:</p>
 <ol>
   <li><b>The worker sends at most one stream message every 100 ms.</b> Partial results it holds back pile up in its outbox and go in the next message. When the evaluation finishes, everything left goes at once.</li>
   <li><b>The page's projection of the program for the worker is made lazy.</b> It folds over the whole program, and it was computed on every update, including each stream message's, which never used it.</li>
 </ol>
 <p>His measurement: 307 messages down to 28, and the main thread's work after opening the slide down from 45.5 s to 5.4 s. A day later, <a href="https://github.com/hazelgrove/hazel/commit/a05f8e5791"><code>a05f8e5791</code></a> made the interval grow with the program, from 100 ms up to 1 s, because a fixed 100 ms still swamped a 2,000-item program (46.7 → 10.2 s). <a href="../005/">Issue 005</a> credited the throttle to that second commit alone; it now has a correction.</p>
-<p>#2635 is #2597 plus <code>dev</code> plus #2469, so it has both commits. #2597 has neither.</p>
+<p><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> is <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> plus <code>dev</code> plus <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>, so it has both commits. <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> has neither.</p>
 
-<h2 id="experiment">The fix, tried on #2597</h2>
-<p><code>c07bdacead</code> was brought onto a copy of #2597 at <code>1fa1384445</code>, on a local branch (<code>perf/2597-stream-throttle</code>, not pushed). It had two small conflicts, both because #2597 had changed the same code since:</p>
+<h2 id="experiment">The fix, tried on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a></h2>
+<p><code>c07bdacead</code> was brought onto a copy of <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> at <code>1fa1384445</code>, on a local branch (<code>perf/2597-stream-throttle</code>, not pushed). It had two small conflicts, both because <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> had changed the same code since:</p>
 <ul>
-  <li>#2597's request to the worker has new fields. They were kept, and the lazy projection is forced only where a request is sent, or where a finished result is checked for reuse.</li>
-  <li>#2597 now holds the last stream for the result message at completion. That was kept, so only the throttled sending during the evaluation came from the commit.</li>
+  <li><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s request to the worker has new fields. They were kept, and the lazy projection is forced only where a request is sent, or where a finished result is checked for reuse.</li>
+  <li><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> now holds the last stream for the result message at completion. That was kept, so only the throttled sending during the evaluation came from the commit.</li>
 </ul>
 <p>The copy built cleanly. Cold, the same way as above:</p>
 <div class="scroll"><table>
 <tr><th>Build</th><th>Scenes, first picture</th><th>Witch, first picture</th></tr>
-<tr><td>#2597</td><td class="n">287.5 s</td><td class="n">173.1 s</td></tr>
-<tr><td>#2597 with <code>c07bdacead</code></td><td class="n"><b>17.6, 16.6, 17.4 s</b></td><td class="n"><b>19.4, 18.9, 18.6 s</b></td></tr>
-<tr><td>#2635</td><td class="n">11.4, 13.2, 12.5 s</td><td class="n">11.8 s</td></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a></td><td class="n">287.5 s</td><td class="n">173.1 s</td></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> with <code>c07bdacead</code></td><td class="n"><b>17.6, 16.6, 17.4 s</b></td><td class="n"><b>19.4, 18.9, 18.6 s</b></td></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a></td><td class="n">11.4, 13.2, 12.5 s</td><td class="n">11.8 s</td></tr>
 </table></div>
-<p>A profile of the copy's load, the same way but sampled every 1 ms: the page handled <b>86</b> messages from the worker instead of 2,520, and its main thread ran the app's code for about 31 s instead of 353. Both of those are profiled times, which run long: under the profiler the first picture came at 348 s on #2597 and 29.5 s on the copy, against 287.5 and about 17 s without it. What remains is the same kind of work, about 60% of it the code editor's view.</p>
+<p>A profile of the copy's load, the same way but sampled every 1 ms: the page handled <b>86</b> messages from the worker instead of 2,520, and its main thread ran the app's code for about 31 s instead of 353. Both of those are profiled times, which run long: under the profiler the first picture came at 348 s on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> and 29.5 s on the copy, against 287.5 and about 17 s without it. What remains is the same kind of work, about 60% of it the code editor's view.</p>
 
 <h2 id="left">What's left</h2>
-<p>The copy is still 5–7 s behind #2635: Scenes about 17 s against 12.5, Witch about 19 s against 11.8. #2469 has more that bears on a load like this:</p>
+<p>The copy is still 5–7 s behind <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: Scenes about 17 s against 12.5, Witch about 19 s against 11.8. <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> has more that bears on a load like this:</p>
 <ul>
   <li><b>The adaptive cadence</b> (<code>a05f8e5791</code>): fewer messages again for a large program. The Scenes program is large, so it should help here.</li>
-  <li><b>The code view in cached chunks:</b> a message redraws only the chunks whose results changed. On #2597 every message rebuilds every tile, which is most of what's left.</li>
+  <li><b>The code view in cached chunks:</b> a message redraws only the chunks whose results changed. On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> every message rebuilds every tile, which is most of what's left.</li>
   <li><b>Statics per item,</b> updated rather than redone (issue 001).</li>
 </ul>
 <p>These have not been measured one at a time. <code>a05f8e5791</code> also carries several unrelated changes, so its cadence would have to be taken out on its own.</p>
 
-<h2 id="not">Not the other #2597 slowness</h2>
-<p><a href="../001/">Issue 001</a> found that a Kids' Choice slider release takes about 3.76 s on #2597 and 0.35 s on #2635. That is a different cost: on every release #2597 runs statics on the whole program from scratch (3.5 s profiled), where #2469 runs them per item. This issue's fix is about how often the page redraws while a program loads, so it should leave a release's time as it was. That has not been checked.</p>
+<h2 id="not">Not the other <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> slowness</h2>
+<p><a href="../001/">Issue 001</a> found that a Kids' Choice slider release takes about 3.76 s on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> and 0.35 s on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>. That is a different cost: on every release <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> runs statics on the whole program from scratch (3.5 s profiled), where <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> runs them per item. This issue's fix is about how often the page redraws while a program loads, so it should leave a release's time as it was. That has not been checked.</p>
 
 <h2 id="next">What next</h2>
 <ol class="ranked">
-  <li><b>Bring <code>c07bdacead</code> to #2597 itself,</b> as tried here, with the worker tests (<code>WorkerServer encodings</code>, <code>StreamInterests</code>) and the slides' load times as the check. It is one commit with two small conflicts. <i><b>Done later on 2026-10-12:</b> it is on #2597 as <a href="https://github.com/hazelgrove/hazel/commit/a15c6f0b65"><code>a15c6f0b65</code></a>, with the same resolution measured here. Scenes now takes 16.7 and 16.4 s to its first picture on #2597, and Witch 18.8 s. The <code>WorkerServer encodings</code>, <code>IncrSlides</code> and <code>Evaluator</code> groups pass (<code>StreamInterests</code> is not on #2597).</i></li>
+  <li><b>Bring <code>c07bdacead</code> to <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> itself,</b> as tried here, with the worker tests (<code>WorkerServer encodings</code>, <code>StreamInterests</code>) and the slides' load times as the check. It is one commit with two small conflicts. <i><b>Done later on 2026-10-12:</b> it is on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> as <a href="https://github.com/hazelgrove/hazel/commit/a15c6f0b65"><code>a15c6f0b65</code></a>, with the same resolution measured here. Scenes now takes 16.7 and 16.4 s to its first picture on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, and Witch 18.8 s. The <code>WorkerServer encodings</code>, <code>IncrSlides</code> and <code>Evaluator</code> groups pass (<code>StreamInterests</code> is not on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>).</i></li>
   <li><b>Then the adaptive cadence,</b> taken out of <code>a05f8e5791</code> on its own, measured the same way.</li>
   <li><b>Check that a Kids' Choice release is unchanged</b> on the copy, as expected.</li>
 </ol>
 
 <h2 id="method">How this was put together</h2>
 <ul>
-  <li><b>Builds:</b> #2597 at <code>1fa1384445</code>, #2635 at <code>57c928cef4</code>, and the copy of #2597 with <code>c07bdacead</code> (local commit <code>0f64f97a10</code>), all dev builds, served locally.</li>
+  <li><b>Builds:</b> <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> at <code>1fa1384445</code>, <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <code>57c928cef4</code>, and the copy of <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> with <code>c07bdacead</code> (local commit <code>0f64f97a10</code>), all dev builds, served locally.</li>
   <li><b>Times:</b> headless Firefox over WebDriver, a fresh profile per run, the slide opened at <code>/fresh</code>. A MutationObserver in the page recorded the time (since navigation) when an <code>svg</code> with more than 40 shapes first appeared. One run at a time on one laptop.</li>
-  <li><b>Profiles:</b> the Gecko profiler, started before navigation and saved a few seconds after the first picture. Saving mid-load failed: the busy page could not hand over its samples, the same busyness finding 25 met. #2597's six-minute load was sampled every 4 ms, the copy's every 1 ms. Shares are from the page's main thread. The message count is the page's <code>message</code> events from the worker, during the whole load.</li>
+  <li><b>Profiles:</b> the Gecko profiler, started before navigation and saved a few seconds after the first picture. Saving mid-load failed: the busy page could not hand over its samples, the same busyness finding 25 met. <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s six-minute load was sampled every 4 ms, the copy's every 1 ms. Shares are from the page's main thread. The message count is the page's <code>message</code> events from the worker, during the whole load.</li>
   <li><b>The cause</b> was first suggested by reading: the two branches' stream code differs in exactly this commit. Then the experiment confirmed it.</li>
 </ul>
 
@@ -248,5 +248,91 @@
 })();
 </script>
 <!-- theme: end -->
+<!-- pr-cards: begin -->
+<style>
+  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 15, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-14T14:42:25Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-14T14:42:33Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-14T14:42:21Z"}}, BUILT = "2026-10-14";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  const ask = key => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#");
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
+                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[2];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
 </body>
 </html>

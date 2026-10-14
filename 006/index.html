@@ -69,10 +69,10 @@
 <p><b>Short answers.</b></p>
 <ol>
   <li><b>Nothing in CI catches a performance regression today.</b> No check is required to merge into <code>dev</code> at all; the tests run on every push, and a red run is a signal, not a gate.</li>
-  <li><b>The two benchmark workflows on <code>dev</code>, <code>/perf</code> and <code>/bench-compare</code>, never worked there.</b> They came from #2161 without the scripts they call. <code>/perf</code> also ran a pull request's own code for anyone who commented. <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a> turns them off.</li>
+  <li><b>The two benchmark workflows on <code>dev</code>, <code>/perf</code> and <code>/bench-compare</code>, never worked there.</b> They came from <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a> without the scripts they call. <code>/perf</code> also ran a pull request's own code for anyone who commented. <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a> turns them off.</li>
   <li><b>A time can't fail a build on GitHub's shared runners; a count can.</b> The full test job's time varied by about 10% across the last five <code>dev</code> runs, and the quick job once ran 40% faster than usual. The same program does the same amount of work on every machine.</li>
   <li><b>The first count-based check is in <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a>:</b> the evaluator's steps, held to budgets. A cold run takes 206,834 steps. A re-run after an edit takes 378, and must stay under 5% of a run. With reuse switched off, the re-run takes 206,834 steps and the test fails.</li>
-  <li><b>#2161 or fresh?</b> We started fresh for the check, because #2161 measures time. Its phase-by-phase timings would suit a later report that informs but does not fail the build (<a href="#pr2161">below</a>).</li>
+  <li><b><a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a> or fresh?</b> We started fresh for the check, because <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a> measures time. Its phase-by-phase timings would suit a later report that informs but does not fail the build (<a href="#pr2161">below</a>).</li>
 </ol>
 </div>
 
@@ -97,12 +97,12 @@
 
 <h2 id="workflows">The two benchmark workflows</h2>
 <ul>
-  <li><b><code>/perf</code></b> builds the PR and its base and runs <code>bench/build-and-run.sh</code> on each. That script is only on #2161's branch, <code>perf-bench</code>. On <code>dev</code>, the workflow exits with "No such file or directory" on both sides; that was the last run, on 09-30. Its last two real successes were on #2161, on 2026-03-06. One on 08-12 "succeeded" with nothing to compare against: the base side had failed to build, so every row was new.</li>
-  <li><b><code>/bench-compare</code></b> looks for stored results named <code>bench-&lt;sha&gt;</code>. Only #2161's branch has the workflow that stores them, and none exist now. It has never succeeded.</li>
+  <li><b><code>/perf</code></b> builds the PR and its base and runs <code>bench/build-and-run.sh</code> on each. That script is only on <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>'s branch, <code>perf-bench</code>. On <code>dev</code>, the workflow exits with "No such file or directory" on both sides; that was the last run, on 09-30. Its last two real successes were on <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>, on 2026-03-06. One on 08-12 "succeeded" with nothing to compare against: the base side had failed to build, so every row was new.</li>
+  <li><b><code>/bench-compare</code></b> looks for stored results named <code>bench-&lt;sha&gt;</code>. Only <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>'s branch has the workflow that stores them, and none exist now. It has never succeeded.</li>
   <li><b>Neither could fail a build.</b> The comparison script marks a change of more than 10% and 0.5 ms with an emoji, and always exits successfully.</li>
   <li><b><code>/perf</code> ran a PR's own code</b> (<code>npm install</code> and the benchmark script) for any commenter, with a token that can write to the PR.</li>
 </ul>
-<p>A CI audit noted the missing scripts on #2161 in August. <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a> turns both workflows off: they now start only by hand, and then their job is skipped. A comment in each file says why, and what reviving it would need.</p>
+<p>A CI audit noted the missing scripts on <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a> in August. <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a> turns both workflows off: they now start only by hand, and then their job is skipped. A comment in each file says why, and what reviving it would need.</p>
 
 <h2 id="times">Why not times</h2>
 <p>A regression worth catching is often 10–20%. That is the size of the noise on GitHub's shared runners. For the last five <code>dev</code> runs, with nearly the same tests (4,699–4,704):</p>
@@ -120,8 +120,8 @@
 <tr><th>Count</th><th>What a rise means</th><th>Where</th></tr>
 <tr><td><b>Evaluator steps actually taken</b></td><td>more evaluation, or reuse that stopped working</td><td><code>dev</code>, with <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a></td></tr>
 <tr><td><b>Statics analyses per expression</b></td><td>an expression analyzed again, as module and livelit definitions were, twice each, until <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a></td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <code>Test_StaticsPasses</code>, with per-file budgets</td></tr>
-<tr><td><b>Work per edit:</b> pieces reparsed, items re-analyzed</td><td>an edit recomputing more than it touched</td><td>#2635: <code>Test_EditLocality</code>, <code>Test_BenchStatics</code></td></tr>
-<tr><td><b>Bytes:</b> an elaboration's size; the worker's messages</td><td>larger values crossing between the threads (issue 005)</td><td>#2635: <code>Test_ElabSize</code>; messages measured by hand so far</td></tr>
+<tr><td><b>Work per edit:</b> pieces reparsed, items re-analyzed</td><td>an edit recomputing more than it touched</td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <code>Test_EditLocality</code>, <code>Test_BenchStatics</code></td></tr>
+<tr><td><b>Bytes:</b> an elaboration's size; the worker's messages</td><td>larger values crossing between the threads (issue 005)</td><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: <code>Test_ElabSize</code>; messages measured by hand so far</td></tr>
 </table>
 </div>
 <p><b>What counts miss:</b> a step that got slower, and the page's own costs (virtual DOM, layout), which need a browser. Those stay with timings.</p>
@@ -141,14 +141,14 @@
 <p><b>It catches what it is for.</b> With reuse switched off in <code>IncrEval.reuse_check</code>, the re-run takes 206,834 steps, and the test fails: "over its budget of 420. A performance regression". This is the failure issues 004 and 005 kept finding by hand, a change re-evaluating everything, invisible to tests that only check the answer. The counts are the same on every run.</p>
 
 <h2 id="pr2161"><a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>: build on it, or start fresh?</h2>
-<p>#2161, "Performance benchmarking", by David Moon, is a draft opened on 2026-03-05. Its last commit is from 2026-03-13, and it conflicts with <code>dev</code>. It has 48 commits: +2,376 and −323 lines in 30 files.</p>
+<p><a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>, "Performance benchmarking", by David Moon, is a draft opened on 2026-03-05. Its last commit is from 2026-03-13, and it conflicts with <code>dev</code>. It has 48 commits: +2,376 and −323 lines in 30 files.</p>
 <p>Its harness, <code>bench/hazel_bench.re</code>, times the editor's syntax and statics phases: zipping, parsing (<code>MakeTerm</code>), layout (<code>Measured</code>), type checking, elaboration. It runs them on let-chains of 100 and 500 bindings, in four scenarios: cold, warm, after a cursor move, and after an edit. Each is the median of 10 runs. It posted result tables on its own PR in March and August. The PR also replaces structural memoization with memoization by pointer, in <code>MakeTerm</code>, <code>Measured</code>, highlighting and elsewhere. The two workflows on <code>dev</code> came from it.</p>
 <div class="scroll">
 <table>
-<tr><th></th><th>Build on #2161</th><th>Start fresh: counts in the test suite (#2678)</th></tr>
+<tr><th></th><th>Build on <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a></th><th>Start fresh: counts in the test suite (<a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a>)</th></tr>
 <tr><td><b>Measures</b></td><td>Time per phase of the editor's syntax and statics</td><td>Work done: evaluator steps now; statics analyses and bytes next</td></tr>
 <tr><td><b>Can it fail a build?</b></td><td><span class="bad">No.</span> Its threshold (10% and 0.5 ms) is the size of the runners' noise, and its comparison never fails</td><td><span class="good">Yes,</span> with no false alarms: a count over budget fails the test</td></tr>
-<tr><td><b>Covers where 001–005 found the costs</b></td><td><span class="warn">Partly:</span> statics, yes; evaluation, reuse, the worker and the page, no</td><td><span class="warn">Partly:</span> evaluation and reuse now; statics once #2635's counts reach <code>dev</code>; the page, no</td></tr>
+<tr><td><b>Covers where 001–005 found the costs</b></td><td><span class="warn">Partly:</span> statics, yes; evaluation, reuse, the worker and the page, no</td><td><span class="warn">Partly:</span> evaluation and reuse now; statics once <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s counts reach <code>dev</code>; the page, no</td></tr>
 <tr><td><b>Explains a regression</b></td><td><span class="good">Yes:</span> time by phase shows where it went</td><td><span class="warn">Partly:</span> a count shows that work grew, and which test, not where the time goes</td></tr>
 <tr><td><b>Sees a step getting slower</b></td><td><span class="good">Yes</span>, given enough repetitions</td><td><span class="bad">No</span></td></tr>
 <tr><td><b>Programs</b></td><td>Synthetic let-chains</td><td>Small programs in the test; slides can be added</td></tr>
@@ -158,7 +158,7 @@
 <tr><td><b>Ownership</b></td><td>David's PR: reviving it is his call</td><td>Ours</td></tr>
 </table>
 </div>
-<p><b>The decision:</b> counts for the check that fails a build, so we started fresh. #2161's timings by phase are the right shape for the other half: a report on a PR that shows where time went, run on one runner for base and head, repeated, and read by a person. If David wants that, the harness could be split out of #2161 for it.</p>
+<p><b>The decision:</b> counts for the check that fails a build, so we started fresh. <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>'s timings by phase are the right shape for the other half: a report on a PR that shows where time went, run on one runner for base and head, repeated, and read by a person. If David wants that, the harness could be split out of <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a> for it.</p>
 
 <h2 id="update">Update, later on 2026-10-12: a count is not a time</h2>
 <p>Later the same day, work on the woods' picture view (<a href="../005/">issue 005</a>) measured steps and time side by side. Times are of the view's own evaluation on the page: a timer around it, on one build, comparing variants in turn. Changes in the whole redraw were too noisy to see.</p>
@@ -181,19 +181,19 @@
 
 <h2 id="next">What next</h2>
 <ul>
-  <li><b>Statics counts on <code>dev</code>:</b> the analyses-per-expression counter and <code>Test_StaticsPasses</code>, from #2635. Its corpus case runs only in the full suite. A small subset could go in the quick one.</li>
+  <li><b>Statics counts on <code>dev</code>:</b> the analyses-per-expression counter and <code>Test_StaticsPasses</code>, from <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>. Its corpus case runs only in the full suite. A small subset could go in the quick one.</li>
   <li><b>The slides:</b> a budget for the work after a figure move in the woods, where reuse failed before <a href="https://github.com/hazelgrove/hazel/pull/2675">#2675</a>.</li>
   <li><b>Bytes:</b> elaboration sizes on <code>dev</code>, and the worker's message sizes for a fixed interaction.</li>
   <li><b>Make the check count:</b> ask the maintainers to require the test jobs for merging into <code>dev</code>.</li>
-  <li><b>A timing report,</b> informing, not failing: base and head on one runner, repeated, phase by phase, perhaps from #2161's harness.</li>
+  <li><b>A timing report,</b> informing, not failing: base and head on one runner, repeated, phase by phase, perhaps from <a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>'s harness.</li>
 </ul>
 
 <h2 id="method">How this was put together</h2>
 <ul>
   <li>The CI facts: the workflow files on <code>dev</code> (<code>e12145c69b</code>), <code>dev</code>'s branch protection, and the logs of the runs named above, read with the GitHub CLI.</li>
   <li>The noise: the "Test Successful in N s" lines of the last ten green <code>dev</code> runs (2026-09-22 to 10-09), of which the last five have nearly the same suite.</li>
-  <li>#2161: its description, files, comments and branch.</li>
-  <li>The counts: #2678's test, run twice, and once with reuse switched off; on the laptop, under node.</li>
+  <li><a href="https://github.com/hazelgrove/hazel/pull/2161">#2161</a>: its description, files, comments and branch.</li>
+  <li>The counts: <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a>'s test, run twice, and once with reuse switched off; on the laptop, under node.</li>
 </ul>
 
 </main>
@@ -279,5 +279,91 @@
 })();
 </script>
 <!-- theme: end -->
+<!-- pr-cards: begin -->
+<style>
+  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2161": {"author": "dm0n3y", "comments": 11, "created": "2026-03-05T19:53:48Z", "kind": "pull", "state": "draft", "title": "Performance benchmarking", "updated": "2026-08-12T16:27:38Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-14T14:42:21Z"}, "hazelgrove/hazel#2651": {"author": "matthewhammer", "comments": 1, "created": "2026-10-05T22:34:31Z", "kind": "pull", "state": "open", "title": "Statics: a module binding analyzes its definition once, not twice", "updated": "2026-10-05T22:55:04Z"}, "hazelgrove/hazel#2675": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T13:05:13Z", "kind": "pull", "state": "open", "title": "Incremental evaluation reuses expressions around a recursive let", "updated": "2026-10-12T13:27:15Z"}, "hazelgrove/hazel#2678": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T17:06:58Z", "kind": "pull", "state": "open", "title": "CI fails when an evaluation does more work than its budget", "updated": "2026-10-12T17:28:32Z"}, "hazelgrove/hazel#2679": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T20:45:04Z", "kind": "pull", "state": "open", "title": "An ascription pushed through a value gives the value back when it already has the type", "updated": "2026-10-12T21:10:16Z"}}, BUILT = "2026-10-14";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  const ask = key => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#");
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
+                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[2];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
 </body>
 </html>

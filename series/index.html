@@ -44,7 +44,7 @@
       <div>
       <div class="num">Issue 013 · 2026-10-14</div>
       <div class="title"><a href="013/">Telling the request what changed</a></div>
-      <p class="blurb">A slider release's request to the evaluation worker on #2635: building its projection of the statics now takes under a millisecond on every Livelit Playground slide, since the per-item statics say which keys they changed instead of the projection walking both maps. What is left grows with how far down the program the slider sits, since every item above it carries the program below. The three commits behind it, carried to #2469 (one change each, its quick tests whole), and what dev and #2597 need first: per-item statics.</p>
+      <p class="blurb">A slider release's request to the evaluation worker on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: building its projection of the statics now takes under a millisecond on every Livelit Playground slide, since the per-item statics say which keys they changed instead of the projection walking both maps. What is left grows with how far down the program the slider sits, since every item above it carries the program below. The three commits behind it, carried to <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> (one change each, its quick tests whole), and what dev and <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> need first: per-item statics.</p>
       </div>
     </li>
     <li>
@@ -84,7 +84,7 @@
       <div>
       <div class="num">Issue 008 · 2026-10-12</div>
       <div class="title"><a href="008/">One slider, three ways: what modular editing saves</a></div>
-      <p class="blurb">One slider change on the Livelit Playground's Full Body slide, three ways. On #2597, without modular editing, it takes 8.6 s, mostly statics on the whole program. On #2635, with it, 1.2 s. Showing only the slider and the picture should be faster still, but it took 3.5 s: opening them as cells gives the picture new ids on every change, and the worker's reuse check then compared lexemes in a walk that was quadratic over the program's <code>let</code>s. Comparing them in the same memoized walk as structure, now on #2635, brings it to 1.26 s, as fast as the whole program.</p>
+      <p class="blurb">One slider change on the Livelit Playground's Full Body slide, three ways. On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, without modular editing, it takes 8.6 s, mostly statics on the whole program. On <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, with it, 1.2 s. Showing only the slider and the picture should be faster still, but it took 3.5 s: opening them as cells gives the picture new ids on every change, and the worker's reuse check then compared lexemes in a walk that was quadratic over the program's <code>let</code>s. Comparing them in the same memoized walk as structure, now on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, brings it to 1.26 s, as fast as the whole program.</p>
       </div>
     </li>
     <li>
@@ -92,7 +92,7 @@
       <div>
       <div class="num">Issue 007 · 2026-10-12</div>
       <div class="title"><a href="007/">Five minutes to the first picture</a></div>
-      <p class="blurb">On #2597, the full livelits branch, the Livelit Playground's Scenes slide took about five minutes to draw its first picture. It really does, 287.5 s against 12.5 s on #2635, and the reason is that the page redraws everything for every message from the worker. #2597's worker sends one after every slice of its evaluation: 2,520 while the slide loads, each costing the page about 140 ms, mostly rebuilding the code editor's view of the whole program. The worker sits idle while the page catches up. One commit from #2469, which sends at most one message every 100 ms, brings the first picture to about 17 s on a copy of #2597.</p>
+      <p class="blurb">On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, the full livelits branch, the Livelit Playground's Scenes slide took about five minutes to draw its first picture. It really does, 287.5 s against 12.5 s on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, and the reason is that the page redraws everything for every message from the worker. <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s worker sends one after every slice of its evaluation: 2,520 while the slide loads, each costing the page about 140 ms, mostly rebuilding the code editor's view of the whole program. The worker sits idle while the page catches up. One commit from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>, which sends at most one message every 100 ms, brings the first picture to about 17 s on a copy of <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>.</p>
       </div>
     </li>
     <li>
@@ -174,5 +174,91 @@
 })();
 </script>
 <!-- theme: end -->
+<!-- pr-cards: begin -->
+<style>
+  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 15, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-14T14:42:25Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-14T14:42:33Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-14T14:42:21Z"}}, BUILT = "2026-10-14";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  const ask = key => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#");
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
+                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[2];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
 </body>
 </html>
