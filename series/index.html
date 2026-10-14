@@ -18,6 +18,7 @@
   main { max-width: 760px; margin: 0 auto; padding: 40px 16px 80px; }
   h1 { font-size: 1.9em; margin: 0 0 6px; }
   .sub { color: var(--muted); margin: 0 0 28px; }
+  .sub:has(+ .sub.dash) { margin-bottom: 8px; }
   a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
   ol.issues { list-style: none; padding: 0; margin: 0; }
   ol.issues li { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin: 12px 0;
@@ -38,6 +39,8 @@
 <main>
   <h1>Hazel performance analysis</h1>
   <p class="sub">Notes on making <a href="https://hazel.org">Hazel</a> responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed. Matthew Hammer.</p>
+  <p class="sub dash">Where this work is tracked, day to day: <a id="dashboard-link" href="http://matthewhammer.org/hazel/work-dashboard/">the Hazel Work Dashboard</a>.</p>
+  <script>if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) document.getElementById("dashboard-link").href = "http://localhost:8000/";</script>
   <ol class="issues" reversed>
     <li>
       <a class="thumb" href="013/"><img class="light" src="013/img/thumb-light.svg" alt="Paired bars for Full Body's four sliders, from the top of the program down: a slider release's request to the evaluation worker, before and after: shirt width 17.5 to 3.6 ms, alien fingers 20.6 to 7.3, eye angle 23.9 to 16.5, tongue width 27.5 to 20.8."><img class="dark" src="013/img/thumb-dark.svg" alt="Paired bars for Full Body's four sliders, from the top of the program down: a slider release's request to the evaluation worker, before and after: shirt width 17.5 to 3.6 ms, alien fingers 20.6 to 7.3, eye angle 23.9 to 16.5, tongue width 27.5 to 20.8."></a>

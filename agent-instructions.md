@@ -6,11 +6,11 @@ How Matthew and his agent write the **Hazel performance analysis** series: what 
 
 The series explains Hazel's performance to **people outside our working loop**: Cyrus, the Hazel team, and anyone else who follows the work. Each report takes one question and answers it with measurements. Is it really that slow? Where does the time go? What fixed it, and what's left? The questions often come from a meeting with Cyrus, or from the dashboard's next steps.
 
-The series is **not our working record.** That is `hazel-work-notes`, a private repository: the Hazel Work Dashboard, its snapshots and our next steps, written for the two of us. So:
+The series is **not our working record.** That is `hazel-work-notes` (public, but written for the two of us): the Hazel Work Dashboard, its snapshots, its tickets and our work notes. So:
 
 - **Write for a reader who wasn't there.** Say what the slide, the branch or the measurement is. Never rely on what was said in chat.
 - **No working chatter:** no to-do lists for ourselves, no local ports or `localhost` links, no "we tried X at 3 am". A dead end belongs in a report only when it teaches the reader something ("tried and not kept", with its numbers).
-- **The dashboard links here, not the other way round.** A report may cite a next step's question, but its links go to PRs, commits, #2609's findings and other reports.
+- **The dashboard links here; only the series index links back.** The index has one line linking the Hazel Work Dashboard (Matthew, 2026-10-14): http://localhost:8000/ when the index is served locally, the published dashboard (http://matthewhammer.org/hazel/work-dashboard/) when it is published, as the dashboard's menu links the local or the published series. A report may cite a ticket's question, but its links go to PRs, commits, #2609's findings and other reports.
 
 ## Scope
 
