@@ -1,8 +1,8 @@
 # Hazel performance analysis
 
-A series of reports on making [Hazel](https://hazel.org) responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed, and what's left. By Matthew Hammer, working with Claude, for Cyrus, the Hazel team and anyone following the work.
+**▶ Read the series at http://matthewhammer.org/hazel/performance-analysis/** (HTTP only, for now).
 
-**Read it at http://matthewhammer.org/hazel/performance-analysis/** (HTTP only, for now).
+A series of reports on making [Hazel](https://hazel.org) responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed, and what's left. By Matthew Hammer, working with Claude, for Cyrus, the Hazel team and anyone following the work.
 
 | Report | |
 |---|---|
@@ -15,6 +15,10 @@ A series of reports on making [Hazel](https://hazel.org) responsive enough for i
 | [007](007/) | Five minutes to the first picture |
 | [008](008/) | One slider, three ways: what modular editing saves |
 | [009](009/) | Names and reuse: what fresh ids cost Hazel |
+| [010](010/) | What a slider change touches |
+| [011](011/) | Naming what a slider leaves alone |
+| [012](012/) | Moving a group, not its points |
+| [013](013/) | Telling the request what changed |
 
 The performance tracking issue is [hazelgrove/hazel#2609](https://github.com/hazelgrove/hazel/issues/2609); its findings are cited by number. Most of the work is on [#2635](https://github.com/hazelgrove/hazel/pull/2635) (livelits × modular editors) and [#2597](https://github.com/hazelgrove/hazel/pull/2597) (the full livelits branch).
 
