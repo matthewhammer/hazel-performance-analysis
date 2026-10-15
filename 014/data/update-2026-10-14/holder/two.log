@@ -1,0 +1,11 @@
+loaded in 15.826 s
+edit 1 -> 67: ok, redraw 7.586 s
+edit 2 -> 74: ok, redraw 7.338 s
+edit 3 -> 81: ok, redraw 7.83 s
+heap 554.9 MB; snapshot after edit 3
+snapshot ok 1490.5 MB in 49.2 s
+edit 4 -> 88: ok, redraw 27.04 s
+edit 5 -> 95: ok, redraw 37.27 s
+edit 6 -> 62: ok, redraw 34.452 s
+heap 751.7 MB; snapshot after edit 6
+snapshot ok 2295.5 MB in 75.8 s

@@ -1,0 +1,17 @@
+loaded in 11.8 s
+after load: [438195663, 614758723]
+edit  1 -> 67: redraw 1.28 s, live heap   427.1 MB (+   9.2)
+edit  2 -> 74: redraw 1.16 s, live heap   435.3 MB (+  17.4)
+edit  3 -> 81: redraw 0.92 s, live heap   443.6 MB (+  25.7)
+edit  4 -> 88: redraw 0.91 s, live heap   451.7 MB (+  33.8)
+edit  5 -> 95: redraw 1.24 s, live heap   461.5 MB (+  43.6)
+edit  6 -> 62: redraw 1.23 s, live heap   469.3 MB (+  51.4)
+edit  7 -> 69: redraw 0.95 s, live heap   477.2 MB (+  59.3)
+edit  8 -> 76: redraw 0.96 s, live heap   485.5 MB (+  67.6)
+edit  9 -> 83: redraw 1.0 s, live heap   493.3 MB (+  75.4)
+edit 10 -> 90: redraw 1.01 s, live heap   511.5 MB (+  93.6)
+edit 11 -> 97: redraw 1.98 s, live heap   463.9 MB (+  46.0)
+edit 12 -> 64: redraw 0.91 s, live heap   469.8 MB (+  51.9)
+edit 13 -> 71: redraw 1.28 s, live heap   475.7 MB (+  57.8)
+edit 14 -> 78: redraw 0.95 s, live heap   481.7 MB (+  63.8)
+edit 15 -> 85: redraw 1.61 s, live heap   487.6 MB (+  69.7)

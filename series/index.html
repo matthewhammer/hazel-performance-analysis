@@ -47,7 +47,7 @@
       <div>
       <div class="num"><a href="014/"><code class="ref"><b>^report(</b>14<b>)</b></code></a> · 2026-10-14</div>
       <div class="title"><a href="014/">What the page keeps from one edit to the next</a></div>
-      <p class="blurb">A tab on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> keeps about 92 MB more after every slider edit on Full Body, without levelling off. It is not the caches (each tried in a build of its own) and not any long-lived table (each counted after every edit): what stays is whole versions of the editor's state, made by every stage of an edit. Which reference holds them is still open, since a heap snapshot kills this tab; the lead is ValueHash's WeakMap of about two million entries.</p>
+      <p class="blurb">A tab on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> keeps about 92 MB more after every slider edit on Full Body, without levelling off. It is not the caches (each tried in a build of its own) and not any long-lived table (each counted after every edit): what stays is whole versions of the editor's state, made by every stage of an edit. Which reference holds them is still open, since a heap snapshot kills this tab; the lead is ValueHash's WeakMap of about two million entries. <b>Updated later on 2026-10-14:</b> a heap snapshot named it, the undo history, which kept a whole page model per edit, uncapped by default. Andrew Blinn's compaction, ported, with the newest undo entry kept whole so undo stays as fast as before, keeps the tab level: 208 MB after 12 edits, against 1,048. Both are on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> and <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>.</p>
       </div>
     </li>
     <li>

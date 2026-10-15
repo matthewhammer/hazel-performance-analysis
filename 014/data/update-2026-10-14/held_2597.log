@@ -1,0 +1,15 @@
+loaded in 14.359 s
+{"label":"load","documents":2,"nodes":47923,"jsEventListeners":609,"heapMB":400.3,"shown":18369,"held":{"listeners":{"window":7,"document":8,"element":149,"MediaQueryList":1},"observing":2,"observers":2,"intervals":0,"timeouts":1,"frames":1}}
+edit 1 -> 67: ok, redraw 6.737 s
+{"label":"edit 1","documents":2,"nodes":47923,"jsEventListeners":609,"heapMB":483.9,"shown":18369,"held":{"listeners":{"window":7,"document":8,"element":149,"MediaQueryList":1},"observing":2,"observers":2,"intervals":0,"timeouts":1,"frames":1}}
+edit 2 -> 74: ok, redraw 6.327 s
+{"label":"edit 2","documents":2,"nodes":47923,"jsEventListeners":609,"heapMB":564.8,"shown":18369,"held":{"listeners":{"window":7,"document":8,"element":149,"MediaQueryList":1},"observing":2,"observers":2,"intervals":0,"timeouts":1,"frames":1}}
+edit 3 -> 81: ok, redraw 6.374 s
+{"label":"edit 3","documents":2,"nodes":47923,"jsEventListeners":609,"heapMB":658.6,"shown":18369,"held":{"listeners":{"window":7,"document":8,"element":149,"MediaQueryList":1},"observing":2,"observers":2,"intervals":0,"timeouts":1,"frames":1}}
+edit 4 -> 88: ok, redraw 5.991 s
+{"label":"edit 4","documents":2,"nodes":47923,"jsEventListeners":609,"heapMB":738.3,"shown":18369,"held":{"listeners":{"window":7,"document":8,"element":149,"MediaQueryList":1},"observing":2,"observers":2,"intervals":0,"timeouts":1,"frames":1}}
+edit 5 -> 95: ok, redraw 6.527 s
+{"label":"edit 5","documents":2,"nodes":47923,"jsEventListeners":609,"heapMB":820.8,"shown":18369,"held":{"listeners":{"window":7,"document":8,"element":149,"MediaQueryList":1},"observing":2,"observers":2,"intervals":0,"timeouts":1,"frames":1}}
+edit 6 -> 62: ok, redraw 6.427 s
+{"label":"edit 6","documents":2,"nodes":47923,"jsEventListeners":609,"heapMB":900.3,"shown":18369,"held":{"listeners":{"window":7,"document":8,"element":149,"MediaQueryList":1},"observing":2,"observers":2,"intervals":0,"timeouts":1,"frames":1}}
+node exit 0

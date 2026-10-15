@@ -1,0 +1,41 @@
+total 37.5 MB
+   14.5 MB  src/web/util/WorkerServer.re
+    9.8 MB  src/util/ValueHash.re
+    5.4 MB  src/util/ShareCodec.re
+    1.8 MB  src/language/dynamics/CallMemo.re
+    0.9 MB  src/web/app/sidebar/OutlineSidebar.re
+    0.6 MB  src/language/term/TermBase.re
+    0.4 MB  src/haz3lcore/lang/MakeTerm.re
+    0.3 MB  src/language/term/IdTagged.re
+    0.3 MB  src/web/app/common/ProjectorView.re
+    0.2 MB  src/web/app/History.re
+    0.2 MB  src/haz3lcore/derived/DefStatics.re
+    0.2 MB  src/haz3lcore/projectors/HazelDOM.re
+    0.2 MB  src/web/app/sidebar/OutlineTree.re
+    0.2 MB  src/haz3lcore/derived/Measured.re
+    0.2 MB  src/haz3lcore/pretty/ExpToSegment.re
+    0.2 MB  src/web/app/Page.re
+    0.1 MB  src/haz3lcore/zipper/Siblings.re
+    0.1 MB  src/web/view/ScratchMode.re
+    0.1 MB  src/language/dynamics/transition/Ascriptions.re
+    0.1 MB  src/haz3lcore/zipper/ZipperBase.re
+    0.1 MB  src/util/IdentityMemo.re
+    0.1 MB  (no src frame: (IDLE_EXTERNAL))
+    0.1 MB  src/haz3lcore/projectors/implementations/LivelitProj.re
+    0.1 MB  src/util/VarMap.re
+    0.1 MB  src/web/NinjaKeys.re
+    0.1 MB  src/web/app/editors/result/Theorems.re
+    0.1 MB  src/util/Id.re
+    0.1 MB  src/language/dynamics/Evaluator.re
+    0.1 MB  src/util/ListUtil.re
+    0.1 MB  src/haz3lcore/derived/TermMap.re
+    0.1 MB  src/language/dynamics/transition/Transition.re
+    0.1 MB  src/language/statics/Statics.re
+    0.1 MB  src/haz3lcore/derived/CanonicalCompletion.re
+    0.0 MB  src/language/statics/ConstructorMap.re
+    0.0 MB  (no src frame: )
+    0.0 MB  src/web/app/common/FontMetrics.re
+    0.0 MB  src/web/HazelDB.re
+    0.0 MB  (no src frame: diffProps)
+    0.0 MB  src/util/OptUtil.re
+    0.0 MB  src/haz3lcore/projectors/ProjectorInfo.re

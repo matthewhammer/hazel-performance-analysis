@@ -1,0 +1,149 @@
+[
+ {
+  "label": "load",
+  "documents": 2,
+  "nodes": 47923,
+  "jsEventListeners": 609,
+  "heapMB": 400.3,
+  "shown": 18369,
+  "held": {
+   "listeners": {
+    "window": 7,
+    "document": 8,
+    "element": 149,
+    "MediaQueryList": 1
+   },
+   "observing": 2,
+   "observers": 2,
+   "intervals": 0,
+   "timeouts": 1,
+   "frames": 1
+  }
+ },
+ {
+  "label": "edit 1",
+  "documents": 2,
+  "nodes": 47923,
+  "jsEventListeners": 609,
+  "heapMB": 483.9,
+  "shown": 18369,
+  "held": {
+   "listeners": {
+    "window": 7,
+    "document": 8,
+    "element": 149,
+    "MediaQueryList": 1
+   },
+   "observing": 2,
+   "observers": 2,
+   "intervals": 0,
+   "timeouts": 1,
+   "frames": 1
+  }
+ },
+ {
+  "label": "edit 2",
+  "documents": 2,
+  "nodes": 47923,
+  "jsEventListeners": 609,
+  "heapMB": 564.8,
+  "shown": 18369,
+  "held": {
+   "listeners": {
+    "window": 7,
+    "document": 8,
+    "element": 149,
+    "MediaQueryList": 1
+   },
+   "observing": 2,
+   "observers": 2,
+   "intervals": 0,
+   "timeouts": 1,
+   "frames": 1
+  }
+ },
+ {
+  "label": "edit 3",
+  "documents": 2,
+  "nodes": 47923,
+  "jsEventListeners": 609,
+  "heapMB": 658.6,
+  "shown": 18369,
+  "held": {
+   "listeners": {
+    "window": 7,
+    "document": 8,
+    "element": 149,
+    "MediaQueryList": 1
+   },
+   "observing": 2,
+   "observers": 2,
+   "intervals": 0,
+   "timeouts": 1,
+   "frames": 1
+  }
+ },
+ {
+  "label": "edit 4",
+  "documents": 2,
+  "nodes": 47923,
+  "jsEventListeners": 609,
+  "heapMB": 738.3,
+  "shown": 18369,
+  "held": {
+   "listeners": {
+    "window": 7,
+    "document": 8,
+    "element": 149,
+    "MediaQueryList": 1
+   },
+   "observing": 2,
+   "observers": 2,
+   "intervals": 0,
+   "timeouts": 1,
+   "frames": 1
+  }
+ },
+ {
+  "label": "edit 5",
+  "documents": 2,
+  "nodes": 47923,
+  "jsEventListeners": 609,
+  "heapMB": 820.8,
+  "shown": 18369,
+  "held": {
+   "listeners": {
+    "window": 7,
+    "document": 8,
+    "element": 149,
+    "MediaQueryList": 1
+   },
+   "observing": 2,
+   "observers": 2,
+   "intervals": 0,
+   "timeouts": 1,
+   "frames": 1
+  }
+ },
+ {
+  "label": "edit 6",
+  "documents": 2,
+  "nodes": 47923,
+  "jsEventListeners": 609,
+  "heapMB": 900.3,
+  "shown": 18369,
+  "held": {
+   "listeners": {
+    "window": 7,
+    "document": 8,
+    "element": 149,
+    "MediaQueryList": 1
+   },
+   "observing": 2,
+   "observers": 2,
+   "intervals": 0,
+   "timeouts": 1,
+   "frames": 1
+  }
+ }
+]

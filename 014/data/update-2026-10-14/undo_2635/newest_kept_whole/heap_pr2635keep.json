@@ -1,0 +1,103 @@
+[
+ {
+  "edit": 0,
+  "used": 438166003,
+  "total": 611912127
+ },
+ {
+  "edit": 1,
+  "value": 67,
+  "set": "ok",
+  "redraw_s": 1.07,
+  "used": 448204450,
+  "total": 596690874
+ },
+ {
+  "edit": 2,
+  "value": 74,
+  "set": "ok",
+  "redraw_s": 1.5,
+  "used": 456851079,
+  "total": 598502939
+ },
+ {
+  "edit": 3,
+  "value": 81,
+  "set": "ok",
+  "redraw_s": 1.3,
+  "used": 465454356,
+  "total": 599528568
+ },
+ {
+  "edit": 4,
+  "value": 88,
+  "set": "ok",
+  "redraw_s": 0.79,
+  "used": 473936679,
+  "total": 602127047
+ },
+ {
+  "edit": 5,
+  "value": 95,
+  "set": "ok",
+  "redraw_s": 1.1,
+  "used": 484215014,
+  "total": 609317134
+ },
+ {
+  "edit": 6,
+  "value": 62,
+  "set": "ok",
+  "redraw_s": 1.23,
+  "used": 492490382,
+  "total": 615847794
+ },
+ {
+  "edit": 7,
+  "value": 69,
+  "set": "ok",
+  "redraw_s": 0.91,
+  "used": 500732097,
+  "total": 622116341
+ },
+ {
+  "edit": 8,
+  "value": 76,
+  "set": "ok",
+  "redraw_s": 1.23,
+  "used": 509406916,
+  "total": 630739916
+ },
+ {
+  "edit": 9,
+  "value": 83,
+  "set": "ok",
+  "redraw_s": 1.22,
+  "used": 517625623,
+  "total": 638843431
+ },
+ {
+  "edit": 10,
+  "value": 90,
+  "set": "ok",
+  "redraw_s": 0.92,
+  "used": 536794117,
+  "total": 659790381
+ },
+ {
+  "edit": 11,
+  "value": 97,
+  "set": "ok",
+  "redraw_s": 1.07,
+  "used": 509633655,
+  "total": 671619151
+ },
+ {
+  "edit": 12,
+  "value": 64,
+  "set": "ok",
+  "redraw_s": 0.8,
+  "used": 493058732,
+  "total": 641448876
+ }
+]

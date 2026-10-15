@@ -1,0 +1,154 @@
+=== node 1 synthetic:(GC roots): retains 778.2 MB, new 256.6 MB; biggest dominated child 124.1 MB
+  dominators: synthetic(257) > synthetic:(GC roots)(257)
+  --[1]--> synthetic:(GC roots)
+  top dominated: object:Array 124.1; object:Array 33.1; object:Array 17.1; object:Array 7.7; object:Array 5.6; object:Array 4.6
+
+=== node 26283463 object:Array: retains 308.6 MB, new 124.1 MB; biggest dominated child 65.9 MB
+  dominators: synthetic(257) > synthetic:(GC roots)(257) > object:Array(124) > object:Array(124) > object:Array(124)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Web__CrashHandling--> object:Array
+  --[3]--> object:Array
+  --[1]--> object:Array
+  --[1]--> object:Array
+  --[1]--> object:Array
+  --[2]--> object:Array
+  top dominated: object:Array 65.9; object:Array 58.1; array:(object elements) 0.0
+
+=== node 27922816 object:Array: retains 35.2 MB, new 35.2 MB; biggest dominated child 16.8 MB
+  dominators: object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(53) > object:Array(35)
+  ( --[2]--> object:Array ) x 17
+  --[1]--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+  --[1]--> object:Array
+  --[1]--> object:Array
+  --[3]--> object:Array
+  --[3]--> object:Array
+  top dominated: object:Array 16.8; object:Array 10.1; object:Array 1.0; object:Array 1.0; object:Array 0.8; object:Array 0.7
+
+=== node 23482751 object:Array: retains 35.2 MB, new 35.2 MB; biggest dominated child 16.8 MB
+  dominators: object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(53) > object:Array(35)
+  ( --[2]--> object:Array ) x 17
+  --[1]--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+  --[1]--> object:Array
+  --[1]--> object:Array
+  --[3]--> object:Array
+  --[3]--> object:Array
+  top dominated: object:Array 16.8; object:Array 10.2; object:Array 1.0; object:Array 1.0; object:Array 0.8; object:Array 0.7
+
+=== node 25407644 object:Array: retains 33.1 MB, new 33.1 MB; biggest dominated child 16.8 MB
+  dominators: synthetic(257) > synthetic:(GC roots)(257) > object:Array(33)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Web__ProjectorView--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+  top dominated: object:Array 16.8; object:Array 10.1; object:Array 1.0; object:Array 0.8; object:Array 0.7; object:Array 0.7
+
+=== node 21573418 object:Array: retains 16.8 MB, new 16.8 MB; biggest dominated child 8.5 MB
+  dominators: object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(53) > object:Array(35) > object:Array(17)
+  ( --[2]--> object:Array ) x 16
+  --[1]--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+  --[1]--> object:Array
+  --[1]--> object:Array
+  --[3]--> object:Array
+  --[3]--> object:Array
+  --[4]--> object:Array
+  top dominated: object:Array 8.5; object:Array 6.0; object:Array 0.8; object:Array 0.6; object:Array 0.5; object:Array 0.0
+
+=== node 25468884 object:Array: retains 16.8 MB, new 16.8 MB; biggest dominated child 8.5 MB
+  dominators: synthetic(257) > synthetic:(GC roots)(257) > object:Array(33) > object:Array(17)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Web__ProjectorView--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+  --[4]--> object:Array
+  top dominated: object:Array 8.5; object:Array 6.0; object:Array 0.8; object:Array 0.6; object:Array 0.5; object:Array 0.0
+
+=== node 21975853 object:Array: retains 16.8 MB, new 16.8 MB; biggest dominated child 8.5 MB
+  dominators: object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(53) > object:Array(35) > object:Array(17)
+  ( --[2]--> object:Array ) x 16
+  --[1]--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+  --[1]--> object:Array
+  --[1]--> object:Array
+  --[3]--> object:Array
+  --[3]--> object:Array
+  --[4]--> object:Array
+  top dominated: object:Array 8.5; object:Array 6.0; object:Array 0.8; object:Array 0.6; object:Array 0.5; object:Array 0.0
+
+=== node 9736208 array: retains 16.9 MB, new 15.8 MB; biggest dominated child 0.0 MB
+  dominators: synthetic(257) > synthetic:(GC roots)(257) > object:Array(17) > object:Array(17) > object:Object(17) > object:system / Context / scope @10601547(17) > object:Map(16) > array(16)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Util__ShareCodec--> object:Array
+  --[3]--> object:Array
+  --[1]--> object:Object
+  --property:workerSize--> closure:workerSize
+  --internal:context--> object:system / Context / scope @10601547
+  --context:table--> object:Map
+  --internal:table--> array
+  top dominated: object:Array 0.0; object:Array 0.0; object:Array 0.0; object:Array 0.0; object:Array 0.0; object:Array 0.0
+
+=== node 23482742 object:Array: retains 14.4 MB, new 14.4 MB; biggest dominated child 7.7 MB
+  dominators: object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(53) > object:Array(14) > object:Array(14)
+  ( --[2]--> object:Array ) x 17
+  --[1]--> object:Array
+  --[2]--> object:Array
+  ( --[1]--> object:Array ) x 4
+  --[3]--> object:Array
+  top dominated: object:Array 7.7; object:Array 4.6; object:Array 2.1; object:Array 0.0; object:Array 0.0; object:Array 0.0
+
+=== node 27922813 object:Array: retains 14.4 MB, new 14.4 MB; biggest dominated child 7.7 MB
+  dominators: object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(53) > object:Array(14) > object:Array(14)
+  ( --[2]--> object:Array ) x 17
+  --[1]--> object:Array
+  --[2]--> object:Array
+  ( --[1]--> object:Array ) x 4
+  --[3]--> object:Array
+  top dominated: object:Array 7.7; object:Array 4.6; object:Array 2.1; object:Array 0.0; object:Array 0.0; object:Array 0.0
+
+=== node 21975852 object:Array: retains 10.2 MB, new 10.2 MB; biggest dominated child 5.3 MB
+  dominators: object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(58) > object:Array(53) > object:Array(35) > object:Array(10)
+  ( --[2]--> object:Array ) x 16
+  --[1]--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+  --[1]--> object:Array
+  --[1]--> object:Array
+  --[3]--> object:Array
+  --[3]--> object:Array
+  --[1]--> object:Array
+  top dominated: object:Array 5.3; object:Array 4.1; object:Array 0.6; object:Array 0.0; object:Array 0.0; object:Array 0.0
+

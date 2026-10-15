@@ -1,0 +1,8 @@
+loaded in 16.5 s
+after load: [370462160, 543245724]
+edit  1 -> 67: redraw 3.27 s, live heap   424.0 MB (+  70.7)
+edit  2 -> 74: redraw 2.89 s, live heap   490.2 MB (+ 136.9)
+edit  3 -> 81: redraw 2.88 s, live heap   554.4 MB (+ 201.1)
+edit  4 -> 88: redraw 3.43 s, live heap   629.1 MB (+ 275.8)
+edit  5 -> 95: redraw 7.26 s, live heap   695.2 MB (+ 341.9)
+edit  6 -> 62: redraw 2.96 s, live heap   762.7 MB (+ 409.4)

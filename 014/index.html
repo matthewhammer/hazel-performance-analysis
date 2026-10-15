@@ -109,19 +109,29 @@
 <p><b>Short answers.</b> One slide, Full Body, on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> at <code>c4e411f9c2</code>, in headless Chromium; after each slider edit, two forced garbage collections and the page's live JavaScript heap. The method is <a href="#method">at the end</a>.</p>
 <ol>
   <li><b>A tab keeps about 92 MB more after every slider edit, and does not level off.</b> Over 15 edits of one slider, the live heap went from 399 to 1,787 MB (+1,388 MB), steadily (<a href="#leak">Figure 1</a>). At that rate, about 25 more edits would pass 4 GB.</li>
-  <li><b>None of the caches is what keeps it.</b> Each was tried in a build of its own: the undo history capped at 2 states, still 92 MB per edit; the projector view cache turned off, 83; the whole-program memos held to one entry, 73; memos and undo together, 71 (<a href="#caches">Figure 2</a>). The memos account for about 19 MB per edit while they fill up to their bounds, and stop when they are full; nothing tried touches the rest.</li>
+  <li><b>None of the caches is what keeps it.</b> Each was tried in a build of its own: the undo history capped at 2 states, still 92 MB per edit; the projector view cache turned off, 83; the whole-program memos held to one entry, 73; memos and undo together, 71 (<a href="#caches">Figure 2</a>). The memos account for about 19 MB per edit while they fill up to their bounds, and stop when they are full; nothing tried touches the rest.<br><span class="note"><b>Update, later on 2026-10-14:</b> the undo history is what keeps it; the build "capped at 2" never applied its cap, which needs a setting that is off by default (<a href="#update">Update</a>).</span></li>
   <li><b>No long-lived table grows.</b> A build that counts 14 of the page's tables after every edit (those keyed by ids, and HazelDB's cache) found each the same size after 8 edits as after the first, while the heap grew by 708 MB. ShareCodec's two tables of values shared with the worker rise and fall back as they reset at their cap of 200,000 entries (<a href="#tables">Figure 3</a>).</li>
   <li><b>What stays is whole versions of the editor's state.</b> V8's sampling heap profiler, over four edits, keeping only what is still alive: 390 MB, made by every stage of an edit. Types and statics 119 MB, ValueHash's hashes of objects 98, terms and syntax 64, the worker's replies 46, layout 41, other 23 (<a href="#what">Figure 4</a>). Not one cache's entries: each edit's whole product.</li>
-  <li><b>Which reference keeps them is still open.</b> A heap snapshot would show the path from a root to each object kept, but taking one kills this tab's renderer, in two builds of Chromium 155. A test page with a WeakMap of two million live entries never finished its snapshot either, and ValueHash's memo is a WeakMap of about that size; a build without it may let a snapshot through (<a href="#snapshots">below</a>).</li>
+  <li><b>Which reference keeps them is still open.</b> A heap snapshot would show the path from a root to each object kept, but taking one kills this tab's renderer, in two builds of Chromium 155. A test page with a WeakMap of two million live entries never finished its snapshot either, and ValueHash's memo is a WeakMap of about that size; a build without it may let a snapshot through (<a href="#snapshots">below</a>).<br><span class="note"><b>Update, later on 2026-10-14:</b> found, with a snapshot: the undo history (<a href="#update">Update</a>).</span></li>
   <li><b>Every weak table here is a JavaScript WeakMap, and none is the cause.</b> A WeakMap's entry lives exactly as long as its key, so ValueHash's 98 MB measures how much old state is alive, not a leak of its own. The fix, once the holder is found, is an owner and a lifetime for what it holds, not a weaker reference (<a href="#weak">below</a>).</li>
 </ol>
+</div>
+
+<div class="update" id="update-box">
+<p><b>Update, later on 2026-10-14: what keeps the versions is the undo history after all.</b></p>
+<ul>
+<li><b>The undo history keeps the whole page as it was before every edit,</b> each with its editors' syntax, statics and layout, and nothing ever trims it. Its cap of 250 states applies only when a setting, <code>cap_undo_stack</code>, is on, and it is off by default. So the build "capped at 2" in answer 2 changed a number the code never reached: that is why it changed nothing.</li>
+<li><b>With the cap applied always,</b> at 2, the tab stops growing after the third edit: it keeps 284 and 284 MB after 12 edits (two runs), against 1,048 MB as built (<a href="#update">below</a>).</li>
+<li><b>Andrew Blinn found and fixed this on the modular editors</b> (<a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>) in <a href="https://github.com/hazelgrove/hazel/commit/6010128b7d"><code>6010128b7d</code></a>: each state in the undo history drops what can be rebuilt (syntax, statics, evaluation results), and the cap always applies. Ported to <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> (<a href="https://github.com/hazelgrove/hazel/commit/d41c7a0298"><code>d41c7a0298</code></a>), the tab keeps 159 MB after 12 edits, but a redo, and half the undos, then take about as long as an edit: about 6 s on Full Body, against 2.6 to 3 s. So <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> also keeps the newest undo and redo entries whole (<a href="https://github.com/hazelgrove/hazel/commit/f8ae6f2b9c"><code>f8ae6f2b9c</code></a>): the latest undo is as fast as before, for one page model more, 208 MB after 12 edits. Both are on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> since 2026-10-15. On <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, which had the compaction already, every redo and most undos took about three edits' time; with the newest entry kept whole there too (<a href="https://github.com/hazelgrove/hazel/commit/032fe3aca6"><code>032fe3aca6</code></a>), each is done within 0.3 s, for no memory we could measure.</li>
+<li><b>A heap snapshot named it.</b> With ValueHash's memo kept only within one synchronous run, a snapshot of Full Body completes (answer 5's lead), and a dominator tree of two snapshots finds the kept versions at the head of the undo history.</li>
+</ul>
 </div>
 
 <div class="glance">
 <figure id="fig-heap"><svg viewBox="0 0 460 300" role="img" class="chart" aria-label="A line rising steadily from 399 MB before the first edit to 1,787 MB after the fifteenth, about 92 MB per edit, with no levelling off."><text x="230.0" y="20" text-anchor="middle" class="ct">The page's live JS heap after each edit (MB)</text><line x1="58" y1="252.0" x2="440" y2="252.0" class="grid"/><text x="52" y="256.0" text-anchor="end" class="cv">0</text><line x1="58" y1="196.4" x2="440" y2="196.4" class="grid"/><text x="52" y="200.4" text-anchor="end" class="cv">500</text><line x1="58" y1="140.9" x2="440" y2="140.9" class="grid"/><text x="52" y="144.9" text-anchor="end" class="cv">1,000</text><line x1="58" y1="85.3" x2="440" y2="85.3" class="grid"/><text x="52" y="89.3" text-anchor="end" class="cv">1,500</text><text x="58.0" y="268" text-anchor="middle" class="cv">0</text><text x="185.3" y="268" text-anchor="middle" class="cv">5</text><text x="312.7" y="268" text-anchor="middle" class="cv">10</text><text x="440.0" y="268" text-anchor="middle" class="cv">15</text><text x="249.0" y="286" text-anchor="middle" class="cv">slider edits (Full Body, shirt width)</text><line x1="58.0" y1="209.6" x2="440.0" y2="56.9" class="diag"/><polyline points="58.0,207.7 83.5,198.3 108.9,189.4 134.4,179.0 159.9,168.6 185.3,159.7 210.8,150.6 236.3,138.7 261.7,129.8 287.2,116.7 312.7,107.8 338.1,98.8 363.6,90.0 389.1,81.6 414.5,62.4 440.0,53.4" fill="none" style="stroke: var(--bad)" stroke-width="2.4" stroke-linejoin="round"/><circle cx="58.0" cy="207.7" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="83.5" cy="198.3" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="108.9" cy="189.4" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="134.4" cy="179.0" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="159.9" cy="168.6" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="185.3" cy="159.7" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="210.8" cy="150.6" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="236.3" cy="138.7" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="261.7" cy="129.8" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="287.2" cy="116.7" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="312.7" cy="107.8" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="338.1" cy="98.8" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="363.6" cy="90.0" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="389.1" cy="81.6" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="414.5" cy="62.4" r="3.4" class="dot" style="fill: var(--bad)"/><circle cx="440.0" cy="53.4" r="3.4" class="dot" style="fill: var(--bad)"/><text x="66.0" y="225.7" class="cl">399</text><text x="185.3" y="149.7" text-anchor="middle" class="cl">831</text><text x="312.7" y="97.8" text-anchor="middle" class="cl">1,298</text><text x="436.0" y="43.4" text-anchor="end" class="cl">1,787</text><text x="88.6" y="113.1" class="bt" style="fill: var(--bad)">+92 MB per edit</text><text x="88.6" y="130.1" class="bs">#2597 at c4e411f9c2; least squares, dashed</text></svg><figcaption><b>Figure 1.</b> The page's live JavaScript heap after each slider edit on Full Body, as built: 399 MB loaded, 1,787 MB after 15 edits, about 92 MB per edit (the dashed line, least squares). Numbers in <a href="#leak">the table below</a>.</figcaption></figure>
 <figure id="fig-builds"><svg viewBox="0 0 460 300" role="img" class="chart" aria-label="Bars of growth per edit, in MB: as built 92; undo history capped at 2, 92; projector view cache off, 83; whole-program memos at one entry, 73; memos at one and undo at 2, 71. Every build still grows."><text x="230.0" y="20" text-anchor="middle" class="ct">Growth of the live heap per edit, by build (MB)</text><line x1="405.3" y1="40" x2="405.3" y2="274" class="diag"/><text x="214" y="60" text-anchor="end" class="cl" font-weight="700">As built</text><text x="214" y="75" text-anchor="end" class="cv" font-size="11">#2597 at c4e411f9c2</text><rect x="222" y="48" width="183.3" height="22" rx="3" style="fill: var(--bad)"/><text x="411.3" y="64" class="cl" font-weight="600">92</text><text x="214" y="108" text-anchor="end" class="cl">Undo history capped at 2</text><text x="214" y="123" text-anchor="end" class="cv" font-size="11">from 250 states</text><rect x="222" y="96" width="183.2" height="22" rx="3" style="fill: var(--warn)"/><text x="411.2" y="112" class="cl" font-weight="600">92</text><text x="214" y="156" text-anchor="end" class="cl">Projector view cache off</text><text x="214" y="171" text-anchor="end" class="cv" font-size="11">never stores a view (6 edits)</text><rect x="222" y="144" width="165.9" height="22" rx="3" style="fill: var(--warn)"/><text x="410.3" y="160" class="cl" font-weight="600">83</text><text x="214" y="204" text-anchor="end" class="cl">Whole-program memos at one entry</text><text x="214" y="219" text-anchor="end" class="cv" font-size="11">Statics.mk 16 → 1, MakeTerm 8 → 1</text><rect x="222" y="192" width="145.8" height="22" rx="3" style="fill: var(--warn)"/><text x="373.8" y="208" class="cl" font-weight="600">73</text><text x="214" y="252" text-anchor="end" class="cl">Memos at one and undo at 2</text><text x="214" y="267" text-anchor="end" class="cv" font-size="11">both together</text><rect x="222" y="240" width="142.7" height="22" rx="3" style="fill: var(--warn)"/><text x="370.7" y="256" class="cl" font-weight="600">71</text><text x="230.0" y="292" text-anchor="middle" class="cv">every build still grows; one run of 15 edits each, except as noted</text></svg><figcaption><b>Figure 2.</b> Growth per edit in builds that each remove a cache or hold it to one entry. Every one still grows; the dashed line is the build as it is. Numbers in <a href="#caches">the table below</a>.</figcaption></figure>
 <figure id="fig-tables"><svg viewBox="0 0 460 300" role="img" class="chart" aria-label="Over eight edits, relative to the page as loaded: the live heap rises to 2.8 times; ShareCodec's two tables of shared values rise and fall back as they reset at their cap; fourteen other tables stay flat at 1."><text x="230.0" y="20" text-anchor="middle" class="ct">After each edit, relative to the page as loaded</text><line x1="46" y1="250.0" x2="400" y2="250.0" class="grid"/><text x="40" y="254.0" text-anchor="end" class="cv">0×</text><line x1="46" y1="182.0" x2="400" y2="182.0" class="grid"/><text x="40" y="186.0" text-anchor="end" class="cv">1×</text><line x1="46" y1="114.0" x2="400" y2="114.0" class="grid"/><text x="40" y="118.0" text-anchor="end" class="cv">2×</text><line x1="46" y1="46.0" x2="400" y2="46.0" class="grid"/><text x="40" y="50.0" text-anchor="end" class="cv">3×</text><text x="46.0" y="266" text-anchor="middle" class="cv">0</text><text x="134.5" y="266" text-anchor="middle" class="cv">2</text><text x="223.0" y="266" text-anchor="middle" class="cv">4</text><text x="311.5" y="266" text-anchor="middle" class="cv">6</text><text x="400.0" y="266" text-anchor="middle" class="cv">8</text><text x="223.0" y="284" text-anchor="middle" class="cv">slider edits, in a build that counts its tables</text><polyline points="46.0,182.0 90.2,182.0 134.5,182.0 178.8,182.0 223.0,182.0 267.2,182.0 311.5,182.0 355.8,182.0 400.0,182.0" fill="none" style="stroke: var(--muted)" stroke-width="6" stroke-linejoin="round"/><polyline points="46.0,182.0 90.2,170.1 134.5,158.1 178.8,146.2 223.0,196.1 267.2,183.4 311.5,171.5 355.8,159.6 400.0,147.7" fill="none" style="stroke: var(--accent2)" stroke-width="2" stroke-linejoin="round"/><polyline points="46.0,182.0 90.2,170.3 134.5,162.1 178.8,154.9 223.0,145.2 267.2,137.1 311.5,128.9 355.8,182.0 400.0,170.8" fill="none" style="stroke: var(--warn)" stroke-width="2" stroke-linejoin="round" stroke-dasharray="5 3"/><polyline points="46.0,182.0 90.2,167.6 134.5,152.7 178.8,136.4 223.0,120.4 267.2,106.6 311.5,92.6 355.8,74.3 400.0,60.5" fill="none" style="stroke: var(--bad)" stroke-width="2.6" stroke-linejoin="round"/><text x="406.0" y="64.5" class="cl" style="fill: var(--bad)" font-weight="700">2.8×</text><text x="406.0" y="186.0" class="cl">1×</text><line x1="54" y1="44" x2="76" y2="44" style="stroke: var(--bad)" stroke-width="2.4"/><text x="82" y="48" class="cl" font-size="12">live heap, 397 → 1,105 MB</text><line x1="54" y1="61" x2="76" y2="61" style="stroke: var(--accent2)" stroke-width="2.4"/><text x="82" y="65" class="cl" font-size="12">ShareCodec: values received</text><line x1="54" y1="78" x2="76" y2="78" style="stroke: var(--warn)" stroke-width="2.4" stroke-dasharray="5 3"/><text x="82" y="82" class="cl" font-size="12">ShareCodec: hashes sent</text><line x1="54" y1="95" x2="76" y2="95" style="stroke: var(--muted)" stroke-width="6"/><text x="82" y="99" class="cl" font-size="12">14 other tables: flat</text></svg><figcaption><b>Figure 3.</b> A build that counts its tables, after each edit, relative to the page as loaded: the heap reaches 2.8 times its size; ShareCodec's two tables rise and reset at their cap; the 14 other tables do not grow. Numbers in <a href="#tables">the table below</a>.</figcaption></figure>
-<figure id="fig-what"><svg viewBox="0 0 460 300" role="img" class="chart" aria-label="Still alive after four edits, 390 MB by the code that made it: types and statics 119 MB, ValueHash's hashes 98, terms and syntax 64, the worker's replies 46, layout 41, other 23."><text x="230.0" y="20" text-anchor="middle" class="ct">Still alive after four edits: 390 MB, by the code that made it</text><text x="196" y="53" text-anchor="end" class="cl">Types and statics</text><text x="196" y="67" text-anchor="end" class="cv" font-size="10.5">ConstructorMap, Typ, Statics, …</text><rect x="204" y="42" width="208.4" height="20" rx="3" style="fill: var(--accent)"/><text x="418.4" y="57" class="cl" font-weight="600">119</text><text x="196" y="93" text-anchor="end" class="cl">ValueHash's hashes</text><text x="196" y="107" text-anchor="end" class="cv" font-size="10.5">the memo of each object's hash</text><rect x="204" y="82" width="170.8" height="20" rx="3" style="fill: var(--accent)"/><text x="380.8" y="97" class="cl" font-weight="600">98</text><text x="196" y="133" text-anchor="end" class="cl">Terms and syntax</text><text x="196" y="147" text-anchor="end" class="cv" font-size="10.5">MakeTerm, IdTagged, TermBase, …</text><rect x="204" y="122" width="111.1" height="20" rx="3" style="fill: var(--accent)"/><text x="321.1" y="137" class="cl" font-weight="600">64</text><text x="196" y="173" text-anchor="end" class="cl">The worker's replies, decoded</text><text x="196" y="187" text-anchor="end" class="cv" font-size="10.5">unmarshaled on the page</text><rect x="204" y="162" width="80.5" height="20" rx="3" style="fill: var(--accent)"/><text x="290.5" y="177" class="cl" font-weight="600">46</text><text x="196" y="213" text-anchor="end" class="cl">Layout</text><text x="196" y="227" text-anchor="end" class="cv" font-size="10.5">Measured, Point, Code</text><rect x="204" y="202" width="71.2" height="20" rx="3" style="fill: var(--accent)"/><text x="281.2" y="217" class="cl" font-weight="600">41</text><text x="196" y="253" text-anchor="end" class="cl">Other</text><text x="196" y="267" text-anchor="end" class="cv" font-size="10.5">OptUtil, ShareCodec, HazelDB, …</text><rect x="204" y="242" width="40.6" height="20" rx="3" style="fill: var(--muted)"/><text x="250.6" y="257" class="cl" font-weight="600">23</text><text x="230.0" y="292" text-anchor="middle" class="cv">every stage of an edit, not one cache: about 98 MB per edit</text></svg><figcaption><b>Figure 4.</b> What is still alive after four edits, by the code that allocated it (V8's sampling heap profiler, live objects only), grouped by Reason source file. Numbers in <a href="#what">the table below</a>.</figcaption></figure>
+<figure id="fig-what"><svg viewBox="0 0 460 300" role="img" class="chart" aria-label="Still alive after four edits, 390 MB by the code that made it: types and statics 119 MB, ValueHash's hashes 98, terms and syntax 64, the worker's replies 46, layout 41, other 23."><text x="230.0" y="20" text-anchor="middle" class="ct">Still alive after four edits, 390 in all, by the code that made it (MB)</text><text x="196" y="53" text-anchor="end" class="cl">Types and statics</text><text x="196" y="67" text-anchor="end" class="cv" font-size="10.5">ConstructorMap, Typ, Statics, …</text><rect x="204" y="42" width="208.4" height="20" rx="3" style="fill: var(--accent)"/><text x="418.4" y="57" class="cl" font-weight="600">119</text><text x="196" y="93" text-anchor="end" class="cl">ValueHash's hashes</text><text x="196" y="107" text-anchor="end" class="cv" font-size="10.5">the memo of each object's hash</text><rect x="204" y="82" width="170.8" height="20" rx="3" style="fill: var(--accent)"/><text x="380.8" y="97" class="cl" font-weight="600">98</text><text x="196" y="133" text-anchor="end" class="cl">Terms and syntax</text><text x="196" y="147" text-anchor="end" class="cv" font-size="10.5">MakeTerm, IdTagged, TermBase, …</text><rect x="204" y="122" width="111.1" height="20" rx="3" style="fill: var(--accent)"/><text x="321.1" y="137" class="cl" font-weight="600">64</text><text x="196" y="173" text-anchor="end" class="cl">The worker's replies, decoded</text><text x="196" y="187" text-anchor="end" class="cv" font-size="10.5">unmarshaled on the page</text><rect x="204" y="162" width="80.5" height="20" rx="3" style="fill: var(--accent)"/><text x="290.5" y="177" class="cl" font-weight="600">46</text><text x="196" y="213" text-anchor="end" class="cl">Layout</text><text x="196" y="227" text-anchor="end" class="cv" font-size="10.5">Measured, Point, Code</text><rect x="204" y="202" width="71.2" height="20" rx="3" style="fill: var(--accent)"/><text x="281.2" y="217" class="cl" font-weight="600">41</text><text x="196" y="253" text-anchor="end" class="cl">Other</text><text x="196" y="267" text-anchor="end" class="cv" font-size="10.5">OptUtil, ShareCodec, HazelDB, …</text><rect x="204" y="242" width="40.6" height="20" rx="3" style="fill: var(--muted)"/><text x="250.6" y="257" class="cl" font-weight="600">23</text><text x="230.0" y="292" text-anchor="middle" class="cv">every stage of an edit, not one cache: about 98 MB per edit</text></svg><figcaption><b>Figure 4.</b> What is still alive after four edits, by the code that allocated it (V8's sampling heap profiler, live objects only), grouped by Reason source file. Numbers in <a href="#what">the table below</a>.</figcaption></figure>
 </div>
 
 <h2 id="leak">A tab, edit by edit</h2>
@@ -146,12 +156,13 @@
 <tr><td class="n">15</td><td class="n">85</td><td class="n">1,787</td><td class="n">81</td><td class="n">7.47</td></tr>
 </table></div>
 <p class="note">One run. The run with the undo history capped at 2 (<a href="#caches">below</a>), which turns out to change nothing, read within 7 MB of this one at every edit and within 1 MB at the end: that is the noise between runs here, well below the differences that matter.</p>
+<p class="note"><b>Update, later on 2026-10-14:</b> it changed nothing because its cap never ran, so these were two runs of the same program; the noise estimate stands.</p>
 
 <h2 id="caches">Not the caches</h2>
 <p>The page has a few caches that could keep whole programs, and each was the first suspect. Each was tried in a build of its own on the same commit, measured over the same 15 edits:</p>
 <ul>
   <li><b>The whole-program memos.</b> <code>Statics.mk</code> remembers the statics of the last 16 programs it saw, and MakeTerm's three memos the last 8 parses (<code>Core.Memo.general</code> with a <code>cache_size_bound</code>). Held to one entry each, the heap still grows 73 MB per edit, and every redraw takes 18 to 31 seconds, since nothing is reused. The difference, about 19 MB per edit, is these memos filling up to their bounds over the first 15 edits; it stops when they are full.</li>
-  <li><b>The undo history</b> keeps 250 states. Capped at 2, nothing changes: 92 MB per edit. Its states share structure, so they are cheap.</li>
+  <li><b>The undo history</b> keeps 250 states. Capped at 2, nothing changes: 92 MB per edit. Its states share structure, so they are cheap.<br><span class="note"><b>Update, later on 2026-10-14:</b> not so. The cap applies only when <code>cap_undo_stack</code> is on (<code>History.re</code>), and it is off by default (<code>Settings.re</code>), so this build changed a number the code never reached, and the states, each a whole page model, are not cheap: they are the growth (<a href="#update">Update</a>).</span></li>
   <li><b>The projector view cache</b> (<code>ProjectorView.ViewCache</code>) keeps a view for each projector's id and is never pruned. Turned off, 83 MB per edit, over six edits read three times; within what the other runs vary by.</li>
   <li><b>ShareCodec's tables.</b> To send the worker only what it does not have, the page keeps the hashes of values it has sent (a Set) and the values the worker has sent it, by hash (a Map). Counted after every edit (Figure 3), they rise, reach their cap of 200,000 entries and reset, while the heap keeps growing through each reset. A census of every Map and Set on the page (<code>Runtime.queryObjects</code>) found these two to be by far its largest; the next largest had 20 entries.</li>
 </ul>
@@ -166,6 +177,7 @@
 
 <h2 id="tables">Not a table keyed by ids</h2>
 <p>If no cache keeps the versions, something else does. A read of every module-level store on the page's main thread (in <code>src/web</code>, <code>src/haz3lcore</code>, <code>src/language</code> and <code>src/util</code> at <code>c4e411f9c2</code>: every <code>ref</code>, <code>Hashtbl</code>, map in a <code>ref</code>, memo and WeakMap) found that nothing on the ordinary editing path adds a version per edit by its construction. Every store sized like a program holds one version and is replaced by the next. Nor does any version keep the one before it: <code>CachedSyntax</code> keeps the inputs it was made from, never an earlier <code>CachedSyntax</code>; the editor's old statics are arguments, never stored; an evaluation result's streaming fields are cleared when the result lands; and the evaluator's state and its incremental cache refer to each other, but <code>replay_state</code> unties the two, so caches do not chain.</p>
+<p class="note"><b>Update, later on 2026-10-14:</b> the read covered module-level stores, not the app's own model, where the undo history lives: a list in the model, not a store, adds one version per edit (<a href="#update">Update</a>).</p>
 <p>That left tables keyed by ids: an entry is replaced when its id comes again, but if ids change from edit to edit, old entries stay. A probe build registers each such table with a counter, and the driver reads all of them after every edit (the probe is <a href="https://github.com/matthewhammer/hazel-performance-analysis/blob/main/patches/count_id_keyed_tables.patch"><code>count_id_keyed_tables.patch</code></a>). None grows:</p>
 <div class="scroll"><table><tr><th>Table</th><th>Key: what it holds</th><th>Loaded</th><th>After 1 edit</th><th>After 8 edits</th></tr>
 <tr><td><code>Statics.module_livelits</code></td><td>a module's id: the livelits it binds, each with its elaborated definition</td><td class="n">6</td><td class="n">6</td><td class="n">6</td></tr>
@@ -211,6 +223,7 @@
 <tr><td>A page holding a WeakMap with two million live entries</td><td class="warn">not finished after 400 seconds</td></tr>
 </table></div>
 <p>The same in snap's Chromium 155.0.8059.39 and in Chrome for Testing's headless shell 155.0.8059.79, with the renderer's hang monitor off. The last row is the lead: ValueHash's memo is a WeakMap, and by its 98 MB in the profile it holds roughly two million entries (an estimate from bytes per entry, not a count). A build with that memo off, or bounded, may let a snapshot through, and the snapshot would name the holder.</p>
+<p class="note"><b>Update, later on 2026-10-14:</b> the lead held. With ValueHash's memo kept only within one synchronous run, a snapshot of Full Body after six edits completes in snap's Chromium: 2.3 GB of JSON in 75 s (<a href="#update">Update</a>).</p>
 
 <h2 id="weak">The weak tables</h2>
 <p>Weak references are the usual suspect when memory is kept by a cache, so all of them were checked. Every weak structure in <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> is a JavaScript WeakMap, used through js_of_ocaml; there is no OCaml <code>Weak</code> or <code>Ephemeron</code> anywhere.</p>
@@ -243,13 +256,124 @@
   <li><b>Measure the same on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a></b> (livelits with modular editors) and on <code>dev</code>, to see whether the growth is <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s own.</li>
   <li><b>Fix it with an owner and a lifetime</b> for whatever holds the versions, and measure the same 15 edits again.</li>
 </ol>
+<p class="note"><b>Update, later on 2026-10-14:</b> steps 1, 3 and 4 are done and step 2 is not needed (<a href="#update">Update</a>): the snapshot worked; what the browser holds does not grow; <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> keeps about 8 MB per edit and falls back, and <code>dev</code> has no Livelit Playground slides to measure but has the same undo history. Step 5 is Andrew's compaction, ported.</p>
+
+<h2 id="update">Update, later on 2026-10-14: the undo history</h2>
+<p><b>What keeps the versions.</b> The page's undo history, <code>History.Model.undo_stack</code> in <code>src/web/app/History.re</code>, is a list of whole page models: before every edit, the page as it was, with every slide's editor and that editor's syntax, statics and layout. On Full Body that is about 90 MB per edit, kept by nothing else. The list is meant to stop at 250 states, but it is cut only when the setting <code>cap_undo_stack</code> is on, and <code>Settings.re</code> sets it off. So the history grows with every edit, and the build above that "capped it at 2" changed the 250 that this code never reaches.</p>
+<figure id="fig-update"><svg class="chart" viewBox="0 0 860 360" width="100%" role="img" aria-label="The live heap kept after each of 12 edits of Full Body: #2597 as built climbs to 1,048 MB; with its undo history always capped at 2 it levels at about 280 MB after the third edit; with Andrew's compaction ported, about 160 MB; #2635 stays between 10 and 100 MB.">
+<text x="0" y="16" font-weight="700" font-size="15" fill="var(--ink)">The live heap kept after each edit, less the page as loaded (MB)</text>
+<line x1="64" x2="840" y1="316.0" y2="316.0" stroke="var(--line)" stroke-width="1"/><text x="56" y="320.0" text-anchor="end" font-size="13" fill="var(--muted)">0</text>
+<line x1="64" x2="840" y1="264.7" y2="264.7" stroke="var(--line)" stroke-width="1"/><text x="56" y="268.7" text-anchor="end" font-size="13" fill="var(--muted)">200</text>
+<line x1="64" x2="840" y1="213.5" y2="213.5" stroke="var(--line)" stroke-width="1"/><text x="56" y="217.5" text-anchor="end" font-size="13" fill="var(--muted)">400</text>
+<line x1="64" x2="840" y1="162.2" y2="162.2" stroke="var(--line)" stroke-width="1"/><text x="56" y="166.2" text-anchor="end" font-size="13" fill="var(--muted)">600</text>
+<line x1="64" x2="840" y1="110.9" y2="110.9" stroke="var(--line)" stroke-width="1"/><text x="56" y="114.9" text-anchor="end" font-size="13" fill="var(--muted)">800</text>
+<line x1="64" x2="840" y1="59.6" y2="59.6" stroke="var(--line)" stroke-width="1"/><text x="56" y="63.6" text-anchor="end" font-size="13" fill="var(--muted)">1,000</text>
+<text x="64.0" y="334" text-anchor="middle" font-size="13" fill="var(--muted)">0</text>
+<text x="193.3" y="334" text-anchor="middle" font-size="13" fill="var(--muted)">2</text>
+<text x="322.7" y="334" text-anchor="middle" font-size="13" fill="var(--muted)">4</text>
+<text x="452.0" y="334" text-anchor="middle" font-size="13" fill="var(--muted)">6</text>
+<text x="581.3" y="334" text-anchor="middle" font-size="13" fill="var(--muted)">8</text>
+<text x="710.7" y="334" text-anchor="middle" font-size="13" fill="var(--muted)">10</text>
+<text x="840.0" y="334" text-anchor="middle" font-size="13" fill="var(--muted)">12</text>
+<text x="452" y="354" text-anchor="middle" font-size="13" fill="var(--muted)">edits of the shirt-width slider</text>
+<polyline points="64.0,316.0 128.7,294.5 193.3,271.9 258.0,247.8 322.7,227.4 387.3,206.1 452.0,185.7 516.7,159.7 581.3,139.0 646.0,118.8 710.7,88.7 775.3,68.2 840.0,47.3" fill="none" stroke="var(--warn)" stroke-width="2" stroke-dasharray="6 4"/>
+<circle cx="128.7" cy="294.5" r="3" fill="var(--warn)"><title>#2597 as built, edit 1: +84.0 MB</title></circle>
+<circle cx="193.3" cy="271.9" r="3" fill="var(--warn)"><title>#2597 as built, edit 2: +171.9 MB</title></circle>
+<circle cx="258.0" cy="247.8" r="3" fill="var(--warn)"><title>#2597 as built, edit 3: +265.9 MB</title></circle>
+<circle cx="322.7" cy="227.4" r="3" fill="var(--warn)"><title>#2597 as built, edit 4: +345.7 MB</title></circle>
+<circle cx="387.3" cy="206.1" r="3" fill="var(--warn)"><title>#2597 as built, edit 5: +428.6 MB</title></circle>
+<circle cx="452.0" cy="185.7" r="3" fill="var(--warn)"><title>#2597 as built, edit 6: +508.3 MB</title></circle>
+<circle cx="516.7" cy="159.7" r="3" fill="var(--warn)"><title>#2597 as built, edit 7: +609.6 MB</title></circle>
+<circle cx="581.3" cy="139.0" r="3" fill="var(--warn)"><title>#2597 as built, edit 8: +690.3 MB</title></circle>
+<circle cx="646.0" cy="118.8" r="3" fill="var(--warn)"><title>#2597 as built, edit 9: +769.3 MB</title></circle>
+<circle cx="710.7" cy="88.7" r="3" fill="var(--warn)"><title>#2597 as built, edit 10: +886.5 MB</title></circle>
+<circle cx="775.3" cy="68.2" r="3" fill="var(--warn)"><title>#2597 as built, edit 11: +966.8 MB</title></circle>
+<circle cx="840.0" cy="47.3" r="3" fill="var(--warn)"><title>#2597 as built, edit 12: +1048.1 MB</title></circle>
+<line x1="80.2" x2="108.2" y1="40.3" y2="40.3" stroke="var(--warn)" stroke-width="2.5" stroke-dasharray="6 4"/>
+<text x="116.2" y="44.3" font-size="13" fill="var(--warn)">#2597 as built: +1,048 MB after 12 edits</text>
+<polyline points="64.0,316.0 128.7,294.5 193.3,274.0 258.0,252.0 322.7,249.5 387.3,249.6 452.0,248.3 516.7,255.9 581.3,253.4 646.0,251.1 710.7,242.3 775.3,241.0 840.0,243.2" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="2 4"/>
+<circle cx="128.7" cy="294.5" r="3" fill="var(--muted)"><title>#2597, undo always capped at 2, edit 1: +83.8 MB</title></circle>
+<circle cx="193.3" cy="274.0" r="3" fill="var(--muted)"><title>#2597, undo always capped at 2, edit 2: +163.9 MB</title></circle>
+<circle cx="258.0" cy="252.0" r="3" fill="var(--muted)"><title>#2597, undo always capped at 2, edit 3: +249.7 MB</title></circle>
+<circle cx="322.7" cy="249.5" r="3" fill="var(--muted)"><title>#2597, undo always capped at 2, edit 4: +259.2 MB</title></circle>
+<circle cx="387.3" cy="249.6" r="3" fill="var(--muted)"><title>#2597, undo always capped at 2, edit 5: +259.0 MB</title></circle>
+<circle cx="452.0" cy="248.3" r="3" fill="var(--muted)"><title>#2597, undo always capped at 2, edit 6: +264.1 MB</title></circle>
+<circle cx="516.7" cy="255.9" r="3" fill="var(--muted)"><title>#2597, undo always capped at 2, edit 7: +234.3 MB</title></circle>
+<circle cx="581.3" cy="253.4" r="3" fill="var(--muted)"><title>#2597, undo always capped at 2, edit 8: +244.3 MB</title></circle>
+<circle cx="646.0" cy="251.1" r="3" fill="var(--muted)"><title>#2597, undo always capped at 2, edit 9: +253.1 MB</title></circle>
+<circle cx="710.7" cy="242.3" r="3" fill="var(--muted)"><title>#2597, undo always capped at 2, edit 10: +287.4 MB</title></circle>
+<circle cx="775.3" cy="241.0" r="3" fill="var(--muted)"><title>#2597, undo always capped at 2, edit 11: +292.5 MB</title></circle>
+<circle cx="840.0" cy="243.2" r="3" fill="var(--muted)"><title>#2597, undo always capped at 2, edit 12: +284.1 MB</title></circle>
+<line x1="80.2" x2="108.2" y1="60.3" y2="60.3" stroke="var(--muted)" stroke-width="2.5" stroke-dasharray="2 4"/>
+<text x="116.2" y="64.3" font-size="13" fill="var(--muted)">#2597, undo always capped at 2: +284 MB after 12 edits</text>
+<polyline points="64.0,316.0 128.7,296.5 193.3,279.6 258.0,273.5 322.7,275.8 387.3,277.3 452.0,274.3 516.7,273.1 581.3,270.3 646.0,267.9 710.7,279.9 775.3,278.2 840.0,275.3" fill="none" stroke="var(--accent)" stroke-width="2"/>
+<circle cx="128.7" cy="296.5" r="3" fill="var(--accent)"><title>#2597 with the compaction ported, edit 1: +76.2 MB</title></circle>
+<circle cx="193.3" cy="279.6" r="3" fill="var(--accent)"><title>#2597 with the compaction ported, edit 2: +142.0 MB</title></circle>
+<circle cx="258.0" cy="273.5" r="3" fill="var(--accent)"><title>#2597 with the compaction ported, edit 3: +165.9 MB</title></circle>
+<circle cx="322.7" cy="275.8" r="3" fill="var(--accent)"><title>#2597 with the compaction ported, edit 4: +156.7 MB</title></circle>
+<circle cx="387.3" cy="277.3" r="3" fill="var(--accent)"><title>#2597 with the compaction ported, edit 5: +150.8 MB</title></circle>
+<circle cx="452.0" cy="274.3" r="3" fill="var(--accent)"><title>#2597 with the compaction ported, edit 6: +162.5 MB</title></circle>
+<circle cx="516.7" cy="273.1" r="3" fill="var(--accent)"><title>#2597 with the compaction ported, edit 7: +167.2 MB</title></circle>
+<circle cx="581.3" cy="270.3" r="3" fill="var(--accent)"><title>#2597 with the compaction ported, edit 8: +178.1 MB</title></circle>
+<circle cx="646.0" cy="267.9" r="3" fill="var(--accent)"><title>#2597 with the compaction ported, edit 9: +187.7 MB</title></circle>
+<circle cx="710.7" cy="279.9" r="3" fill="var(--accent)"><title>#2597 with the compaction ported, edit 10: +140.7 MB</title></circle>
+<circle cx="775.3" cy="278.2" r="3" fill="var(--accent)"><title>#2597 with the compaction ported, edit 11: +147.5 MB</title></circle>
+<circle cx="840.0" cy="275.3" r="3" fill="var(--accent)"><title>#2597 with the compaction ported, edit 12: +158.6 MB</title></circle>
+<line x1="80.2" x2="108.2" y1="80.3" y2="80.3" stroke="var(--accent)" stroke-width="2.5"/>
+<text x="116.2" y="84.3" font-size="13" fill="var(--accent)">#2597 with the compaction ported: +159 MB after 12 edits</text>
+<polyline points="64.0,316.0 128.7,313.6 193.3,311.5 258.0,309.4 322.7,307.4 387.3,304.8 452.0,302.8 516.7,300.8 581.3,298.7 646.0,296.7 710.7,292.0 775.3,304.2 840.0,302.7" fill="none" stroke="var(--good)" stroke-width="2"/>
+<circle cx="128.7" cy="313.6" r="3" fill="var(--good)"><title>#2635, which has it, edit 1: +9.2 MB</title></circle>
+<circle cx="193.3" cy="311.5" r="3" fill="var(--good)"><title>#2635, which has it, edit 2: +17.5 MB</title></circle>
+<circle cx="258.0" cy="309.4" r="3" fill="var(--good)"><title>#2635, which has it, edit 3: +25.7 MB</title></circle>
+<circle cx="322.7" cy="307.4" r="3" fill="var(--good)"><title>#2635, which has it, edit 4: +33.7 MB</title></circle>
+<circle cx="387.3" cy="304.8" r="3" fill="var(--good)"><title>#2635, which has it, edit 5: +43.5 MB</title></circle>
+<circle cx="452.0" cy="302.8" r="3" fill="var(--good)"><title>#2635, which has it, edit 6: +51.4 MB</title></circle>
+<circle cx="516.7" cy="300.8" r="3" fill="var(--good)"><title>#2635, which has it, edit 7: +59.3 MB</title></circle>
+<circle cx="581.3" cy="298.7" r="3" fill="var(--good)"><title>#2635, which has it, edit 8: +67.5 MB</title></circle>
+<circle cx="646.0" cy="296.7" r="3" fill="var(--good)"><title>#2635, which has it, edit 9: +75.4 MB</title></circle>
+<circle cx="710.7" cy="292.0" r="3" fill="var(--good)"><title>#2635, which has it, edit 10: +93.6 MB</title></circle>
+<circle cx="775.3" cy="304.2" r="3" fill="var(--good)"><title>#2635, which has it, edit 11: +46.0 MB</title></circle>
+<circle cx="840.0" cy="302.7" r="3" fill="var(--good)"><title>#2635, which has it, edit 12: +51.9 MB</title></circle>
+<line x1="80.2" x2="108.2" y1="100.3" y2="100.3" stroke="var(--good)" stroke-width="2.5"/>
+<text x="116.2" y="104.3" font-size="13" fill="var(--good)">#2635, which has it: +52 MB after 12 edits</text>
+</svg>
+<figcaption class="note">The same driver as Figure 1, 12 edits per run, in snap's Chromium 155. Hover a point for its value.</figcaption></figure>
+<div class="scroll"><table><tr><th>Build</th><th>What it changes</th><th>Runs</th><th>Kept after 12 edits, MB</th><th>Growth per edit, edits 4–12, MB</th><th>Redraw, s: median (range)</th></tr>
+<tr><td>As built</td><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> at <code>c4e411f9c2</code>, nothing changed</td><td class="n">1</td><td class="n">1,048</td><td class="n">89.0</td><td class="n">2.41 (2.14–7.59)</td></tr>
+<tr><td>Undo always capped at 2</td><td><code>History.re</code> cuts the history to 2 states whatever the setting (a probe, not a fix)</td><td class="n">2</td><td class="n">284 and 284</td><td class="n">4.4 and 4.2</td><td class="n">2.21 (1.82–6.68); 2.29 (2.01–6.62)</td></tr>
+<tr><td>Compaction ported</td><td>Andrew's <a href="https://github.com/hazelgrove/hazel/commit/6010128b7d"><code>6010128b7d</code></a>, adapted: <a href="https://github.com/hazelgrove/hazel/commit/d41c7a0298"><code>d41c7a0298</code></a> on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, measured as the same change alone on <code>c4e411f9c2</code></td><td class="n">1</td><td class="n">159</td><td class="n">-0.4</td><td class="n">2.36 (1.92–6.43)</td></tr>
+<tr><td>Compaction, the newest entry kept whole</td><td>on top of the port, the newest entry of each stack keeps its page model whole until the next is pushed: <a href="https://github.com/hazelgrove/hazel/commit/f8ae6f2b9c"><code>f8ae6f2b9c</code></a> on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, measured likewise</td><td class="n">1</td><td class="n">208</td><td class="n">3.5</td><td class="n">2.34 (2.23–7.15)</td></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a></td><td>livelits with modular editors, at <code>9fb2bdf067</code>: has Andrew's fix</td><td class="n">1</td><td class="n">52</td><td class="n">1.6</td><td class="n">0.99 (0.91–1.58)</td></tr>
+</table></div>
+<p class="note">Growth per edit is the slope from the 4th edit to the 12th, after the history has filled to its cap in the capped build. In every <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> build redraws range from about 2 to 7 s, as in Figure 1, and do not separate the builds. <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> was measured over 30 edits: it keeps 9 MB after the first and 94 MB after the tenth, falls back to 46 MB at the eleventh, and does so again at the 22nd; the likely cause is ShareCodec's tables starting over at their cap, not confirmed.</p>
+<p><b>How it was found.</b> In five steps, each taking one suspect off the list:</p>
+<ol>
+<li><b>Not what the browser holds.</b> Over six edits the heap grew from 400 to 900 MB while the page's event listeners (609), DOM nodes, detached ones included (47,923), observers and timers stayed exactly the same (counted with <code>Memory.getDOMCounters</code> and wrappers installed before the page's own scripts).</li>
+<li><b>Not on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>.</b> The same sampled profile as Figure 4, over the same four edits, finds 37.5 MB kept on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: the worker's replies 14.5, ValueHash 9.8, ShareCodec 5.4, and almost nothing in types, statics, terms or layout, where <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> keeps 390 MB.</li>
+<li><b>A snapshot, at last.</b> A probe build keeps ValueHash's memo only within one synchronous run (it starts over on the next microtask). The tab still grows 68 MB per edit, and a snapshot after six edits completes: 2.3 GB of JSON in 75 seconds.</li>
+<li><b>Two snapshots, one session.</b> V8 keeps an object's snapshot id for the life of the tab, so the objects in a snapshot after edit 6 whose ids a snapshot after edit 3 lacks were made by edits 4 to 6: 12.2 million objects, 257 MB. A dominator tree of the second snapshot (29 million nodes, computed in 4.6 s by a small C program) shows three copies of one 35 MB structure, Full Body's editor with its derived data. Two hang from the first and second entries of the undo history (<code>Logged.Model.current</code>, then <code>undo_stack</code>, then each entry's page model, its list of slides, and Full Body). The third is the projector view cache's one view, which is replaced, not added to.</li>
+<li><b>Confirmed by a build:</b> the undo history always cut to 2 states, the same 12 edits, twice (the table above).</li>
+</ol>
+<p><b>The fix is Andrew's.</b> Andrew Blinn met the same growth on the modular editors, on a much larger program, and fixed it in <a href="https://github.com/hazelgrove/hazel/commit/6010128b7d"><code>6010128b7d</code></a> (2026-08-26, "memory: kill the exponential co_ctx leak + compact undo snapshots"): each page model saved for undo has its syntax replaced by a small shared placeholder marked out of date, its statics and evaluation state emptied, and its result reset (since <a href="https://github.com/hazelgrove/hazel/commit/d93e482166"><code>d93e482166</code></a>, also his, it keeps what autosave keeps); undo rebuilds them from the program. And the cap always applies. That is why <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, which has <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> merged in, does not grow. <code>dev</code> has the same undo history as <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>.</p>
+<p><b>Ported to <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a></b> (<a href="https://github.com/hazelgrove/hazel/commit/d41c7a0298"><code>d41c7a0298</code></a>; <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s slide list is simpler than the modular editors', and the rest follows Andrew's code, less two caches <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> does not have, as it stands on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>), the tab keeps 159 MB after 12 edits, level from the third. The six Undo tests pass, as changed by Andrew to check the restored program text rather than the very same model. In the browser, an edit, an undo, a redo, a second edit and another undo restore the same picture and slider value as as built does, in five runs of each, alternating between the builds (median and range; on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> the five with the newest entry kept whole ran later, alternating with five more as built, which agree with these; the two <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> rows ran one after the other):</p>
+<div class="scroll"><table><tr><th>Build</th><th>Runs</th><th>Edits, s</th><th>Undo, s</th><th>Redo, s</th><th>Undo after a second edit, s</th><th>Restores</th><th>Console errors</th></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> as built</td><td class="n">5</td><td class="n">6.7 (6.3–7.2)</td><td class="n">2.6 (2.6–2.6)</td><td class="n">3.0 (2.7–3.1)</td><td class="n">2.6 (2.5–2.7)</td><td>yes, every step</td><td class="n">387</td></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, compaction ported</td><td class="n">5</td><td class="n">6.9 (6.2–8.4)</td><td class="n">5.8 (2.0–5.9)</td><td class="n">6.1 (6.0–6.5)</td><td class="n">3.0 (2.5–6.5)</td><td>yes, every step</td><td class="n">828–882</td></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, the newest entry kept whole too</td><td class="n">5</td><td class="n">6.6 (6.1–7.4)</td><td class="n">2.6 (2.5–2.6)</td><td class="n">3.0 (2.5–3.0)</td><td class="n">2.6 (2.5–3.2)</td><td>yes, every step</td><td class="n">387–414</td></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, as it was (<a href="https://github.com/hazelgrove/hazel/commit/653ebc4adf"><code>653ebc4adf</code></a>: Andrew's compaction)</td><td class="n">5</td><td class="n">1.2 (1.1–1.4)</td><td class="n">3.6 (1.2–3.9)</td><td class="n">3.9 (3.6–4.2)</td><td class="n">3.9 (1.1–5.1)</td><td>yes, every step</td><td class="n">378</td></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> with the newest entry kept whole (<a href="https://github.com/hazelgrove/hazel/commit/032fe3aca6"><code>032fe3aca6</code></a>)</td><td class="n">5</td><td class="n">1.1 (1.1–1.7)</td><td class="n">0.3 (0.2–0.3)</td><td class="n">0.3 (0.2–0.3)</td><td class="n">0.3 (0.3–0.3)</td><td>yes, every step</td><td class="n">120</td></tr>
+</table></div>
+<p class="note">Seconds from the key press (or the slider's change) to the picture's markup changing, read by the DevTools-protocol driver (<code>undo_check.mjs</code>), whose times run longer than <code>heap_per_edit.py</code>'s, as in the caches table: compare them within this table only. On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, two of the as-built undos, and two of those with the newest entry kept whole, read 0.24 s or less where every other step there took 2.5 s or more: the driver catching a redraw from before the key press, so they are left out. On <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> with the newest entry kept whole, every step reads 0.25 to 0.31 s: the redraw is there at the check's second look, 0.3 s after the key press. The console errors are one message, "HazelDOM: unrecognized attribute: Disabled", in every run, as built too; it comes about twice as often with the compaction, which fits more redraws.</p>
+<p><b>What it costs.</b> An undo now rebuilds what the saved state dropped. With the compaction, every redo took 6.0 to 6.5 seconds, about an edit's time, against 2.7 to 3.1 as built; half the undos did too (5 of 10, 5.8 to 6.5 s), and the other half took 2.0 to 3.0 s, as built does. Which undos stay fast was not examined; the whole-program memos, which remember the last few programs, may still hold the program being restored. <b>So <a href="https://github.com/hazelgrove/hazel/commit/f8ae6f2b9c"><code>f8ae6f2b9c</code></a></b>, also on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, keeps the newest entry of each stack whole, compacting it only when the next is pushed above it: the latest undo and redo then take what they take as built (median 2.6 s over five runs), for one page model more, 208 MB kept after 12 edits instead of 159. An undo further back still rebuilds. Andrew's note on the cap names the step after this one: undo entries that keep the program alone, not a page model.</p>
+<p><b><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> and <code>dev</code>.</b> <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> had Andrew's compaction alone: every redo took 3.6 to 4.2 s and most undos 3.5 to 5.1 s, about three edits' time (an edit 1.2 s there, five runs); with the newest entry kept whole (<a href="https://github.com/hazelgrove/hazel/commit/032fe3aca6"><code>032fe3aca6</code></a>, on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> since 2026-10-15), every undo and redo is done within 0.3 s, the check's polling interval, and the memory kept over 12 edits is the same within about 1 MB (the undo times in the table above, the memory in the report's data). <code>dev</code>, which has the same undo history, is left to <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>'s merge, which brings Andrew's fix (Matthew's call, 2026-10-15).</p>
+<p class="note">The update's data, in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/014/data/update-2026-10-14"><code>014/data/update-2026-10-14/</code></a>: each run's readings, the undo checks, the listener and node counts, <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s profile by file, and, in <code>holder/</code>, the dominator reports and the tools (the snapshot index, the dominator tree in C, the drivers). The snapshots themselves, 4 GB, are not kept. In this page, under <code>update_2026_10_14</code> in the report's data.</p>
 
 <h2 id="method">How this was put together</h2>
 <ul>
   <li><b>Build:</b> <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> at <a href="https://github.com/hazelgrove/hazel/commit/c4e411f9c2"><code>c4e411f9c2</code></a>, development profile. Each experiment is one build of that commit with one patch from this repository's <code>patches/</code>: <code>memos_at_one_entry.patch</code>, <code>undo_history_capped_at_2.patch</code> (and both together), <code>view_cache_never_stores.patch</code>, and the probe, <code>count_id_keyed_tables.patch</code>. Each applies to <code>c4e411f9c2</code> as it is.</li>
   <li><b>Browsers:</b> snap's Chromium 155.0.8059.39, headless, with <code>--enable-precise-memory-info</code> and <code>--js-flags=--expose-gc</code>; for the snapshot tests also Chrome for Testing's headless shell 155.0.8059.79.</li>
   <li><b>Drivers</b> (in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/014/drivers"><code>014/drivers/</code></a>): <code>heap_per_edit.py</code>, Python over chromedriver, for the 15-edit runs; and, in node 22 over the DevTools protocol with its built-in WebSocket, <code>count_tables.mjs</code> (the probe's counts), <code>census_maps_sets.mjs</code> (every Map and Set, with the view-cache run), <code>sample_live_heap.mjs</code> (the sampling profile) and <code>snapshot_test.mjs</code>. <code>live_heap_by_file.py</code> groups the profile by source file.</li>
-  <li><b>Runs:</b> one per build: 15 edits each, except the view-cache run (6, read after 0, 3 and 6), the probe (8) and the profile (2 to warm up, then 4). The heap is the page's main thread's, read after two forced collections and four seconds after the picture redrew. The two runs expected to match, as built and undo capped at 2, agree within 7 MB at every edit.</li>
+  <li><b>Runs:</b> one per build: 15 edits each, except the view-cache run (6, read after 0, 3 and 6), the probe (8) and the profile (2 to warm up, then 4). The heap is the page's main thread's, read after two forced collections and four seconds after the picture redrew. The two runs expected to match, as built and undo capped at 2, agree within 7 MB at every edit.<br><span class="note"><b>Update, later on 2026-10-14:</b> the update's runs are 12 edits each, in the same browser and with the same driver; its builds and patches are listed in its section.</span></li>
   <li><b>The profile's grouping:</b> each sample is counted under the innermost frame on its stack that lies in Hazel's own code, skipping js_of_ocaml's runtime helpers (<code>caml_*</code>), and that frame is named by the Reason source location the bundle gives just above it. Generic helpers (<code>OptUtil</code>, <code>ListUtil</code>) count as their own file, under "other". The raw profile is 31 MB and not kept here; its summaries are in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/014/data"><code>014/data/</code></a>, with every run's numbers.</li>
   <li><b>The audit</b> of every store and weak table read the source at <code>c4e411f9c2</code>; it is the basis of the tables in <a href="#tables">Not a table keyed by ids</a> and <a href="#weak">The weak tables</a>.</li>
   <li><b>The numbers, for programs too:</b> every number behind the figures and tables is also in this page, as JSON in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset: each run's readings, the probe's counts, the census, the profile by file and the snapshot tests. The same numbers, and the profile's summaries, are files in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/014/data"><code>014/data/</code></a>.</li>
@@ -1296,7 +1420,800 @@
   "data/live_heap_by_file.txt",
   "data/live_heap_by_function.txt",
   "data/view_cache_off_census.log"
- ]
+ ],
+ "update_2026_10_14": {
+  "what": "The holder is the undo history (History.Model.undo_stack): a whole page model per edit, uncapped while cap_undo_stack is off (its default).",
+  "runs": {
+   "as_built": {
+    "loaded_mb": 398.9,
+    "kept_mb_after_each_edit": [
+     84.0,
+     171.9,
+     265.9,
+     345.7,
+     428.6,
+     508.3,
+     609.6,
+     690.3,
+     769.3,
+     886.5,
+     966.8,
+     1048.1
+    ],
+    "redraw_s": [
+     2.17,
+     2.14,
+     2.2,
+     6.12,
+     6.8,
+     2.35,
+     3.28,
+     2.21,
+     6.29,
+     7.59,
+     2.19,
+     2.47
+    ],
+    "growth_per_edit_mb_edits_4_12": 89.0
+   },
+   "cap2_always_1": {
+    "loaded_mb": 399.4,
+    "kept_mb_after_each_edit": [
+     83.8,
+     163.9,
+     249.7,
+     259.2,
+     259.0,
+     264.1,
+     234.3,
+     244.3,
+     253.1,
+     287.4,
+     292.5,
+     284.1
+    ],
+    "redraw_s": [
+     6.6,
+     6.68,
+     2.12,
+     1.82,
+     2.28,
+     2.68,
+     2.13,
+     2.73,
+     2.07,
+     2.58,
+     2.12,
+     1.97
+    ],
+    "growth_per_edit_mb_edits_4_12": 4.43
+   },
+   "cap2_always_2": {
+    "loaded_mb": 399.1,
+    "kept_mb_after_each_edit": [
+     83.8,
+     164.0,
+     251.1,
+     260.5,
+     261.5,
+     265.1,
+     235.7,
+     245.8,
+     254.6,
+     287.3,
+     292.9,
+     284.5
+    ],
+    "redraw_s": [
+     2.27,
+     2.01,
+     2.01,
+     2.24,
+     3.02,
+     2.46,
+     2.23,
+     2.94,
+     2.31,
+     2.73,
+     2.2,
+     6.62
+    ],
+    "growth_per_edit_mb_edits_4_12": 4.22
+   },
+   "compaction": {
+    "loaded_mb": 399.1,
+    "kept_mb_after_each_edit": [
+     76.2,
+     142.0,
+     165.9,
+     156.7,
+     150.8,
+     162.5,
+     167.2,
+     178.1,
+     187.7,
+     140.7,
+     147.5,
+     158.6
+    ],
+    "redraw_s": [
+     2.1,
+     6.43,
+     2.14,
+     2.55,
+     2.17,
+     2.15,
+     3.1,
+     6.38,
+     1.92,
+     3.86,
+     2.71,
+     1.92
+    ],
+    "growth_per_edit_mb_edits_4_12": -0.42
+   },
+   "pr2635": {
+    "loaded_mb": 418.0,
+    "kept_mb_after_each_edit": [
+     9.2,
+     17.5,
+     25.7,
+     33.7,
+     43.5,
+     51.4,
+     59.3,
+     67.5,
+     75.4,
+     93.6,
+     46.0,
+     51.9,
+     57.8,
+     63.7,
+     69.7,
+     77.2,
+     83.1,
+     88.9,
+     95.4,
+     101.9,
+     108.3,
+     53.1,
+     59.0,
+     64.8,
+     71.2,
+     77.5,
+     85.6,
+     91.9,
+     98.3,
+     104.6
+    ],
+    "redraw_s": [
+     1.02,
+     0.94,
+     1.25,
+     0.93,
+     0.96,
+     0.91,
+     0.93,
+     1.58,
+     0.93,
+     1.07,
+     1.08,
+     1.3,
+     1.27,
+     0.94,
+     0.95,
+     0.93,
+     0.93,
+     1.44,
+     1.48,
+     0.94,
+     1.25,
+     1.85,
+     0.95,
+     1.35,
+     1.18,
+     0.92,
+     1.26,
+     1.26,
+     0.92,
+     0.93
+    ],
+    "growth_per_edit_mb_edits_4_12": 1.59
+   },
+   "keep_newest": {
+    "loaded_mb": 398.7,
+    "kept_mb_after_each_edit": [
+     84.0,
+     156.5,
+     180.4,
+     191.3,
+     181.6,
+     176.4,
+     180.8,
+     191.3,
+     218.1,
+     204.6,
+     198.5,
+     207.7
+    ],
+    "redraw_s": [
+     2.26,
+     2.24,
+     2.4,
+     2.7,
+     2.54,
+     2.23,
+     2.28,
+     7.15,
+     2.66,
+     2.24,
+     2.27,
+     2.51
+    ],
+    "growth_per_edit_mb_edits_4_12": 3.5
+   },
+   "pr2635_newest_kept_whole": {
+    "loaded_mb": 417.9,
+    "kept_mb_after_each_edit": [
+     9.6,
+     17.8,
+     26.0,
+     34.1,
+     43.9,
+     51.8,
+     59.7,
+     67.9,
+     75.8,
+     94.1,
+     68.2,
+     52.3
+    ],
+    "redraw_s": [
+     1.07,
+     1.5,
+     1.3,
+     0.79,
+     1.1,
+     1.23,
+     0.91,
+     1.23,
+     1.22,
+     0.92,
+     1.07,
+     0.8
+    ]
+   }
+  },
+  "builds": {
+   "as_built": "#2597 at c4e411f9c2",
+   "cap2_always": "c4e411f9c2 + the undo history cut to 2 states whatever the setting (probe)",
+   "compaction": "c4e411f9c2 + bc66ae5616 (Andrew's 6010128b7d, ported), measured; on #2597 as d41c7a0298 (2026-10-15), the same History.re and Test_Undo.re",
+   "pr2635": "#2635 at 9fb2bdf067",
+   "keep_newest": "c4e411f9c2 + bc66ae5616 + 3041fd0483 (the newest undo and redo entries kept whole), measured; on #2597 as f8ae6f2b9c (2026-10-15), the same code but a comment",
+   "pr2635_newest_kept_whole": "#2635 at 032fe3aca6 (653ebc4adf + the newest undo and redo entries kept whole)"
+  },
+  "undo_checks": {
+   "as_built": {
+    "edit": 6.683,
+    "undo": 2.541,
+    "redo": 2.58,
+    "edit2": 6.261,
+    "undo2": 2.604,
+    "restored": true,
+    "console_errors": 387
+   },
+   "compaction_1": {
+    "edit": 6.686,
+    "undo": 6.014,
+    "redo": 6.059,
+    "edit2": 6.065,
+    "undo2": 2.376,
+    "restored": true,
+    "console_errors": 855
+   },
+   "compaction_2": {
+    "edit": 6.845,
+    "undo": 2.129,
+    "redo": 5.946,
+    "edit2": 7.503,
+    "undo2": 7.798,
+    "restored": true,
+    "console_errors": 882
+   }
+  },
+  "browser_holdings_2597": [
+   {
+    "label": "load",
+    "documents": 2,
+    "nodes": 47923,
+    "jsEventListeners": 609,
+    "heapMB": 400.3,
+    "shown": 18369,
+    "held": {
+     "listeners": {
+      "window": 7,
+      "document": 8,
+      "element": 149,
+      "MediaQueryList": 1
+     },
+     "observing": 2,
+     "observers": 2,
+     "intervals": 0,
+     "timeouts": 1,
+     "frames": 1
+    }
+   },
+   {
+    "label": "edit 1",
+    "documents": 2,
+    "nodes": 47923,
+    "jsEventListeners": 609,
+    "heapMB": 483.9,
+    "shown": 18369,
+    "held": {
+     "listeners": {
+      "window": 7,
+      "document": 8,
+      "element": 149,
+      "MediaQueryList": 1
+     },
+     "observing": 2,
+     "observers": 2,
+     "intervals": 0,
+     "timeouts": 1,
+     "frames": 1
+    }
+   },
+   {
+    "label": "edit 2",
+    "documents": 2,
+    "nodes": 47923,
+    "jsEventListeners": 609,
+    "heapMB": 564.8,
+    "shown": 18369,
+    "held": {
+     "listeners": {
+      "window": 7,
+      "document": 8,
+      "element": 149,
+      "MediaQueryList": 1
+     },
+     "observing": 2,
+     "observers": 2,
+     "intervals": 0,
+     "timeouts": 1,
+     "frames": 1
+    }
+   },
+   {
+    "label": "edit 3",
+    "documents": 2,
+    "nodes": 47923,
+    "jsEventListeners": 609,
+    "heapMB": 658.6,
+    "shown": 18369,
+    "held": {
+     "listeners": {
+      "window": 7,
+      "document": 8,
+      "element": 149,
+      "MediaQueryList": 1
+     },
+     "observing": 2,
+     "observers": 2,
+     "intervals": 0,
+     "timeouts": 1,
+     "frames": 1
+    }
+   },
+   {
+    "label": "edit 4",
+    "documents": 2,
+    "nodes": 47923,
+    "jsEventListeners": 609,
+    "heapMB": 738.3,
+    "shown": 18369,
+    "held": {
+     "listeners": {
+      "window": 7,
+      "document": 8,
+      "element": 149,
+      "MediaQueryList": 1
+     },
+     "observing": 2,
+     "observers": 2,
+     "intervals": 0,
+     "timeouts": 1,
+     "frames": 1
+    }
+   },
+   {
+    "label": "edit 5",
+    "documents": 2,
+    "nodes": 47923,
+    "jsEventListeners": 609,
+    "heapMB": 820.8,
+    "shown": 18369,
+    "held": {
+     "listeners": {
+      "window": 7,
+      "document": 8,
+      "element": 149,
+      "MediaQueryList": 1
+     },
+     "observing": 2,
+     "observers": 2,
+     "intervals": 0,
+     "timeouts": 1,
+     "frames": 1
+    }
+   },
+   {
+    "label": "edit 6",
+    "documents": 2,
+    "nodes": 47923,
+    "jsEventListeners": 609,
+    "heapMB": 900.3,
+    "shown": 18369,
+    "held": {
+     "listeners": {
+      "window": 7,
+      "document": 8,
+      "element": 149,
+      "MediaQueryList": 1
+     },
+     "observing": 2,
+     "observers": 2,
+     "intervals": 0,
+     "timeouts": 1,
+     "frames": 1
+    }
+   }
+  ],
+  "profile_by_file_2635_mb": {
+   "total": 37.5,
+   "WorkerServer.re": 14.5,
+   "ValueHash.re": 9.8,
+   "ShareCodec.re": 5.4,
+   "CallMemo.re": 1.8
+  },
+  "snapshots": {
+   "after_edit_3": {
+    "json_mb": 1490.5,
+    "nodes": 18635390
+   },
+   "after_edit_6": {
+    "json_mb": 2295.5,
+    "nodes": 29257404,
+    "edges": 115450170
+   },
+   "new_between": {
+    "nodes": 12160126,
+    "self_mb": 256.6
+   },
+   "copies_of_full_body_editor_mb": {
+    "undo_stack[0]": 35.2,
+    "undo_stack[1]": 35.2,
+    "ProjectorView cache": 33.1
+   }
+  },
+  "files": [
+   "by_file_2635.txt",
+   "heap_2635_30.json",
+   "heap_2635_30.log",
+   "heap_2635_exact.json",
+   "heap_2635_exact.log",
+   "heap_asbuilt_8311.json",
+   "heap_asbuilt_8311.log",
+   "heap_compact.json",
+   "heap_compact.log",
+   "heap_probe.json",
+   "heap_probe.log",
+   "heap_undo2_again.json",
+   "heap_undo2_again.log",
+   "heap_undo2_always.json",
+   "heap_undo2_always.log",
+   "held_2597.json",
+   "held_2597.log",
+   "holder",
+   "keep_newest",
+   "sample_2635.heapprofile.gz",
+   "sample_2635.log",
+   "undo5",
+   "undo_2635",
+   "undo_8311.log",
+   "undo_8391_1.log",
+   "undo_8391_2.log"
+  ],
+  "undo_checks_5_runs": {
+   "asbuilt": {
+    "steps_s": {
+     "edit": [
+      6.855,
+      7.159,
+      6.764,
+      6.917,
+      6.87
+     ],
+     "undo": [
+      0.003,
+      2.635,
+      2.646,
+      2.603,
+      2.567
+     ],
+     "redo": [
+      3.019,
+      2.748,
+      3.079,
+      3.051,
+      3.03
+     ],
+     "edit2": [
+      6.626,
+      6.346,
+      6.673,
+      6.307,
+      6.308
+     ],
+     "undo2": [
+      2.68,
+      2.602,
+      2.625,
+      0.003,
+      2.549
+     ]
+    },
+    "all_restore": true,
+    "console_errors": [
+     387,
+     387,
+     387,
+     387,
+     387
+    ]
+   },
+   "port": {
+    "steps_s": {
+     "edit": [
+      6.818,
+      6.873,
+      6.846,
+      7.013,
+      6.954
+     ],
+     "undo": [
+      5.82,
+      5.936,
+      2.32,
+      1.967,
+      5.828
+     ],
+     "redo": [
+      6.01,
+      6.007,
+      6.509,
+      6.071,
+      6.353
+     ],
+     "edit2": [
+      8.367,
+      6.79,
+      6.578,
+      6.2,
+      7.703
+     ],
+     "undo2": [
+      6.459,
+      3.011,
+      2.518,
+      6.457,
+      2.533
+     ]
+    },
+    "all_restore": true,
+    "console_errors": [
+     855,
+     858,
+     882,
+     828,
+     882
+    ]
+   }
+  },
+  "undo_checks_keep_newest_5_runs": {
+   "asbuilt": {
+    "steps_s": {
+     "edit": [
+      6.897,
+      6.951,
+      6.646,
+      6.688,
+      6.87
+     ],
+     "undo": [
+      2.658,
+      2.559,
+      0.002,
+      2.544,
+      2.574
+     ],
+     "redo": [
+      2.629,
+      2.887,
+      3.0,
+      2.957,
+      2.673
+     ],
+     "edit2": [
+      6.406,
+      6.094,
+      6.382,
+      6.219,
+      6.223
+     ],
+     "undo2": [
+      3.16,
+      2.535,
+      2.616,
+      2.645,
+      2.631
+     ]
+    },
+    "all_restore": true,
+    "console_errors": [
+     414,
+     387,
+     387,
+     387,
+     387
+    ]
+   },
+   "keep": {
+    "steps_s": {
+     "edit": [
+      7.357,
+      6.874,
+      6.732,
+      6.789,
+      6.565
+     ],
+     "undo": [
+      0.002,
+      2.567,
+      2.608,
+      0.241,
+      2.482
+     ],
+     "redo": [
+      3.013,
+      3.046,
+      2.965,
+      2.675,
+      2.488
+     ],
+     "edit2": [
+      6.502,
+      6.342,
+      6.575,
+      6.139,
+      6.117
+     ],
+     "undo2": [
+      2.582,
+      2.624,
+      2.643,
+      3.169,
+      2.543
+     ]
+    },
+    "all_restore": true,
+    "console_errors": [
+     387,
+     387,
+     387,
+     414,
+     387
+    ]
+   }
+  },
+  "undo_checks_2635_5_runs": {
+   "as_it_was_653ebc4adf": {
+    "steps_s": {
+     "edit": [
+      1.435,
+      1.143,
+      1.312,
+      1.25,
+      1.127
+     ],
+     "undo": [
+      1.493,
+      1.235,
+      3.839,
+      3.858,
+      3.554
+     ],
+     "redo": [
+      4.105,
+      4.166,
+      3.818,
+      3.928,
+      3.591
+     ],
+     "edit2": [
+      1.417,
+      1.359,
+      1.177,
+      1.095,
+      1.054
+     ],
+     "undo2": [
+      4.419,
+      3.886,
+      5.076,
+      3.532,
+      1.098
+     ]
+    },
+    "all_restore": true,
+    "console_errors": [
+     378,
+     378,
+     378,
+     378,
+     378
+    ]
+   },
+   "newest_kept_whole_032fe3aca6": {
+    "steps_s": {
+     "edit": [
+      1.113,
+      1.214,
+      1.153,
+      1.681,
+      1.145
+     ],
+     "undo": [
+      0.245,
+      0.306,
+      0.258,
+      0.304,
+      0.259
+     ],
+     "redo": [
+      0.304,
+      0.307,
+      0.306,
+      0.249,
+      0.305
+     ],
+     "edit2": [
+      1.132,
+      1.067,
+      1.247,
+      1.054,
+      1.135
+     ],
+     "undo2": [
+      0.306,
+      0.307,
+      0.305,
+      0.308,
+      0.306
+     ]
+    },
+    "all_restore": true,
+    "console_errors": [
+     120,
+     120,
+     120,
+     120,
+     120
+    ]
+   }
+  }
+ }
 }
 </script>
 <!-- theme: begin -->
@@ -1383,91 +2300,6 @@
 })();
 </script>
 <!-- steps: end -->
-<!-- pr-cards: begin -->
-<style>
-  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
-    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
-    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
-  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
-  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
-  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
-  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
-  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
-  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
-</style>
-<script>
-/* A card for each link to a GitHub PR or issue, on hover or focus: its
-   title, state, author, dates and comments, asked of GitHub live, once per
-   number per page load; if GitHub does not answer, what it said when the
-   page was built (tools/link_prs.py writes this block). */
-(() => {
-  const CACHED = {"hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-14T14:42:33Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-14T14:42:21Z"}}, BUILT = "2026-10-14";
-  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
-  const asked = new Map();
-  const ask = key => {
-    if (!asked.has(key)) {
-      const [repo, n] = key.split("#");
-      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
-        .then(r => r.ok ? r.json() : Promise.reject(r.status))
-        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
-                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
-                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
-        .catch(() => null));
-    }
-    return asked.get(key);
-  };
-  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-  const ago = iso => {
-    const s = (Date.now() - new Date(iso)) / 1000;
-    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
-      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
-    return "just now";
-  };
-  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const fill = (key, d, note) => {
-    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
-    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
-      `<div class="pr-title">${esc(d.title)}</div>` +
-      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
-      (note ? `<div class="pr-note">${note}</div>` : "");
-  };
-  let card = null, over = null, timer = null;
-  const place = a => {
-    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
-    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
-    const below = r.bottom + 6 + h < innerHeight;
-    card.style.left = (left + scrollX) + "px";
-    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
-  };
-  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
-  const show = a => {
-    const m = RX.exec(a.href);
-    if (!m) return;
-    const key = m[1] + "#" + m[2];
-    over = a; clearTimeout(timer);
-    timer = setTimeout(async () => {
-      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
-      const cached = CACHED[key];
-      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
-      card.hidden = false; place(a);
-      const d = await ask(key);
-      if (over !== a) return;
-      card.innerHTML = d ? fill(key, d, "")
-        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
-        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
-      place(a);
-    }, 250);
-  };
-  const linkOf = t => t && t.closest && t.closest("a[href]");
-  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
-  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
-  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
-  document.addEventListener("focusout", hide);
-  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
-  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
-})();
-</script>
-<!-- pr-cards: end -->
 
 <!-- refs: begin -->
 <style>
@@ -1566,6 +2398,91 @@
 })();
 </script>
 <!-- ref-cards: end -->
+<!-- pr-cards: begin -->
+<style>
+  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 15, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-14T14:42:25Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-15T13:38:57Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-15T14:18:13Z"}}, BUILT = "2026-10-15";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  const ask = key => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#");
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
+                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[2];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
 
 </body>
 </html>

@@ -1,0 +1,160 @@
+B: 29257404 nodes, 12160126 new, 256.6 MB new self size
+58086 attachments under 16334 old nodes
+
+===    124.1 MB new below old node 10190785 (object:Array), via 1 x [i]  (first: object:Array)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Web__CrashHandling--> object:Array
+  --[3]--> object:Array
+
+===     48.7 MB new below old node 9736207 (object:Map), via 1 x internal:table  (first: array)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Util__ShareCodec--> object:Array
+  --[3]--> object:Array
+  --[1]--> object:Object
+  --property:workerSize--> closure:workerSize
+  --internal:context--> object:system / Context / scope @10601547
+  --context:table--> object:Map
+
+===     42.7 MB new below old node 1437572 (object:Array), via 1 x [i]  (first: object:Array)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Web__ProjectorView--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+  --[2]--> object:Array
+  --[1]--> object:Array
+
+===      7.7 MB new below old node 10190675 (object:Array), via 1 x [i]  (first: object:Array)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Web__ScrollWidth--> object:Array
+  --[1]--> object:Array
+
+===      7.4 MB new below old node 5065008 (object:Array), via 7 x [i]  (first: object:Array)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Haz3lcore__MakeTerm--> object:Array
+  --[76]--> closure
+  --internal:context--> object:system / Context / scope @2828099
+  --context:cache$0--> object:Array
+  --[3]--> object:Array
+  --[1]--> object:Array
+
+===      5.6 MB new below old node 5071463 (object:Array), via 1 x [i]  (first: object:Array)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Web__HazelDB--> object:Array
+  --[8]--> object:Array
+
+===      3.7 MB new below old node 5171496 (object:Array), via 1 x [i]  (first: object:Array)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Incr_dom__Incr--> object:Array
+  --[4]--> object:Array
+  --[3]--> object:Array
+  --[9]--> object:Array
+  --[2]--> object:Array
+
+===      2.0 MB new below old node 1076748 (object:WeakMap), via 1 x internal:table  (first: array)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Language__Ascriptions--> object:Array
+  --[7]--> object:Array
+  --[1]--> object:WeakMap
+
+===      2.0 MB new below old node 1076744 (array), via 1 x internal:64 / part of key (Array @37420081) -> va  (first: object:Array)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Language__Ascriptions--> object:Array
+  --[5]--> object:WeakMap
+  --internal:table--> array
+
+===      1.0 MB new below old node 1078966 (object:WeakMap), via 1 x internal:table  (first: array)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Language__TypHash--> object:Array
+  --[7]--> object:Array
+  --[1]--> object:WeakMap
+
+===      0.7 MB new below old node 7420969 (object:WeakMap), via 1 x internal:table  (first: array)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Haz3lcore__MvuShape--> object:Array
+  --[5]--> object:Array
+  --[1]--> closure
+  --internal:context--> object:system / Context / scope @3684567
+  --context:g--> closure
+  --internal:context--> object:system / Context / scope @3684663
+  --context:memo--> object:WeakMap
+
+===      0.6 MB new below old node 28863248 (native:blink::SVGDocumentExtensions), via 1 x [i]  (first: native:blink::HeapHashTableBacking<blink::HashTable<cppgc)
+  --[1]--> synthetic:(GC roots)
+  --[29]--> synthetic:C++ Persistent roots
+  --internal:blink::WebNode::WebNode(const WebNode &)--> native:<textarea id="clipboard-shim">
+  --[6]--> native:HTMLDocument
+  --[35]--> native:blink::SVGDocumentExtensions
+
+===      0.6 MB new below old node 1076744 (array), via 1 x internal:416 / part of key (Array @37387029) -> v  (first: object:Array)
+  --[1]--> synthetic:(GC roots)
+  --[10]--> synthetic:(Global handles)
+  --internal:214 / blink::ScriptStateProtectingContex--> native:system / NativeContext / http://localhost:8391
+  --internal:global_object--> object:Window [JSGlobalObject] / http://localhost:8391
+  --property:jsoo_runtime--> object:Object
+  --property:caml_global_data--> object:Array
+  --property:Language__Ascriptions--> object:Array
+  --[5]--> object:WeakMap
+  --internal:table--> array
+
+===      0.5 MB new below old node 29147156 (native:blink::DocumentState), via 50 x [i]  (first: native:<input type="file" accept="" id="import-scratchpad)
+  --[1]--> synthetic:(GC roots)
+  --[29]--> synthetic:C++ Persistent roots
+  --internal:blink::WebLocalFrameImpl::WebLocalFrameI--> native:blink::WebLocalFrameImpl
+  --[7]--> native:blink::HistoryItem
+  --[1]--> native:blink::DocumentState
+
