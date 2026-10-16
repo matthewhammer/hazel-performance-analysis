@@ -1,0 +1,130 @@
+{
+ "setup": "B",
+ "port": 8341,
+ "runs": [
+  {
+   "i": 0,
+   "warmup": true,
+   "target": 110,
+   "value": "104",
+   "s": 1.648,
+   "polls": 5
+  },
+  {
+   "i": 1,
+   "warmup": true,
+   "target": 130,
+   "value": "125",
+   "s": 1.627,
+   "polls": 6
+  },
+  {
+   "i": 2,
+   "warmup": false,
+   "target": 150,
+   "value": "146",
+   "s": 1.983,
+   "polls": 8
+  },
+  {
+   "i": 3,
+   "warmup": false,
+   "target": 175,
+   "value": "171",
+   "s": 1.862,
+   "polls": 7
+  },
+  {
+   "i": 4,
+   "warmup": false,
+   "target": 200,
+   "value": "196",
+   "s": 2.55,
+   "polls": 8
+  },
+  {
+   "i": 5,
+   "warmup": false,
+   "target": 225,
+   "value": "222",
+   "s": 1.357,
+   "polls": 4
+  },
+  {
+   "i": 6,
+   "warmup": false,
+   "target": 250,
+   "value": "247",
+   "s": 1.991,
+   "polls": 7
+  },
+  {
+   "i": 7,
+   "warmup": false,
+   "target": 275,
+   "value": "272",
+   "s": 2.139,
+   "polls": 8
+  },
+  {
+   "i": 8,
+   "warmup": false,
+   "target": 300,
+   "value": "302",
+   "s": 3.775,
+   "polls": 8
+  },
+  {
+   "i": 9,
+   "warmup": false,
+   "target": 325,
+   "value": "327",
+   "s": 2.631,
+   "polls": 6
+  },
+  {
+   "i": 10,
+   "warmup": false,
+   "target": 350,
+   "value": "352",
+   "s": 1.772,
+   "polls": 5
+  },
+  {
+   "i": 11,
+   "warmup": false,
+   "target": 375,
+   "value": "377",
+   "s": 1.91,
+   "polls": 6
+  },
+  {
+   "i": 12,
+   "warmup": false,
+   "target": 400,
+   "value": "403",
+   "s": 2.097,
+   "polls": 7
+  },
+  {
+   "i": 13,
+   "warmup": false,
+   "target": 425,
+   "value": "428",
+   "s": 2.183,
+   "polls": 7
+  }
+ ],
+ "ux": {
+  "on": [
+   "arm_length",
+   "probedrawn"
+  ],
+  "chips": 43,
+  "sliders": 1,
+  "pictures": 1
+ },
+ "median": 2.044,
+ "min": 1.357,
+ "max": 3.775
+}

@@ -49,6 +49,7 @@
   .scroll { overflow-x: auto; }
   code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; }
   .note { color: var(--muted); font-size: 0.9em; }
+  .update { background: var(--paper); border-left: 4px solid var(--warn); padding: 10px 14px; border-radius: 6px; margin: 16px 0; }
   .step { border-left: 3px solid var(--line); padding-left: 14px; }
   .kicker { margin: 0; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8em; }
   ol.ranked > li { margin: 10px 0; }
@@ -77,10 +78,22 @@
     </ul></li>
   <li><b>So the hypothesis holds for analysis, not yet for display.</b> Not reprocessing unrelated code is the big win, and statics per item already does it. Hiding the unrelated code saves nothing yet: with the whole program on screen, <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> spends only 9 ms per change on the code view, because it is cached. And dividing the program costs more than hiding saves. With the fix in 5, the two about cancel: B takes as long as C.</li>
   <li><b>On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> the figure is rebuilt rather than patched:</b> its elements are new after every change. That costs the page more, and it fooled the first measurements here (<a href="#measuring">below</a>).</li>
-  <li><b>One fix in the worker's reuse check makes B as fast as C: 1.26 s against 1.23 s</b> (medians of 12). It is on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> as <a href="https://github.com/hazelgrove/hazel/commit/cbdab791f5"><code>cbdab791f5</code></a>. The check now compares lexemes in the same memoized walk as structure, so the 2 s becomes 1–4 ms, with exactly the same reuse decisions (<a href="#fix">below</a>).</li>
+  <li><b>One fix in the worker's reuse check makes B as fast as C: 1.26 s against 1.23 s</b> <span class="note">(Update, later on 2026-10-14: not on today's head, where the autosave makes B 0.6–0.7 s slower again; a fix for that brings them level again: <a href="#update">below</a>.)</span> (medians of 12). It is on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> as <a href="https://github.com/hazelgrove/hazel/commit/cbdab791f5"><code>cbdab791f5</code></a>. The check now compares lexemes in the same memoized walk as structure, so the 2 s becomes 1–4 ms, with exactly the same reuse decisions (<a href="#fix">below</a>).</li>
   <li><b>The worker's 2 s has one cause:</b> the open picture cell's item depends on the slider, and in the divided program it is elaborated again after every change, with fresh ids. About 120 enclosing parts of the program then differ only by ids, and each takes the reuse check's slow path. With only the slider's cell open, those slow checks fall from 122 to 4 per change. Keeping a re-analyzed cell's ids stable would fix it. A GUI-only view that keeps the program whole would avoid all three costs.</li>
 </ol>
 </div>
+
+<div class="update" id="update-box">
+<p><b>Update, later on 2026-10-14: do B and C come out the same once both have the same fixes? Yes, with one more fix.</b></p>
+<ul>
+<li><b>Showing only the GUI gives no responsiveness benefit, and once the fixes are in, no loss either.</b> Measured again on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s head, <a href="https://github.com/hazelgrove/hazel/commit/9fb2bdf067"><code>9fb2bdf067</code></a>, which has the reuse check's fix and the index's (<a href="#fix">below</a>) and the evaluator's fixes since, B was slower than C again: medians of 2.05 and 2.04 s, against 1.33 and 1.44 s (two sessions of twelve changes each).</li>
+<li><b>The cause is the autosave,</b> as in answer 2: it turns the program into text, and with the slide's probes that print had become quadratic in the program's top-level items. It takes about 0.6 s a change in C, where it falls just after the redraw, and about 1 s in B, where it falls inside the change. A fix (<a href="https://github.com/hazelgrove/hazel/commit/ec9f125acd"><code>ec9f125acd</code></a>) brings the print to about 80 ms. With it, B took 1.26–1.56 s and C 1.23–1.76 s over five sessions each: the same, within the spread from one session to the next.</li>
+<li>What is left between them, perhaps 0.1–0.2 s, is the cells' livelit views, run on the page (answer 2).</li>
+<li><b>Later, on 2026-10-15, on a newer head, the same again.</b> <a href="../015/"><code class="ref"><b>^report(</b>15<b>)</b></code></a> measured this slider another way (one real drag of 1.5 seconds, eight drags in one session, headless Firefox 157) on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <code>032fe3aca6</code>, which has the fix: the picture was final 1.09 s after letting go with the whole program (C) and 1.20 s in UX mode (B), within the drift between sessions (<a href="#update-check">below</a>).</li>
+</ul>
+</div>
+
+<figure id="update-fig"><svg class="chart" viewBox="0 0 860 363" width="100%" role="img" aria-label="Release to redraw for each session of twelve changes: on 10-12 C took 1.2 s, B 3.5 s and B with the reuse check fixed 1.26 s; on today's head C took 1.33 and 1.44 s and B 2.05 and 2.04 s; with the print fixed C took 1.23 to 1.76 s and B 1.26 to 1.56 s over five sessions each."><text x="0" y="16" font-weight="700" font-size="15" fill="var(--ink)">Release to redraw, each session of 12 changes: the median, and the range</text><line x1="300" y1="26" x2="300" y2="337" stroke="var(--line)" stroke-width="1"/><text x="300" y="353" font-size="13" text-anchor="middle" fill="var(--muted)">0 s</text><line x1="408" y1="26" x2="408" y2="337" stroke="var(--line)" stroke-width="1"/><text x="408" y="353" font-size="13" text-anchor="middle" fill="var(--muted)">1 s</text><line x1="516" y1="26" x2="516" y2="337" stroke="var(--line)" stroke-width="1"/><text x="516" y="353" font-size="13" text-anchor="middle" fill="var(--muted)">2 s</text><line x1="624" y1="26" x2="624" y2="337" stroke="var(--line)" stroke-width="1"/><text x="624" y="353" font-size="13" text-anchor="middle" fill="var(--muted)">3 s</text><line x1="732" y1="26" x2="732" y2="337" stroke="var(--line)" stroke-width="1"/><text x="732" y="353" font-size="13" text-anchor="middle" fill="var(--muted)">4 s</text><line x1="840" y1="26" x2="840" y2="337" stroke="var(--line)" stroke-width="1"/><text x="840" y="353" font-size="13" text-anchor="middle" fill="var(--muted)">5 s</text><text x="0" y="44" font-size="14" fill="var(--ink)"> 10-12: C</text><line x1="397.2" y1="39.5" x2="494.4" y2="39.5" stroke="var(--good)" stroke-width="2" opacity="0.55"/><circle cx="429.6" cy="39.5" r="4.5" fill="var(--good)"/><text x="0" y="72" font-size="14" fill="var(--ink)"> 10-12: B</text><line x1="613.2" y1="66.5" x2="840.0" y2="66.5" stroke="var(--warn)" stroke-width="2" opacity="0.55"/><circle cx="678.0" cy="66.5" r="4.5" fill="var(--warn)"/><text x="0" y="98" font-size="14" fill="var(--ink)"> 10-12: B, reuse check fixed</text><line x1="414.5" y1="93.5" x2="505.2" y2="93.5" stroke="var(--warn)" stroke-width="2" opacity="0.55"/><circle cx="436.1" cy="93.5" r="4.5" fill="var(--warn)"/><text x="0" y="131" font-size="14" fill="var(--ink)">today's head: C</text><line x1="427.4" y1="120.5" x2="522.5" y2="120.5" stroke="var(--good)" stroke-width="2" opacity="0.55"/><circle cx="443.6" cy="120.5" r="4.5" fill="var(--good)"/><line x1="439.3" y1="131.5" x2="548.4" y2="131.5" stroke="var(--good)" stroke-width="2" opacity="0.55"/><circle cx="455.5" cy="131.5" r="4.5" fill="var(--good)"/><text x="0" y="169" font-size="14" fill="var(--ink)">today's head: B</text><line x1="493.3" y1="158.5" x2="630.5" y2="158.5" stroke="var(--warn)" stroke-width="2" opacity="0.55"/><circle cx="521.4" cy="158.5" r="4.5" fill="var(--warn)"/><line x1="446.9" y1="169.5" x2="708.2" y2="169.5" stroke="var(--warn)" stroke-width="2" opacity="0.55"/><circle cx="520.3" cy="169.5" r="4.5" fill="var(--warn)"/><text x="0" y="224" font-size="14" fill="var(--ink)">with the print fixed: C</text><line x1="426.4" y1="196.5" x2="607.8" y2="196.5" stroke="var(--good)" stroke-width="2" opacity="0.55"/><circle cx="490.1" cy="196.5" r="4.5" fill="var(--good)"/><line x1="428.5" y1="207.5" x2="473.9" y2="207.5" stroke="var(--good)" stroke-width="2" opacity="0.55"/><circle cx="440.4" cy="207.5" r="4.5" fill="var(--good)"/><line x1="394.0" y1="218.5" x2="522.5" y2="218.5" stroke="var(--good)" stroke-width="2" opacity="0.55"/><circle cx="432.8" cy="218.5" r="4.5" fill="var(--good)"/><line x1="430.7" y1="229.5" x2="591.6" y2="229.5" stroke="var(--good)" stroke-width="2" opacity="0.55"/><circle cx="452.3" cy="229.5" r="4.5" fill="var(--good)"/><line x1="419.9" y1="240.5" x2="594.8" y2="240.5" stroke="var(--good)" stroke-width="2" opacity="0.55"/><circle cx="440.4" cy="240.5" r="4.5" fill="var(--good)"/><text x="0" y="294" font-size="14" fill="var(--ink)">with the print fixed: B</text><line x1="404.8" y1="267.5" x2="539.8" y2="267.5" stroke="var(--warn)" stroke-width="2" opacity="0.55"/><circle cx="436.1" cy="267.5" r="4.5" fill="var(--warn)"/><line x1="404.8" y1="278.5" x2="581.9" y2="278.5" stroke="var(--warn)" stroke-width="2" opacity="0.55"/><circle cx="454.4" cy="278.5" r="4.5" fill="var(--warn)"/><line x1="411.2" y1="289.5" x2="621.8" y2="289.5" stroke="var(--warn)" stroke-width="2" opacity="0.55"/><circle cx="463.1" cy="289.5" r="4.5" fill="var(--warn)"/><line x1="411.2" y1="300.5" x2="559.2" y2="300.5" stroke="var(--warn)" stroke-width="2" opacity="0.55"/><circle cx="466.3" cy="300.5" r="4.5" fill="var(--warn)"/><line x1="414.5" y1="311.5" x2="554.9" y2="311.5" stroke="var(--warn)" stroke-width="2" opacity="0.55"/><circle cx="468.5" cy="311.5" r="4.5" fill="var(--warn)"/></svg><figcaption>Every session, release to redraw: the dot is the median of twelve changes, the line their range. The first three rows are this report's, from 10-12. "With the print fixed" is <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s head with <a href="https://github.com/hazelgrove/hazel/commit/ec9f125acd"><code>ec9f125acd</code></a> (five sessions each).</figcaption></figure>
 
 <div class="kpis">
   <div class="kpi"><div class="v bad">8.6 s</div><div class="l">A: <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, no modular editing</div></div>
@@ -164,6 +177,7 @@
 <tr><td>The reuse check's slow path</td><td class="n">1,450–2,500 ms</td><td class="n">1–4 ms</td><td class="n">0–1 ms</td></tr>
 <tr><td>Slow matches, and parts reused</td><td class="n">122, 337</td><td class="n">122, 337</td><td class="n">1, 338</td></tr>
 </table></div>
+<p class="note"><b>Update, later on 2026-10-14:</b> on today's head the save falls inside B's change again, and its print takes about 1 s (<a href="#update">below</a>).</p>
 <p>The decisions are identical; only their cost changed. With the check cheap, a change in B also finishes before the autosave fires, so the save stopped landing in the middle of it. B's range was 1.06–1.9 s, with one change at 3.8 s.</p>
 <p>Profiled again with the fix (six changes, the last column of the <a href="#where">table</a>), the worker's part of a change in B is now smaller than in C (884 ms against 1,056), and the autosave and the text conversion are gone from the change. What B still spends beyond C is on the page: the cells' livelit views without their memo (449 ms against C's 163) and collecting the stream's state (340 against 204). Profiled, B's window is still 1.2× C's, though on the clock the two are within 3%: the profiler slows some code more than other code (as in <a href="../004/#cost"><code class="ref"><b>^report(</b>4<b>)</b></code></a>), so these rows say where the time goes, and the clock says how much.</p>
 <p>The fix is on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> as <a href="https://github.com/hazelgrove/hazel/commit/cbdab791f5"><code>cbdab791f5</code></a>. It adds a test that the one-walk check agrees with the trace check (the same term with new ids: equal; a lexeme-only edit: not; a real change: not). The existing test that a lexeme-only edit invalidates reuse still passes, as do the <code>Evaluator</code> (524), <code>Evaluator.Incremental</code> (46), <code>IncrSlides</code> (13), <code>CallMemo</code> (6) and <code>Equality</code> (8) groups.</p>
@@ -178,12 +192,25 @@
   <li><b>On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, the picture is rebuilt, not patched.</b> A MutationObserver watching the picture's elements saw no change on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, because after a change those elements are gone, and the new picture is new elements. So the redraw is detected by content instead: every 200 ms the page compares the large pictures' markup with what it was before the drag. That works whether a picture is patched or rebuilt.</li>
 </ul>
 
+<h2 id="update">Update, later on 2026-10-14: B and C with the same fixes</h2>
+<p>B and C, measured again the same way on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s head, <a href="https://github.com/hazelgrove/hazel/commit/9fb2bdf067"><code>9fb2bdf067</code></a>: the Full Body slide, the "arm length" slider, two warm-up changes and then twelve, each a real pointer drag to a length not drawn before, in headless Firefox 157.0 with a fresh profile per session. The harness of 10-12 did not survive, so it was rebuilt from this report's method (<a href="#method">below</a>). The picture's row now reads <code>probe(drawn)</code> while it is shown, so B keeps that row and <code>arm_length</code>'s.</p>
+<div class="scroll"><table>
+<tr><th>Build</th><th>C, the whole program</th><th>B, the slider and the picture</th></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s head</td><td class="n">1.33, 1.44 s</td><td class="n">2.05, 2.04 s</td></tr>
+<tr><td>with the print fixed (<a href="https://github.com/hazelgrove/hazel/commit/ec9f125acd"><code>ec9f125acd</code></a>)</td><td class="n">1.76, 1.30, 1.23, 1.41, 1.30 s</td><td class="n">1.26, 1.43, 1.51, 1.54, 1.56 s</td></tr>
+</table></div>
+<p class="note">Each number is one session's median of twelve changes. The ranges are in the <a href="#update-fig">figure</a> and in the data.</p>
+<p><b>Where B's extra time went.</b> Profiled (four changes in B on the head), the program's conversion to text (<code>segment_to_string</code>) was in 49% of the page's samples, about 1 s a change, inside the window. In C the same save comes just after the redraw. With the window held open 2.5 s past the redraw to catch it, <code>save_current</code> was 1,821 samples over three changes, about 600 ms each, and 239 (about 80 ms) with the fix.</p>
+<p><b>Why the print was slow.</b> To print a program with probes, the page wraps each probed term in its <code>^^probe(...)</code> syntax (<code>Triggers.refractor_seg_to_seg_with</code>). A slide's top level is one long <code>let ... in</code> chain. At each node of it, the wrap sliced the list from its head (<code>ListUtil.sublist</code>) and took each child's range by walking down the chain (<code>Skel.range</code>): quadratic in the top-level items. And <code>Segment.to_string</code> calls it again on every nested segment while a probe is still unplaced, building each segment's skeleton. The fix slices an array, takes one end of a range at a time, and passes over any segment none of whose own pieces carries a probe. The output is the same: the 120 doc slides printed with their probes and parsed back pass, as do the divided-program, segmented-parser and FastParse tests.</p>
+<p><b>What is left in B</b> is the cells' livelit views, run on the page (<code>live_html</code>, about 340 ms of profile a change). That is the gap between the two rows' medians, where there is one.</p>
+<p id="update-check"><b>A cross-check, on 2026-10-15.</b> <a href="../015/"><code class="ref"><b>^report(</b>15<b>)</b></code></a>, which sets Dress Up beside its livelits, measured the same slide and slider on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s newer head, <code>032fe3aca6</code>, with the print's fix and the undo history's (<a href="../014/"><code class="ref"><b>^report(</b>14<b>)</b></code></a>'s update). Its drag is not this report's: one real drag of 1.5 seconds (15 pointer moves of 100 ms), and release to redraw checked every 50 ms, eight drags after two warm-ups, in one session per set-up. Medians: C 1,091 ms (1,014–1,212), B 1,197 ms (1,056–2,206). The two again within the drift this update found between sessions; the numbers are in <a href="../015/"><code class="ref"><b>^report(</b>15<b>)</b></code></a>'s data.</p>
+
 <h2 id="next">What next</h2>
 <ol class="ranked">
   <li><b>Bring the reuse check's fix to <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>,</b> whose check has no lexeme comparison at all (<a href="#fix">above</a>), and to <code>dev</code>, together with the hash shortcut. <i><b>Corrected on 2026-10-13:</b> there is nothing to bring to <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> (<a href="#fix">above</a>); <code>dev</code> remains.</i></li>
   <li><b>Keep an open cell's ids stable when it is analyzed again</b> without its text changing, or don't analyze it again. With the fix the check is cheap, but those parts still miss the hash lookup on every change; stable ids would put them back on it, on any slide with cells open (<a href="#reuse">above</a>).</li>
 
-  <li><b>Keep the autosave out of a change:</b> save when the page is idle, not on a timer that can fall in the middle of an update.</li>
+  <li><b>Keep the autosave out of a change:</b> save when the page is idle, not on a timer that can fall in the middle of an update. <span class="note">(Update, later on 2026-10-14: the save's print was also quadratic with probes, and is fixed: <a href="#update">above</a>. Saving when idle would still keep it out of a change.)</span></li>
   <li><b>Give the cells' livelit views the view memo</b> the whole program's editor uses.</li>
   <li><b>Or a GUI-only view that keeps the program whole,</b> drawing just the chosen livelits from the whole program's editor instead of opening cells. That would avoid all three costs at once.</li>
   <li><b>A way to open a slide in UX mode from its address,</b> for example <code>?mode=ux&amp;show=arm_length,drawn</code>. It would make these measurements, and demos, quicker to set up than clicking 41 rows off.</li>
@@ -293,182 +320,6 @@
   code.ref b { font-weight: 800; }
 </style>
 <!-- refs: end -->
-<!-- ref-cards: begin -->
-<style>
-  .ref-card { position: absolute; z-index: 40; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
-    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
-    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
-  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
-  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
-  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
-  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
-  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
-    vertical-align: 1px; background: #6e7781; }
-  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
-  .rc-state.done { background: #8250df; }
-</style>
-<script>
-/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
-   ticket from the work dashboard's data (its area, its status, its first
-   line), carried by the dashboard's own pages and read live from the
-   published data anywhere else; a report from its own page, live (its
-   title, date and opening). Once per page load each. */
-(() => {
-  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
-  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
-  /* the dashboard itself carries its tickets (made with the page, changed
-     with it); any other page asks the published data */
-  const EMBED = null;
-  let data = EMBED ? Promise.resolve(EMBED) : null;
-  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
-  const pages = new Map();
-  const loadReport = url => {
-    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
-      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
-      let p = h1 && h1.nextElementSibling;
-      while (p && p.tagName !== "P") p = p.nextElementSibling;
-      const label = (doc.querySelector(".series") || {}).textContent || "";
-      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
-               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
-    }).catch(() => null));
-    return pages.get(url);
-  };
-  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
-  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
-  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
-  const ticketCard = (n, d) => {
-    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
-    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
-    const q = (d.queue || []).indexOf(n);
-    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
-      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
-      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
-    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
-      `<div class="rc-title">${esc(lead(t.text))}</div>` +
-      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
-      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
-  };
-  const reportCard = (n, r) => r
-    ? `<div class="rc-head">^report(${n}) · Hazel performance analysis${r.date ? " · " + esc(r.date) : ""}</div>` +
-      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
-    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
-  let card = null, over = null, timer = null;
-  const place = a => {
-    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
-    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
-    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
-  };
-  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
-  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
-  const show = (a, ref) => {
-    over = a; clearTimeout(timer);
-    timer = setTimeout(async () => {
-      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
-      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
-      card.hidden = false; place(a);
-      let html;
-      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
-      else html = reportCard(ref.n, await loadReport(a.href));
-      if (over !== a) return;
-      card.innerHTML = html; place(a);
-    }, 250);
-  };
-  const linkOf = t => t && t.closest && t.closest("a[href]");
-  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
-  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
-  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
-  document.addEventListener("focusout", hide);
-  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
-  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
-})();
-</script>
-<!-- ref-cards: end -->
-<!-- pr-cards: begin -->
-<style>
-  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
-    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
-    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
-  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
-  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
-  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
-  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
-  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
-  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
-</style>
-<script>
-/* A card for each link to a GitHub PR or issue, on hover or focus: its
-   title, state, author, dates and comments, asked of GitHub live, once per
-   number per page load; if GitHub does not answer, what it said when the
-   page was built (tools/link_prs.py writes this block). */
-(() => {
-  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 15, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-14T14:42:25Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-14T14:42:33Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-14T14:42:21Z"}}, BUILT = "2026-10-14";
-  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
-  const asked = new Map();
-  const ask = key => {
-    if (!asked.has(key)) {
-      const [repo, n] = key.split("#");
-      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
-        .then(r => r.ok ? r.json() : Promise.reject(r.status))
-        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
-                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
-                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
-        .catch(() => null));
-    }
-    return asked.get(key);
-  };
-  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-  const ago = iso => {
-    const s = (Date.now() - new Date(iso)) / 1000;
-    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
-      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
-    return "just now";
-  };
-  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const fill = (key, d, note) => {
-    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
-    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
-      `<div class="pr-title">${esc(d.title)}</div>` +
-      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
-      (note ? `<div class="pr-note">${note}</div>` : "");
-  };
-  let card = null, over = null, timer = null;
-  const place = a => {
-    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
-    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
-    const below = r.bottom + 6 + h < innerHeight;
-    card.style.left = (left + scrollX) + "px";
-    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
-  };
-  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
-  const show = a => {
-    const m = RX.exec(a.href);
-    if (!m) return;
-    const key = m[1] + "#" + m[2];
-    over = a; clearTimeout(timer);
-    timer = setTimeout(async () => {
-      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
-      const cached = CACHED[key];
-      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
-      card.hidden = false; place(a);
-      const d = await ask(key);
-      if (over !== a) return;
-      card.innerHTML = d ? fill(key, d, "")
-        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
-        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
-      place(a);
-    }, 250);
-  };
-  const linkOf = t => t && t.closest && t.closest("a[href]");
-  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
-  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
-  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
-  document.addEventListener("focusout", hide);
-  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
-  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
-})();
-</script>
-<!-- pr-cards: end -->
 <!-- report-data: begin -->
 <script type="application/json" id="report-data">
 {
@@ -568,6 +419,26 @@
  "updates": "Corrected on 2026-10-13: #2597's terms carry no lexemes (they came to dev with 500c466b44, which #2597 lacks), so there is nothing to bring to #2597; dev compares lexemes by trace on every check (since 7de3875cd8), so the fix would suit it, with the hash shortcut. No new measurements.",
  "provenance": "No raw file was kept with this report: the WebDriver driver's output, the Gecko profiles and the reuse-diag build's console file were not saved with it. Every number here exists only as printed in the report.",
  "raw_files": {},
+ "update_2026_10_14": {
+  "question": "Are B and C similar once the same fixes are applied to each?",
+  "builds": [
+   {
+    "name": "C, B (today's head)",
+    "pr": "hazelgrove/hazel#2635",
+    "commit": "9fb2bdf067",
+    "note": "dev build, served locally"
+   },
+   {
+    "name": "C, B (with the print fixed)",
+    "pr": "hazelgrove/hazel#2635",
+    "commit": "9fb2bdf067 plus ec9f125acd",
+    "note": "the autosave's print of a program with probes made linear (Triggers.refractor_seg_to_seg_with); sessions r84_*3-5 had the fix's first half (array slicing and one-ended ranges), r84_*6-7 both halves (also skipping segments with no probe pieces)"
+   }
+  ],
+  "runtime": "headless Firefox 157.0 over WebDriver (geckodriver), a fresh profile per session, one session at a time on one laptop",
+  "runs": "Each session: the Full Body slide opened at /fresh, two warm-up changes, then twelve, each a real pointer drag (WebDriver actions) of the 'arm length' slider to a length not drawn before (110, 130, then 150 to 425 in steps of 25). B: the outline's UX mode, every GUI row's chip switched off except arm_length's and the picture's (its row reads probe(drawn) while shown). Release to redraw: from the slider's pointerup to the first 200 ms poll at which the largest picture's markup differs from before the drag. The harness is update-2026-10-14/fullbody_release.py; each session's runs are update-2026-10-14/r*.json (setup, target, value reached, seconds, polls).",
+  "profiles": "Gecko profiler, 1 ms sampling: B on the head, four changes (segment_to_string 4,031 of 8,159 main-thread samples); C with the window held 2.5 s past the redraw, three changes: save_current 1,821 samples before the fix, 239 after (the refractor walk 1,594 and 38)."
+ },
  "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
  "tables": [
   {
@@ -780,15 +651,235 @@
      "1, 338"
     ]
    ]
+  },
+  {
+   "section": "Update, later on 2026-10-14: B and C with the same fixes",
+   "section_id": "update",
+   "columns": [
+    "Build",
+    "C, the whole program",
+    "B, the slider and the picture"
+   ],
+   "rows": [
+    [
+     "#2635's head",
+     "1.33, 1.44 s",
+     "2.05, 2.04 s"
+    ],
+    [
+     "with the print fixed (ec9f125acd)",
+     "1.76, 1.30, 1.23, 1.41, 1.30 s",
+     "1.26, 1.43, 1.51, 1.54, 1.56 s"
+    ]
+   ]
   }
  ],
  "files": [
   "data/meta.json",
-  "data/tables.json"
+  "data/tables.json",
+  "data/update-2026-10-14"
  ],
- "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/008/data"
+ "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/008/data",
+ "cross_check_2026_10_15": {
+  "source": "^report(15), https://matthewhammer.org/hazel/performance-analysis/015/ (its data: 015/data/hazel_fullbody_C.json, hazel_fullbody_B.json)",
+  "build": {
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "032fe3aca6"
+  },
+  "browser": "headless Firefox 157, a fresh profile per set-up",
+  "method": "one real drag per run (WebDriver: down, 15 moves of 100 ms, up) to a value not drawn before; release to redraw polled every 50 ms; 2 warm-ups then 8 drags, one session per set-up",
+  "release_to_redraw_ms": {
+   "C_whole_program": {
+    "median": 1091.0,
+    "min": 1014,
+    "max": 1212
+   },
+   "B_ux_mode": {
+    "median": 1196.5,
+    "min": 1056,
+    "max": 2206
+   }
+  }
+ }
 }
 </script>
 <!-- report-data: end -->
+<!-- ref-cards: begin -->
+<style>
+  .ref-card { position: absolute; z-index: 40; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
+  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
+    vertical-align: 1px; background: #6e7781; }
+  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
+  .rc-state.done { background: #8250df; }
+</style>
+<script>
+/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
+   ticket from the work dashboard's data (its area, its status, its first
+   line), carried by the dashboard's own pages and read live from the
+   published data anywhere else; a report from its own page, live (its
+   title, date and opening). Once per page load each. */
+(() => {
+  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
+  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
+  /* the dashboard itself carries its tickets (made with the page, changed
+     with it); any other page asks the published data */
+  const EMBED = null;
+  let data = EMBED ? Promise.resolve(EMBED) : null;
+  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
+  const pages = new Map();
+  const loadReport = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
+      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
+      let p = h1 && h1.nextElementSibling;
+      while (p && p.tagName !== "P") p = p.nextElementSibling;
+      const label = (doc.querySelector(".series") || {}).textContent || "";
+      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
+               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
+    }).catch(() => null));
+    return pages.get(url);
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
+  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
+  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
+  const ticketCard = (n, d) => {
+    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
+    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
+    const q = (d.queue || []).indexOf(n);
+    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
+      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
+      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
+    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
+      `<div class="rc-title">${esc(lead(t.text))}</div>` +
+      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
+      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
+  };
+  const reportCard = (n, r) => r
+    ? `<div class="rc-head">^report(${n}) · Hazel performance analysis${r.date ? " · " + esc(r.date) : ""}</div>` +
+      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
+    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
+    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = (a, ref) => {
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
+      card.hidden = false; place(a);
+      let html;
+      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
+      else html = reportCard(ref.n, await loadReport(a.href));
+      if (over !== a) return;
+      card.innerHTML = html; place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- ref-cards: end -->
+<!-- pr-cards: begin -->
+<style>
+  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 15, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-16T02:57:32Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-15T14:33:10Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-15T14:18:13Z"}}, BUILT = "2026-10-15";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  const ask = key => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#");
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
+                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[2];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
 </body>
 </html>

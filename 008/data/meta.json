@@ -3,12 +3,42 @@
  "date": "2026-10-12",
  "question": "hazelgrove/hazel#2597 has no modular editing, and #2635 has it, from #2469 (modular editors). How long does one slider change take on a complex picture, the Livelit Playground's Full Body slide? The hypothesis: #2635 is much faster, especially in its UX outline mode, showing only the slider and the picture, because it doesn't reprocess the unrelated code. A third set-up separates the two halves of that hypothesis.",
  "builds": [
-  {"name": "A", "pr": "hazelgrove/hazel#2597", "commit": "a15c6f0b65", "note": "no modular editing; has ^report(7)'s fix (c07bdacead), so its worker's stream messages are throttled as on #2635; the whole program on screen, with its livelits; dev build, served locally"},
-  {"name": "C", "pr": "hazelgrove/hazel#2635", "commit": "57c928cef4", "note": "modular editing; the whole program on screen, with its livelits (the outline's dev mode); dev build, served locally"},
-  {"name": "B", "pr": "hazelgrove/hazel#2635", "commit": "57c928cef4", "note": "modular editing; only two cells on screen, the slider and the picture (the outline's UX mode, every GUI row's chip switched off except 'arm_length' and 'drawn')"},
-  {"name": "B, fixed; C, fixed", "pr": "hazelgrove/hazel#2635", "commit": "57c928cef4 plus cbdab791f5", "note": "the reuse check compares lexemes in the same memoized walk as structure; on #2635 as cbdab791f5"},
-  {"name": "C, with the index's fix", "pr": "hazelgrove/hazel#2635", "commit": "57c928cef4 plus cbdab791f5 and 8717564a5f", "note": "the page's index of the elaboration stops at expressions; on #2635 as 8717564a5f"},
-  {"name": "reuse-diag", "pr": "hazelgrove/hazel#2635", "commit": "not stated in the report", "note": "a temporary build on local branch perf/2635-reuse-diag, not pushed, that counted IncrEval.reuse_check's outcomes and printed them per request; its own sampling slowed it, so no time in the report comes from it"}
+  {
+   "name": "A",
+   "pr": "hazelgrove/hazel#2597",
+   "commit": "a15c6f0b65",
+   "note": "no modular editing; has ^report(7)'s fix (c07bdacead), so its worker's stream messages are throttled as on #2635; the whole program on screen, with its livelits; dev build, served locally"
+  },
+  {
+   "name": "C",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "57c928cef4",
+   "note": "modular editing; the whole program on screen, with its livelits (the outline's dev mode); dev build, served locally"
+  },
+  {
+   "name": "B",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "57c928cef4",
+   "note": "modular editing; only two cells on screen, the slider and the picture (the outline's UX mode, every GUI row's chip switched off except 'arm_length' and 'drawn')"
+  },
+  {
+   "name": "B, fixed; C, fixed",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "57c928cef4 plus cbdab791f5",
+   "note": "the reuse check compares lexemes in the same memoized walk as structure; on #2635 as cbdab791f5"
+  },
+  {
+   "name": "C, with the index's fix",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "57c928cef4 plus cbdab791f5 and 8717564a5f",
+   "note": "the page's index of the elaboration stops at expressions; on #2635 as 8717564a5f"
+  },
+  {
+   "name": "reuse-diag",
+   "pr": "hazelgrove/hazel#2635",
+   "commit": "not stated in the report",
+   "note": "a temporary build on local branch perf/2635-reuse-diag, not pushed, that counted IncrEval.reuse_check's outcomes and printed them per request; its own sampling slowed it, so no time in the report comes from it"
+  }
  ],
  "runtime": "headless Firefox over WebDriver (the report states no version), a fresh profile per set-up, dev builds served locally; one set-up at a time, on one laptop. The Full Body slide's text is identical on both branches.",
  "runs": "Twelve changes per set-up, after two warm-up changes, each a real pointer drag of the 'arm length' slider to a length not drawn before, the same twelve lengths in each set-up. Profiles: three changes per set-up, and six more each for B with the reuse check's fix and for C with the index's fix. Reuse counts: per slider change, steady state, from the reuse-diag build, its worker console copied to a file by Firefox (devtools.console.stdout.content).",
@@ -45,11 +75,43 @@
   "B, only the slider's cell open (reuse counts)": "slow-path checks fall from 122 to 4 per change"
  },
  "cited": [
-  {"number": "3.5 s of statics against 16 ms per item", "what": "a Kids' Choice release on #2597 and #2635", "from": "^report(1)"},
-  {"number": "about 6,400 nodes; 122 enclosing lets", "what": "the subterm each enclosing let traced in the slow path's lexeme comparison, which is quadratic", "from": "the report's #reuse"},
-  {"number": "524, 46, 13, 6, 8", "what": "tests passing with cbdab791f5: the Evaluator, Evaluator.Incremental, IncrSlides, CallMemo and Equality groups", "from": "the report's #fix"}
+  {
+   "number": "3.5 s of statics against 16 ms per item",
+   "what": "a Kids' Choice release on #2597 and #2635",
+   "from": "^report(1)"
+  },
+  {
+   "number": "about 6,400 nodes; 122 enclosing lets",
+   "what": "the subterm each enclosing let traced in the slow path's lexeme comparison, which is quadratic",
+   "from": "the report's #reuse"
+  },
+  {
+   "number": "524, 46, 13, 6, 8",
+   "what": "tests passing with cbdab791f5: the Evaluator, Evaluator.Incremental, IncrSlides, CallMemo and Equality groups",
+   "from": "the report's #fix"
+  }
  ],
  "updates": "Corrected on 2026-10-13: #2597's terms carry no lexemes (they came to dev with 500c466b44, which #2597 lacks), so there is nothing to bring to #2597; dev compares lexemes by trace on every check (since 7de3875cd8), so the fix would suit it, with the hash shortcut. No new measurements.",
  "provenance": "No raw file was kept with this report: the WebDriver driver's output, the Gecko profiles and the reuse-diag build's console file were not saved with it. Every number here exists only as printed in the report.",
- "raw_files": {}
+ "raw_files": {},
+ "update_2026_10_14": {
+  "question": "Are B and C similar once the same fixes are applied to each?",
+  "builds": [
+   {
+    "name": "C, B (today's head)",
+    "pr": "hazelgrove/hazel#2635",
+    "commit": "9fb2bdf067",
+    "note": "dev build, served locally"
+   },
+   {
+    "name": "C, B (with the print fixed)",
+    "pr": "hazelgrove/hazel#2635",
+    "commit": "9fb2bdf067 plus cbc585933b",
+    "note": "the autosave's print of a program with probes made linear (Triggers.refractor_seg_to_seg_with); sessions r84_*3-5 had the fix's first half (array slicing and one-ended ranges), r84_*6-7 both halves (also skipping segments with no probe pieces)"
+   }
+  ],
+  "runtime": "headless Firefox 157.0 over WebDriver (geckodriver), a fresh profile per session, one session at a time on one laptop",
+  "runs": "Each session: the Full Body slide opened at /fresh, two warm-up changes, then twelve, each a real pointer drag (WebDriver actions) of the 'arm length' slider to a length not drawn before (110, 130, then 150 to 425 in steps of 25). B: the outline's UX mode, every GUI row's chip switched off except arm_length's and the picture's (its row reads probe(drawn) while shown). Release to redraw: from the slider's pointerup to the first 200 ms poll at which the largest picture's markup differs from before the drag. The harness is update-2026-10-14/fullbody_release.py; each session's runs are update-2026-10-14/r*.json (setup, target, value reached, seconds, polls).",
+  "profiles": "Gecko profiler, 1 ms sampling: B on the head, four changes (segment_to_string 4,031 of 8,159 main-thread samples); C with the window held 2.5 s past the redraw, three changes: save_current 1,821 samples before the fix, 239 after (the refractor walk 1,594 and 38)."
+ }
 }

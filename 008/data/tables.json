@@ -209,5 +209,26 @@
     "1, 338"
    ]
   ]
+ },
+ {
+  "section": "Update, later on 2026-10-14: B and C with the same fixes",
+  "section_id": "update",
+  "columns": [
+   "Build",
+   "C, the whole program",
+   "B, the slider and the picture"
+  ],
+  "rows": [
+   [
+    "#2635's head",
+    "1.33, 1.44 s",
+    "2.05, 2.04 s"
+   ],
+   [
+    "with the print fixed (cbc585933b)",
+    "1.76, 1.30, 1.23, 1.41, 1.30 s",
+    "1.26, 1.43, 1.51, 1.54, 1.56 s"
+   ]
+  ]
  }
 ]
