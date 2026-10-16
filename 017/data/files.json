@@ -1,0 +1,573 @@
+{
+ "prs": {
+  "2603": {
+   "branch": "dev-statics-perf",
+   "oid_match": true,
+   "base": "6a816c4b29",
+   "files": [
+    "src/haz3lcore/TyDi/TyDi.re",
+    "src/haz3lcore/TyDi/TyDiCtx.re",
+    "src/language/builtins/Builtins.re",
+    "src/language/statics/Ctx.re",
+    "src/language/statics/Statics.re",
+    "src/language/statics/StaticsBase.re",
+    "test/Test_CtxIndex.re",
+    "test/Test_TyDi.re",
+    "test/haz3ltest.re",
+    "test/statics/Test_Statics_Let.re"
+   ],
+   "commits": 5
+  },
+  "2606": {
+   "branch": "eval-worker-held-cache",
+   "oid_match": true,
+   "base": "fe599fe7b4",
+   "files": [
+    "src/web/app/editors/result/EvalResult.re",
+    "src/web/util/WorkerServer.re",
+    "src/web/view/CodeExerciseMode.re",
+    "src/web/view/ScratchMode.re",
+    "src/web/view/TutorialMode.re",
+    "test/Test_WorkerServer.re"
+   ],
+   "commits": 3
+  },
+  "2610": {
+   "branch": "parse-fallback-segmented",
+   "oid_match": true,
+   "base": "9b3f18323a",
+   "files": [
+    "src/haz3lcore/zipper/MarkerParse.re",
+    "src/haz3lcore/zipper/Parser.re",
+    "test/Test_ParseSegmented.re",
+    "test/haz3ltest.re"
+   ],
+   "commits": 2
+  },
+  "2614": {
+   "branch": "parser-perf",
+   "oid_match": true,
+   "base": "ae1c204ea6",
+   "files": [
+    "src/haz3lcore/tiles/Segment.re",
+    "src/haz3lcore/tiles/Tile.re",
+    "src/haz3lcore/zipper/MarkerParse.re",
+    "src/haz3lcore/zipper/Parser.re",
+    "src/haz3lcore/zipper/Siblings.re",
+    "src/haz3lcore/zipper/Zipper.re",
+    "src/haz3lcore/zipper/action/Insert.re",
+    "test/Test_LoadPath.re",
+    "test/haz3ltest.re"
+   ],
+   "commits": 8
+  },
+  "2651": {
+   "branch": "statics-module-def-once",
+   "oid_match": true,
+   "base": "34f9605ddf",
+   "files": [
+    "src/language/statics/Statics.re"
+   ],
+   "commits": 1
+  },
+  "2652": {
+   "branch": "eval-worker-start-at-load",
+   "oid_match": true,
+   "base": "34f9605ddf",
+   "files": [
+    "src/web/Main.re",
+    "src/web/util/WorkerClient.re"
+   ],
+   "commits": 1
+  },
+  "2661": {
+   "branch": "typ-hash-consistent",
+   "oid_match": true,
+   "base": "e12145c69b",
+   "files": [
+    "src/language/dynamics/transition/Ascriptions.re",
+    "src/language/term/TypHash.re",
+    "test/Test_TypHash.re",
+    "test/haz3ltest.re"
+   ],
+   "commits": 1
+  },
+  "2671": {
+   "branch": "mappiece-keep-identity",
+   "oid_match": true,
+   "base": "e12145c69b",
+   "files": [
+    "src/haz3lcore/zipper/ZipperBase.re",
+    "test/Test_MapPieceIdentity.re",
+    "test/haz3ltest.re"
+   ],
+   "commits": 1
+  },
+  "2672": {
+   "branch": "font-metrics-keep-scroll",
+   "oid_match": true,
+   "base": "e12145c69b",
+   "files": [
+    "src/web/app/Page.re"
+   ],
+   "commits": 1
+  },
+  "2673": {
+   "branch": "reuse-check-merkle-hash",
+   "oid_match": true,
+   "base": "e12145c69b",
+   "files": [
+    "src/language/dynamics/IncrEval.re",
+    "src/language/term/Equality.re",
+    "src/language/term/Exp.re",
+    "src/util/Util.re",
+    "src/util/ValueHash.re",
+    "test/Test_ValueHash.re",
+    "test/evaluator/Test_Evaluator_Incremental.re",
+    "test/haz3ltest.re"
+   ],
+   "commits": 2
+  },
+  "2675": {
+   "branch": "recursive-let-reuse",
+   "oid_match": true,
+   "base": "e12145c69b",
+   "files": [
+    "src/language/statics/Statics.re",
+    "test/evaluator/Test_Evaluator_Incremental.re"
+   ],
+   "commits": 1
+  },
+  "2678": {
+   "branch": "ci-perf-budgets",
+   "oid_match": true,
+   "base": "e12145c69b",
+   "files": [
+    ".github/workflows/bench-compare.yml",
+    ".github/workflows/perf.yml",
+    "src/language/dynamics/Evaluator.re",
+    "src/language/dynamics/Evaluator.rei",
+    "src/language/dynamics/evaluation/Trampoline.re",
+    "test/evaluator/Test_PerfBudgets.re",
+    "test/haz3ltest.re"
+   ],
+   "commits": 1
+  },
+  "2679": {
+   "branch": "ascriptions-copy-on-change",
+   "oid_match": true,
+   "base": "e12145c69b",
+   "files": [
+    "src/language/dynamics/transition/Ascriptions.re",
+    "test/evaluator/Test_Ascriptions.re",
+    "test/haz3ltest.re"
+   ],
+   "commits": 1
+  },
+  "2681": {
+   "branch": "ascriptions-has-type",
+   "oid_match": true,
+   "base": "e12145c69b",
+   "files": [
+    "src/language/dynamics/transition/Ascriptions.re",
+    "src/language/term/TypHash.re",
+    "src/util/IdentityTable.re",
+    "src/util/Util.re",
+    "test/Test_TypHash.re",
+    "test/evaluator/Test_Ascriptions.re",
+    "test/haz3ltest.re"
+   ],
+   "commits": 4
+  }
+ },
+ "overlaps": {
+  "2603-2610": [
+   "test/haz3ltest.re"
+  ],
+  "2603-2614": [
+   "test/haz3ltest.re"
+  ],
+  "2603-2651": [
+   "src/language/statics/Statics.re"
+  ],
+  "2603-2661": [
+   "test/haz3ltest.re"
+  ],
+  "2603-2671": [
+   "test/haz3ltest.re"
+  ],
+  "2603-2673": [
+   "test/haz3ltest.re"
+  ],
+  "2603-2675": [
+   "src/language/statics/Statics.re"
+  ],
+  "2603-2678": [
+   "test/haz3ltest.re"
+  ],
+  "2603-2679": [
+   "test/haz3ltest.re"
+  ],
+  "2603-2681": [
+   "test/haz3ltest.re"
+  ],
+  "2610-2614": [
+   "src/haz3lcore/zipper/MarkerParse.re",
+   "src/haz3lcore/zipper/Parser.re",
+   "test/haz3ltest.re"
+  ],
+  "2610-2661": [
+   "test/haz3ltest.re"
+  ],
+  "2610-2671": [
+   "test/haz3ltest.re"
+  ],
+  "2610-2673": [
+   "test/haz3ltest.re"
+  ],
+  "2610-2678": [
+   "test/haz3ltest.re"
+  ],
+  "2610-2679": [
+   "test/haz3ltest.re"
+  ],
+  "2610-2681": [
+   "test/haz3ltest.re"
+  ],
+  "2614-2661": [
+   "test/haz3ltest.re"
+  ],
+  "2614-2671": [
+   "test/haz3ltest.re"
+  ],
+  "2614-2673": [
+   "test/haz3ltest.re"
+  ],
+  "2614-2678": [
+   "test/haz3ltest.re"
+  ],
+  "2614-2679": [
+   "test/haz3ltest.re"
+  ],
+  "2614-2681": [
+   "test/haz3ltest.re"
+  ],
+  "2651-2675": [
+   "src/language/statics/Statics.re"
+  ],
+  "2661-2671": [
+   "test/haz3ltest.re"
+  ],
+  "2661-2673": [
+   "test/haz3ltest.re"
+  ],
+  "2661-2678": [
+   "test/haz3ltest.re"
+  ],
+  "2661-2679": [
+   "src/language/dynamics/transition/Ascriptions.re",
+   "test/haz3ltest.re"
+  ],
+  "2661-2681": [
+   "src/language/dynamics/transition/Ascriptions.re",
+   "src/language/term/TypHash.re",
+   "test/Test_TypHash.re",
+   "test/haz3ltest.re"
+  ],
+  "2671-2673": [
+   "test/haz3ltest.re"
+  ],
+  "2671-2678": [
+   "test/haz3ltest.re"
+  ],
+  "2671-2679": [
+   "test/haz3ltest.re"
+  ],
+  "2671-2681": [
+   "test/haz3ltest.re"
+  ],
+  "2673-2675": [
+   "test/evaluator/Test_Evaluator_Incremental.re"
+  ],
+  "2673-2678": [
+   "test/haz3ltest.re"
+  ],
+  "2673-2679": [
+   "test/haz3ltest.re"
+  ],
+  "2673-2681": [
+   "src/util/Util.re",
+   "test/haz3ltest.re"
+  ],
+  "2678-2679": [
+   "test/haz3ltest.re"
+  ],
+  "2678-2681": [
+   "test/haz3ltest.re"
+  ],
+  "2679-2681": [
+   "src/language/dynamics/transition/Ascriptions.re",
+   "test/evaluator/Test_Ascriptions.re",
+   "test/haz3ltest.re"
+  ]
+ },
+ "pairwise_conflicts": {
+  "2610-2614": [
+   "CONFLICT (content): Merge conflict in src/haz3lcore/zipper/MarkerParse.re"
+  ],
+  "2661-2671": [
+   "CONFLICT (content): Merge conflict in test/haz3ltest.re"
+  ],
+  "2661-2679": [
+   "CONFLICT (content): Merge conflict in src/language/dynamics/transition/Ascriptions.re"
+  ],
+  "2671-2681": [
+   "CONFLICT (content): Merge conflict in test/haz3ltest.re"
+  ],
+  "2673-2681": [
+   "CONFLICT (content): Merge conflict in src/util/Util.re"
+  ],
+  "2678-2679": [
+   "CONFLICT (content): Merge conflict in test/haz3ltest.re"
+  ],
+  "2678-2681": [
+   "CONFLICT (content): Merge conflict in test/haz3ltest.re"
+  ]
+ },
+ "sequential": [
+  [
+   2672,
+   "clean",
+   []
+  ],
+  [
+   2652,
+   "clean",
+   []
+  ],
+  [
+   2651,
+   "clean",
+   []
+  ],
+  [
+   2610,
+   "clean",
+   []
+  ],
+  [
+   2614,
+   "conflict",
+   [
+    "CONFLICT (content): Merge conflict in src/haz3lcore/zipper/MarkerParse.re"
+   ]
+  ]
+ ],
+ "trial_tip": "2e1404471765b4feffa6f2b776cb6c3f755d13b8",
+ "vs_2469": {
+  "2603": {
+   "common": [
+    "src/haz3lcore/TyDi/TyDiCtx.re",
+    "src/language/builtins/Builtins.re",
+    "src/language/statics/Ctx.re",
+    "src/language/statics/Statics.re",
+    "src/language/statics/StaticsBase.re",
+    "test/haz3ltest.re"
+   ],
+   "conflicts": [
+    "CONFLICT (content): Merge conflict in src/language/builtins/Builtins.re"
+   ]
+  },
+  "2606": {
+   "common": [
+    "src/web/app/editors/result/EvalResult.re",
+    "src/web/util/WorkerServer.re",
+    "src/web/view/ScratchMode.re",
+    "test/Test_WorkerServer.re"
+   ],
+   "conflicts": [
+    "CONFLICT (content): Merge conflict in src/web/app/editors/result/EvalResult.re",
+    "CONFLICT (content): Merge conflict in src/web/util/WorkerServer.re",
+    "CONFLICT (content): Merge conflict in src/web/view/ScratchMode.re",
+    "CONFLICT (content): Merge conflict in test/Test_WorkerServer.re"
+   ]
+  },
+  "2610": {
+   "common": [
+    "src/haz3lcore/zipper/MarkerParse.re",
+    "test/haz3ltest.re"
+   ],
+   "conflicts": []
+  },
+  "2614": {
+   "common": [
+    "src/haz3lcore/tiles/Segment.re",
+    "src/haz3lcore/zipper/MarkerParse.re",
+    "src/haz3lcore/zipper/Siblings.re",
+    "src/haz3lcore/zipper/Zipper.re",
+    "test/haz3ltest.re"
+   ],
+   "conflicts": [
+    "CONFLICT (content): Merge conflict in src/haz3lcore/tiles/Segment.re",
+    "CONFLICT (content): Merge conflict in src/haz3lcore/zipper/Zipper.re"
+   ]
+  },
+  "2651": {
+   "common": [
+    "src/language/statics/Statics.re"
+   ],
+   "conflicts": []
+  },
+  "2652": {
+   "common": [
+    "src/web/Main.re"
+   ],
+   "conflicts": []
+  },
+  "2661": {
+   "common": [
+    "test/haz3ltest.re"
+   ],
+   "conflicts": []
+  },
+  "2671": {
+   "common": [
+    "src/haz3lcore/zipper/ZipperBase.re",
+    "test/haz3ltest.re"
+   ],
+   "conflicts": []
+  },
+  "2672": {
+   "common": [
+    "src/web/app/Page.re"
+   ],
+   "conflicts": []
+  },
+  "2673": {
+   "common": [
+    "src/language/dynamics/IncrEval.re",
+    "src/util/Util.re",
+    "test/evaluator/Test_Evaluator_Incremental.re",
+    "test/haz3ltest.re"
+   ],
+   "conflicts": []
+  },
+  "2675": {
+   "common": [
+    "src/language/statics/Statics.re",
+    "test/evaluator/Test_Evaluator_Incremental.re"
+   ],
+   "conflicts": []
+  },
+  "2678": {
+   "common": [
+    "src/language/dynamics/Evaluator.re",
+    "test/haz3ltest.re"
+   ],
+   "conflicts": []
+  },
+  "2679": {
+   "common": [
+    "test/haz3ltest.re"
+   ],
+   "conflicts": []
+  },
+  "2681": {
+   "common": [
+    "src/util/Util.re",
+    "test/haz3ltest.re"
+   ],
+   "conflicts": []
+  }
+ },
+ "plan_order": [
+  2672,
+  2652,
+  2651,
+  2610,
+  2614,
+  2603,
+  2675,
+  2671,
+  2661,
+  2679,
+  2681,
+  2673,
+  2606,
+  2678
+ ],
+ "plan_trial": [
+  {
+   "pr": 2672,
+   "conflicts": []
+  },
+  {
+   "pr": 2652,
+   "conflicts": []
+  },
+  {
+   "pr": 2651,
+   "conflicts": []
+  },
+  {
+   "pr": 2610,
+   "conflicts": []
+  },
+  {
+   "pr": 2614,
+   "conflicts": [
+    "src/haz3lcore/zipper/MarkerParse.re"
+   ],
+   "union_resolved": true
+  },
+  {
+   "pr": 2603,
+   "conflicts": []
+  },
+  {
+   "pr": 2675,
+   "conflicts": []
+  },
+  {
+   "pr": 2671,
+   "conflicts": []
+  },
+  {
+   "pr": 2661,
+   "conflicts": [
+    "test/haz3ltest.re"
+   ],
+   "union_resolved": true
+  },
+  {
+   "pr": 2679,
+   "conflicts": [
+    "src/language/dynamics/transition/Ascriptions.re"
+   ],
+   "union_resolved": true
+  },
+  {
+   "pr": 2681,
+   "conflicts": []
+  },
+  {
+   "pr": 2673,
+   "conflicts": [
+    "src/util/Util.re"
+   ],
+   "union_resolved": true
+  },
+  {
+   "pr": 2606,
+   "conflicts": []
+  },
+  {
+   "pr": 2678,
+   "conflicts": [
+    "test/haz3ltest.re"
+   ],
+   "union_resolved": true
+  }
+ ],
+ "plan_tip": "2d547dd671e747e28273c48d5fd7f6464ac75f07"
+}

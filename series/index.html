@@ -43,6 +43,22 @@
   <script>if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) document.getElementById("dashboard-link").href = "http://localhost:8000/";</script>
   <ol class="issues" reversed>
     <li>
+      <a class="thumb" href="017/"><img class="light" src="017/img/thumb-light.svg" alt="Fourteen boxes, one per performance PR to dev, in four columns, the merge waves, coloured by what they change; three red dashed lines mark the pairs that conflict."><img class="dark" src="017/img/thumb-dark.svg" alt="Fourteen boxes, one per performance PR to dev, in four columns, the merge waves, coloured by what they change; three red dashed lines mark the pairs that conflict."></a>
+      <div>
+      <div class="num"><a href="017/"><code class="ref"><b>^report(</b>17<b>)</b></code></a> · 2026-10-15</div>
+      <div class="title"><a href="017/">Fourteen performance PRs to dev, and a plan to merge them</a></div>
+      <p class="blurb">For whoever reviews them: the fourteen open performance PRs to <code>dev</code>, each with what it buys and where that was measured, the honest reasons to wait, and what to look at. All are green and merge cleanly one at a time; none is reviewed. On dev they make nested-function statics linear (5.3 s to 13 ms at eight levels), loading text 2.5× faster, and re-evaluation after an edit 2.7 s to 0.41 s in a 400-definition program; on the livelits branches more. Three pairs conflict and three PRs conflict with <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>. A merge plan in four waves, checked by merging them in order: nine go in clean, five need a hand resolution, and with those all fifteen (a fifteenth, <a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a>, was missing from the list) build and pass the full test suite, 4,756 tests.</p>
+      </div>
+    </li>
+    <li>
+      <a class="thumb" href="016/"><img class="light" src="016/img/thumb-light.svg" alt="Two bars: frozen during one 1.5-second drag of Full Body's slider, #2635's head 4.0 s, keeping only the newest preview 2.2 s. Below, each round's difference from the head: the fix's ten dots all left of zero, the head against itself scattered around zero."><img class="dark" src="016/img/thumb-dark.svg" alt="Two bars: frozen during one 1.5-second drag of Full Body's slider, #2635's head 4.0 s, keeping only the newest preview 2.2 s. Below, each round's difference from the head: the fix's ten dots all left of zero, the head against itself scattered around zero."></a>
+      <div>
+      <div class="num"><a href="016/"><code class="ref"><b>^report(</b>16<b>)</b></code></a> · 2026-10-15</div>
+      <div class="title"><a href="016/">Two fixes for a drag, measured side by side</a></div>
+      <p class="blurb">Two fixes for a slow slider drag on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, measured with the builds side by side in one browser, drag by drag, and the head measured twice as a control. Keeping only the newest preview while one is on its way cuts the freeze in a long 1.5-second drag of Full Body's slider from 4.0 to 2.2 s, lower in all ten rounds where the head against itself differed by 0.1 s: it sends fewer repaints, each as slow as before. In UX mode the effect hides in the noise. Evaluating the livelit views in the worker shortens no drag, and in UX mode makes the final picture about a quarter of a second later. Measured a session at a time, neither fix could be told from the drift.</p>
+      </div>
+    </li>
+    <li>
       <a class="thumb" href="015/"><img class="light" src="015/img/thumb-light.svg" alt="Three rows of frame ticks over one 1.5-second slider drag: Dress Up's packed evenly with no freezes; Kids' Choice's with small gaps, frozen 0.3 s; Full Body's in bursts between long freezes, frozen 2.5 s, its picture final about a second after the finger lifts."><img class="dark" src="015/img/thumb-dark.svg" alt="Three rows of frame ticks over one 1.5-second slider drag: Dress Up's packed evenly with no freezes; Kids' Choice's with small gaps, frozen 0.3 s; Full Body's in bursts between long freezes, frozen 2.5 s, its picture final about a second after the finger lifts."></a>
       <div>
       <div class="num"><a href="015/"><code class="ref"><b>^report(</b>15<b>)</b></code></a> · 2026-10-15</div>
@@ -218,7 +234,7 @@
    number per page load; if GitHub does not answer, what it said when the
    page was built (tools/link_prs.py writes this block). */
 (() => {
-  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 15, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-16T03:35:09Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-15T14:33:10Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-15T14:18:13Z"}}, BUILT = "2026-10-15";
+  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 15, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-16T11:12:20Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-15T14:33:10Z"}, "hazelgrove/hazel#2608": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T12:03:57Z", "kind": "pull", "state": "open", "title": "Leave the source's whitespace and comments out of elaborations", "updated": "2026-09-30T00:37:35Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-15T14:18:13Z"}}, BUILT = "2026-10-16";
   const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
   const asked = new Map();
   const ask = key => {

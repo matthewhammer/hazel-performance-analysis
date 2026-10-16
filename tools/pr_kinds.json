@@ -1,8 +1,23 @@
 {
  "hazelgrove/hazel#2161": "pull",
  "hazelgrove/hazel#2469": "pull",
+ "hazelgrove/hazel#2490": "pull",
  "hazelgrove/hazel#2597": "pull",
+ "hazelgrove/hazel#2603": "pull",
+ "hazelgrove/hazel#2606": "pull",
+ "hazelgrove/hazel#2608": "pull",
  "hazelgrove/hazel#2609": "issues",
+ "hazelgrove/hazel#2610": "pull",
+ "hazelgrove/hazel#2614": "pull",
  "hazelgrove/hazel#2635": "pull",
- "hazelgrove/hazel#2678": "pull"
+ "hazelgrove/hazel#2651": "pull",
+ "hazelgrove/hazel#2652": "pull",
+ "hazelgrove/hazel#2661": "pull",
+ "hazelgrove/hazel#2671": "pull",
+ "hazelgrove/hazel#2672": "pull",
+ "hazelgrove/hazel#2673": "pull",
+ "hazelgrove/hazel#2675": "pull",
+ "hazelgrove/hazel#2678": "pull",
+ "hazelgrove/hazel#2679": "pull",
+ "hazelgrove/hazel#2681": "pull"
 }

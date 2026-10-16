@@ -1,0 +1,644 @@
+{
+ "setup": "C",
+ "rounds": 10,
+ "builds": {
+  "head": "http://localhost:8341",
+  "head-again": "http://127.0.0.1:8341",
+  "coalesce": "http://localhost:8351"
+ },
+ "drags": [
+  {
+   "round": -1,
+   "build": "coalesce",
+   "target": 400,
+   "visible": "visible",
+   "frames": 119,
+   "longest_gap_ms": 234,
+   "stalled_ms": 2283,
+   "window_ms": 4047,
+   "release_to_redraw_ms": 1151,
+   "inputs": 46,
+   "repaints_sent": 24,
+   "repaints_coalesced": 22
+  },
+  {
+   "round": -1,
+   "build": "head-again",
+   "target": 400,
+   "visible": "visible",
+   "frames": 139,
+   "longest_gap_ms": 383,
+   "stalled_ms": 4918,
+   "window_ms": 6367,
+   "release_to_redraw_ms": 1170,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": -1,
+   "build": "head",
+   "target": 400,
+   "visible": "visible",
+   "frames": 129,
+   "longest_gap_ms": 316,
+   "stalled_ms": 4769,
+   "window_ms": 6077,
+   "release_to_redraw_ms": 1361,
+   "inputs": 43,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 0,
+   "build": "head",
+   "target": 153,
+   "visible": "visible",
+   "frames": 122,
+   "longest_gap_ms": 217,
+   "stalled_ms": 4019,
+   "window_ms": 5222,
+   "release_to_redraw_ms": 1110,
+   "inputs": 43,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 0,
+   "build": "head-again",
+   "target": 153,
+   "visible": "visible",
+   "frames": 114,
+   "longest_gap_ms": 283,
+   "stalled_ms": 4334,
+   "window_ms": 5380,
+   "release_to_redraw_ms": 1236,
+   "inputs": 44,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 0,
+   "build": "coalesce",
+   "target": 153,
+   "visible": "visible",
+   "frames": 107,
+   "longest_gap_ms": 300,
+   "stalled_ms": 2753,
+   "window_ms": 4122,
+   "release_to_redraw_ms": 1301,
+   "inputs": 41,
+   "repaints_sent": 26,
+   "repaints_coalesced": 15
+  },
+  {
+   "round": 1,
+   "build": "head",
+   "target": 394,
+   "visible": "visible",
+   "frames": 124,
+   "longest_gap_ms": 316,
+   "stalled_ms": 4485,
+   "window_ms": 5686,
+   "release_to_redraw_ms": 1213,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 1,
+   "build": "coalesce",
+   "target": 394,
+   "visible": "visible",
+   "frames": 118,
+   "longest_gap_ms": 217,
+   "stalled_ms": 2223,
+   "window_ms": 3888,
+   "release_to_redraw_ms": 1056,
+   "inputs": 46,
+   "repaints_sent": 25,
+   "repaints_coalesced": 21
+  },
+  {
+   "round": 1,
+   "build": "head-again",
+   "target": 394,
+   "visible": "visible",
+   "frames": 126,
+   "longest_gap_ms": 250,
+   "stalled_ms": 4216,
+   "window_ms": 5442,
+   "release_to_redraw_ms": 1298,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 2,
+   "build": "coalesce",
+   "target": 159,
+   "visible": "visible",
+   "frames": 106,
+   "longest_gap_ms": 183,
+   "stalled_ms": 2567,
+   "window_ms": 3872,
+   "release_to_redraw_ms": 1037,
+   "inputs": 41,
+   "repaints_sent": 26,
+   "repaints_coalesced": 15
+  },
+  {
+   "round": 2,
+   "build": "head",
+   "target": 159,
+   "visible": "visible",
+   "frames": 118,
+   "longest_gap_ms": 300,
+   "stalled_ms": 3934,
+   "window_ms": 5089,
+   "release_to_redraw_ms": 1137,
+   "inputs": 41,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 2,
+   "build": "head-again",
+   "target": 159,
+   "visible": "visible",
+   "frames": 119,
+   "longest_gap_ms": 366,
+   "stalled_ms": 4619,
+   "window_ms": 5772,
+   "release_to_redraw_ms": 1360,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 3,
+   "build": "coalesce",
+   "target": 388,
+   "visible": "visible",
+   "frames": 119,
+   "longest_gap_ms": 283,
+   "stalled_ms": 2517,
+   "window_ms": 4059,
+   "release_to_redraw_ms": 1124,
+   "inputs": 42,
+   "repaints_sent": 25,
+   "repaints_coalesced": 17
+  },
+  {
+   "round": 3,
+   "build": "head-again",
+   "target": 388,
+   "visible": "visible",
+   "frames": 134,
+   "longest_gap_ms": 300,
+   "stalled_ms": 4032,
+   "window_ms": 5400,
+   "release_to_redraw_ms": 1263,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 3,
+   "build": "head",
+   "target": 388,
+   "visible": "visible",
+   "frames": 144,
+   "longest_gap_ms": 267,
+   "stalled_ms": 4133,
+   "window_ms": 5773,
+   "release_to_redraw_ms": 1121,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 4,
+   "build": "head-again",
+   "target": 165,
+   "visible": "visible",
+   "frames": 118,
+   "longest_gap_ms": 266,
+   "stalled_ms": 3635,
+   "window_ms": 4785,
+   "release_to_redraw_ms": 1067,
+   "inputs": 42,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 4,
+   "build": "coalesce",
+   "target": 165,
+   "visible": "visible",
+   "frames": 105,
+   "longest_gap_ms": 200,
+   "stalled_ms": 1899,
+   "window_ms": 3303,
+   "release_to_redraw_ms": 1031,
+   "inputs": 41,
+   "repaints_sent": 24,
+   "repaints_coalesced": 17
+  },
+  {
+   "round": 4,
+   "build": "head",
+   "target": 165,
+   "visible": "visible",
+   "frames": 125,
+   "longest_gap_ms": 200,
+   "stalled_ms": 4018,
+   "window_ms": 5230,
+   "release_to_redraw_ms": 1074,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 5,
+   "build": "head-again",
+   "target": 382,
+   "visible": "visible",
+   "frames": 142,
+   "longest_gap_ms": 284,
+   "stalled_ms": 4116,
+   "window_ms": 5631,
+   "release_to_redraw_ms": 1142,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 5,
+   "build": "head",
+   "target": 382,
+   "visible": "visible",
+   "frames": 135,
+   "longest_gap_ms": 266,
+   "stalled_ms": 3866,
+   "window_ms": 5242,
+   "release_to_redraw_ms": 1073,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 5,
+   "build": "coalesce",
+   "target": 382,
+   "visible": "visible",
+   "frames": 103,
+   "longest_gap_ms": 234,
+   "stalled_ms": 2033,
+   "window_ms": 3637,
+   "release_to_redraw_ms": 1101,
+   "inputs": 46,
+   "repaints_sent": 23,
+   "repaints_coalesced": 23
+  },
+  {
+   "round": 6,
+   "build": "head",
+   "target": 171,
+   "visible": "visible",
+   "frames": 128,
+   "longest_gap_ms": 234,
+   "stalled_ms": 3936,
+   "window_ms": 5278,
+   "release_to_redraw_ms": 1124,
+   "inputs": 43,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 6,
+   "build": "head-again",
+   "target": 171,
+   "visible": "visible",
+   "frames": 121,
+   "longest_gap_ms": 234,
+   "stalled_ms": 3922,
+   "window_ms": 5163,
+   "release_to_redraw_ms": 1209,
+   "inputs": 42,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 6,
+   "build": "coalesce",
+   "target": 171,
+   "visible": "visible",
+   "frames": 109,
+   "longest_gap_ms": 201,
+   "stalled_ms": 1969,
+   "window_ms": 3453,
+   "release_to_redraw_ms": 1023,
+   "inputs": 40,
+   "repaints_sent": 24,
+   "repaints_coalesced": 16
+  },
+  {
+   "round": 7,
+   "build": "head",
+   "target": 376,
+   "visible": "visible",
+   "frames": 136,
+   "longest_gap_ms": 250,
+   "stalled_ms": 4050,
+   "window_ms": 5444,
+   "release_to_redraw_ms": 1064,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 7,
+   "build": "coalesce",
+   "target": 376,
+   "visible": "visible",
+   "frames": 106,
+   "longest_gap_ms": 233,
+   "stalled_ms": 2686,
+   "window_ms": 4051,
+   "release_to_redraw_ms": 1332,
+   "inputs": 46,
+   "repaints_sent": 25,
+   "repaints_coalesced": 21
+  },
+  {
+   "round": 7,
+   "build": "head-again",
+   "target": 376,
+   "visible": "visible",
+   "frames": 130,
+   "longest_gap_ms": 233,
+   "stalled_ms": 4398,
+   "window_ms": 5720,
+   "release_to_redraw_ms": 1051,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 8,
+   "build": "coalesce",
+   "target": 177,
+   "visible": "visible",
+   "frames": 103,
+   "longest_gap_ms": 250,
+   "stalled_ms": 2166,
+   "window_ms": 3467,
+   "release_to_redraw_ms": 1037,
+   "inputs": 37,
+   "repaints_sent": 23,
+   "repaints_coalesced": 14
+  },
+  {
+   "round": 8,
+   "build": "head",
+   "target": 177,
+   "visible": "visible",
+   "frames": 111,
+   "longest_gap_ms": 199,
+   "stalled_ms": 3366,
+   "window_ms": 4471,
+   "release_to_redraw_ms": 1051,
+   "inputs": 39,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 8,
+   "build": "head-again",
+   "target": 177,
+   "visible": "visible",
+   "frames": 118,
+   "longest_gap_ms": 233,
+   "stalled_ms": 3648,
+   "window_ms": 4840,
+   "release_to_redraw_ms": 1019,
+   "inputs": 43,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 9,
+   "build": "coalesce",
+   "target": 370,
+   "visible": "visible",
+   "frames": 125,
+   "longest_gap_ms": 433,
+   "stalled_ms": 1985,
+   "window_ms": 3950,
+   "release_to_redraw_ms": 1617,
+   "inputs": 45,
+   "repaints_sent": 23,
+   "repaints_coalesced": 22
+  },
+  {
+   "round": 9,
+   "build": "head-again",
+   "target": 370,
+   "visible": "visible",
+   "frames": 149,
+   "longest_gap_ms": 517,
+   "stalled_ms": 4518,
+   "window_ms": 6171,
+   "release_to_redraw_ms": 1805,
+   "inputs": 44,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 9,
+   "build": "head",
+   "target": 370,
+   "visible": "visible",
+   "frames": 153,
+   "longest_gap_ms": 500,
+   "stalled_ms": 5002,
+   "window_ms": 6720,
+   "release_to_redraw_ms": 1753,
+   "inputs": 43,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  }
+ ],
+ "status": {
+  "head": {
+   "bundle": "2026-10-15 10:00:08",
+   "head": "032fe3aca6 The newest undo and redo entries stay whole",
+   "stale_sources": [],
+   "branch": "integration/livelits-modular-editors",
+   "worktree": "hazel-livelits-modular",
+   "port": 8341,
+   "stale": 0
+  },
+  "head-again": {
+   "bundle": "2026-10-15 10:00:08",
+   "head": "032fe3aca6 The newest undo and redo entries stay whole",
+   "stale_sources": [],
+   "branch": "integration/livelits-modular-editors",
+   "worktree": "hazel-livelits-modular",
+   "port": 8341,
+   "stale": 0
+  },
+  "coalesce": {
+   "bundle": "2026-10-15 21:31:17",
+   "head": "2db6ee4c30 MEASURE (^ticket(91), not for pushing): count repaints sent and coalesced",
+   "stale_sources": [],
+   "branch": "perf/2635-coalesce-drag-repaint",
+   "worktree": "hazel-ab-coal",
+   "port": 8351,
+   "stale": 0
+  }
+ },
+ "summary": {
+  "head": {
+   "stalled_ms": {
+    "median": 4018.5,
+    "min": 3366,
+    "max": 5002
+   },
+   "longest_gap_ms": {
+    "median": 258.0,
+    "min": 199,
+    "max": 500
+   },
+   "release_to_redraw_ms": {
+    "median": 1115.5,
+    "min": 1051,
+    "max": 1753
+   },
+   "inputs": {
+    "median": 44.0,
+    "min": 39,
+    "max": 46
+   }
+  },
+  "head-again": {
+   "stalled_ms": {
+    "median": 4166.0,
+    "min": 3635,
+    "max": 4619
+   },
+   "longest_gap_ms": {
+    "median": 274.5,
+    "min": 233,
+    "max": 517
+   },
+   "release_to_redraw_ms": {
+    "median": 1222.5,
+    "min": 1019,
+    "max": 1805
+   },
+   "inputs": {
+    "median": 44.5,
+    "min": 42,
+    "max": 46
+   }
+  },
+  "coalesce": {
+   "stalled_ms": {
+    "median": 2194.5,
+    "min": 1899,
+    "max": 2753
+   },
+   "longest_gap_ms": {
+    "median": 233.5,
+    "min": 183,
+    "max": 433
+   },
+   "release_to_redraw_ms": {
+    "median": 1078.5,
+    "min": 1023,
+    "max": 1617
+   },
+   "inputs": {
+    "median": 41.5,
+    "min": 37,
+    "max": 46
+   }
+  }
+ },
+ "paired": {
+  "head-again - head: stalled_ms": {
+   "median": 118.0,
+   "rounds": 10,
+   "lower": 5,
+   "higher": 5,
+   "diffs": [
+    315,
+    -269,
+    685,
+    -101,
+    -383,
+    250,
+    -14,
+    348,
+    282,
+    -484
+   ]
+  },
+  "head-again - head: release_to_redraw_ms": {
+   "median": 77.0,
+   "rounds": 10,
+   "lower": 3,
+   "higher": 7,
+   "diffs": [
+    126,
+    85,
+    223,
+    142,
+    -7,
+    69,
+    85,
+    -13,
+    -32,
+    52
+   ]
+  },
+  "coalesce - head: stalled_ms": {
+   "median": -1724.5,
+   "rounds": 10,
+   "lower": 10,
+   "higher": 0,
+   "diffs": [
+    -1266,
+    -2262,
+    -1367,
+    -1616,
+    -2119,
+    -1833,
+    -1967,
+    -1364,
+    -1200,
+    -3017
+   ]
+  },
+  "coalesce - head: release_to_redraw_ms": {
+   "median": -28.5,
+   "rounds": 10,
+   "lower": 6,
+   "higher": 4,
+   "diffs": [
+    191,
+    -157,
+    -100,
+    3,
+    -43,
+    28,
+    -101,
+    268,
+    -14,
+    -136
+   ]
+  }
+ }
+}

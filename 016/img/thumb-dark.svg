@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 300" width="450" height="300" font-family="system-ui, 'DejaVu Sans', sans-serif" font-size="13">
+<style>
+  .ink { fill: #1f2328; } .muted { fill: #5b6470; } .bad { fill: #b91c1c; } .good { fill: #15803d; } .aa { fill: #6b7280; } .axis { stroke: #9aa1ab; } .zero { stroke: #1f2328; }
+    .ink { fill: #e8e6e3; } .muted { fill: #a2a9b3; } .bad { fill: #f87171; } .good { fill: #4ade80; } .aa { fill: #9ca3af; } .axis { stroke: #6b7280; } .zero { stroke: #e8e6e3; }
+  
+</style>
+<text x="225" y="26" text-anchor="middle" class="ink" font-weight="700" font-size="15">frozen during one 1.5 s drag, side by side</text>
+<text x="40" y="50" class="ink" font-weight="600">#2635’s head</text>
+<rect x="40" y="57" width="297.4" height="20" rx="3" class="bad"/>
+<text x="345.4" y="72" class="ink" font-weight="700">4.0 s</text>
+<text x="40" y="96" class="ink" font-weight="600">newest preview only</text>
+<rect x="40" y="103" width="162.4" height="20" rx="3" class="good"/>
+<text x="210.4" y="118" class="ink" font-weight="700">2.2 s</text>
+<text x="40" y="170" class="ink" font-weight="600">each round, minus the head</text>
+<line x1="367.8" y1="180" x2="367.8" y2="248" class="zero" stroke-dasharray="3 3"/>
+<circle cx="387.4" cy="196" r="5" class="aa" opacity="0.8"/>
+<circle cx="351.1" cy="196" r="5" class="aa" opacity="0.8"/>
+<circle cx="410.4" cy="196" r="5" class="aa" opacity="0.8"/>
+<circle cx="361.5" cy="196" r="5" class="aa" opacity="0.8"/>
+<circle cx="344.0" cy="196" r="5" class="aa" opacity="0.8"/>
+<circle cx="383.3" cy="196" r="5" class="aa" opacity="0.8"/>
+<circle cx="366.9" cy="196" r="5" class="aa" opacity="0.8"/>
+<circle cx="389.4" cy="196" r="5" class="aa" opacity="0.8"/>
+<circle cx="385.4" cy="196" r="5" class="aa" opacity="0.8"/>
+<circle cx="337.7" cy="196" r="5" class="aa" opacity="0.8"/>
+<text x="40" y="200" class="muted" font-size="12">the head again</text>
+<circle cx="289.0" cy="226" r="5" class="good" opacity="0.8"/>
+<circle cx="227.0" cy="226" r="5" class="good" opacity="0.8"/>
+<circle cx="282.7" cy="226" r="5" class="good" opacity="0.8"/>
+<circle cx="267.2" cy="226" r="5" class="good" opacity="0.8"/>
+<circle cx="235.9" cy="226" r="5" class="good" opacity="0.8"/>
+<circle cx="253.8" cy="226" r="5" class="good" opacity="0.8"/>
+<circle cx="245.4" cy="226" r="5" class="good" opacity="0.8"/>
+<circle cx="282.9" cy="226" r="5" class="good" opacity="0.8"/>
+<circle cx="293.1" cy="226" r="5" class="good" opacity="0.8"/>
+<circle cx="180.0" cy="226" r="5" class="good" opacity="0.8"/>
+<text x="40" y="230" class="muted" font-size="12">the fix</text>
+<text x="181.1" y="266" text-anchor="middle" class="muted" font-size="11">-3 s</text>
+<text x="243.3" y="266" text-anchor="middle" class="muted" font-size="11">-2 s</text>
+<text x="305.6" y="266" text-anchor="middle" class="muted" font-size="11">-1 s</text>
+<text x="367.8" y="266" text-anchor="middle" class="muted" font-size="11">+0 s</text>
+<text x="430.0" y="266" text-anchor="middle" class="muted" font-size="11">+1 s</text>
+<text x="225" y="290" text-anchor="middle" class="muted" font-size="12">lower in 10 of 10 rounds; the head against itself, 5 and 5</text>
+</svg>

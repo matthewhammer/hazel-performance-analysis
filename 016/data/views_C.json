@@ -1,0 +1,644 @@
+{
+ "setup": "C",
+ "rounds": 10,
+ "builds": {
+  "head": "http://localhost:8341",
+  "head-again": "http://127.0.0.1:8341",
+  "views-in-worker": "http://localhost:8352"
+ },
+ "drags": [
+  {
+   "round": -1,
+   "build": "views-in-worker",
+   "target": 400,
+   "visible": "visible",
+   "frames": 141,
+   "longest_gap_ms": 267,
+   "stalled_ms": 4433,
+   "window_ms": 5890,
+   "release_to_redraw_ms": 1213,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": -1,
+   "build": "head-again",
+   "target": 400,
+   "visible": "visible",
+   "frames": 143,
+   "longest_gap_ms": 267,
+   "stalled_ms": 4850,
+   "window_ms": 6358,
+   "release_to_redraw_ms": 1263,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": -1,
+   "build": "head",
+   "target": 400,
+   "visible": "visible",
+   "frames": 131,
+   "longest_gap_ms": 717,
+   "stalled_ms": 5636,
+   "window_ms": 6981,
+   "release_to_redraw_ms": 1087,
+   "inputs": 44,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 0,
+   "build": "head",
+   "target": 153,
+   "visible": "visible",
+   "frames": 125,
+   "longest_gap_ms": 350,
+   "stalled_ms": 5033,
+   "window_ms": 6250,
+   "release_to_redraw_ms": 1083,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 0,
+   "build": "head-again",
+   "target": 153,
+   "visible": "visible",
+   "frames": 112,
+   "longest_gap_ms": 301,
+   "stalled_ms": 3934,
+   "window_ms": 5078,
+   "release_to_redraw_ms": 1294,
+   "inputs": 42,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 0,
+   "build": "views-in-worker",
+   "target": 153,
+   "visible": "visible",
+   "frames": 127,
+   "longest_gap_ms": 250,
+   "stalled_ms": 4131,
+   "window_ms": 5366,
+   "release_to_redraw_ms": 1173,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 1,
+   "build": "head",
+   "target": 394,
+   "visible": "visible",
+   "frames": 126,
+   "longest_gap_ms": 267,
+   "stalled_ms": 4065,
+   "window_ms": 5314,
+   "release_to_redraw_ms": 1072,
+   "inputs": 44,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 1,
+   "build": "views-in-worker",
+   "target": 394,
+   "visible": "visible",
+   "frames": 138,
+   "longest_gap_ms": 266,
+   "stalled_ms": 4253,
+   "window_ms": 5633,
+   "release_to_redraw_ms": 1133,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 1,
+   "build": "head-again",
+   "target": 394,
+   "visible": "visible",
+   "frames": 133,
+   "longest_gap_ms": 251,
+   "stalled_ms": 4517,
+   "window_ms": 5859,
+   "release_to_redraw_ms": 1318,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 2,
+   "build": "views-in-worker",
+   "target": 159,
+   "visible": "visible",
+   "frames": 125,
+   "longest_gap_ms": 200,
+   "stalled_ms": 4004,
+   "window_ms": 5221,
+   "release_to_redraw_ms": 1038,
+   "inputs": 44,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 2,
+   "build": "head",
+   "target": 159,
+   "visible": "visible",
+   "frames": 123,
+   "longest_gap_ms": 251,
+   "stalled_ms": 4002,
+   "window_ms": 5222,
+   "release_to_redraw_ms": 1110,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 2,
+   "build": "head-again",
+   "target": 159,
+   "visible": "visible",
+   "frames": 128,
+   "longest_gap_ms": 666,
+   "stalled_ms": 5400,
+   "window_ms": 6697,
+   "release_to_redraw_ms": 1060,
+   "inputs": 44,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 3,
+   "build": "views-in-worker",
+   "target": 388,
+   "visible": "visible",
+   "frames": 139,
+   "longest_gap_ms": 233,
+   "stalled_ms": 4246,
+   "window_ms": 5702,
+   "release_to_redraw_ms": 1252,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 3,
+   "build": "head-again",
+   "target": 388,
+   "visible": "visible",
+   "frames": 122,
+   "longest_gap_ms": 634,
+   "stalled_ms": 5320,
+   "window_ms": 6549,
+   "release_to_redraw_ms": 1085,
+   "inputs": 43,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 3,
+   "build": "head",
+   "target": 388,
+   "visible": "visible",
+   "frames": 126,
+   "longest_gap_ms": 234,
+   "stalled_ms": 4300,
+   "window_ms": 5649,
+   "release_to_redraw_ms": 1102,
+   "inputs": 43,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 4,
+   "build": "head-again",
+   "target": 165,
+   "visible": "visible",
+   "frames": 113,
+   "longest_gap_ms": 267,
+   "stalled_ms": 3900,
+   "window_ms": 4971,
+   "release_to_redraw_ms": 1027,
+   "inputs": 44,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 4,
+   "build": "views-in-worker",
+   "target": 165,
+   "visible": "visible",
+   "frames": 140,
+   "longest_gap_ms": 267,
+   "stalled_ms": 4451,
+   "window_ms": 5918,
+   "release_to_redraw_ms": 1254,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 4,
+   "build": "head",
+   "target": 165,
+   "visible": "visible",
+   "frames": 122,
+   "longest_gap_ms": 267,
+   "stalled_ms": 4235,
+   "window_ms": 5443,
+   "release_to_redraw_ms": 1167,
+   "inputs": 44,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 5,
+   "build": "head-again",
+   "target": 382,
+   "visible": "visible",
+   "frames": 144,
+   "longest_gap_ms": 234,
+   "stalled_ms": 4318,
+   "window_ms": 5812,
+   "release_to_redraw_ms": 1219,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 5,
+   "build": "head",
+   "target": 382,
+   "visible": "visible",
+   "frames": 134,
+   "longest_gap_ms": 217,
+   "stalled_ms": 4381,
+   "window_ms": 5800,
+   "release_to_redraw_ms": 1227,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 5,
+   "build": "views-in-worker",
+   "target": 382,
+   "visible": "visible",
+   "frames": 127,
+   "longest_gap_ms": 284,
+   "stalled_ms": 3736,
+   "window_ms": 5043,
+   "release_to_redraw_ms": 1040,
+   "inputs": 41,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 6,
+   "build": "head",
+   "target": 171,
+   "visible": "visible",
+   "frames": 128,
+   "longest_gap_ms": 250,
+   "stalled_ms": 4432,
+   "window_ms": 5716,
+   "release_to_redraw_ms": 1236,
+   "inputs": 43,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 6,
+   "build": "head-again",
+   "target": 171,
+   "visible": "visible",
+   "frames": 121,
+   "longest_gap_ms": 300,
+   "stalled_ms": 4550,
+   "window_ms": 5718,
+   "release_to_redraw_ms": 1052,
+   "inputs": 43,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 6,
+   "build": "views-in-worker",
+   "target": 171,
+   "visible": "visible",
+   "frames": 131,
+   "longest_gap_ms": 183,
+   "stalled_ms": 3816,
+   "window_ms": 5117,
+   "release_to_redraw_ms": 1012,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 7,
+   "build": "head",
+   "target": 376,
+   "visible": "visible",
+   "frames": 131,
+   "longest_gap_ms": 250,
+   "stalled_ms": 3782,
+   "window_ms": 5203,
+   "release_to_redraw_ms": 1034,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 7,
+   "build": "views-in-worker",
+   "target": 376,
+   "visible": "visible",
+   "frames": 160,
+   "longest_gap_ms": 200,
+   "stalled_ms": 4150,
+   "window_ms": 5921,
+   "release_to_redraw_ms": 1628,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 7,
+   "build": "head-again",
+   "target": 376,
+   "visible": "visible",
+   "frames": 142,
+   "longest_gap_ms": 250,
+   "stalled_ms": 3999,
+   "window_ms": 5516,
+   "release_to_redraw_ms": 1151,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 8,
+   "build": "views-in-worker",
+   "target": 177,
+   "visible": "visible",
+   "frames": 126,
+   "longest_gap_ms": 151,
+   "stalled_ms": 3901,
+   "window_ms": 5147,
+   "release_to_redraw_ms": 1198,
+   "inputs": 42,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 8,
+   "build": "head",
+   "target": 177,
+   "visible": "visible",
+   "frames": 110,
+   "longest_gap_ms": 200,
+   "stalled_ms": 3600,
+   "window_ms": 4668,
+   "release_to_redraw_ms": 993,
+   "inputs": 39,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 8,
+   "build": "head-again",
+   "target": 177,
+   "visible": "visible",
+   "frames": 121,
+   "longest_gap_ms": 217,
+   "stalled_ms": 3901,
+   "window_ms": 5077,
+   "release_to_redraw_ms": 996,
+   "inputs": 44,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 9,
+   "build": "views-in-worker",
+   "target": 370,
+   "visible": "visible",
+   "frames": 134,
+   "longest_gap_ms": 216,
+   "stalled_ms": 4082,
+   "window_ms": 5437,
+   "release_to_redraw_ms": 1084,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 9,
+   "build": "head-again",
+   "target": 370,
+   "visible": "visible",
+   "frames": 134,
+   "longest_gap_ms": 500,
+   "stalled_ms": 5482,
+   "window_ms": 6758,
+   "release_to_redraw_ms": 1743,
+   "inputs": 45,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  },
+  {
+   "round": 9,
+   "build": "head",
+   "target": 370,
+   "visible": "visible",
+   "frames": 145,
+   "longest_gap_ms": 434,
+   "stalled_ms": 4267,
+   "window_ms": 5813,
+   "release_to_redraw_ms": 1636,
+   "inputs": 46,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0
+  }
+ ],
+ "status": {
+  "head": {
+   "bundle": "2026-10-15 10:00:08",
+   "head": "032fe3aca6 The newest undo and redo entries stay whole",
+   "stale_sources": [],
+   "branch": "integration/livelits-modular-editors",
+   "worktree": "hazel-livelits-modular",
+   "port": 8341,
+   "stale": 0
+  },
+  "head-again": {
+   "bundle": "2026-10-15 10:00:08",
+   "head": "032fe3aca6 The newest undo and redo entries stay whole",
+   "stale_sources": [],
+   "branch": "integration/livelits-modular-editors",
+   "worktree": "hazel-livelits-modular",
+   "port": 8341,
+   "stale": 0
+  },
+  "views-in-worker": {
+   "bundle": "2026-10-15 21:36:18",
+   "head": "4c9331d13c EXPERIMENT 3: whole programs fold livelit views into the worker's run too",
+   "stale_sources": [],
+   "branch": "exp/2635-views-in-worker-032fe",
+   "worktree": "hazel-ab-views",
+   "port": 8352,
+   "stale": 0
+  }
+ },
+ "summary": {
+  "head": {
+   "stalled_ms": {
+    "median": 4251.0,
+    "min": 3600,
+    "max": 5033
+   },
+   "longest_gap_ms": {
+    "median": 250.5,
+    "min": 200,
+    "max": 434
+   },
+   "release_to_redraw_ms": {
+    "median": 1106.0,
+    "min": 993,
+    "max": 1636
+   },
+   "inputs": {
+    "median": 44.5,
+    "min": 39,
+    "max": 46
+   }
+  },
+  "head-again": {
+   "stalled_ms": {
+    "median": 4417.5,
+    "min": 3900,
+    "max": 5482
+   },
+   "longest_gap_ms": {
+    "median": 283.5,
+    "min": 217,
+    "max": 666
+   },
+   "release_to_redraw_ms": {
+    "median": 1118.0,
+    "min": 996,
+    "max": 1743
+   },
+   "inputs": {
+    "median": 44.0,
+    "min": 42,
+    "max": 46
+   }
+  },
+  "views-in-worker": {
+   "stalled_ms": {
+    "median": 4106.5,
+    "min": 3736,
+    "max": 4451
+   },
+   "longest_gap_ms": {
+    "median": 224.5,
+    "min": 151,
+    "max": 284
+   },
+   "release_to_redraw_ms": {
+    "median": 1153.0,
+    "min": 1012,
+    "max": 1628
+   },
+   "inputs": {
+    "median": 45.0,
+    "min": 41,
+    "max": 46
+   }
+  }
+ },
+ "paired": {
+  "head-again - head: stalled_ms": {
+   "median": 259.0,
+   "rounds": 10,
+   "lower": 3,
+   "higher": 7,
+   "diffs": [
+    -1099,
+    452,
+    1398,
+    1020,
+    -335,
+    -63,
+    118,
+    217,
+    301,
+    1215
+   ]
+  },
+  "head-again - head: release_to_redraw_ms": {
+   "median": -2.5,
+   "rounds": 10,
+   "lower": 5,
+   "higher": 5,
+   "diffs": [
+    211,
+    246,
+    -50,
+    -17,
+    -140,
+    -8,
+    -184,
+    117,
+    3,
+    107
+   ]
+  },
+  "views-in-worker - head: stalled_ms": {
+   "median": -26.0,
+   "rounds": 10,
+   "lower": 5,
+   "higher": 5,
+   "diffs": [
+    -902,
+    188,
+    2,
+    -54,
+    216,
+    -645,
+    -616,
+    368,
+    301,
+    -185
+   ]
+  },
+  "views-in-worker - head: release_to_redraw_ms": {
+   "median": 74.0,
+   "rounds": 10,
+   "lower": 4,
+   "higher": 6,
+   "diffs": [
+    90,
+    61,
+    -72,
+    150,
+    87,
+    -187,
+    -224,
+    594,
+    205,
+    -552
+   ]
+  }
+ }
+}
