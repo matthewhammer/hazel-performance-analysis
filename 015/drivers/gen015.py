@@ -158,6 +158,34 @@ def bands(aria, w=860):
     out.append(f'<text x="{w / 2}" y="{h - 8}" text-anchor="middle" class="cv">dots: measured today (Dress Up: its cost per change plus one frame); dashed: a guess, argued in the section below, not a measurement</text></svg>')
     return "".join(out)
 
+def shapebars(aria, w=860):
+    """(update, later on 2026-10-15) shapes per picture, log scale, each row with what its drag did"""
+    import math
+    sh = J("shapes.json")
+    rows = [("Hazel: Full Body", "one picture of 167 items", sh["hazel_fullbody"]["shapes"], 0, f"froze {med(hc, 'stalled_ms') / 1000:.1f} s in a drag", "bad"),
+            ("Hazel: Kids' Choice", "a face", sh["hazel_kids"]["shapes"], 0, f"froze {med(hk, 'stalled_ms') / 1000:.2f} s", "warn"),
+            ("Hazel: the Scenes slide", "the largest in the series; not timed here (report 010)", 570, 0, "", "muted"),
+            ("Dress Up: the friend alone", "the same friend as Full Body", sh["dress_none"]["shapes"], sh["dress_none"]["anims"], "never froze", "good"),
+            ("Dress Up: the forest", "the friend in a place", sh["dress_forest"]["shapes"], sh["dress_forest"]["anims"], "never froze", "good"),
+            ("Dress Up: the witch's woods", "its busiest place", sh["dress_witch"]["shapes"], sh["dress_witch"]["anims"], "never froze", "good")]
+    lo, hi = math.log10(20), math.log10(3000)
+    x0, x1 = 300, w - 190
+    sc = lambda v: x0 + (x1 - x0) * (math.log10(v) - lo) / (hi - lo)
+    h = 56 + 54 * len(rows) + 30
+    out = [f'<svg viewBox="0 0 {w} {h}" role="img" class="chart" aria-label="{esc(aria)}">',
+           f'<text x="{w / 2}" y="20" text-anchor="middle" class="ct">How much each measured picture draws: its shapes (log scale)</text>']
+    for t in (20, 50, 100, 200, 500, 1000, 2000):
+        out.append(f'<line x1="{sc(t):.1f}" y1="34" x2="{sc(t):.1f}" y2="{h - 30}" class="grid"/><text x="{sc(t):.1f}" y="{h - 14}" text-anchor="middle" class="cv">{t:,}</text>')
+    for i, (lab, sub, v, an, did, cls) in enumerate(rows):
+        y = 46 + 54 * i
+        out.append(f'<text x="{x0 - 10}" y="{y + 13}" text-anchor="end" class="cl" font-weight="600">{esc(lab)}</text>'
+                   f'<text x="{x0 - 10}" y="{y + 28}" text-anchor="end" class="cv" font-size="11">{esc(sub)}</text>'
+                   f'<rect x="{sc(20):.1f}" y="{y}" width="{sc(v) - sc(20):.1f}" height="24" rx="3" style="fill: var(--{cls})"{" opacity=\"0.45\"" if cls == "muted" else ""}/>'
+                   f'<text x="{sc(v) + 6:.1f}" y="{y + 16}" class="cl" font-weight="600">{v:,}{f" · {an} animated" if an else ""}</text>'
+                   + (f'<text x="{sc(v) + 6:.1f}" y="{y + 31}" class="cv" font-size="11">{esc(did)}</text>' if did else ""))
+    out.append("</svg>")
+    return "".join(out)
+
 # ---------- numbers ----------
 dress_change = statistics.median(dc["times"]["none"] + dc["times"]["forest"] + dc["times"]["witch"])
 prof = {"fullbody_C_main_js_ms": 1010, "fullbody_B_main_js_ms": 1251, "kids_main_js_ms": 225,
@@ -191,6 +219,9 @@ fig_change = logbars("One change, start to finish, in JavaScript on the page (lo
     f"Main-thread JavaScript per change, log scale: Dress Up {dress_change:.1f} ms, Kids' Choice 225 ms, Full Body 1,010 ms whole program and 1,251 ms in UX mode; one frame is 16.7 ms.")
 fig_tl = timeline("Three lanes of frame ticks over about five seconds. Dress Up's ticks are evenly packed through the drag and the picture is final as the finger lifts. Kids' Choice's ticks have small gaps and the picture follows 0.1 s after the finger lifts. Full Body's ticks are broken by long gaps of up to half a second, and the picture is final about a second after the finger lifts.")
 fig_hist = history(f"Then and now, log scale: Polygons click 11 s then 0.2 s; Kids' Choice release 4.6 s then {med(hk, 'release_to_redraw_ms') / 1000:.2f} s; Full Body release 8.6 s on the full livelits branch then {med(hc, 'release_to_redraw_ms') / 1000:.2f} s on the modular one.")
+shapes = J("shapes.json")
+dress_size = {"version": "0.0.48", "lines": 12647, "places": 24, "settings": 1370, "controls": 402, "tunes": 28}
+fig_shapes = shapebars(f"Shapes per picture, log scale: Hazel's Full Body 49 (froze {med(hc, 'stalled_ms') / 1000:.1f} s in a drag), Kids' Choice 93 (froze {med(hk, 'stalled_ms') / 1000:.2f} s), the Scenes slide 570 (not timed here); Dress Up's friend alone 46, the forest 457 with 16 animated, the witch's woods 1,452 with 463 animated, each never froze.")
 fig_bands = bands(f"Bands of feel from every frame to waiting, on a log scale of milliseconds. Today: Dress Up about 18 ms, Kids' Choice {med(hk, 'release_to_redraw_ms'):.0f} ms, Full Body {med(hc, 'release_to_redraw_ms'):.0f} ms. Guessed for September 2027, dashed: Kids' Choice 30 to 60 ms, Full Body 100 to 300 ms.")
 
 def row(name, sub, d, extra=""):
@@ -228,6 +259,15 @@ data = {
                 {"what": "Full Body: release to redraw", "then_ms": 8600, "then": "#2597, ^report(8)", "now_ms": med(hc, "release_to_redraw_ms"), "now": "#2635, this report"}],
     "speculation": {"kids_sep_2027_ms": [30, 60], "fullbody_sep_2027_ms": [100, 300], "note": "guesses, argued in the report's section #bridge; not measurements"},
     "files": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/015/data",
+    "update_2026_10_15_shapes": {
+        "what": "shapes in each measured picture: its SVG shape elements (path, rect, circle, ellipse, line, polyline, polygon, text, use, image), its SMIL animations, its groups and all its elements, counted after the set-up in the same browser and builds as the drags",
+        "where": {"dress_up": "the game's #pic, Dress Up 0.0.48, default friend, music muted", "hazel": "the slide's largest picture (more than 40 elements), #2635 at 032fe3aca6, after load"},
+        "counts": {k: {kk: v[kk] for kk in ("shapes", "anims", "groups", "all")} for k, v in shapes.items()},
+        "kinds": {k: v["kinds"] for k, v in shapes.items()},
+        "hazel_scenes_slide_shapes": {"value": 570, "source": "^report(10), counted from its picture value; not timed in this report"},
+        "dress_up_size": dress_size,
+        "full_body_items": 167,
+        "file": "015/data/shapes.json"},
 }
 
 page = f"""<!doctype html>
@@ -258,6 +298,15 @@ page = f"""<!doctype html>
   <li><b>Most of the distance has already been covered.</b> Full Body's release went from 8.6 s on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> to {med(hc, 'release_to_redraw_ms') / 1000:.1f} s on #2635, Kids' Choice's from 4.6 to {med(hk, 'release_to_redraw_ms') / 1000:.2f} s, and a Polygons click from about 11 s to 0.2 s, all within the last week (<a href="#closed">Figure 5</a>).</li>
   <li><b>A guess for September 2027: Kids'-sized livelits immediate, Full Body a short lag.</b> The fixes in hand and the measured shares of where a change's time goes point to small livelits at 30 to 60 ms per change, and Full Body at 100 to 300 ms: a drag that follows the finger at a few to ten pictures a second, not every frame. Every frame for a program of Full Body's size would take an evaluator several times faster per step, which this guess does not assume. This is speculation, argued step by step <a href="#bridge">below</a> (<a href="#bridge">Figure 6</a>).</li>
 </ol>
+</div>
+
+<div class="update" id="update-box">
+<p><b>Update, later on 2026-10-15: not like for like.</b> The drags above set Dress Up beside Hazel, but the two do not draw the same amount. Counting each measured picture's shapes (<a href="#update">below</a>, Figure 7):</p>
+<ul>
+<li><b>Only one pair is like for like: the friend alone.</b> Dress Up's friend with no place is {shapes["dress_none"]["shapes"]} shapes; Hazel's Full Body, the same friend, is {shapes["hazel_fullbody"]["shapes"]}. On that pair Dress Up never froze, and Full Body froze {med(hc, 'stalled_ms') / 1000:.1f} s in a 1.5-second drag.</li>
+<li><b>Dress Up's places draw up to 30 times as much, and move.</b> The forest is {shapes["dress_forest"]["shapes"]:,} shapes, {shapes["dress_forest"]["anims"]} of them animated; the witch's woods {shapes["dress_witch"]["shapes"]:,} shapes and {shapes["dress_witch"]["anims"]} animations, about {round(shapes["dress_witch"]["shapes"] / shapes["hazel_fullbody"]["shapes"])} times Full Body's picture. Dress Up never froze in either. The largest picture Hazel has drawn in this series, the Scenes slide, has 570 shapes (report 010).</li>
+<li><b>And the game is far bigger than any slide.</b> Dress Up 0.0.48 was {dress_size["lines"]:,} lines, {dress_size["places"]} places, {dress_size["settings"]:,} settings behind {dress_size["controls"]} controls, and {dress_size["tunes"]} tunes synthesized in the page; Full Body is one picture of 167 items. So the comparison above is Hazel at the size it can handle today against Dress Up at that size: the gap in the short answers is the gap at equal size, and the game itself has grown well past what Hazel can draw.</li>
+</ul>
 </div>
 
 <div class="glance">
@@ -306,6 +355,17 @@ page = f"""<!doctype html>
   <li>Make the same drags on an iPad, in Safari, where M plays: the kids' own device sets the bar.</li>
   <li>Run this report's drags again every month, on #2635's head and the newest Dress Up, and add a dated update with the new figures.</li>
 </ol>
+
+<h2 id="update">Update, later on 2026-10-15: how much each picture draws</h2>
+<figure class="fig" id="fig-shapes">{fig_shapes}<figcaption><b>Figure 7.</b> Each measured picture's shapes, log scale, with what its drag did. Hazel's pictures are the friend (Full Body) and a face (Kids' Choice); the Scenes slide, the largest Hazel picture in this series, is shown for scale, not timed here. Dress Up's friend alone is the like-for-like pair with Full Body; its places draw 10 to 30 times as much.</figcaption></figure>
+<div class="scroll"><table><tr><th>Picture</th><th>Shapes</th><th>Animated (SMIL)</th><th>Groups</th><th>All elements</th><th>In a 1.5-second drag</th></tr>
+<tr><td>Hazel: Full Body</td><td class="n">{shapes["hazel_fullbody"]["shapes"]}</td><td class="n">{shapes["hazel_fullbody"]["anims"]}</td><td class="n">{shapes["hazel_fullbody"]["groups"]}</td><td class="n">{shapes["hazel_fullbody"]["all"]}</td><td>froze {med(hc, 'stalled_ms') / 1000:.1f} s (whole program)</td></tr>
+<tr><td>Hazel: Kids' Choice</td><td class="n">{shapes["hazel_kids"]["shapes"]}</td><td class="n">{shapes["hazel_kids"]["anims"]}</td><td class="n">{shapes["hazel_kids"]["groups"]}</td><td class="n">{shapes["hazel_kids"]["all"]}</td><td>froze {med(hk, 'stalled_ms') / 1000:.2f} s</td></tr>
+<tr><td>Dress Up: the friend alone</td><td class="n">{shapes["dress_none"]["shapes"]}</td><td class="n">{shapes["dress_none"]["anims"]}</td><td class="n">{shapes["dress_none"]["groups"]}</td><td class="n">{shapes["dress_none"]["all"]}</td><td>never froze</td></tr>
+<tr><td>Dress Up: the forest</td><td class="n">{shapes["dress_forest"]["shapes"]}</td><td class="n">{shapes["dress_forest"]["anims"]}</td><td class="n">{shapes["dress_forest"]["groups"]}</td><td class="n">{shapes["dress_forest"]["all"]}</td><td>never froze</td></tr>
+<tr><td>Dress Up: the witch's woods</td><td class="n">{shapes["dress_witch"]["shapes"]:,}</td><td class="n">{shapes["dress_witch"]["anims"]}</td><td class="n">{shapes["dress_witch"]["groups"]}</td><td class="n">{shapes["dress_witch"]["all"]:,}</td><td>never froze (longest gap 33 ms)</td></tr>
+</table></div>
+<p>Shapes are the picture's drawing elements (paths, rectangles, circles, ellipses, lines, polylines, polygons, text and uses of a shared drawing), counted in the same browser and on the same builds as the drags: Dress Up 0.0.48's picture after each set-up, and the largest picture on each Hazel slide after it loaded. A shape count is a rough measure of a picture's complexity, not of its cost: Dress Up's witch's woods also animates 463 of its parts, every frame, which is the heavier part of drawing it (0.0.55 made those animations cheaper). The counts are in this page's data and in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/015/data"><code>015/data/shapes.json</code></a>.</p>
 
 <h2 id="method">How this was put together</h2>
 <ul>

@@ -1,0 +1,92 @@
+{
+ "dress_none": {
+  "shapes": 46,
+  "anims": 0,
+  "groups": 22,
+  "all": 77,
+  "kinds": {
+   "defs": 3,
+   "g": 22,
+   "ellipse": 1,
+   "polygon": 9,
+   "line": 20,
+   "rect": 4,
+   "clipPath": 4,
+   "path": 6,
+   "circle": 6,
+   "mask": 2
+  }
+ },
+ "dress_forest": {
+  "shapes": 457,
+  "anims": 16,
+  "groups": 93,
+  "all": 584,
+  "kinds": {
+   "defs": 6,
+   "g": 93,
+   "linearGradient": 2,
+   "stop": 4,
+   "rect": 7,
+   "path": 26,
+   "polygon": 183,
+   "ellipse": 7,
+   "use": 52,
+   "animate": 7,
+   "circle": 162,
+   "animateMotion": 3,
+   "animateTransform": 6,
+   "line": 20,
+   "clipPath": 4,
+   "mask": 2
+  }
+ },
+ "dress_witch": {
+  "shapes": 1452,
+  "anims": 463,
+  "groups": 55,
+  "all": 1983,
+  "kinds": {
+   "defs": 4,
+   "g": 55,
+   "linearGradient": 1,
+   "stop": 2,
+   "rect": 15,
+   "circle": 77,
+   "animateTransform": 4,
+   "path": 1063,
+   "line": 233,
+   "polygon": 55,
+   "animate": 459,
+   "ellipse": 9,
+   "clipPath": 4,
+   "mask": 2
+  }
+ },
+ "hazel_kids": {
+  "shapes": 93,
+  "anims": 0,
+  "groups": 44,
+  "all": 138,
+  "kinds": {
+   "style": 1,
+   "line": 17,
+   "path": 10,
+   "g": 44,
+   "text": 25,
+   "rect": 16,
+   "circle": 20,
+   "polygon": 5
+  }
+ },
+ "hazel_fullbody": {
+  "shapes": 49,
+  "anims": 0,
+  "groups": 0,
+  "all": 49,
+  "kinds": {
+   "polyline": 5,
+   "polygon": 44
+  }
+ }
+}
