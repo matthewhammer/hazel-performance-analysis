@@ -43,6 +43,14 @@
   <script>if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) document.getElementById("dashboard-link").href = "http://localhost:8000/";</script>
   <ol class="issues" reversed>
     <li>
+      <a class="thumb" href="015/"><img class="light" src="015/img/thumb-light.svg" alt="Three rows of frame ticks over one 1.5-second slider drag: Dress Up's packed evenly with no freezes; Kids' Choice's with small gaps, frozen 0.3 s; Full Body's in bursts between long freezes, frozen 2.5 s, its picture final about a second after the finger lifts."><img class="dark" src="015/img/thumb-dark.svg" alt="Three rows of frame ticks over one 1.5-second slider drag: Dress Up's packed evenly with no freezes; Kids' Choice's with small gaps, frozen 0.3 s; Full Body's in bursts between long freezes, frozen 2.5 s, its picture final about a second after the finger lifts."></a>
+      <div>
+      <div class="num"><a href="015/"><code class="ref"><b>^report(</b>15<b>)</b></code></a> · 2026-10-15</div>
+      <div class="title"><a href="015/">Dress Up and its livelits, side by side</a></div>
+      <p class="blurb">The same 1.5-second slider drag in Messed Up Dress Up, the plain-JavaScript game, and in its livelits on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, in one browser. Dress Up never froze and its picture was final as the finger lifted, at about 1.4 ms of JavaScript per change. Kids' Choice froze 0.11 s and was final 0.13 s after; Full Body, the whole friend in Hazel, froze 2.9 s and was final 1.1 s after, at about a second per change. A week of fixes took these from 4.6 and 8.6 s. Then a guess, argued step by step, for September 2027: small livelits immediate, Full Body a short lag.</p>
+      </div>
+    </li>
+    <li>
       <a class="thumb" href="014/"><img class="light" src="014/img/thumb-light.svg" alt="A line rising from 399 MB to 1,787 MB over 15 slider edits on Full Body, about 92 MB per edit, above a flat band for every cache and id-keyed table."><img class="dark" src="014/img/thumb-dark.svg" alt="A line rising from 399 MB to 1,787 MB over 15 slider edits on Full Body, about 92 MB per edit, above a flat band for every cache and id-keyed table."></a>
       <div>
       <div class="num"><a href="014/"><code class="ref"><b>^report(</b>14<b>)</b></code></a> · 2026-10-14</div>
@@ -210,7 +218,7 @@
    number per page load; if GitHub does not answer, what it said when the
    page was built (tools/link_prs.py writes this block). */
 (() => {
-  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 15, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-14T14:42:25Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-14T14:42:33Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-14T14:42:21Z"}}, BUILT = "2026-10-14";
+  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 15, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-16T00:56:38Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-15T14:33:10Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-15T14:18:13Z"}}, BUILT = "2026-10-15";
   const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
   const asked = new Map();
   const ask = key => {

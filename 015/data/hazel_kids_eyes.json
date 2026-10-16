@@ -1,0 +1,150 @@
+{
+ "game": "hazel",
+ "slide": "livelit-playground-emotion-kids-choice",
+ "place": "none",
+ "label": "eye size",
+ "port": 8341,
+ "runs": [
+  {
+   "share": 0.1,
+   "target": 10.0,
+   "frames": 89,
+   "window_ms": 2046,
+   "longest_gap_ms": 100,
+   "stalled_ms": 167,
+   "release_to_redraw_ms": 125,
+   "inputs": 39,
+   "warmup": true
+  },
+  {
+   "share": 0.15,
+   "target": 15.0,
+   "frames": 109,
+   "window_ms": 2079,
+   "longest_gap_ms": 133,
+   "stalled_ms": 266,
+   "release_to_redraw_ms": 191,
+   "inputs": 7,
+   "warmup": true
+  },
+  {
+   "share": 0.25,
+   "target": 25.0,
+   "frames": 107,
+   "window_ms": 2143,
+   "longest_gap_ms": 100,
+   "stalled_ms": 416,
+   "release_to_redraw_ms": 146,
+   "inputs": 13,
+   "warmup": false
+  },
+  {
+   "share": 0.4,
+   "target": 40.0,
+   "frames": 102,
+   "window_ms": 1890,
+   "longest_gap_ms": 50,
+   "stalled_ms": 101,
+   "release_to_redraw_ms": 137,
+   "inputs": 15,
+   "warmup": false
+  },
+  {
+   "share": 0.55,
+   "target": 55.0,
+   "frames": 107,
+   "window_ms": 2080,
+   "longest_gap_ms": 84,
+   "stalled_ms": 201,
+   "release_to_redraw_ms": 159,
+   "inputs": 15,
+   "warmup": false
+  },
+  {
+   "share": 0.7,
+   "target": 70.0,
+   "frames": 102,
+   "window_ms": 1890,
+   "longest_gap_ms": 50,
+   "stalled_ms": 101,
+   "release_to_redraw_ms": 117,
+   "inputs": 16,
+   "warmup": false
+  },
+  {
+   "share": 0.85,
+   "target": 85.0,
+   "frames": 104,
+   "window_ms": 2001,
+   "longest_gap_ms": 100,
+   "stalled_ms": 217,
+   "release_to_redraw_ms": 132,
+   "inputs": 15,
+   "warmup": false
+  },
+  {
+   "share": 0.3,
+   "target": 30.0,
+   "frames": 103,
+   "window_ms": 2229,
+   "longest_gap_ms": 68,
+   "stalled_ms": 118,
+   "release_to_redraw_ms": 118,
+   "inputs": 53,
+   "warmup": false
+  },
+  {
+   "share": 0.6,
+   "target": 60.0,
+   "frames": 103,
+   "window_ms": 1946,
+   "longest_gap_ms": 50,
+   "stalled_ms": 50,
+   "release_to_redraw_ms": 125,
+   "inputs": 30,
+   "warmup": false
+  },
+  {
+   "share": 0.9,
+   "target": 90.0,
+   "frames": 105,
+   "window_ms": 2035,
+   "longest_gap_ms": 49,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 129,
+   "inputs": 31,
+   "warmup": false
+  }
+ ],
+ "ua": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:157.0) Gecko/20100101 Firefox/157.0",
+ "longest_gap_ms": {
+  "median": 59.0,
+  "min": 49,
+  "max": 100
+ },
+ "stalled_ms": {
+  "median": 109.5,
+  "min": 0,
+  "max": 416
+ },
+ "window_ms": {
+  "median": 2018.0,
+  "min": 1890,
+  "max": 2229
+ },
+ "release_to_redraw_ms": {
+  "median": 130.5,
+  "min": 117,
+  "max": 159
+ },
+ "inputs": {
+  "median": 15.5,
+  "min": 13,
+  "max": 53
+ },
+ "frames": {
+  "median": 103.5,
+  "min": 102,
+  "max": 107
+ }
+}

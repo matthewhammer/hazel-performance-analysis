@@ -1,0 +1,168 @@
+{
+ "game": "dress-up",
+ "place": "none",
+ "port": 8133,
+ "runs": [
+  {
+   "target": 110,
+   "frames": 113,
+   "window_ms": 1815,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 16,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0,
+   "warmup": true,
+   "value_after": 109
+  },
+  {
+   "target": 130,
+   "frames": 113,
+   "window_ms": 1809,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 22,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0,
+   "warmup": true,
+   "value_after": 129
+  },
+  {
+   "target": 150,
+   "frames": 112,
+   "window_ms": 1794,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 22,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0,
+   "warmup": false,
+   "value_after": 149
+  },
+  {
+   "target": 200,
+   "frames": 112,
+   "window_ms": 1802,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 50,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0,
+   "warmup": false,
+   "value_after": 200
+  },
+  {
+   "target": 250,
+   "frames": 112,
+   "window_ms": 1803,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 50,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0,
+   "warmup": false,
+   "value_after": 250
+  },
+  {
+   "target": 300,
+   "frames": 112,
+   "window_ms": 1797,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 50,
+   "inputs": 50,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0,
+   "warmup": false,
+   "value_after": 300
+  },
+  {
+   "target": 350,
+   "frames": 112,
+   "window_ms": 1835,
+   "longest_gap_ms": 33,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 50,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0,
+   "warmup": false,
+   "value_after": 350
+  },
+  {
+   "target": 400,
+   "frames": 112,
+   "window_ms": 1801,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 50,
+   "inputs": 51,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0,
+   "warmup": false,
+   "value_after": 401
+  },
+  {
+   "target": 425,
+   "frames": 112,
+   "window_ms": 1801,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 52,
+   "inputs": 25,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0,
+   "warmup": false,
+   "value_after": 426
+  },
+  {
+   "target": 175,
+   "frames": 112,
+   "window_ms": 1804,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 86,
+   "repaints_sent": 0,
+   "repaints_coalesced": 0,
+   "warmup": false,
+   "value_after": 174
+  }
+ ],
+ "ua": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:157.0) Gecko/20100101 Firefox/157.0",
+ "longest_gap_ms": {
+  "median": 17.0,
+  "min": 17,
+  "max": 33
+ },
+ "stalled_ms": {
+  "median": 0.0,
+  "min": 0,
+  "max": 0
+ },
+ "window_ms": {
+  "median": 1801.5,
+  "min": 1794,
+  "max": 1835
+ },
+ "release_to_redraw_ms": {
+  "median": 51.0,
+  "min": 50,
+  "max": 52
+ },
+ "inputs": {
+  "median": 50.0,
+  "min": 22,
+  "max": 86
+ },
+ "frames": {
+  "median": 112.0,
+  "min": 112,
+  "max": 112
+ }
+}

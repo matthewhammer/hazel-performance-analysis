@@ -1,0 +1,150 @@
+{
+ "game": "dress",
+ "slide": null,
+ "place": "none",
+ "label": "eye size",
+ "port": 8133,
+ "runs": [
+  {
+   "share": 0.1,
+   "target": -1.5,
+   "frames": 113,
+   "window_ms": 1805,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 52,
+   "inputs": 50,
+   "warmup": true
+  },
+  {
+   "share": 0.15,
+   "target": 15.2,
+   "frames": 112,
+   "window_ms": 1799,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 17,
+   "warmup": true
+  },
+  {
+   "share": 0.25,
+   "target": 48.8,
+   "frames": 112,
+   "window_ms": 1795,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 35,
+   "warmup": false
+  },
+  {
+   "share": 0.4,
+   "target": 99.0,
+   "frames": 112,
+   "window_ms": 1801,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 53,
+   "warmup": false
+  },
+  {
+   "share": 0.55,
+   "target": 149.3,
+   "frames": 112,
+   "window_ms": 1802,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 50,
+   "inputs": 50,
+   "warmup": false
+  },
+  {
+   "share": 0.7,
+   "target": 199.5,
+   "frames": 112,
+   "window_ms": 1803,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 51,
+   "warmup": false
+  },
+  {
+   "share": 0.85,
+   "target": 249.8,
+   "frames": 114,
+   "window_ms": 1861,
+   "longest_gap_ms": 33,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 50,
+   "inputs": 50,
+   "warmup": false
+  },
+  {
+   "share": 0.3,
+   "target": 65.5,
+   "frames": 113,
+   "window_ms": 1818,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 84,
+   "warmup": false
+  },
+  {
+   "share": 0.6,
+   "target": 166.0,
+   "frames": 111,
+   "window_ms": 1803,
+   "longest_gap_ms": 32,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 51,
+   "inputs": 84,
+   "warmup": false
+  },
+  {
+   "share": 0.9,
+   "target": 266.5,
+   "frames": 112,
+   "window_ms": 1803,
+   "longest_gap_ms": 17,
+   "stalled_ms": 0,
+   "release_to_redraw_ms": 52,
+   "inputs": 79,
+   "warmup": false
+  }
+ ],
+ "ua": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:157.0) Gecko/20100101 Firefox/157.0",
+ "longest_gap_ms": {
+  "median": 17.0,
+  "min": 17,
+  "max": 33
+ },
+ "stalled_ms": {
+  "median": 0.0,
+  "min": 0,
+  "max": 0
+ },
+ "window_ms": {
+  "median": 1803.0,
+  "min": 1795,
+  "max": 1861
+ },
+ "release_to_redraw_ms": {
+  "median": 51.0,
+  "min": 50,
+  "max": 52
+ },
+ "inputs": {
+  "median": 52.0,
+  "min": 35,
+  "max": 84
+ },
+ "frames": {
+  "median": 112.0,
+  "min": 111,
+  "max": 114
+ }
+}
