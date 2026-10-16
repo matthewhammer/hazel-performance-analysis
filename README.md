@@ -1,6 +1,6 @@
 # Hazel performance analysis
 
-**▶ Read the series at http://matthewhammer.org/hazel/performance-analysis/** (HTTP only, for now).
+**▶ Read the series at https://matthewhammer.org/hazel/performance-analysis/**
 
 A series of reports on making [Hazel](https://hazel.org) responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed, and what's left. By Matthew Hammer, working with Claude, for Cyrus, the Hazel team and anyone following the work.
 
