@@ -10,7 +10,7 @@ The series is **not our working record.** That is `hazel-work-notes` (public, bu
 
 - **Write for a reader who wasn't there.** Say what the slide, the branch or the measurement is. Never rely on what was said in chat.
 - **No working chatter:** no to-do lists for ourselves, no local ports or `localhost` links, no "we tried X at 3 am". A dead end belongs in a report only when it teaches the reader something ("tried and not kept", with its numbers).
-- **The dashboard links here; only the series index links back.** The index has one line linking the Hazel Work Dashboard (Matthew, 2026-10-14): http://localhost:8000/ when the index is served locally, the published dashboard (http://matthewhammer.org/hazel/work-dashboard/) when it is published, as the dashboard's menu links the local or the published series. A report may cite a ticket's question, but its links go to PRs, commits, #2609's findings and other reports.
+- **The dashboard links here; only the series index links back.** The index has one line linking the Hazel Work Dashboard (Matthew, 2026-10-14): http://localhost:8000/ when the index is served locally, the published dashboard (https://matthewhammer.org/hazel/dashboard/, since 2026-10-16; before that /hazel/work-dashboard/, which redirects) when it is published, as the dashboard's menu links the local or the published series. A report may cite a ticket's question, but its links go to PRs, commits, #2609's findings and other reports.
 
 ## Scope
 
@@ -64,7 +64,7 @@ A report is drafted here and previewed locally. **Matthew reviews it and says wh
 1. Copy the report, and any reports with new dated notes, to `~/matthewhammer.github.io/hazel/performance-analysis/`. Update the series index there with the new card.
 2. Give the card a thumbnail that says the report's point at a glance: a transparent SVG, `NNN/img/thumb.svg`, with its light colours in plain rules and its dark ones in one `@media (prefers-color-scheme: dark)` block, split with `tools/theme_variants.py` into `thumb-light.svg` and `thumb-dark.svg`, both in the card as `img.light` and `img.dark`. Check both on a white and on a dark card. Only a picture of the app itself (002 to 004) stays a PNG on a light ground.
 3. List it on the homepage's Hazel page (http://matthewhammer.org/hazel/, "Matthew Hammer and Hazel"): `python3 tools/hazel_page.py` rewrites that page's list of reports from the series index's cards (idempotent).
-4. Push, wait for the Pages run, and check the live pages over HTTPS.
+4. Pull first (`git pull --rebase`): the dashboard publishes into that repository by itself, up to every ten minutes, so its master is usually ahead of the checkout (^ticket(181), 2026-10-16). Then push, wait for the Pages run, and check the live pages over HTTPS.
 5. Commit here too, saying what was published, and push. This repository is public, so what is pushed is published as well: push a draft only once Matthew has seen it.
 
 Ask before posting to GitHub, for example a finding on #2609. Post with `gh ... --body-file` and a quoted heredoc.
