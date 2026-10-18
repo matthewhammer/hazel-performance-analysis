@@ -1,10 +1,14 @@
-"""A theme switch on a page: Auto (the system's choice), Light or Dark,
+"""A theme switch on a page: Auto (the system's choice), Light or Dark (and, since ticket 296, the nav bar
+Matthew's pages share, whose top carries the same choice),
 remembered per site in localStorage ("theme") and applied before the page
 paints. The page's CSS must honour :root[data-theme="light"|"dark"].
 Idempotent (between markers).  python3 tools/add_theme.py page.html ..."""
 import sys
 HB, HE = "<!-- theme: head begin -->", "<!-- theme: head end -->"
 BB, BE = "<!-- theme: begin -->", "<!-- theme: end -->"
+# (ticket 296) the nav bar Matthew's pages share, with the theme: ~/matthewhammer.github.io/nav/agent-instructions.md
+NB, NE = "<!-- nav: begin -->", "<!-- nav: end -->"
+NAV = NB + '<meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script>' + NE
 HEAD = HB + '''
 <script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
 ''' + HE
@@ -44,6 +48,7 @@ def put(s, begin, end, block, anchor, after):
     return s.replace(anchor, anchor + "\n" + block, 1) if after else s.replace(anchor, block + "\n" + anchor, 1)
 for path in sys.argv[1:]:
     s = open(path).read()
+    s = put(s, NB, NE, NAV, '<meta charset="utf-8">', True)
     s = put(s, HB, HE, HEAD, '<meta charset="utf-8">', True)
     s = put(s, BB, BE, BODY, "</body>", False)
     open(path, "w").write(s)

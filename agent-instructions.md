@@ -27,6 +27,7 @@ The series is **not our working record.** That is `hazel-work-notes` (public, bu
 | The series index | `series/index.html`, a card per report. `series/NNN` are links to the reports. |
 | Patches tried and not kept | `patches/`, named for what they do. |
 | Local preview | `series/` served at http://localhost:8131/series/ (launch entry `perf-report`). |
+| The nav bar | Every report page loads the nav bar Matthew's pages share (ticket 296): `tools/add_theme.py`, which every report runs through, puts it in with the theme switch. How it fits together: https://github.com/matthewhammer/matthewhammer.github.io/blob/master/nav/agent-instructions.md . |
 | Published | https://matthewhammer.org/hazel/performance-analysis/ (HTTPS since 2026-10-15; old http:// links redirect). |
 
 ## Writing a report
