@@ -33,7 +33,7 @@
   "mechanism": "The elaboration is read at the definition's representative id in the current run's info map.",
   "argument": "When the let's last analysis had the same context and expected type as the direct call, and recorded exactly the elaboration it returned, and took the non-recursive path, purity gives the same elaboration. A definition that is not a function is never recursive, so that holds in the normal case.",
   "assumes": "That the let's recorded elaboration equals what a direct analysis returns, and that the definition is not recursive.",
-  "risk": "<b>Singleton-signature lifting:</b> when a module is ascribed a one-member signature and has more members (<code>module M : { let x : Int } = { let x = 1; let y = 2 } in M.x</code>, an error on dev that still runs), the lifting path records a different elaboration from the one it returns, so <code>M</code> at runtime is now the module's own elaboration instead of the label wrapper: evaluation changes (arguably for the better, but not \"the same output\"). <b>A function definition naming its own module</b> (<code>module F = fun x -&gt; F(x)</code>, parser not checked): the read-back elaboration has <code>F</code> unbound with no error mark, where the old second pass reported a free-constructor error. <b>Confirmed by running</b> the first corner with the command-line evaluator at #2651's head (<code>e3013b0360</code>) and its parent (<code>34f9605ddf</code>, dev): <code>M</code> evaluates to <code>(x=({ let x = 1; let y = 2 }))</code> on dev and to <code>(x=1, y=2)</code> with #2651, and <code>M.x</code> to <code>{ let x = 1; let y = 2 }</code> on dev and to <code>1</code> with #2651. The new results look like the right ones; dev already reports this program as a type error. The second corner was not run.",
+  "risk": "<b>Singleton-signature lifting:</b> when a module is ascribed a one-member signature and has more members (<code>module M : { let x : Int } = { let x = 1; let y = 2 } in M.x</code>, an error on dev that still runs), the lifting path records a different elaboration from the one it returns, so <code>M</code> at runtime is now the module's own elaboration instead of the label wrapper: evaluation changes (arguably for the better, but not \"the same output\"). <b>A function definition naming its own module</b> (<code>module F = fun x -&gt; F(x)</code>, parser not checked): the read-back elaboration has <code>F</code> unbound with no error mark, where the old second pass reported a free-constructor error. <b>Confirmed by running</b> the first corner with the command-line evaluator at #2651's head (<code>e3013b0360</code>) and its parent (<code>34f9605ddf</code>, dev): <code>M</code> evaluates to <code>(x=({ let x = 1; let y = 2 }))</code> on dev and to <code>(x=1, y=2)</code> with #2651, and <code>M.x</code> to <code>{ let x = 1; let y = 2 }</code> on dev and to <code>1</code> with #2651. The new results look like the right ones; dev already reports this program as a type error. The second corner, <b>confirmed by running too</b>: for <code>module F = fun x -&gt; F(x) in 1</code>, dev reports a static error at <code>F</code> inside the definition, and #2651 reports none (both evaluate to 1, as <code>F</code> is not called).",
   "tests_have": [
    "None added; the PR reports the Module, Statics, Elaboration and Evaluator groups passing (913 tests). The evaluator's module tests never reach the lifting path."
   ],
@@ -42,7 +42,8 @@
    "Old against new elaborations over every program with a module.",
    "A dev-build assertion that the read-back elaboration equals the direct one."
   ],
-  "verdict": "fails"
+  "verdict": "fails",
+  "note": "since fixed at 29c08fd8fa: the self-naming error is back, and the one-member corner is kept, with a test for each"
  },
  {
   "pr": 2661,
@@ -217,7 +218,8 @@
    "Fallback-shaped inputs (an unfinished form at the end, concave holes), compared as terms, not only printed text.",
    "A likely fix, not yet tried: remold the joined zipper once before the final re-grout."
   ],
-  "verdict": "fails"
+  "verdict": "fails",
+  "note": "since fixed at 94ca8a2daa: the joined pieces are remolded once, with three split tests"
  },
  {
   "pr": 2614,
