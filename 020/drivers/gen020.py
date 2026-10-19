@@ -3,9 +3,18 @@
 progress until the meeting: edit the JSON (an item, its status and as_of, the updated line), run this from the
 repository's root, then the series tools (report_refs, link_prs, add_theme).
   python3 020/drivers/gen020.py"""
-import json, html
+import json, html, os, re
 
 A = json.load(open("020/data/agenda.json"))
+# the agenda is public (Matthew, 2026-10-19): a report it cites that is not published yet is a chip without a link,
+# never a link that fails; it links once that report is published
+PUBLISHED = os.path.expanduser("~/matthewhammer.github.io/hazel/performance-analysis")
+
+
+def unlink_unpublished(s):
+    return re.sub(r'<a href="\.\./(\d{3})/">(<code class="ref">.*?</code>)</a>',
+                  lambda m: m.group(0) if os.path.isdir(os.path.join(PUBLISHED, m.group(1)))
+                  else f'<span title="not published yet">{m.group(2)}</span>', s)
 esc = html.escape
 TONES = {"good", "warn", "accent", "accent2", "muted"}
 
@@ -123,5 +132,26 @@ page = f"""<!doctype html>
 </body>
 </html>
 """
-open("020/index.html", "w").write(page)
+open("020/index.html", "w").write(unlink_unpublished(page))
+
+# the series card's thumbnail: the meeting's date, and one bar per item in its status colour (then
+# tools/theme_variants.py 020/img/thumb.svg makes its light and dark copies)
+LIGHT = {"good": "#15803d", "warn": "#b45309", "accent": "#6d28d9", "accent2": "#0e7490", "muted": "#5b6470", "ink": "#1f2328"}
+DARK = {"good": "#4ade80", "warn": "#fbbf24", "accent": "#c4b5fd", "accent2": "#67e8f9", "muted": "#a2a9b3", "ink": "#e8e6e3"}
+rule = lambda pal: "".join(f".{k}{{fill:{v}}}" for k, v in pal.items())
+month, day = {"10": "OCT", "11": "NOV", "12": "DEC"}.get(A["meeting"][5:7], A["meeting"][5:7]), str(int(A["meeting"][8:]))
+step = min(21, 150 // max(1, len(A["items"])))
+bars = "".join(
+    f'<circle cx="140" cy="{24 + i * step + 6}" r="5" class="{it["tone"]}"/>'
+    f'<rect x="152" y="{24 + i * step}" width="{min(150, 60 + 2 * len(re.sub("<[^>]+>|&[a-z]+;", "", it["title"])))}" height="12" rx="6" class="{it["tone"]}"/>'
+    for i, it in enumerate(A["items"]))
+os.makedirs("020/img", exist_ok=True)
+open("020/img/thumb.svg", "w").write(
+    f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">\n'
+    f'<style>{rule(LIGHT)}.box{{fill:none;stroke:#5b6470;stroke-width:2}}.m{{font:700 14px system-ui,sans-serif;letter-spacing:2px}}.d{{font:700 44px system-ui,sans-serif}}.mt{{fill:#ffffff}}'
+    f'@media (prefers-color-scheme: dark) {{{rule(DARK)}.box{{fill:none;stroke:#a2a9b3;stroke-width:2}}.mt{{fill:#15171a}}}}</style>\n'
+    f'<rect x="20" y="40" width="96" height="100" rx="10" class="box"/><rect x="20" y="40" width="96" height="26" rx="10" class="accent"/>'
+    f'<rect x="20" y="56" width="96" height="10" class="accent"/>'
+    f'<text x="68" y="58" text-anchor="middle" class="m mt">{month}</text>'
+    f'<text x="68" y="122" text-anchor="middle" class="d ink">{day}</text>\n{bars}\n</svg>\n')
 print("wrote 020/index.html:", len(A["items"]), "items, updated", A["updated"])
