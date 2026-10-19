@@ -1,0 +1,83 @@
+{
+ "report": 22,
+ "date": "2026-10-19",
+ "page_title": "Week in Hazel's Credits",
+ "title": "Week in Hazel names the right author for 29 of 33 credited PRs; its errors come from names and merges",
+ "sub": "Matthew asked for a check of how Week in Hazel, Andrew Blinn's weekly digest written by AI from the Hazel repository and GitHub, credits each team member's work, with a list of corrections where it is plainly wrong. This report reads issues 001 to 006 and the three retrospective issues, as published on 2026-10-19, and checks each credit against the author of the PR or commit on GitHub.",
+ "as_of": "As of 2026-10-19: issues 001-006 and the retrospective issues -019, -060 and -100.",
+ "answers": [
+  "<b>Most credits are right: 29 of the 33 places where an issue gives a PR to a person by name.</b> Issues 005 and 006 get all 17 of theirs right. The retrospective issues name no one.",
+  "<b>The wrong ones come from names.</b> In issues 002 and 004 the digest calls Matthew Hammer \"Matt\", for six of his PRs and a commit, while Matt Keenan, also on the team, is \"Matt\" in issue 006. Issue 003 also gives \"Matt\" a PR of Alexander Bandukwala's (#2579).",
+  "<b>And from merges.</b> Issues 003 and 004 credit Matthew with Alexander's colour vocabulary, because Matthew merged Alexander's configuration branch into his own branches (on 09-15 and 09-22); every one of #1591's 148 commits is Alexander's.",
+  "<b>The digest corrects itself, sometimes.</b> Issue 005 corrected issue 003's credit of #2587 (Alexander's) to Matt Keenan; the errors below are not corrected yet.",
+  "<b>A fix for the agent:</b> take each person from the PR's or commit's author on GitHub, never from a name in the text or from who made a merge, and use full names where two people share one."
+ ],
+ "corrections": [
+  {
+   "issue": "002",
+   "where": "the story on user-defined livelits and the livelit signature",
+   "says": "#2576 is Matt's",
+   "fact": "#2576 is Matthew Hammer's (matthewhammer)."
+  },
+  {
+   "issue": "002",
+   "where": "the same story, on the expansion-typing review",
+   "says": "Matt gave the closing account of #2488",
+   "fact": "#2488 and its closing comment are Matthew Hammer's."
+  },
+  {
+   "issue": "002",
+   "where": "the Blackboard paragraph",
+   "says": "Matt closed #2525",
+   "fact": "#2525 is Matthew Hammer's, and he closed it."
+  },
+  {
+   "issue": "002",
+   "where": "the Fumola store-history story",
+   "says": "Matt's September 14 commit",
+   "fact": "The Fumola commits of September 14 (605e98081c, 2b1809627b, ef85903ad9) are Matthew Hammer's."
+  },
+  {
+   "issue": "003",
+   "where": "the canonical-completion story, on module bodies",
+   "says": "Matt's module-body PR (#2579)",
+   "fact": "#2579 is Alexander Bandukwala's (7h3kk1d)."
+  },
+  {
+   "issue": "003",
+   "where": "\"Name the decision, then the color\"",
+   "says": "Matthew's colour-vocabulary work merged into configuration on September 22",
+   "fact": "The semantic colour vocabulary is Alexander Bandukwala's (commits of 08-27 to 09-01, then #1591). On 09-22 Matthew merged Alexander's configuration branch into his own branches (47cc22fab3), and said so on #1591 that day; nothing of his merged into configuration."
+  },
+  {
+   "issue": "004",
+   "where": "the Configuration mode story",
+   "says": "#1591 incorporates Matthew's colour-scheme work",
+   "fact": "All 148 commits of #1591 are Alexander Bandukwala's. Matthew's part was bug reports on #1591 (09-22) and, later, his own #2613."
+  },
+  {
+   "issue": "004",
+   "where": "the livelit-branch story",
+   "says": "Matt's #2597",
+   "fact": "#2597 is Matthew Hammer's."
+  },
+  {
+   "issue": "004",
+   "where": "the same story",
+   "says": "Matt opened draft #2635",
+   "fact": "#2635 is Matthew Hammer's."
+  },
+  {
+   "issue": "004",
+   "where": "the Tree Care / jump-to-piece paragraph",
+   "says": "Matt's #2602",
+   "fact": "#2602 is Matthew Hammer's."
+  }
+ ],
+ "method": [
+  "Each issue's online page was read as text. Every PR or issue number it mentions (160 in all) was looked up on GitHub for its author.",
+  "<b>A credit</b> here is a person named as a PR's owner in the same phrase (\"Name's #N\", in any of its forms); there are 33 in issues 001 to 006. One of the 33 flagged by the count is a false alarm (a comment of Matthew's on Alexander's #2482, which the issue describes correctly), so 29 of 33 are right.",
+  "The colour credits were traced through the commits: the configuration branch's history and #1591's commits (no commit of Matthew's), Matthew's merge commits of 09-15 and 09-22, and his comments on #1591.",
+  "Credits without a PR number (a commit, a branch) were checked by hand where the text names Matthew or \"Matt\"; others were not."
+ ]
+}
