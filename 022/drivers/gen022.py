@@ -42,7 +42,7 @@ page = f"""<!doctype html>
 </head>
 <body>
 <main>
-<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>{D["report"]}<b>)</b></code> · {D["date"]}</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>{D["report"]}<b>)</b></code> · {D["date"]}</p>
 <h1>{D["title"]}</h1>
 <p class="sub">{D["sub"]}</p>
 <div class="headline">

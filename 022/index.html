@@ -32,7 +32,7 @@
 </head>
 <body>
 <main>
-<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>22<b>)</b></code> · 2026-10-19</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>22<b>)</b></code> · 2026-10-19</p>
 <h1>Week in Hazel names the right author for 29 of 33 credited PRs; its errors come from names and merges</h1>
 <p class="sub">Matthew asked for a check of how Week in Hazel, Andrew Blinn's weekly digest written by AI from the Hazel repository and GitHub, credits each team member's work, with a list of corrections where it is plainly wrong. This report reads issues 001 to 006 and the three retrospective issues, as published on 2026-10-19, and checks each credit against the author of the PR or commit on GitHub.</p>
 <div class="headline">
@@ -134,7 +134,7 @@
       (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
   };
   const reportCard = (n, r) => r
-    ? `<div class="rc-head">^report(${n}) · Hazel performance analysis${r.date ? " · " + esc(r.date) : ""}</div>` +
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
       `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
     : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
   let card = null, over = null, timer = null;
