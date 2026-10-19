@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- theme: head begin -->
+<script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<!-- theme: head end -->
+<!-- nav: begin --><meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script><!-- nav: end -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda for October 21</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8; --accent2: #0e7490;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.1em; margin: 0 0 4px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .wip { display: inline-block; font-size: 0.8em; font-weight: 600; letter-spacing: 0.02em; color: var(--warn);
+          border: 1px solid var(--warn); border-radius: 999px; padding: 0 8px; margin-left: 4px; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  .headline ol > li { margin: 8px 0; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; overflow-wrap: anywhere; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.95em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; color: var(--muted); }
+  .scroll { overflow-x: auto; }
+  .chip { display: inline-block; font-size: 0.78em; font-weight: 600; white-space: nowrap; vertical-align: 2px;
+           border-radius: 999px; padding: 1px 9px; border: 1px solid currentColor; }
+  .chip.good { color: var(--good); } .chip.warn { color: var(--warn); } .chip.accent { color: var(--accent); }
+  .chip.accent2 { color: var(--accent2); } .chip.muted { color: var(--muted); }
+  .item { background: var(--paper); border: 1px solid var(--line); border-left: 5px solid var(--line);
+           border-radius: 8px; padding: 12px 16px; margin: 16px 0; }
+  .item.good { border-left-color: var(--good); } .item.warn { border-left-color: var(--warn); }
+  .item.accent { border-left-color: var(--accent); } .item.accent2 { border-left-color: var(--accent2); }
+  .item h3 .n { color: var(--muted); }
+  .meta { color: var(--muted); font-size: 0.9em; margin: 0 0 8px; }
+  .ask { border-top: 1px dashed var(--line); padding-top: 8px; margin-bottom: 2px; }
+  details { margin: 6px 0 10px; } summary { cursor: pointer; color: var(--muted); }
+  ul.prs { columns: 2 22em; margin: 6px 0; }
+</style>
+</head>
+<body>
+<main>
+<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>20<b>)</b></code> · agenda <span class="wip">work in progress</span> · started 2026-10-19, updated 2026-10-19 12:35 MDT</p>
+<h1>Agenda: Matthew and Cyrus, Wednesday 2026-10-21</h1>
+<p class="sub">The topics Matthew brings to his meeting with Cyrus on Wednesday 2026-10-21. Most are Cyrus's own questions from their meeting on Friday 2026-10-16. <b>A work in progress:</b> compiled over the two days before the meeting and updated as items move, so each item says where it stands, as of when, and what it needs from the meeting.</p>
+
+<div class="headline">
+<p><b>In short.</b> As of 2026-10-19 12:35 MDT.</p>
+<ol>
+  <li><b><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s CI: every failure has a fix.</b> The three causes <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a> found are fixed, one of them a real bug in incremental statics; the last 8 cases go with <a href="https://github.com/hazelgrove/hazel/pull/2699">#2699</a>, which merges into <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> once its CI is green.</li>
+  <li><b>Cyrus's two tiles asks: what is missing is selection, not tiles.</b> The explainer's examples and the livelit model views are already tiles; only the revealed model can be selected (<a href="../019/"><code class="ref"><b>^report(</b>19<b>)</b></code></a>).</li>
+  <li><b>Long types in &Gamma;: a draft PR,</b> <a href="https://github.com/hazelgrove/hazel/pull/2698">#2698</a>, stacked on <a href="https://github.com/hazelgrove/hazel/pull/2676">#2676</a> (the cursor inspector's long types).</li>
+  <li><b>The performance PRs' correctness: an argument for each of the 19, in a report to come,</b> with more correctness tests.</li>
+  <li><b>The merge plan for dev:</b> which PRs are first, and how the livelits PRs meet <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> once it lands.</li>
+</ol>
+</div>
+
+<h2 id="items">The items</h2>
+<div class="scroll"><table>
+  <tr><th></th><th>Item</th><th>Status</th></tr>
+  <tr><td class="n">1</td><td><a href="#ci">#2635's CI: why it failed, and a fix for every failure</a></td><td><span class="chip good">fixed, merging</span></td></tr>
+  <tr><td class="n">2</td><td><a href="#model">Livelits' model views as read-only tiles, with the tiles' selection UX</a></td><td><span class="chip muted">queued</span></td></tr>
+  <tr><td class="n">3</td><td><a href="#explainer">The explainer's examples as read-only tiles</a></td><td><span class="chip muted">queued</span></td></tr>
+  <tr><td class="n">4</td><td><a href="#gamma">Long types in &Gamma;, laid out as the result type is</a></td><td><span class="chip accent2">draft PR</span></td></tr>
+  <tr><td class="n">5</td><td><a href="#correctness">Do the performance PRs keep typing and evaluation correct?</a></td><td><span class="chip warn">to come</span></td></tr>
+  <tr><td class="n">6</td><td><a href="#merge">The merge plan for dev</a></td><td><span class="chip accent">for discussion</span></td></tr>
+  <tr><td class="n">7</td><td><a href="#gate">Require the test jobs for merging into dev</a></td><td><span class="chip accent">for discussion</span></td></tr>
+</table></div>
+
+<section class="item good" id="ci">
+<h3><span class="n">1.</span> <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s CI: why it failed, and a fix for every failure <span class="chip good">fixed, merging</span></h3>
+<p class="meta">Asked by Cyrus, 2026-10-16 · <code class="ref"><b>^ticket(</b>405<b>)</b></code> · as of 2026-10-19 12:35</p>
+<p><a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a> found three causes, all from merging <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> (modular editors) into the livelits branch, with neither branch broken on its own: 8 DefStaticsParity module cases (modules analyzed whole since the merge), one typed-table test (<code>Editing.TableDecorations 1</code>, from dev's canonical completion, <a href="https://github.com/hazelgrove/hazel/pull/2374">#2374</a>), and one mismatch in the slide corpus. As of 2026-10-19 each has a fix:</p><ul><li>the table test's input, so that its hidden error still comes from table syntax (<code>27f100e37c</code>);</li><li>the corpus mismatch, <b>a real bug in incremental statics</b>: a livelit use was not analyzed again when the livelit it applies changed, so after an edit it kept its old expansion (<code>1131a457e4</code>);</li><li>the 8 module cases, by <a href="https://github.com/hazelgrove/hazel/pull/2699">#2699</a>, which brings Andrew Blinn's per-member module analysis on Modules II (<code>a6b5478f52</code>, from <a href="https://github.com/hazelgrove/hazel/pull/2687">#2687</a>) into <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, with one fix of its own: a livelit definition is no longer analyzed as a module (<code>223357135a</code>).</li></ul><p>With <a href="https://github.com/hazelgrove/hazel/pull/2699">#2699</a>, DefStaticsParity passes 43 of 43 locally. <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s conflicts with its base are resolved too (<code>cf325d4f61</code>).</p>
+
+<p class="ask"><b>For the meeting:</b> Confirm <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> is green (this item is updated before Wednesday). The corpus bug is the kind the correctness item below is about: the parity tests caught it.</p>
+</section>
+
+<section class="item muted" id="model">
+<h3><span class="n">2.</span> Livelits' model views as read-only tiles, with the tiles' selection UX <span class="chip muted">queued</span></h3>
+<p class="meta">Asked by Cyrus, 2026-10-16 · <code class="ref"><b>^ticket(</b>387<b>)</b></code> · as of 2026-10-19 12:35</p>
+<p><a href="../019/"><code class="ref"><b>^report(</b>19<b>)</b></code></a>: a livelit's model, revealed with its eye, is the one view outside the editor that already has read-only tiles with a caret, Shift+Arrow selection, the inspector and the right-click menu. Two gaps, seen on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>: a mouse drag over the model selects by character, not by tile (its ends do not snap to tiles, as they do in the editor); and while the revealed model has focus, the rest of the editor draws blank until the eye closes. A livelit's head and params lines are HTML inputs, by design.</p>
+
+<p class="ask"><b>For the meeting:</b> Is the revealed model's read-only selection what Cyrus wants on every look-only view? <a href="../019/"><code class="ref"><b>^report(</b>19<b>)</b></code></a> suggests one shared read-only, selectable view for all 16 of them.</p>
+</section>
+
+<section class="item muted" id="explainer">
+<h3><span class="n">3.</span> The explainer's examples as read-only tiles <span class="chip muted">queued</span></h3>
+<p class="meta">Asked by Cyrus, 2026-10-16 · <code class="ref"><b>^ticket(</b>388<b>)</b></code> · as of 2026-10-19 12:35</p>
+<p><a href="../019/"><code class="ref"><b>^report(</b>19<b>)</b></code></a>: the examples are already tiles, in a locked cell editor. They take focus but no caret, no selection and no menu. The inline code in the explanations is plain text. So, as with the model views, the ask comes down to selection and the menu.</p>
+
+<p class="ask"><b>For the meeting:</b> The same question; and should the inline code become tiles too?</p>
+</section>
+
+<section class="item accent2" id="gamma">
+<h3><span class="n">4.</span> Long types in &Gamma;, laid out as the result type is <span class="chip accent2">draft PR</span></h3>
+<p class="meta">Asked by Cyrus, 2026-10-16 · <code class="ref"><b>^ticket(</b>386<b>)</b></code> · as of 2026-10-19 12:35</p>
+<p><a href="https://github.com/hazelgrove/hazel/pull/2698">#2698</a> (a draft, stacked on <a href="https://github.com/hazelgrove/hazel/pull/2676">#2676</a>, which does the same for the cursor inspector): a toggle on each entry in &Gamma; lays a long type, or an alias's definition, out under its name in at most 60 columns, and &Gamma; grows to 40% of the window while one is open. On the tutorial, the toggle appears on the 147 of 249 entries that are cut off. Later steps: unfold all, unfold the caret's variable by itself, and module members one per line.</p><p>A related bug (<code class="ref"><b>^ticket(</b>396<b>)</b></code>): opening &Gamma; on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s Scenes slide freezes the browser. A lead: even on a 4-line program &Gamma; draws 6,802 tokens, because the context holds the prelude's types (<code>ColorScheme</code>, <code>ColorRoles</code>, &hellip;) and each is printed whole as tiles.</p>
+
+<p class="ask"><b>For the meeting:</b> Review <a href="https://github.com/hazelgrove/hazel/pull/2676">#2676</a>, then <a href="https://github.com/hazelgrove/hazel/pull/2698">#2698</a>? Which of the later steps matter?</p>
+</section>
+
+<section class="item warn" id="correctness">
+<h3><span class="n">5.</span> Do the performance PRs keep typing and evaluation correct? <span class="chip warn">to come</span></h3>
+<p class="meta">Asked by Cyrus, relayed by Matthew 2026-10-19 · <code class="ref"><b>^ticket(</b>398<b>)</b></code> · as of 2026-10-19 12:35</p>
+<p>Cyrus asked for more analysis and coverage of functional correctness. For each PR against <a href="https://github.com/hazelgrove/hazel/issues/2609">#2609</a> (the performance tracking issue), a report will argue why it computes the same types and values as before: what it caches, skips or shares, the key it is looked up by, what invalidates it, and what it assumes. Any PR whose argument does not hold is called out. And more correctness tests: a new PR to dev, and tests on each PR.</p><p>One such check exists already: the DefStaticsParity tests compare incremental statics with a cold analysis and with monolithic statics after each edit. They caught the livelit bug fixed on 2026-10-19 (the first item).</p>
+<details><summary>The 19 PRs</summary><ul class="prs"><li><a href="https://github.com/hazelgrove/hazel/pull/2490">#2490</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2603">#2603</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2606">#2606</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2610">#2610</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2614">#2614</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2652">#2652</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2671">#2671</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2672">#2672</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2673">#2673</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2675">#2675</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2689">#2689</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2690">#2690</a></li><li><a href="https://github.com/hazelgrove/hazel/pull/2691">#2691</a></li></ul></details>
+<p class="ask"><b>For the meeting:</b> Is an argument per PR, plus the tests, what Cyrus had in mind? Which PRs first?</p>
+</section>
+
+<section class="item accent" id="merge">
+<h3><span class="n">6.</span> The merge plan for dev <span class="chip accent">for discussion</span></h3>
+<p class="meta">Asked by Cyrus, relayed by Matthew 2026-10-19 · as of 2026-10-19 12:35</p>
+<p>Cyrus's plan, broadly: first the PRs that have been waiting, then Andrew's modular editors (<a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>, with the standard library, <a href="https://github.com/hazelgrove/hazel/pull/2687">#2687</a>), then the livelits and performance PRs, in some order. The livelits work is <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> (the full livelits branch) and <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits &times; modular editors, which merges <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> into it). Most of the performance PRs are against dev already.</p>
+
+<p class="ask"><b>For the meeting:</b> Which PRs are the ones that have been waiting? Once <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> lands, do the livelits PRs meet it through <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, or by <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> merging dev? And the order of the performance PRs.</p>
+</section>
+
+<section class="item accent" id="gate">
+<h3><span class="n">7.</span> Require the test jobs for merging into dev <span class="chip accent">for discussion</span></h3>
+<p class="meta">Asked by Matthew · <code class="ref"><b>^ticket(</b>16<b>)</b></code> · as of 2026-10-19 12:35</p>
+<p>dev is protected but requires no status check, so a red CI run, or a broken performance budget (<a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a>), is a signal, not a gate. A proposal for the maintainers: require the Fast checks job (10 to 15 minutes: the quick suite and the budgets), keep Full tests informational or require it too, and first quarantine the tests that fail by chance (<code>Evaluator.Properties</code>).</p>
+
+<p class="ask"><b>For the meeting:</b> Cyrus's view, as a maintainer.</p>
+</section>
+
+<h2 id="if-time">If there is time</h2>
+<ul>
+  <li><b>Livelit views evaluated in the worker</b> (option B of <a href="../005/"><code class="ref"><b>^report(</b>5<b>)</b></code></a>; <code class="ref"><b>^ticket(</b>18<b>)</b></code>): prototyped on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s branch (a view that takes 8 ms or more runs in the worker), not yet measured in a browser.</li>
+  <li><b>Node budgets beside step budgets:</b> draft <a href="https://github.com/hazelgrove/hazel/pull/2697">#2697</a> (<code class="ref"><b>^ticket(</b>19<b>)</b></code>).</li>
+  <li><b>Three ports offered to <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>,</b> with <a href="../013/"><code class="ref"><b>^report(</b>13<b>)</b></code></a>'s numbers (<code class="ref"><b>^ticket(</b>54<b>)</b></code>; offered on <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> on 2026-10-19).</li>
+</ul>
+
+<h2 id="method">How this agenda is kept</h2>
+<ul>
+  <li>Started 2026-10-19 from the meeting's ticket on the work dashboard (<code class="ref"><b>^ticket(</b>389<b>)</b></code>), which collects the topics as they come in; Matthew adds topics through Wednesday.</li>
+  <li>Each item gives who asked, its status and the time that status is from. PRs are hazelgrove/hazel's; commits are on the PR named beside them.</li>
+  <li><b>The data:</b> in this page's <code>&lt;script type="application/json" id="report-data"&gt;</code> element and in <code>020/data/agenda.json</code>; the page is made by <code>020/drivers/gen020.py</code>.</li>
+</ul>
+</main>
+<script type="application/json" id="report-data">{"report": 20, "kind": "agenda", "meeting": "2026-10-21", "started": "2026-10-19", "updated": "2026-10-19 12:35 MDT", "page_title": "Agenda for October 21", "title": "Agenda: Matthew and Cyrus, Wednesday 2026-10-21", "sub": "The topics Matthew brings to his meeting with Cyrus on Wednesday 2026-10-21. Most are Cyrus's own questions from their meeting on Friday 2026-10-16. <b>A work in progress:<\/b> compiled over the two days before the meeting and updated as items move, so each item says where it stands, as of when, and what it needs from the meeting.", "short": ["<b>#2635's CI: every failure has a fix.<\/b> The three causes <a href=\"../018/\"><code class=\"ref\"><b>^report(<\/b>18<b>)<\/b><\/code><\/a> found are fixed, one of them a real bug in incremental statics; the last 8 cases go with #2699, which merges into #2635 once its CI is green.", "<b>Cyrus's two tiles asks: what is missing is selection, not tiles.<\/b> The explainer's examples and the livelit model views are already tiles; only the revealed model can be selected (<a href=\"../019/\"><code class=\"ref\"><b>^report(<\/b>19<b>)<\/b><\/code><\/a>).", "<b>Long types in &Gamma;: a draft PR,<\/b> #2698, stacked on #2676 (the cursor inspector's long types).", "<b>The performance PRs' correctness: an argument for each of the 19, in a report to come,<\/b> with more correctness tests.", "<b>The merge plan for dev:<\/b> which PRs are first, and how the livelits PRs meet #2469 once it lands."], "items": [{"id": "ci", "title": "#2635's CI: why it failed, and a fix for every failure", "asked": "Cyrus, 2026-10-16", "ticket": 405, "status": "fixed, merging", "tone": "good", "as_of": "2026-10-19 12:35", "body": "<p><a href=\"../018/\"><code class=\"ref\"><b>^report(<\/b>18<b>)<\/b><\/code><\/a> found three causes, all from merging #2469 (modular editors) into the livelits branch, with neither branch broken on its own: 8 DefStaticsParity module cases (modules analyzed whole since the merge), one typed-table test (<code>Editing.TableDecorations 1<\/code>, from dev's canonical completion, #2374), and one mismatch in the slide corpus. As of 2026-10-19 each has a fix:<\/p><ul><li>the table test's input, so that its hidden error still comes from table syntax (<code>27f100e37c<\/code>);<\/li><li>the corpus mismatch, <b>a real bug in incremental statics<\/b>: a livelit use was not analyzed again when the livelit it applies changed, so after an edit it kept its old expansion (<code>1131a457e4<\/code>);<\/li><li>the 8 module cases, by #2699, which brings Andrew Blinn's per-member module analysis on Modules II (<code>a6b5478f52<\/code>, from #2687) into #2635, with one fix of its own: a livelit definition is no longer analyzed as a module (<code>223357135a<\/code>).<\/li><\/ul><p>With #2699, DefStaticsParity passes 43 of 43 locally. #2635's conflicts with its base are resolved too (<code>cf325d4f61<\/code>).<\/p>", "meeting": "Confirm #2635 is green (this item is updated before Wednesday). The corpus bug is the kind the correctness item below is about: the parity tests caught it."}, {"id": "model", "title": "Livelits' model views as read-only tiles, with the tiles' selection UX", "asked": "Cyrus, 2026-10-16", "ticket": 387, "status": "queued", "tone": "muted", "as_of": "2026-10-19 12:35", "body": "<p><a href=\"../019/\"><code class=\"ref\"><b>^report(<\/b>19<b>)<\/b><\/code><\/a>: a livelit's model, revealed with its eye, is the one view outside the editor that already has read-only tiles with a caret, Shift+Arrow selection, the inspector and the right-click menu. Two gaps, seen on #2635: a mouse drag over the model selects by character, not by tile (its ends do not snap to tiles, as they do in the editor); and while the revealed model has focus, the rest of the editor draws blank until the eye closes. A livelit's head and params lines are HTML inputs, by design.<\/p>", "meeting": "Is the revealed model's read-only selection what Cyrus wants on every look-only view? <a href=\"../019/\"><code class=\"ref\"><b>^report(<\/b>19<b>)<\/b><\/code><\/a> suggests one shared read-only, selectable view for all 16 of them."}, {"id": "explainer", "title": "The explainer's examples as read-only tiles", "asked": "Cyrus, 2026-10-16", "ticket": 388, "status": "queued", "tone": "muted", "as_of": "2026-10-19 12:35", "body": "<p><a href=\"../019/\"><code class=\"ref\"><b>^report(<\/b>19<b>)<\/b><\/code><\/a>: the examples are already tiles, in a locked cell editor. They take focus but no caret, no selection and no menu. The inline code in the explanations is plain text. So, as with the model views, the ask comes down to selection and the menu.<\/p>", "meeting": "The same question; and should the inline code become tiles too?"}, {"id": "gamma", "title": "Long types in &Gamma;, laid out as the result type is", "asked": "Cyrus, 2026-10-16", "ticket": 386, "status": "draft PR", "tone": "accent2", "as_of": "2026-10-19 12:35", "body": "<p>#2698 (a draft, stacked on #2676, which does the same for the cursor inspector): a toggle on each entry in &Gamma; lays a long type, or an alias's definition, out under its name in at most 60 columns, and &Gamma; grows to 40% of the window while one is open. On the tutorial, the toggle appears on the 147 of 249 entries that are cut off. Later steps: unfold all, unfold the caret's variable by itself, and module members one per line.<\/p><p>A related bug (<code class=\"ref\"><b>^ticket(<\/b>396<b>)<\/b><\/code>): opening &Gamma; on #2635's Scenes slide freezes the browser. A lead: even on a 4-line program &Gamma; draws 6,802 tokens, because the context holds the prelude's types (<code>ColorScheme<\/code>, <code>ColorRoles<\/code>, &hellip;) and each is printed whole as tiles.<\/p>", "meeting": "Review #2676, then #2698? Which of the later steps matter?"}, {"id": "correctness", "title": "Do the performance PRs keep typing and evaluation correct?", "asked": "Cyrus, relayed by Matthew 2026-10-19", "ticket": 398, "status": "to come", "tone": "warn", "as_of": "2026-10-19 12:35", "body": "<p>Cyrus asked for more analysis and coverage of functional correctness. For each PR against #2609 (the performance tracking issue), a report will argue why it computes the same types and values as before: what it caches, skips or shares, the key it is looked up by, what invalidates it, and what it assumes. Any PR whose argument does not hold is called out. And more correctness tests: a new PR to dev, and tests on each PR.<\/p><p>One such check exists already: the DefStaticsParity tests compare incremental statics with a cold analysis and with monolithic statics after each edit. They caught the livelit bug fixed on 2026-10-19 (the first item).<\/p>", "prs": [2603, 2606, 2608, 2610, 2614, 2651, 2652, 2661, 2671, 2672, 2673, 2675, 2678, 2679, 2681, 2689, 2690, 2691, 2490], "meeting": "Is an argument per PR, plus the tests, what Cyrus had in mind? Which PRs first?"}, {"id": "merge", "title": "The merge plan for dev", "asked": "Cyrus, relayed by Matthew 2026-10-19", "ticket": null, "status": "for discussion", "tone": "accent", "as_of": "2026-10-19 12:35", "body": "<p>Cyrus's plan, broadly: first the PRs that have been waiting, then Andrew's modular editors (#2469, with the standard library, #2687), then the livelits and performance PRs, in some order. The livelits work is #2597 (the full livelits branch) and #2635 (livelits &times; modular editors, which merges #2469 into it). Most of the performance PRs are against dev already.<\/p>", "meeting": "Which PRs are the ones that have been waiting? Once #2469 lands, do the livelits PRs meet it through #2635, or by #2597 merging dev? And the order of the performance PRs."}, {"id": "gate", "title": "Require the test jobs for merging into dev", "asked": "Matthew", "ticket": 16, "status": "for discussion", "tone": "accent", "as_of": "2026-10-19 12:35", "body": "<p>dev is protected but requires no status check, so a red CI run, or a broken performance budget (#2678), is a signal, not a gate. A proposal for the maintainers: require the Fast checks job (10 to 15 minutes: the quick suite and the budgets), keep Full tests informational or require it too, and first quarantine the tests that fail by chance (<code>Evaluator.Properties<\/code>).<\/p>", "meeting": "Cyrus's view, as a maintainer."}], "if_time": ["<b>Livelit views evaluated in the worker<\/b> (option B of <a href=\"../005/\"><code class=\"ref\"><b>^report(<\/b>5<b>)<\/b><\/code><\/a>; <code class=\"ref\"><b>^ticket(<\/b>18<b>)<\/b><\/code>): prototyped on #2635's branch (a view that takes 8 ms or more runs in the worker), not yet measured in a browser.", "<b>Node budgets beside step budgets:<\/b> draft #2697 (<code class=\"ref\"><b>^ticket(<\/b>19<b>)<\/b><\/code>).", "<b>Three ports offered to #2469,<\/b> with <a href=\"../013/\"><code class=\"ref\"><b>^report(<\/b>13<b>)<\/b><\/code><\/a>'s numbers (<code class=\"ref\"><b>^ticket(<\/b>54<b>)<\/b><\/code>; offered on #2469 on 2026-10-19)."], "method": ["Started 2026-10-19 from the meeting's ticket on the work dashboard (<code class=\"ref\"><b>^ticket(<\/b>389<b>)<\/b><\/code>), which collects the topics as they come in; Matthew adds topics through Wednesday.", "Each item gives who asked, its status and the time that status is from. PRs are hazelgrove/hazel's; commits are on the PR named beside them."]}</script>
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
+<!-- ref-cards: begin -->
+<style>
+  .ref-card { position: absolute; z-index: 40; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
+  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
+    vertical-align: 1px; background: #6e7781; }
+  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
+  .rc-state.done { background: #8250df; }
+</style>
+<script>
+/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
+   ticket from the work dashboard's data (its area, its status, its first
+   line), carried by the dashboard's own pages and read live from the
+   published data anywhere else; a report from its own page, live (its
+   title, date and opening). Once per page load each. */
+(() => {
+  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
+  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
+  /* the dashboard itself carries its tickets (made with the page, changed
+     with it); any other page asks the published data */
+  const EMBED = null;
+  let data = EMBED ? Promise.resolve(EMBED) : null;
+  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
+  const pages = new Map();
+  const loadReport = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
+      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
+      let p = h1 && h1.nextElementSibling;
+      while (p && p.tagName !== "P") p = p.nextElementSibling;
+      const label = (doc.querySelector(".series") || {}).textContent || "";
+      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
+               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
+    }).catch(() => null));
+    return pages.get(url);
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
+  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
+  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
+  const ticketCard = (n, d) => {
+    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
+    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
+    const q = (d.queue || []).indexOf(n);
+    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
+      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
+      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
+    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
+      `<div class="rc-title">${esc(lead(t.text))}</div>` +
+      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
+      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
+  };
+  const reportCard = (n, r) => r
+    ? `<div class="rc-head">^report(${n}) · Hazel performance analysis${r.date ? " · " + esc(r.date) : ""}</div>` +
+      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
+    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
+    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = (a, ref) => {
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
+      card.hidden = false; place(a);
+      let html;
+      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
+      else html = reportCard(ref.n, await loadReport(a.href));
+      if (over !== a) return;
+      card.innerHTML = html; place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- ref-cards: end -->
+<!-- pr-cards: begin -->
+<style>
+  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2374": {"author": "disconcision", "comments": 7, "created": "2026-07-03T03:08:41Z", "kind": "pull", "state": "merged", "title": "Canonical completion + Shard/Lexeme Provenance", "updated": "2026-09-22T17:34:14Z"}, "hazelgrove/hazel#2469": {"author": "disconcision", "comments": 17, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-19T17:44:58Z"}, "hazelgrove/hazel#2490": {"author": "matthewhammer", "comments": 5, "created": "2026-09-04T01:01:04Z", "kind": "pull", "state": "draft", "title": "SPIKE: compile the Hazel evaluator with wasm_of_ocaml and benchmark it", "updated": "2026-09-22T22:35:02Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-15T14:33:10Z"}, "hazelgrove/hazel#2603": {"author": "matthewhammer", "comments": 1, "created": "2026-09-26T21:10:09Z", "kind": "pull", "state": "open", "title": "Statics: a let is analyzed once unless it refers to itself, plus three smaller speedups", "updated": "2026-09-26T21:30:11Z"}, "hazelgrove/hazel#2606": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T01:00:47Z", "kind": "pull", "state": "open", "title": "Keep the incremental cache in the eval worker", "updated": "2026-09-30T19:18:48Z"}, "hazelgrove/hazel#2608": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T12:03:57Z", "kind": "pull", "state": "open", "title": "Leave the source's whitespace and comments out of elaborations", "updated": "2026-09-30T00:37:35Z"}, "hazelgrove/hazel#2609": {"author": "matthewhammer", "comments": 24, "created": "2026-09-28T13:34:18Z", "kind": "issues", "state": "open", "title": "Performance Challenges (Fall 2026)", "updated": "2026-10-14T19:50:20Z"}, "hazelgrove/hazel#2610": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T15:18:03Z", "kind": "pull", "state": "open", "title": "Parse the load fallback with the segmented parser, projectors kept", "updated": "2026-09-30T19:33:35Z"}, "hazelgrove/hazel#2614": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T22:58:00Z", "kind": "pull", "state": "open", "title": "Load text about 2.5× faster: whole tokens, one re-grout", "updated": "2026-09-29T18:40:33Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-19T17:58:18Z"}, "hazelgrove/hazel#2651": {"author": "matthewhammer", "comments": 1, "created": "2026-10-05T22:34:31Z", "kind": "pull", "state": "open", "title": "Statics: a module binding analyzes its definition once, not twice", "updated": "2026-10-05T22:55:04Z"}, "hazelgrove/hazel#2652": {"author": "matthewhammer", "comments": 1, "created": "2026-10-06T00:19:52Z", "kind": "pull", "state": "open", "title": "Eval worker in Firefox: start it at load, and do not time out a reply that is queued", "updated": "2026-10-06T00:46:51Z"}, "hazelgrove/hazel#2661": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T01:18:55Z", "kind": "pull", "state": "open", "title": "Types get a Merkle hash; the evaluator asks is_consistent once per pair", "updated": "2026-10-10T01:36:30Z"}, "hazelgrove/hazel#2671": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T13:59:41Z", "kind": "pull", "state": "open", "title": "MapPiece keeps unchanged pieces as the same objects", "updated": "2026-10-10T14:25:32Z"}, "hazelgrove/hazel#2672": {"author": "matthewhammer", "comments": 0, "created": "2026-10-10T16:32:57Z", "kind": "pull", "state": "open", "title": "Measuring the font no longer scrolls the editor to the caret", "updated": "2026-10-10T16:32:57Z"}, "hazelgrove/hazel#2673": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T17:19:02Z", "kind": "pull", "state": "open", "title": "Incremental evaluation recognizes an unchanged expression by its Merkle hash", "updated": "2026-10-13T12:02:53Z"}, "hazelgrove/hazel#2675": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T13:05:13Z", "kind": "pull", "state": "open", "title": "Incremental evaluation reuses expressions around a recursive let", "updated": "2026-10-12T13:27:15Z"}, "hazelgrove/hazel#2676": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T16:11:08Z", "kind": "pull", "state": "open", "title": "The cursor inspector can show a long type whole, on several lines", "updated": "2026-10-19T17:06:40Z"}, "hazelgrove/hazel#2678": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T17:06:58Z", "kind": "pull", "state": "open", "title": "CI fails when an evaluation does more work than its budget", "updated": "2026-10-12T17:28:32Z"}, "hazelgrove/hazel#2679": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T20:45:04Z", "kind": "pull", "state": "open", "title": "An ascription pushed through a value gives the value back when it already has the type", "updated": "2026-10-12T21:10:16Z"}, "hazelgrove/hazel#2681": {"author": "matthewhammer", "comments": 1, "created": "2026-10-13T13:04:35Z", "kind": "pull", "state": "open", "title": "A value known to have a type is not walked again for it", "updated": "2026-10-13T13:26:10Z"}, "hazelgrove/hazel#2687": {"author": "disconcision", "comments": 1, "created": "2026-10-17T01:26:52Z", "kind": "pull", "state": "draft", "title": "Standard library in Hazel source", "updated": "2026-10-19T18:12:09Z"}, "hazelgrove/hazel#2689": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:20Z", "kind": "pull", "state": "draft", "title": "Test: statics analyzes each expression within a budget", "updated": "2026-10-17T03:28:12Z"}, "hazelgrove/hazel#2690": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:23Z", "kind": "pull", "state": "draft", "title": "Test: a re-run beside a library with recursive members stays within its step budget", "updated": "2026-10-17T03:29:35Z"}, "hazelgrove/hazel#2691": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:25Z", "kind": "pull", "state": "draft", "title": "Test: what the eval worker sends and gets back stays within a byte budget", "updated": "2026-10-17T03:29:32Z"}, "hazelgrove/hazel#2697": {"author": "matthewhammer", "comments": 1, "created": "2026-10-19T15:36:02Z", "kind": "pull", "state": "draft", "title": "Test: the nodes an evaluation builds, held to budgets beside its steps", "updated": "2026-10-19T15:54:17Z"}, "hazelgrove/hazel#2698": {"author": "matthewhammer", "comments": 1, "created": "2026-10-19T16:07:08Z", "kind": "pull", "state": "draft", "title": "non-`dev` (`cursor-inspector-full-types`): Gamma can show a long type whole, on several lines", "updated": "2026-10-19T17:24:01Z"}, "hazelgrove/hazel#2699": {"author": "matthewhammer", "comments": 0, "created": "2026-10-19T17:30:43Z", "kind": "pull", "state": "draft", "title": "non-`dev` (`integration/livelits-modular-editors`): Exploratory: per-member module analysis on Modules II, after Andrew's stdlib port", "updated": "2026-10-19T18:06:35Z"}}, BUILT = "2026-10-19";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  const ask = key => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#");
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
+                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[2];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
+<!-- theme: begin -->
+<style>
+  .theme-toggle { position: fixed; top: 10px; right: 10px; z-index: 30; font: 13px system-ui, sans-serif; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--muted, GrayText);
+    cursor: pointer; opacity: 0.85; }
+  .theme-toggle:hover { opacity: 1; color: var(--ink, CanvasText); }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+/* The theme switch: Auto (the system's choice), Light, Dark; remembered for this site. */
+(() => {
+  const order = ["auto", "light", "dark"], label = { auto: "◐ auto", light: "☀ light", dark: "☾ dark" };
+  const get = () => { try { return localStorage.getItem("theme") || "auto"; } catch (_) { return "auto"; } };
+  const apply = m => m === "auto" ? document.documentElement.removeAttribute("data-theme")
+                                  : document.documentElement.setAttribute("data-theme", m);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "theme-toggle";
+  const show = () => { const m = get(); b.textContent = label[m] || label.auto;
+    b.title = "Theme: " + m + ". Click for " + order[(order.indexOf(m) + 1) % 3] + "; remembered on this site."; };
+  b.addEventListener("click", () => {
+    const m = order[(order.indexOf(get()) + 1) % 3];
+    try { m === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", m); } catch (_) {}
+    apply(m); show();
+  });
+  window.addEventListener("storage", e => { if (e.key === "theme") { apply(get()); show(); } });
+  show(); document.body.append(b);
+})();
+</script>
+<!-- theme: end -->
+</body>
+</html>
