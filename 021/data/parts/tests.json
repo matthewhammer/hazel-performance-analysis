@@ -1,0 +1,110 @@
+[
+ {
+  "pr": 2678,
+  "area": "tests",
+  "short": "CI step budgets",
+  "title": "CI fails when an evaluation does more work than its budget",
+  "what": "A test group holds two evaluations to step budgets: a cold run (206,834 steps, budget 227,000) and a re-run after editing a literal nothing reads (378, budget 420, and under 5% of the cold run).",
+  "changes": "No. The trampoline now returns the step count it already kept, and a new entry point, called only by the test, runs the same trampoline.",
+  "mechanism": "<code>Evaluator.evaluate_counting_work</code> runs the trampoline through <code>run_slice(~step_budget=max_int)</code> and returns the count; <code>Trampoline.Yielding.SliceDone</code> carries the total. The only other matches on <code>SliceDone</code> ignore the new field. No global state.",
+  "argument": "No production path changes what it computes: the new entry point is used by the test alone, and both trampoline drivers interpret Bind, Next and Done the same way.",
+  "assumes": "That step counts repeat exactly across runs (the PR says so; not re-checked here).",
+  "risk": "Budgets have about 10% headroom and a count more than 25% under fails too, so harmless refactors will need budget bumps: noise, not flakiness. Not counted: the reuse pre-pass, statics, the worker's streaming path.",
+  "tests_have": [
+   "Both runs check their values (6085 and 7085), so a stale reuse in the re-run would fail."
+  ],
+  "tests_missing": [
+   "Edit a literal that is read (fib(10) to fib(11)) and check the value equals a fresh run's: the guard against reusing too much.",
+   "Check the re-run's step count and probe samples equal a fresh run's.",
+   "Check the counted path's value equals <code>Evaluator.evaluate</code>'s."
+  ],
+  "verdict": "none",
+  "head": "13b2e588ac"
+ },
+ {
+  "pr": 2689,
+  "area": "tests",
+  "short": "statics pass budgets",
+  "title": "Test: statics analyzes each expression within a budget",
+  "what": "<code>hazel analyze --count-passes</code> counts how often statics analyzes each expression; a test pins the known multipliers (a recursive let 3x, nested recursive lets 27x, ...) and budgets every corpus program (at most 5 analyses of one expression, 2.5 on average).",
+  "changes": "Its own commits: no (a counter that is off unless the CLI flag sets it). It is stacked on #2603 and #2651, which do change statics.",
+  "mechanism": "A check at the top of <code>uexp_to_info_map</code> reads a ref that is <code>None</code> unless the flag sets it; the counts go in a table keyed by expression id.",
+  "argument": "With the flag off, the only new work is reading one ref per call; nothing statics computes changes.",
+  "assumes": "Merged after #2603 and #2651, as it says: its diff includes their code.",
+  "risk": "A pass count cannot see a wrong type: the new test throws the info map away. With the flag on, <code>Exp.rep_id</code> could raise on an expression without ids (CLI only).",
+  "tests_have": [
+   "The tests carried from #2603 check results: Test_CtxIndex compares indexed lookups with a plain scan; Test_Statics_Let checks nested lets type-check consistently."
+  ],
+  "tests_missing": [
+   "Assert each pinned case's type and that it has no errors, since statics already runs there.",
+   "Keep an expected top-level type and error list per corpus program, and compare: where #2603's analyze-once could silently change a type."
+  ],
+  "verdict": "none",
+  "note": "stacked on #2603 and #2651",
+  "head": "0d5d015eff"
+ },
+ {
+  "pr": 2690,
+  "area": "tests",
+  "short": "recursive-library budget",
+  "title": "Test: a re-run beside a library with recursive members stays within its step budget",
+  "what": "A third step-budget case: a library module with recursive members, and an edit to a knob only the last line reads; the re-run takes 132 steps (budget 145, under 5% of the cold run's 127,394).",
+  "changes": "Its own commit: no (test only). It is stacked on #2678 and #2675; #2675 changes which expressions are reused.",
+  "mechanism": "Test only.",
+  "argument": "No non-test code of its own.",
+  "assumes": "Merged after #2678 and #2675.",
+  "risk": "13 steps of headroom; the low-side check fails below 109.",
+  "tests_have": [
+   "The value must be 45158 (300·301/2 + 8)."
+  ],
+  "tests_missing": [
+   "The other direction for #2675: edit inside the library (range(300) to range(301), expect 45458) and inside a recursive member's body, each checked against a fresh run."
+  ],
+  "verdict": "none",
+  "note": "stacked on #2678 and #2675",
+  "head": "d706264f3f"
+ },
+ {
+  "pr": 2691,
+  "area": "tests",
+  "short": "worker byte budgets",
+  "title": "Test: what the eval worker sends and gets back stays within a byte budget",
+  "what": "Measures the encoded size of the eval worker's request and answer for two programs, with budgets about 10% over today (probes.hz: 25,180 and 3,617 bytes; B2T2 leftjoin: 60,628 and 21,258).",
+  "changes": "Its own commit: no (test only). It is stacked on #2606 and #2608, which change runtime behaviour.",
+  "mechanism": "Test only: it repeats the worker's resolve, evaluate and keep sequence itself.",
+  "argument": "No non-test code of its own.",
+  "assumes": "Merged after #2606 and #2608.",
+  "risk": "It never looks at the answer's value: a broken evaluation shows only if the answer shrinks by more than 25%. Native and js_of_ocaml Marshal sizes not compared.",
+  "tests_have": [
+   "The carried Test_WorkerServer (#2606) compares a run with the held cache against a fresh run, on a small program."
+  ],
+  "tests_missing": [
+   "Decode the request and answer and check they round-trip.",
+   "Compare the answer's value with <code>Evaluator.evaluate</code> on the same elaboration, and the second answer's value with the first's."
+  ],
+  "verdict": "none",
+  "note": "stacked on #2606 and #2608",
+  "head": "35edf2d1d8"
+ },
+ {
+  "pr": 2490,
+  "area": "tests",
+  "short": "wasm spike (draft)",
+  "title": "SPIKE: compile the Hazel evaluator with wasm_of_ocaml and benchmark it",
+  "what": "A draft spike, not meant to merge: it benchmarks the evaluator compiled with wasm_of_ocaml. To build, it splits <code>util</code>, swaps the statics memo, and removes the builtin livelits; it also commits 957 build artifacts under <code>_build-wasm/</code>.",
+  "changes": "<b>Yes, as it stands:</b> the builtin livelits (<code>^slider</code>, <code>^emotion</code>) no longer type or elaborate, and three livelit tests are deleted.",
+  "mechanism": "<code>Builtins.ctx_entries</code> drops the builtin livelits; <code>Statics.mk</code>'s memo empties the whole table at 1,000 entries instead of evicting least-recently-used ones (keys still compared structurally, so a cost change, not a result change).",
+  "argument": "Not a merge candidate. Its benchmark compares the two backends' results by a hash of each workload's printed result (three workloads matched); that is a spot check, not a test.",
+  "assumes": "That it is never merged as it is.",
+  "risk": "If merged: the livelit regression, the deleted tests, 957 build artifacts in history, and a dune 3.17 requirement.",
+  "tests_have": [
+   "None that run in CI."
+  ],
+  "tests_missing": [
+   "Before wasm is used for real: a CI check that results match across the two backends. Keep the util split, if wanted, as a fresh PR without the artifacts or the livelit removal."
+  ],
+  "verdict": "spike",
+  "note": "draft spike; conflicts with dev",
+  "head": "a7b5559cbb"
+ }
+]

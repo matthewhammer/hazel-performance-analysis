@@ -1,0 +1,411 @@
+[
+ {
+  "pr": 2603,
+  "area": "statics",
+  "short": "a let analyzed once",
+  "title": "Statics: a let is analyzed once unless it refers to itself, plus three smaller speedups",
+  "head": "70e6677bdb",
+  "what": "A let whose definition is a function that neither mentions its own names nor shadows an outer one is analyzed once (the recursion probe's analysis becomes the final one), and a non-function definition skips the probe; context lookups answer the builtins from a hash table; <code>meet</code> is computed once per node; completion skips variables that cannot match the typed token.",
+  "changes": "Types, marks, the names each node reads and elaborations: no, except one corner (below). Inside the definition, the editor's context now shows the binder at the pattern's type; IncrEval, the reuse pass, EvalInfo and the evaluator never read that context.",
+  "mechanism": "Reuse when the definition is function-shaped, shadows nothing, and its analysis read none of the pattern's names (<code>CoCtx.has_any</code>); the builtin index is keyed by the physical identity of the builtin list; the shared <code>meet</code> answer is used only when all three old calls were literally the same call.",
+  "argument": "The probe's inputs are exactly those of the old recursive path's first pass, and statics is pure apart from fresh-name counters. With no shadowing, every other name resolves the same way in both contexts, and every way of looking up the binder is recorded in the names the definition reads; so when none of them was read, the final pass would equal the probe. For a non-function definition the old probe only fed a recursion test whose first case already answered false.",
+  "assumes": "That a definition depends on the context only through lookups recorded in the names it reads, and that statics is pure.",
+  "risk": "One corner: a derivation quote (<code>DrvQuote</code>) looks names up but records none, so a quote that names the let's own binder is invisible to the reuse check, and an error mark (<code>VarNoJoin</code>) that the old final pass reported goes missing. Elaboration is unchanged. Very unlikely. Not checked: whether <code>Typ.equal</code> can tell two analyses apart through fresh variable names under <code>Poly</code>.",
+  "tests_have": [
+   "Statics.Let: three type checks (plain, recursive, shadowing) and a timing test of 12 nested lets.",
+   "Ctx.TailIndex compares the indexed lookup with a plain scan; TyDi.PrefixPruning.",
+   "The PR reports identical <code>analyze -W</code> output on 72 programs (errors and warnings only)."
+  ],
+  "tests_missing": [
+   "The old let behind a flag, compared per id (type, marks, names read, elaboration) and by evaluation, over the corpus and random nests of lets.",
+   "Cases: <code>let (f, g) = …</code> where only <code>g</code> calls <code>f</code>; an annotation that disagrees (<code>let f : Int = fun x -&gt; x</code>); definitions with holes; a derivation quote naming the binder (which would fail today)."
+  ],
+  "verdict": "assumes"
+ },
+ {
+  "pr": 2651,
+  "area": "statics",
+  "short": "module analyzed once",
+  "title": "Statics: a module binding analyzes its definition once, not twice",
+  "head": "e3013b0360",
+  "what": "A module binding reads its definition's elaboration back from the info that the expanded let already wrote, instead of analyzing the definition a second time (kept as a fallback).",
+  "changes": "For well-typed module definitions that do not name their own module: no. <b>In two corners, yes.</b>",
+  "mechanism": "The elaboration is read at the definition's representative id in the current run's info map.",
+  "argument": "When the let's last analysis had the same context and expected type as the direct call, and recorded exactly the elaboration it returned, and took the non-recursive path, purity gives the same elaboration. A definition that is not a function is never recursive, so that holds in the normal case.",
+  "assumes": "That the let's recorded elaboration equals what a direct analysis returns, and that the definition is not recursive.",
+  "risk": "<b>Singleton-signature lifting:</b> when a module is ascribed a one-member signature and has more members (<code>module M : { let x : Int } = { let x = 1; let y = 2 } in M.x</code>, an error on dev that still runs), the lifting path records a different elaboration from the one it returns, so <code>M</code> at runtime is now the module's own elaboration instead of the label wrapper: evaluation changes (arguably for the better, but not \"the same output\"). <b>A function definition naming its own module</b> (<code>module F = fun x -&gt; F(x)</code>, parser not checked): the read-back elaboration has <code>F</code> unbound with no error mark, where the old second pass reported a free-constructor error. <b>Confirmed by running</b> the first corner with the command-line evaluator at #2651's head (<code>e3013b0360</code>) and its parent (<code>34f9605ddf</code>, dev): <code>M</code> evaluates to <code>(x=({ let x = 1; let y = 2 }))</code> on dev and to <code>(x=1, y=2)</code> with #2651, and <code>M.x</code> to <code>{ let x = 1; let y = 2 }</code> on dev and to <code>1</code> with #2651. The new results look like the right ones; dev already reports this program as a type error. The second corner was not run.",
+  "tests_have": [
+   "None added; the PR reports the Module, Statics, Elaboration and Evaluator groups passing (913 tests). The evaluator's module tests never reach the lifting path."
+  ],
+  "tests_missing": [
+   "Evaluation tests for both corners.",
+   "Old against new elaborations over every program with a module.",
+   "A dev-build assertion that the read-back elaboration equals the direct one."
+  ],
+  "verdict": "fails"
+ },
+ {
+  "pr": 2661,
+  "area": "statics",
+  "short": "type hash memo",
+  "title": "Types get a Merkle hash; the evaluator asks is_consistent once per pair",
+  "head": "0875dfcd66",
+  "what": "Types get a structural hash that ignores ids and the provenance of unknown types, cached per object; the evaluator's consistency check when pushing an ascription through a constructor application is remembered per pair of hashes.",
+  "changes": "No, if two different types never hash the same.",
+  "mechanism": "A global table from a pair of 60-bit hashes to a boolean, emptied at 4,096 entries, caching <code>is_consistent(Ctx.empty, unroll(sumt), unroll(t))</code>. Types with expressions inside (proofs), projectors and signatures get no hash and are never cached.",
+  "argument": "The answer depends only on the two types' structure, not on ids or on unknown types' provenance: every unknown case succeeds whatever its provenance, variables in an empty context compare names, and bad sum entries cannot change the result. The hash covers every constructor and field except ids and provenance; binder names and constructor order are included, which only costs missed hits.",
+  "assumes": "That equal 60-bit hashes mean structurally equal types, and that types are immutable.",
+  "risk": "The hash is not cryptographic (a base-31 polynomial and an FNV-like lane, each mod 2^30, and for atoms the second lane is an affine function of the first). A collision would give a wrong consistency answer: a mismatched constructor application pushed through, or a consistent one cast. Rare, no adversary, but silent.",
+  "tests_have": [
+   "TypHash: 10 tests of the hash's properties."
+  ],
+  "tests_missing": [
+   "A property test over random type pairs (random ids, provenance, parens, recursive types, bad entries): the remembered answer equals the direct one, in both orders.",
+   "A census over every type in the corpus's info maps: same hash implies equal up to ids and provenance.",
+   "The evaluator with the memo on and off, compared."
+  ],
+  "verdict": "assumes"
+ },
+ {
+  "pr": 2679,
+  "area": "statics",
+  "short": "ascription returns the value",
+  "title": "An ascription pushed through a value gives the value back when it already has the type",
+  "head": "c82726a3c2",
+  "what": "Pushing an ascription through a list, cons, tuple, label or constructor payload returns the value itself when every part comes back unchanged, instead of a fresh copy.",
+  "changes": "No: in exactly those cases the old result was a copy of the same term. Only identity and annotations differ.",
+  "mechanism": "Physical equality on the children; only a recursive push can return a child unchanged.",
+  "argument": "Every place the push returns its input unchanged (an unknown type, a matching atom, a consistent constructor, and the new cases) returns exactly its input, so when every child comes back as itself, the rebuilt node equals the value.",
+  "assumes": "That values are immutable, and that nothing depends on the old copy's stripped annotations.",
+  "risk": "Values now keep their source annotations past an ascription (all their ids, comments, incomplete marks), where the copy had stripped them: the stepper or result printing could show a comment inside a value, and id-keyed machinery sees all ids. Display and metadata only; no bug found.",
+  "tests_have": [
+   "Test_Ascriptions: a well-typed list of labelled tuples keeps its identity; a list holding a function is still wrapped."
+  ],
+  "tests_missing": [
+   "Old against new over a corpus: results equal, step counts and stepper traces identical.",
+   "A property test over random typed values."
+  ],
+  "verdict": "holds"
+ },
+ {
+  "pr": 2681,
+  "area": "statics",
+  "short": "typed values remembered",
+  "title": "A value known to have a type is not walked again for it",
+  "head": "8546bde64e",
+  "what": "The evaluator remembers, per value (a term block, or a list's cell), the type hashes at which pushing an ascription returned it unchanged, and skips the walk the next time; a list records every tail.",
+  "changes": "No, if two different types never hash the same.",
+  "mechanism": "A weak map keyed by the value's physical identity, holding type hashes (from #2661). Values are immutable, so nothing needs invalidating; dead keys are dropped.",
+  "argument": "The push decides only from the term's contents and the type (ids are used only to build copies), so two values sharing a term behave the same. A list can come back as itself only when every element did, at an unknown type, or through parens forwarding to one of those, and in each case every suffix list at the same type also comes back unchanged (so recording tails is sound). Values that need wrapping (functions) never come back as themselves, so they are never recorded.",
+  "assumes": "#2661's no-collision assumption; that terms and lists are never mutated in place.",
+  "risk": "A collision would hide a failing push: a list remembered at <code>[Int]</code> would pass unchanged at a type with the same hash, skipping the cast failure. Same probability as #2661.",
+  "tests_have": [
+   "Test_Ascriptions: a list's tails are remembered, only for that type; a value without the type is not remembered (mutation-checked on #2635, the PR says)."
+  ],
+  "tests_missing": [
+   "The memo on and off over a corpus and random programs with annotated parameters: results, step counts and cast errors compared.",
+   "A wrongly typed head consed onto a remembered tail.",
+   "A fake hash injected to force a collision, showing it is the only way to a wrong answer."
+  ],
+  "verdict": "assumes",
+  "note": "its branch also merges #2661 and #2679"
+ },
+ {
+  "pr": 2606,
+  "area": "evaluator",
+  "short": "cache kept in the worker",
+  "title": "Keep the incremental cache in the eval worker",
+  "head": "1b5de419b3",
+  "what": "The eval worker keeps the last finished incremental cache for each (document, key), at most 32 slots, and answers without sending the cache back; a request asks for the held one instead of sending its own.",
+  "changes": "Values: no. It changes which earlier cache a run starts from: always the worker's last finished one for that slot, not whatever the page held (an older one after undo, a partial one after a superseded run, none after a slide reset).",
+  "mechanism": "<code>WorkerServer.Held</code>, keyed by (document, key). A failed run (a step-limit timeout included) drops its slot, a superseded run is never kept, a restarted worker starts empty, a 33rd slot clears the table. The held cache is swapped in once per request, before both the reuse plan and the evaluation run.",
+  "argument": "The reuse check never trusts where its earlier cache came from: for each node it re-checks the elaboration, the provenance of every name the node reads, and the probe targets against the new request. So a cache from an earlier run, or from another program that shares ids, is reused at a node only when the node and all it reads are the same, down to the builtins.",
+  "assumes": "That every finished cache is internally consistent: each entry's value was computed from the values its sources hold. That holds by induction over runs, with one gap shared by all incremental reuse: whether a source counts as reused comes from the reuse plan's prediction, not from what the evaluator did.",
+  "risk": "A bad cache, if one ever exists (the #2457 kind), now survives slide resets and undo until the worker restarts or the page reloads. Some documents share a slot (slides of the same name; three modes send an empty document name), which costs reuse, not correctness. The tests skip the worker's real request path, and their program is below the size where the worker uses an earlier cache at all.",
+  "tests_have": [
+   "A new group, WorkerServer held cache (4 tests): a slot is kept and left out of the answer; documents and keys are separate; an edited program run against the held cache equals a fresh run; a failure drops the slot."
+  ],
+  "tests_missing": [
+   "Across programs: for programs A and B from the slides and the tutorial, evaluating B with A's cache equals evaluating B fresh (value, probes, test results).",
+   "The same through the worker's yielding path, with a superseding request mid-run, on a program above the incremental threshold.",
+   "An edit sequence replayed three ways (held cache, the page's cache, fresh), compared at every step."
+  ],
+  "verdict": "assumes"
+ },
+ {
+  "pr": 2608,
+  "area": "evaluator",
+  "short": "no whitespace in elab",
+  "title": "Leave the source's whitespace and comments out of elaborations",
+  "head": "66f789d916",
+  "what": "Statics builds elaborated expressions and patterns without the whitespace and comments (<code>secondary</code>) around each source node, which only made elaborations bigger.",
+  "changes": "No. Only the <code>secondary</code> annotation on elaboration nodes changes.",
+  "mechanism": "Nothing cached: data dropped (<code>IdTagged.unwrap_elab</code>, <code>strip_secondary</code>).",
+  "argument": "Nothing that consumes an elaboration reads <code>secondary</code>: the evaluator only ever empties it; equality ignores annotations except lexemes; printing uses stored whitespace only when preserving parsed source exactly, never for elaborations or results; incremental reuse compares lexemes, not whitespace.",
+  "assumes": "That nothing reads an elaboration's whitespace and comments (none does at this head).",
+  "risk": "A future reader (say, quotation that keeps formatting) would silently get none. The stripping is incomplete (labelled-tuple wrappers, the nodes of types inside an elaboration), which costs size only.",
+  "tests_have": [
+   "A new group, ElabSize: a program full of comments elaborates with no whitespace on any expression or pattern node and still evaluates to 30.",
+   "The whole evaluator suite now runs on stripped elaborations."
+  ],
+  "tests_missing": [
+   "Over the slides and the tutorial, with and without the change: info maps agree except the elaboration, elaborations agree on every id and lexeme, and results, probes and test results are identical."
+  ],
+  "verdict": "holds"
+ },
+ {
+  "pr": 2673,
+  "area": "evaluator",
+  "short": "reuse by Merkle hash",
+  "title": "Incremental evaluation recognizes an unchanged expression by its Merkle hash",
+  "head": "cea8f0a98f",
+  "what": "The reuse check first asks whether the cached and new elaborations hash the same (a structural 64-bit hash of the runtime value, remembered per object); if not, one structural walk compares the terms and their lexemes together, remembering each answer per pair of objects.",
+  "changes": "It is meant not to, but its decision differs from the old check in corners: a hash collision would reuse a different elaboration (a wrong value), and the one walk is stricter than the old check in one case and laxer in another.",
+  "mechanism": "<code>Util.ValueHash</code> over the whole value (ids, lexemes, whitespace); memos never invalidated, relying on terms never being mutated; values with functions, unforced lazies or cycles get no hash and fall back to the walk. The shortcut is used only with alpha-equivalence off and no environments, so identical subterms mean the same thing.",
+  "argument": "Equal hashes mean an identical structure (barring collisions), and on identical structures the old check was true too. Where the new walk differs: <b>stricter</b>, a parenthesized literal against a parenthesized literal under new ids, or a slider over an Int literal, compares unequal (lost reuse, never wrong); <b>laxer</b>, <code>(e)</code> against <code>e</code> compares equal where the old check refused, and both evaluate to the same value (parens and projectors take one side-effect-free step), though a replayed step count can differ by the number of wrappers.",
+  "assumes": "That the 64-bit hash never collides, and that terms are never mutated in place.",
+  "risk": "A collision silently reuses a wrong value. The hash has a structure that makes collisions easier than chance: each lane is an xor-multiply chain in which flipping bit 31 of a child flips only bit 31 of the state, so two children both differing exactly in bit 31 cancel. Elaborations have few raw int fields and no realistic colliding term was found, but a finalizer per lane (or a 128-bit hash) would remove the structure. The PR claims the same reuse decisions as before; that is not quite so.",
+  "tests_have": [
+   "ValueHash (5 tests), one_walk_lexemes_test and lexeme_edit_test in the incremental suite."
+  ],
+  "tests_missing": [
+   "A QCheck property over random terms and random edits (new ids, lexeme and literal edits, parens and projectors added or removed, a binder renamed): the hashed check equals the old one, and equal hashes imply equal terms. It would catch the parens case.",
+   "Old against new reuse decisions at every node of the slides and the tutorial, after an edit and after replacing all ids.",
+   "No two structurally different subterms of that corpus share a hash."
+  ],
+  "verdict": "assumes"
+ },
+ {
+  "pr": 2675,
+  "area": "evaluator",
+  "short": "reuse around a recursive let",
+  "title": "Incremental evaluation reuses expressions around a recursive let",
+  "head": "1e5207494a",
+  "what": "For a recursive let, statics' record of the names the definition reads (its co_ctx) now leaves out the let's own names, which the fixpoint binds, so an edit elsewhere no longer forces the recursive definition and everything after it to re-run.",
+  "changes": "Values: no; more expressions are reused. It also changes one thing statics shows: in <code>let go = 1 in let go = fun i -&gt; ... go(i - 1) ... in go(3)</code> the outer <code>go</code> is now flagged unused, which is right but not mentioned in the PR. Types do not change.",
+  "mechanism": "The co_ctx decides which names the reuse check must find unchanged; removing a name removes a dependency.",
+  "argument": "A recursive let elaborates to <code>Let(p, FixF(p, def), body)</code>, and its definition was analyzed with the pattern's names in scope, so every use of those names in it refers to the recursive binding the fixpoint binds. The free variables of <code>FixF(p, def)</code> are exactly the definition's minus the pattern's names, which is what the new co_ctx computes; a non-recursive <code>let x = x + 1</code> still reads the outer <code>x</code>.",
+  "assumes": "That the fixpoint binds exactly the names the pattern adds to the context (the fixpoint's own node already assumed this).",
+  "risk": "It widens reuse in exactly the programs (modules of recursive helpers) where any gap in cache consistency would show, while the property that compares incremental with fresh evaluation is switched off on dev (#2457).",
+  "tests_have": [
+   "Two new cases check the result and the reuse plan after an unrelated literal edit."
+  ],
+  "tests_missing": [
+   "Incremental against fresh after editing an outer variable used inside the recursive definition (<code>let k = 7 in let go = fun i -&gt; if i == 0 then k else go(i - 1) in go(3)</code>: editing <code>k</code> must not reuse <code>go</code>), mutual recursion, function sugar, and an outer binding the recursive name shadows.",
+   "Re-enable the incremental-against-fresh property, with a generator that makes recursive lets."
+  ],
+  "verdict": "holds"
+ },
+ {
+  "pr": 2610,
+  "area": "editor",
+  "short": "segmented load fallback",
+  "title": "Parse the load fallback with the segmented parser, projectors kept",
+  "head": "0aba66119a",
+  "what": "When the fast parser rejects saved text, the fallback now types it in as top-level pieces of at least 100 characters, each into a fresh zipper, joined and re-grouted once, instead of character by character; projector pins are kept.",
+  "changes": "<b>Yes, on the fallback path</b> (saved programs with an unfinished form or a concave hole, share links, the CLI's tutorial decoding): a piece is parsed without its left context.",
+  "mechanism": "<code>Parser.to_zipper_segmented</code> splits where the caret is at top level, outside any token, with no missing shards, just after whitespace (Parser.re:81-85). The join is re-grouted (Parser.re:158), never remolded, and the caller does not remold afterwards.",
+  "argument": "The PR checks the printed text against the character-by-character parser on 128 inputs, and keeps projector ids across the split (sound).",
+  "assumes": "That a piece's first token is molded the same way without what precedes it. That is false for tokens whose mold depends on their left neighbour.",
+  "risk": "<code>-</code> (binary or unary) and <code>(</code> (application or parentheses) are molded by their left neighbour, and an ascription's right side switches to types. If a split lands just after an operand, as when 100 characters end inside <code>x</code> in a top-level <code>x - y</code>, the next piece starts in a concave context: <code>-</code> becomes unary minus and the join gets a hole, so <code>aaa…a - b</code> loads as <code>aaa…a ¿ -b</code>, and <code>f (b)</code> as <code>f ¿ (b)</code>. Splits also happen right after a comment's closing <code>#</code>. Rare per program, but silent at load, and written back on the next save. <b>Confirmed by running</b> Hazel's <code>format</code> at #2610's head (<code>0aba66119a</code>) and its parent, on a program the fast parser rejects (a concave hole earlier on) followed by a 100-letter name and <code>- b</code>: the parent loads <code>aaa…a - b</code>, #2610 loads <code>aaa…a ¿ - b</code>. (Both turn <code>c ¿ d</code> into <code>c ¿ ¿ ¿ d</code>; that is older than #2610.)",
+  "tests_have": [
+   "Parser.Segmented compares 5 files and a prose paragraph with the character-by-character parser, by printed text."
+  ],
+  "tests_missing": [
+   "The confirmed case (a forced fallback, a top-level <code>x - y</code> with the split inside <code>x</code>), and <code>f (y)</code> and <code>e : T</code> at a split, against the character-by-character parser.",
+   "A sweep of split positions: each corpus program with 0 to 99 characters of padding in front, so every top-level space becomes a split point at some offset.",
+   "Fallback-shaped inputs (an unfinished form at the end, concave holes), compared as terms, not only printed text.",
+   "A likely fix, not yet tried: remold the joined zipper once before the final re-grout."
+  ],
+  "verdict": "fails"
+ },
+ {
+  "pr": 2614,
+  "area": "editor",
+  "short": "load 2.5x faster",
+  "title": "Load text about 2.5× faster: whole tokens, one re-grout",
+  "head": "b4e3914b03",
+  "what": "Loading types each run of operand or operator characters in as one insertion and re-grouts once at the end, not after every character; rescanning returns its own argument when nothing changed, tested by identity; a carriage return reads as a newline.",
+  "changes": "Designed not to, and no case found by reading, except the line-ending change, which changes the parse on purpose for text with <code>\\r</code> (loading, the paste fallback, splice paste).",
+  "mechanism": "<code>to_zipper ~by_run</code>; <code>take_run</code> stops where typing would stop extending a token; one <code>remold_regrout</code> at the end; <code>Siblings.rescan</code> returns its argument unchanged when nothing converted.",
+  "argument": "The identity check is exactly the old structural one: rescanning alters a piece only at a conversion, which it flags. Whole-token runs: the operand and operator character classes are disjoint and no token spans both, and insertion still merges with its left neighbour. One re-grout: remolding skips grout and passes shapes through, so molds cannot depend on grout, and the final pass puts the same 0 or 1 grout at each junction.",
+  "assumes": "That insertion's choices do not depend on grout or on per-prefix side effects (three places in Insert read grout, for ids, a suppressed space and the caret, none for the term).",
+  "risk": "A hole's place relative to a neighbouring space may differ (text and layout, not the term). A lone <code>\\r</code> inside a string or comment now splits it into fragments (dev dropped it silently); rare and loud. CRLF text, which loaded with a hole on every line, now loads right. #2610 and #2614 both rewrite the same fallback: merging both needs a choice.",
+  "tests_have": [
+   "Parser.LoadPath (6 tests); 386 parse tests; a structural comparison on 72 programs, run once offline."
+  ],
+  "tests_missing": [
+   "In CI: whole-token runs on against off, ids erased, over the corpus and fallback-shaped inputs (prose, hole-heavy text, unfinished endings, <code>x+-1</code>, <code>&gt;&gt;=</code>, <code>1.5e-3</code>, Unicode names, strings and comments with spaces).",
+   "A lone <code>\\r</code> inside a literal."
+  ],
+  "verdict": "assumes"
+ },
+ {
+  "pr": 2671,
+  "area": "editor",
+  "short": "MapPiece keeps identity",
+  "title": "MapPiece keeps unchanged pieces as the same objects",
+  "head": "04e1c6c362",
+  "what": "Mapping over a segment returns the original object wherever nothing under it changed.",
+  "changes": "No: the output is structurally equal to before; only sharing differs.",
+  "mechanism": "Identity checks (<code>===</code>) on each piece and tile; the updater is applied piece by piece and then recursed into, where the old code applied it to a whole level first: the same calls in a different order.",
+  "argument": "If every piece maps to itself the output is element for element the input, so returning the input is equivalent. All five callers on dev are pure or order-independent.",
+  "assumes": "That updaters are pure, or at least do not depend on call order.",
+  "risk": "A future updater that depends on order would break. It makes identity-keyed caches hit after projector updates; on #2635 that switches on incremental term-building reuse, which is sound only if an item's term depends on nothing outside its own pieces (a question for #2635's review).",
+  "tests_have": [
+   "MapPieceIdentity: a no-op update returns the same segment, and the top-level prefix is kept (both fail without the change)."
+  ],
+  "tests_missing": [
+   "A property test: new against old, structurally, for random pure updaters; identity checked at depth."
+  ],
+  "verdict": "assumes"
+ },
+ {
+  "pr": 2672,
+  "area": "editor",
+  "short": "font measure, no scroll",
+  "title": "Measuring the font no longer scrolls the editor to the caret",
+  "head": "86bdda9d0c",
+  "what": "Storing the measured font no longer asks the editor to scroll the caret into view.",
+  "changes": "No. Only the scroll flag flips; nothing recalculated before or after.",
+  "mechanism": "<code>SetFontMetrics</code> returns <code>Updated.return_quiet</code> without <code>~scroll_active=true</code>.",
+  "argument": "The metrics are stored exactly as before, and the update never triggered a recalculation; the flag only decides whether the caret is scrolled into view after drawing.",
+  "assumes": "Nothing.",
+  "risk": "User-visible and deliberate: after a zoom or a web font settling, the caret is no longer brought back into view. The reveal at startup still happens.",
+  "tests_have": [
+   "None; checked in a browser."
+  ],
+  "tests_missing": [
+   "Assert the update returns <code>scroll_active = false</code>."
+  ],
+  "verdict": "holds"
+ },
+ {
+  "pr": 2652,
+  "area": "editor",
+  "short": "no false worker timeout",
+  "title": "Eval worker in Firefox: start it at load, and do not time out a reply that is queued",
+  "head": "9de67fdf30",
+  "what": "The eval worker starts with the page; a deadline timer that fires more than 250 ms late waits another 500 ms and checks again instead of declaring a timeout.",
+  "changes": "No: only whether and when the page gives up. What is sent, and which replies are accepted (the latest request id), is unchanged; a spurious \"Evaluation timed out\" now shows the real result.",
+  "mechanism": "<code>set_deadline</code> (WorkerClient.re:57-74) re-arms a late timer; the timer reference always holds the latest one, so clearing cancels re-armed timers too.",
+  "argument": "A fresh worker starts in the same state whenever it is created; replies are matched by request id, so a stale one is dropped.",
+  "assumes": "That a worker message already queued runs before a 500 ms timer set after it (not guaranteed by the spec; if not, the timer decides as before).",
+  "risk": "The evaluation deadline is no longer a fixed 20 s: in a hidden tab, timers run late and re-arm indefinitely, so a runaway evaluation keeps a core busy until the tab is visible. That delays a timeout message; it never shows a wrong result.",
+  "tests_have": [
+   "None."
+  ],
+  "tests_missing": [
+   "<code>set_deadline</code> against a fake clock: fires when on time, re-arms when late, clearing cancels a re-armed timer."
+  ],
+  "verdict": "holds"
+ },
+ {
+  "pr": 2678,
+  "area": "tests",
+  "short": "CI step budgets",
+  "title": "CI fails when an evaluation does more work than its budget",
+  "what": "A test group holds two evaluations to step budgets: a cold run (206,834 steps, budget 227,000) and a re-run after editing a literal nothing reads (378, budget 420, and under 5% of the cold run).",
+  "changes": "No. The trampoline now returns the step count it already kept, and a new entry point, called only by the test, runs the same trampoline.",
+  "mechanism": "<code>Evaluator.evaluate_counting_work</code> runs the trampoline through <code>run_slice(~step_budget=max_int)</code> and returns the count; <code>Trampoline.Yielding.SliceDone</code> carries the total. The only other matches on <code>SliceDone</code> ignore the new field. No global state.",
+  "argument": "No production path changes what it computes: the new entry point is used by the test alone, and both trampoline drivers interpret Bind, Next and Done the same way.",
+  "assumes": "That step counts repeat exactly across runs (the PR says so; not re-checked here).",
+  "risk": "Budgets have about 10% headroom and a count more than 25% under fails too, so harmless refactors will need budget bumps: noise, not flakiness. Not counted: the reuse pre-pass, statics, the worker's streaming path.",
+  "tests_have": [
+   "Both runs check their values (6085 and 7085), so a stale reuse in the re-run would fail."
+  ],
+  "tests_missing": [
+   "Edit a literal that is read (fib(10) to fib(11)) and check the value equals a fresh run's: the guard against reusing too much.",
+   "Check the re-run's step count and probe samples equal a fresh run's.",
+   "Check the counted path's value equals <code>Evaluator.evaluate</code>'s."
+  ],
+  "verdict": "none",
+  "head": "13b2e588ac"
+ },
+ {
+  "pr": 2689,
+  "area": "tests",
+  "short": "statics pass budgets",
+  "title": "Test: statics analyzes each expression within a budget",
+  "what": "<code>hazel analyze --count-passes</code> counts how often statics analyzes each expression; a test pins the known multipliers (a recursive let 3x, nested recursive lets 27x, ...) and budgets every corpus program (at most 5 analyses of one expression, 2.5 on average).",
+  "changes": "Its own commits: no (a counter that is off unless the CLI flag sets it). It is stacked on #2603 and #2651, which do change statics.",
+  "mechanism": "A check at the top of <code>uexp_to_info_map</code> reads a ref that is <code>None</code> unless the flag sets it; the counts go in a table keyed by expression id.",
+  "argument": "With the flag off, the only new work is reading one ref per call; nothing statics computes changes.",
+  "assumes": "Merged after #2603 and #2651, as it says: its diff includes their code.",
+  "risk": "A pass count cannot see a wrong type: the new test throws the info map away. With the flag on, <code>Exp.rep_id</code> could raise on an expression without ids (CLI only).",
+  "tests_have": [
+   "The tests carried from #2603 check results: Test_CtxIndex compares indexed lookups with a plain scan; Test_Statics_Let checks nested lets type-check consistently."
+  ],
+  "tests_missing": [
+   "Assert each pinned case's type and that it has no errors, since statics already runs there.",
+   "Keep an expected top-level type and error list per corpus program, and compare: where #2603's analyze-once could silently change a type."
+  ],
+  "verdict": "none",
+  "note": "stacked on #2603 and #2651",
+  "head": "0d5d015eff"
+ },
+ {
+  "pr": 2690,
+  "area": "tests",
+  "short": "recursive-library budget",
+  "title": "Test: a re-run beside a library with recursive members stays within its step budget",
+  "what": "A third step-budget case: a library module with recursive members, and an edit to a knob only the last line reads; the re-run takes 132 steps (budget 145, under 5% of the cold run's 127,394).",
+  "changes": "Its own commit: no (test only). It is stacked on #2678 and #2675; #2675 changes which expressions are reused.",
+  "mechanism": "Test only.",
+  "argument": "No non-test code of its own.",
+  "assumes": "Merged after #2678 and #2675.",
+  "risk": "13 steps of headroom; the low-side check fails below 109.",
+  "tests_have": [
+   "The value must be 45158 (300·301/2 + 8)."
+  ],
+  "tests_missing": [
+   "The other direction for #2675: edit inside the library (range(300) to range(301), expect 45458) and inside a recursive member's body, each checked against a fresh run."
+  ],
+  "verdict": "none",
+  "note": "stacked on #2678 and #2675",
+  "head": "d706264f3f"
+ },
+ {
+  "pr": 2691,
+  "area": "tests",
+  "short": "worker byte budgets",
+  "title": "Test: what the eval worker sends and gets back stays within a byte budget",
+  "what": "Measures the encoded size of the eval worker's request and answer for two programs, with budgets about 10% over today (probes.hz: 25,180 and 3,617 bytes; B2T2 leftjoin: 60,628 and 21,258).",
+  "changes": "Its own commit: no (test only). It is stacked on #2606 and #2608, which change runtime behaviour.",
+  "mechanism": "Test only: it repeats the worker's resolve, evaluate and keep sequence itself.",
+  "argument": "No non-test code of its own.",
+  "assumes": "Merged after #2606 and #2608.",
+  "risk": "It never looks at the answer's value: a broken evaluation shows only if the answer shrinks by more than 25%. Native and js_of_ocaml Marshal sizes not compared.",
+  "tests_have": [
+   "The carried Test_WorkerServer (#2606) compares a run with the held cache against a fresh run, on a small program."
+  ],
+  "tests_missing": [
+   "Decode the request and answer and check they round-trip.",
+   "Compare the answer's value with <code>Evaluator.evaluate</code> on the same elaboration, and the second answer's value with the first's."
+  ],
+  "verdict": "none",
+  "note": "stacked on #2606 and #2608",
+  "head": "35edf2d1d8"
+ },
+ {
+  "pr": 2490,
+  "area": "tests",
+  "short": "wasm spike (draft)",
+  "title": "SPIKE: compile the Hazel evaluator with wasm_of_ocaml and benchmark it",
+  "what": "A draft spike, not meant to merge: it benchmarks the evaluator compiled with wasm_of_ocaml. To build, it splits <code>util</code>, swaps the statics memo, and removes the builtin livelits; it also commits 957 build artifacts under <code>_build-wasm/</code>.",
+  "changes": "<b>Yes, as it stands:</b> the builtin livelits (<code>^slider</code>, <code>^emotion</code>) no longer type or elaborate, and three livelit tests are deleted.",
+  "mechanism": "<code>Builtins.ctx_entries</code> drops the builtin livelits; <code>Statics.mk</code>'s memo empties the whole table at 1,000 entries instead of evicting least-recently-used ones (keys still compared structurally, so a cost change, not a result change).",
+  "argument": "Not a merge candidate. Its benchmark compares the two backends' results by a hash of each workload's printed result (three workloads matched); that is a spot check, not a test.",
+  "assumes": "That it is never merged as it is.",
+  "risk": "If merged: the livelit regression, the deleted tests, 957 build artifacts in history, and a dune 3.17 requirement.",
+  "tests_have": [
+   "None that run in CI."
+  ],
+  "tests_missing": [
+   "Before wasm is used for real: a CI check that results match across the two backends. Keep the util split, if wanted, as a fresh PR without the artifacts or the livelit removal."
+  ],
+  "verdict": "spike",
+  "note": "draft spike; conflicts with dev",
+  "head": "a7b5559cbb"
+ }
+]

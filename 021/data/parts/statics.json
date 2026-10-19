@@ -1,0 +1,113 @@
+[
+ {
+  "pr": 2603,
+  "area": "statics",
+  "short": "a let analyzed once",
+  "title": "Statics: a let is analyzed once unless it refers to itself, plus three smaller speedups",
+  "head": "70e6677bdb",
+  "what": "A let whose definition is a function that neither mentions its own names nor shadows an outer one is analyzed once (the recursion probe's analysis becomes the final one), and a non-function definition skips the probe; context lookups answer the builtins from a hash table; <code>meet</code> is computed once per node; completion skips variables that cannot match the typed token.",
+  "changes": "Types, marks, the names each node reads and elaborations: no, except one corner (below). Inside the definition, the editor's context now shows the binder at the pattern's type; IncrEval, the reuse pass, EvalInfo and the evaluator never read that context.",
+  "mechanism": "Reuse when the definition is function-shaped, shadows nothing, and its analysis read none of the pattern's names (<code>CoCtx.has_any</code>); the builtin index is keyed by the physical identity of the builtin list; the shared <code>meet</code> answer is used only when all three old calls were literally the same call.",
+  "argument": "The probe's inputs are exactly those of the old recursive path's first pass, and statics is pure apart from fresh-name counters. With no shadowing, every other name resolves the same way in both contexts, and every way of looking up the binder is recorded in the names the definition reads; so when none of them was read, the final pass would equal the probe. For a non-function definition the old probe only fed a recursion test whose first case already answered false.",
+  "assumes": "That a definition depends on the context only through lookups recorded in the names it reads, and that statics is pure.",
+  "risk": "One corner: a derivation quote (<code>DrvQuote</code>) looks names up but records none, so a quote that names the let's own binder is invisible to the reuse check, and an error mark (<code>VarNoJoin</code>) that the old final pass reported goes missing. Elaboration is unchanged. Very unlikely. Not checked: whether <code>Typ.equal</code> can tell two analyses apart through fresh variable names under <code>Poly</code>.",
+  "tests_have": [
+   "Statics.Let: three type checks (plain, recursive, shadowing) and a timing test of 12 nested lets.",
+   "Ctx.TailIndex compares the indexed lookup with a plain scan; TyDi.PrefixPruning.",
+   "The PR reports identical <code>analyze -W</code> output on 72 programs (errors and warnings only)."
+  ],
+  "tests_missing": [
+   "The old let behind a flag, compared per id (type, marks, names read, elaboration) and by evaluation, over the corpus and random nests of lets.",
+   "Cases: <code>let (f, g) = …</code> where only <code>g</code> calls <code>f</code>; an annotation that disagrees (<code>let f : Int = fun x -&gt; x</code>); definitions with holes; a derivation quote naming the binder (which would fail today)."
+  ],
+  "verdict": "assumes"
+ },
+ {
+  "pr": 2651,
+  "area": "statics",
+  "short": "module analyzed once",
+  "title": "Statics: a module binding analyzes its definition once, not twice",
+  "head": "e3013b0360",
+  "what": "A module binding reads its definition's elaboration back from the info that the expanded let already wrote, instead of analyzing the definition a second time (kept as a fallback).",
+  "changes": "For well-typed module definitions that do not name their own module: no. <b>In two corners, yes.</b>",
+  "mechanism": "The elaboration is read at the definition's representative id in the current run's info map.",
+  "argument": "When the let's last analysis had the same context and expected type as the direct call, and recorded exactly the elaboration it returned, and took the non-recursive path, purity gives the same elaboration. A definition that is not a function is never recursive, so that holds in the normal case.",
+  "assumes": "That the let's recorded elaboration equals what a direct analysis returns, and that the definition is not recursive.",
+  "risk": "<b>Singleton-signature lifting:</b> when a module is ascribed a one-member signature and has more members (<code>module M : { let x : Int } = { let x = 1; let y = 2 } in M.x</code>, an error on dev that still runs), the lifting path records a different elaboration from the one it returns, so <code>M</code> at runtime is now the module's own elaboration instead of the label wrapper: evaluation changes (arguably for the better, but not \"the same output\"). <b>A function definition naming its own module</b> (<code>module F = fun x -&gt; F(x)</code>, parser not checked): the read-back elaboration has <code>F</code> unbound with no error mark, where the old second pass reported a free-constructor error. Found by reading; not run.",
+  "tests_have": [
+   "None added; the PR reports the Module, Statics, Elaboration and Evaluator groups passing (913 tests). The evaluator's module tests never reach the lifting path."
+  ],
+  "tests_missing": [
+   "Evaluation tests for both corners.",
+   "Old against new elaborations over every program with a module.",
+   "A dev-build assertion that the read-back elaboration equals the direct one."
+  ],
+  "verdict": "fails"
+ },
+ {
+  "pr": 2661,
+  "area": "statics",
+  "short": "type hashes, consistency memo",
+  "title": "Types get a Merkle hash; the evaluator asks is_consistent once per pair",
+  "head": "0875dfcd66",
+  "what": "Types get a structural hash that ignores ids and the provenance of unknown types, cached per object; the evaluator's consistency check when pushing an ascription through a constructor application is remembered per pair of hashes.",
+  "changes": "No, if two different types never hash the same.",
+  "mechanism": "A global table from a pair of 60-bit hashes to a boolean, emptied at 4,096 entries, caching <code>is_consistent(Ctx.empty, unroll(sumt), unroll(t))</code>. Types with expressions inside (proofs), projectors and signatures get no hash and are never cached.",
+  "argument": "The answer depends only on the two types' structure, not on ids or on unknown types' provenance: every unknown case succeeds whatever its provenance, variables in an empty context compare names, and bad sum entries cannot change the result. The hash covers every constructor and field except ids and provenance; binder names and constructor order are included, which only costs missed hits.",
+  "assumes": "That equal 60-bit hashes mean structurally equal types, and that types are immutable.",
+  "risk": "The hash is not cryptographic (a base-31 polynomial and an FNV-like lane, each mod 2^30, and for atoms the second lane is an affine function of the first). A collision would give a wrong consistency answer: a mismatched constructor application pushed through, or a consistent one cast. Rare, no adversary, but silent.",
+  "tests_have": [
+   "TypHash: 10 tests of the hash's properties."
+  ],
+  "tests_missing": [
+   "A property test over random type pairs (random ids, provenance, parens, recursive types, bad entries): the remembered answer equals the direct one, in both orders.",
+   "A census over every type in the corpus's info maps: same hash implies equal up to ids and provenance.",
+   "The evaluator with the memo on and off, compared."
+  ],
+  "verdict": "assumes"
+ },
+ {
+  "pr": 2679,
+  "area": "statics",
+  "short": "ascription returns the value",
+  "title": "An ascription pushed through a value gives the value back when it already has the type",
+  "head": "c82726a3c2",
+  "what": "Pushing an ascription through a list, cons, tuple, label or constructor payload returns the value itself when every part comes back unchanged, instead of a fresh copy.",
+  "changes": "No: in exactly those cases the old result was a copy of the same term. Only identity and annotations differ.",
+  "mechanism": "Physical equality on the children; only a recursive push can return a child unchanged.",
+  "argument": "Every place the push returns its input unchanged (an unknown type, a matching atom, a consistent constructor, and the new cases) returns exactly its input, so when every child comes back as itself, the rebuilt node equals the value.",
+  "assumes": "That values are immutable, and that nothing depends on the old copy's stripped annotations.",
+  "risk": "Values now keep their source annotations past an ascription (all their ids, comments, incomplete marks), where the copy had stripped them: the stepper or result printing could show a comment inside a value, and id-keyed machinery sees all ids. Display and metadata only; no bug found.",
+  "tests_have": [
+   "Test_Ascriptions: a well-typed list of labelled tuples keeps its identity; a list holding a function is still wrapped."
+  ],
+  "tests_missing": [
+   "Old against new over a corpus: results equal, step counts and stepper traces identical.",
+   "A property test over random typed values."
+  ],
+  "verdict": "holds"
+ },
+ {
+  "pr": 2681,
+  "area": "statics",
+  "short": "a typed value not walked again",
+  "title": "A value known to have a type is not walked again for it",
+  "head": "8546bde64e",
+  "what": "The evaluator remembers, per value (a term block, or a list's cell), the type hashes at which pushing an ascription returned it unchanged, and skips the walk the next time; a list records every tail.",
+  "changes": "No, if two different types never hash the same.",
+  "mechanism": "A weak map keyed by the value's physical identity, holding type hashes (from #2661). Values are immutable, so nothing needs invalidating; dead keys are dropped.",
+  "argument": "The push decides only from the term's contents and the type (ids are used only to build copies), so two values sharing a term behave the same. A list can come back as itself only when every element did, at an unknown type, or through parens forwarding to one of those, and in each case every suffix list at the same type also comes back unchanged (so recording tails is sound). Values that need wrapping (functions) never come back as themselves, so they are never recorded.",
+  "assumes": "#2661's no-collision assumption; that terms and lists are never mutated in place.",
+  "risk": "A collision would hide a failing push: a list remembered at <code>[Int]</code> would pass unchanged at a type with the same hash, skipping the cast failure. Same probability as #2661.",
+  "tests_have": [
+   "Test_Ascriptions: a list's tails are remembered, only for that type; a value without the type is not remembered (mutation-checked on #2635, the PR says)."
+  ],
+  "tests_missing": [
+   "The memo on and off over a corpus and random programs with annotated parameters: results, step counts and cast errors compared.",
+   "A wrongly typed head consed onto a remembered tail.",
+   "A fake hash injected to force a collision, showing it is the only way to a wrong answer."
+  ],
+  "verdict": "assumes",
+  "note": "its branch also merges #2661 and #2679"
+ }
+]

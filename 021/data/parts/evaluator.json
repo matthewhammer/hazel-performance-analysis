@@ -1,0 +1,88 @@
+[
+ {
+  "pr": 2606,
+  "area": "evaluator",
+  "short": "cache kept in the worker",
+  "title": "Keep the incremental cache in the eval worker",
+  "head": "1b5de419b3",
+  "what": "The eval worker keeps the last finished incremental cache for each (document, key), at most 32 slots, and answers without sending the cache back; a request asks for the held one instead of sending its own.",
+  "changes": "Values: no. It changes which earlier cache a run starts from: always the worker's last finished one for that slot, not whatever the page held (an older one after undo, a partial one after a superseded run, none after a slide reset).",
+  "mechanism": "<code>WorkerServer.Held</code>, keyed by (document, key). A failed run (a step-limit timeout included) drops its slot, a superseded run is never kept, a restarted worker starts empty, a 33rd slot clears the table. The held cache is swapped in once per request, before both the reuse plan and the evaluation run.",
+  "argument": "The reuse check never trusts where its earlier cache came from: for each node it re-checks the elaboration, the provenance of every name the node reads, and the probe targets against the new request. So a cache from an earlier run, or from another program that shares ids, is reused at a node only when the node and all it reads are the same, down to the builtins.",
+  "assumes": "That every finished cache is internally consistent: each entry's value was computed from the values its sources hold. That holds by induction over runs, with one gap shared by all incremental reuse: whether a source counts as reused comes from the reuse plan's prediction, not from what the evaluator did.",
+  "risk": "A bad cache, if one ever exists (the #2457 kind), now survives slide resets and undo until the worker restarts or the page reloads. Some documents share a slot (slides of the same name; three modes send an empty document name), which costs reuse, not correctness. The tests skip the worker's real request path, and their program is below the size where the worker uses an earlier cache at all.",
+  "tests_have": [
+   "A new group, WorkerServer held cache (4 tests): a slot is kept and left out of the answer; documents and keys are separate; an edited program run against the held cache equals a fresh run; a failure drops the slot."
+  ],
+  "tests_missing": [
+   "Across programs: for programs A and B from the slides and the tutorial, evaluating B with A's cache equals evaluating B fresh (value, probes, test results).",
+   "The same through the worker's yielding path, with a superseding request mid-run, on a program above the incremental threshold.",
+   "An edit sequence replayed three ways (held cache, the page's cache, fresh), compared at every step."
+  ],
+  "verdict": "assumes"
+ },
+ {
+  "pr": 2608,
+  "area": "evaluator",
+  "short": "no whitespace in elaborations",
+  "title": "Leave the source's whitespace and comments out of elaborations",
+  "head": "66f789d916",
+  "what": "Statics builds elaborated expressions and patterns without the whitespace and comments (<code>secondary</code>) around each source node, which only made elaborations bigger.",
+  "changes": "No. Only the <code>secondary</code> annotation on elaboration nodes changes.",
+  "mechanism": "Nothing cached: data dropped (<code>IdTagged.unwrap_elab</code>, <code>strip_secondary</code>).",
+  "argument": "Nothing that consumes an elaboration reads <code>secondary</code>: the evaluator only ever empties it; equality ignores annotations except lexemes; printing uses stored whitespace only when preserving parsed source exactly, never for elaborations or results; incremental reuse compares lexemes, not whitespace.",
+  "assumes": "That nothing reads an elaboration's whitespace and comments (none does at this head).",
+  "risk": "A future reader (say, quotation that keeps formatting) would silently get none. The stripping is incomplete (labelled-tuple wrappers, the nodes of types inside an elaboration), which costs size only.",
+  "tests_have": [
+   "A new group, ElabSize: a program full of comments elaborates with no whitespace on any expression or pattern node and still evaluates to 30.",
+   "The whole evaluator suite now runs on stripped elaborations."
+  ],
+  "tests_missing": [
+   "Over the slides and the tutorial, with and without the change: info maps agree except the elaboration, elaborations agree on every id and lexeme, and results, probes and test results are identical."
+  ],
+  "verdict": "holds"
+ },
+ {
+  "pr": 2673,
+  "area": "evaluator",
+  "short": "reuse by Merkle hash",
+  "title": "Incremental evaluation recognizes an unchanged expression by its Merkle hash",
+  "head": "cea8f0a98f",
+  "what": "The reuse check first asks whether the cached and new elaborations hash the same (a structural 64-bit hash of the runtime value, remembered per object); if not, one structural walk compares the terms and their lexemes together, remembering each answer per pair of objects.",
+  "changes": "It is meant not to, but its decision differs from the old check in corners: a hash collision would reuse a different elaboration (a wrong value), and the one walk is stricter than the old check in one case and laxer in another.",
+  "mechanism": "<code>Util.ValueHash</code> over the whole value (ids, lexemes, whitespace); memos never invalidated, relying on terms never being mutated; values with functions, unforced lazies or cycles get no hash and fall back to the walk. The shortcut is used only with alpha-equivalence off and no environments, so identical subterms mean the same thing.",
+  "argument": "Equal hashes mean an identical structure (barring collisions), and on identical structures the old check was true too. Where the new walk differs: <b>stricter</b>, a parenthesized literal against a parenthesized literal under new ids, or a slider over an Int literal, compares unequal (lost reuse, never wrong); <b>laxer</b>, <code>(e)</code> against <code>e</code> compares equal where the old check refused, and both evaluate to the same value (parens and projectors take one side-effect-free step), though a replayed step count can differ by the number of wrappers.",
+  "assumes": "That the 64-bit hash never collides, and that terms are never mutated in place.",
+  "risk": "A collision silently reuses a wrong value. The hash has a structure that makes collisions easier than chance: each lane is an xor-multiply chain in which flipping bit 31 of a child flips only bit 31 of the state, so two children both differing exactly in bit 31 cancel. Elaborations have few raw int fields and no realistic colliding term was found, but a finalizer per lane (or a 128-bit hash) would remove the structure. The PR claims the same reuse decisions as before; that is not quite so.",
+  "tests_have": [
+   "ValueHash (5 tests), one_walk_lexemes_test and lexeme_edit_test in the incremental suite."
+  ],
+  "tests_missing": [
+   "A QCheck property over random terms and random edits (new ids, lexeme and literal edits, parens and projectors added or removed, a binder renamed): the hashed check equals the old one, and equal hashes imply equal terms. It would catch the parens case.",
+   "Old against new reuse decisions at every node of the slides and the tutorial, after an edit and after replacing all ids.",
+   "No two structurally different subterms of that corpus share a hash."
+  ],
+  "verdict": "assumes"
+ },
+ {
+  "pr": 2675,
+  "area": "evaluator",
+  "short": "reuse around a recursive let",
+  "title": "Incremental evaluation reuses expressions around a recursive let",
+  "head": "1e5207494a",
+  "what": "For a recursive let, statics' record of the names the definition reads (its co_ctx) now leaves out the let's own names, which the fixpoint binds, so an edit elsewhere no longer forces the recursive definition and everything after it to re-run.",
+  "changes": "Values: no; more expressions are reused. It also changes one thing statics shows: in <code>let go = 1 in let go = fun i -&gt; ... go(i - 1) ... in go(3)</code> the outer <code>go</code> is now flagged unused, which is right but not mentioned in the PR. Types do not change.",
+  "mechanism": "The co_ctx decides which names the reuse check must find unchanged; removing a name removes a dependency.",
+  "argument": "A recursive let elaborates to <code>Let(p, FixF(p, def), body)</code>, and its definition was analyzed with the pattern's names in scope, so every use of those names in it refers to the recursive binding the fixpoint binds. The free variables of <code>FixF(p, def)</code> are exactly the definition's minus the pattern's names, which is what the new co_ctx computes; a non-recursive <code>let x = x + 1</code> still reads the outer <code>x</code>.",
+  "assumes": "That the fixpoint binds exactly the names the pattern adds to the context (the fixpoint's own node already assumed this).",
+  "risk": "It widens reuse in exactly the programs (modules of recursive helpers) where any gap in cache consistency would show, while the property that compares incremental with fresh evaluation is switched off on dev (#2457).",
+  "tests_have": [
+   "Two new cases check the result and the reuse plan after an unrelated literal edit."
+  ],
+  "tests_missing": [
+   "Incremental against fresh after editing an outer variable used inside the recursive definition (<code>let k = 7 in let go = fun i -&gt; if i == 0 then k else go(i - 1) in go(3)</code>: editing <code>k</code> must not reuse <code>go</code>), mutual recursion, function sugar, and an outer binding the recursive name shadows.",
+   "Re-enable the incremental-against-fresh property, with a generator that makes recursive lets."
+  ],
+  "verdict": "holds"
+ }
+]

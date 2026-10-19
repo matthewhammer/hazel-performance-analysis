@@ -1,0 +1,106 @@
+[
+ {
+  "pr": 2610,
+  "area": "editor",
+  "short": "segmented load fallback",
+  "title": "Parse the load fallback with the segmented parser, projectors kept",
+  "head": "0aba66119a",
+  "what": "When the fast parser rejects saved text, the fallback now types it in as top-level pieces of at least 100 characters, each into a fresh zipper, joined and re-grouted once, instead of character by character; projector pins are kept.",
+  "changes": "<b>Yes, on the fallback path</b> (saved programs with an unfinished form or a concave hole, share links, the CLI's tutorial decoding): a piece is parsed without its left context.",
+  "mechanism": "<code>Parser.to_zipper_segmented</code> splits where the caret is at top level, outside any token, with no missing shards, just after whitespace (Parser.re:81-85). The join is re-grouted (Parser.re:158), never remolded, and the caller does not remold afterwards.",
+  "argument": "The PR checks the printed text against the character-by-character parser on 128 inputs, and keeps projector ids across the split (sound).",
+  "assumes": "That a piece's first token is molded the same way without what precedes it. That is false for tokens whose mold depends on their left neighbour.",
+  "risk": "<code>-</code> (binary or unary) and <code>(</code> (application or parentheses) are molded by their left neighbour, and an ascription's right side switches to types. If a split lands just after an operand, as when 100 characters end inside <code>x</code> in a top-level <code>x - y</code>, the next piece starts in a concave context: <code>-</code> becomes unary minus and the join gets a hole, so <code>aaa…a - b</code> loads as <code>aaa…a ¿ -b</code>, and <code>f (b)</code> as <code>f ¿ (b)</code>. Splits also happen right after a comment's closing <code>#</code>. Rare per program, but silent at load, and written back on the next save. <i>Found by reading the code; a test to confirm it is the first step below.</i>",
+  "tests_have": [
+   "Parser.Segmented compares 5 files and a prose paragraph with the character-by-character parser, by printed text."
+  ],
+  "tests_missing": [
+   "The constructed cases above, against the character-by-character parser.",
+   "A sweep of split positions: each corpus program with 0 to 99 characters of padding in front, so every top-level space becomes a split point at some offset.",
+   "Fallback-shaped inputs (an unfinished form at the end, concave holes), compared as terms, not only printed text.",
+   "A likely fix, not yet tried: remold the joined zipper once before the final re-grout."
+  ],
+  "verdict": "fails"
+ },
+ {
+  "pr": 2614,
+  "area": "editor",
+  "short": "load 2.5x faster",
+  "title": "Load text about 2.5× faster: whole tokens, one re-grout",
+  "head": "b4e3914b03",
+  "what": "Loading types each run of operand or operator characters in as one insertion and re-grouts once at the end, not after every character; rescanning returns its own argument when nothing changed, tested by identity; a carriage return reads as a newline.",
+  "changes": "Designed not to, and no case found by reading, except the line-ending change, which changes the parse on purpose for text with <code>\\r</code> (loading, the paste fallback, splice paste).",
+  "mechanism": "<code>to_zipper ~by_run</code>; <code>take_run</code> stops where typing would stop extending a token; one <code>remold_regrout</code> at the end; <code>Siblings.rescan</code> returns its argument unchanged when nothing converted.",
+  "argument": "The identity check is exactly the old structural one: rescanning alters a piece only at a conversion, which it flags. Whole-token runs: the operand and operator character classes are disjoint and no token spans both, and insertion still merges with its left neighbour. One re-grout: remolding skips grout and passes shapes through, so molds cannot depend on grout, and the final pass puts the same 0 or 1 grout at each junction.",
+  "assumes": "That insertion's choices do not depend on grout or on per-prefix side effects (three places in Insert read grout, for ids, a suppressed space and the caret, none for the term).",
+  "risk": "A hole's place relative to a neighbouring space may differ (text and layout, not the term). A lone <code>\\r</code> inside a string or comment now splits it into fragments (dev dropped it silently); rare and loud. CRLF text, which loaded with a hole on every line, now loads right. #2610 and #2614 both rewrite the same fallback: merging both needs a choice.",
+  "tests_have": [
+   "Parser.LoadPath (6 tests); 386 parse tests; a structural comparison on 72 programs, run once offline."
+  ],
+  "tests_missing": [
+   "In CI: whole-token runs on against off, ids erased, over the corpus and fallback-shaped inputs (prose, hole-heavy text, unfinished endings, <code>x+-1</code>, <code>&gt;&gt;=</code>, <code>1.5e-3</code>, Unicode names, strings and comments with spaces).",
+   "A lone <code>\\r</code> inside a literal."
+  ],
+  "verdict": "assumes"
+ },
+ {
+  "pr": 2671,
+  "area": "editor",
+  "short": "MapPiece keeps identity",
+  "title": "MapPiece keeps unchanged pieces as the same objects",
+  "head": "04e1c6c362",
+  "what": "Mapping over a segment returns the original object wherever nothing under it changed.",
+  "changes": "No: the output is structurally equal to before; only sharing differs.",
+  "mechanism": "Identity checks (<code>===</code>) on each piece and tile; the updater is applied piece by piece and then recursed into, where the old code applied it to a whole level first: the same calls in a different order.",
+  "argument": "If every piece maps to itself the output is element for element the input, so returning the input is equivalent. All five callers on dev are pure or order-independent.",
+  "assumes": "That updaters are pure, or at least do not depend on call order.",
+  "risk": "A future updater that depends on order would break. It makes identity-keyed caches hit after projector updates; on #2635 that switches on incremental term-building reuse, which is sound only if an item's term depends on nothing outside its own pieces (a question for #2635's review).",
+  "tests_have": [
+   "MapPieceIdentity: a no-op update returns the same segment, and the top-level prefix is kept (both fail without the change)."
+  ],
+  "tests_missing": [
+   "A property test: new against old, structurally, for random pure updaters; identity checked at depth."
+  ],
+  "verdict": "assumes"
+ },
+ {
+  "pr": 2672,
+  "area": "editor",
+  "short": "font measure, no scroll",
+  "title": "Measuring the font no longer scrolls the editor to the caret",
+  "head": "86bdda9d0c",
+  "what": "Storing the measured font no longer asks the editor to scroll the caret into view.",
+  "changes": "No. Only the scroll flag flips; nothing recalculated before or after.",
+  "mechanism": "<code>SetFontMetrics</code> returns <code>Updated.return_quiet</code> without <code>~scroll_active=true</code>.",
+  "argument": "The metrics are stored exactly as before, and the update never triggered a recalculation; the flag only decides whether the caret is scrolled into view after drawing.",
+  "assumes": "Nothing.",
+  "risk": "User-visible and deliberate: after a zoom or a web font settling, the caret is no longer brought back into view. The reveal at startup still happens.",
+  "tests_have": [
+   "None; checked in a browser."
+  ],
+  "tests_missing": [
+   "Assert the update returns <code>scroll_active = false</code>."
+  ],
+  "verdict": "holds"
+ },
+ {
+  "pr": 2652,
+  "area": "editor",
+  "short": "worker at load, no false timeout",
+  "title": "Eval worker in Firefox: start it at load, and do not time out a reply that is queued",
+  "head": "9de67fdf30",
+  "what": "The eval worker starts with the page; a deadline timer that fires more than 250 ms late waits another 500 ms and checks again instead of declaring a timeout.",
+  "changes": "No: only whether and when the page gives up. What is sent, and which replies are accepted (the latest request id), is unchanged; a spurious \"Evaluation timed out\" now shows the real result.",
+  "mechanism": "<code>set_deadline</code> (WorkerClient.re:57-74) re-arms a late timer; the timer reference always holds the latest one, so clearing cancels re-armed timers too.",
+  "argument": "A fresh worker starts in the same state whenever it is created; replies are matched by request id, so a stale one is dropped.",
+  "assumes": "That a worker message already queued runs before a 500 ms timer set after it (not guaranteed by the spec; if not, the timer decides as before).",
+  "risk": "The evaluation deadline is no longer a fixed 20 s: in a hidden tab, timers run late and re-arm indefinitely, so a runaway evaluation keeps a core busy until the tab is visible. That delays a timeout message; it never shows a wrong result.",
+  "tests_have": [
+   "None."
+  ],
+  "tests_missing": [
+   "<code>set_deadline</code> against a fake clock: fires when on time, re-arms when late, clearing cancels a re-armed timer."
+  ],
+  "verdict": "holds"
+ }
+]
