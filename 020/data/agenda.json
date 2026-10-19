@@ -3,7 +3,7 @@
  "kind": "agenda",
  "meeting": "2026-10-21",
  "started": "2026-10-19",
- "updated": "2026-10-19 12:32 MDT",
+ "updated": "2026-10-19 12:59 MDT",
  "page_title": "Agenda for October 21",
  "title": "Agenda: Matthew and Cyrus, Wednesday 2026-10-21",
  "sub": "The topics Matthew brings to his meeting with Cyrus on Wednesday 2026-10-21. Most are Cyrus's own questions from their meeting on Friday 2026-10-16. <b>A work in progress:</b> compiled over the two days before the meeting and updated as items move, so each item says where it stands, as of when, and what it needs from the meeting.",
@@ -22,8 +22,8 @@
    "ticket": 405,
    "status": "fixed, merging",
    "tone": "good",
-   "as_of": "2026-10-19 12:30",
-   "body": "<p><a href=\"../018/\"><code class=\"ref\"><b>^report(</b>18<b>)</b></code></a> found three causes, all from merging #2469 (modular editors) into the livelits branch, with neither branch broken on its own: 8 DefStaticsParity module cases (modules analyzed whole since the merge), one typed-table test (<code>Editing.TableDecorations 1</code>, from dev's canonical completion, #2374), and one mismatch in the slide corpus. As of 2026-10-19 each has a fix:</p><ul><li>the table test's input, so that its hidden error still comes from table syntax (<code>27f100e37c</code>);</li><li>the corpus mismatch, <b>a real bug in incremental statics</b>: a livelit use was not analyzed again when the livelit it applies changed, so after an edit it kept its old expansion (<code>1131a457e4</code>);</li><li>the 8 module cases, by #2699, which brings Andrew Blinn's per-member module analysis on Modules II (<code>a6b5478f52</code>, from #2687) into #2635, with one fix of its own: a livelit definition is no longer analyzed as a module (<code>223357135a</code>).</li></ul><p>With #2699, DefStaticsParity passes 43 of 43 locally. #2635's conflicts with its base are resolved too (<code>cf325d4f61</code>).</p>",
+   "as_of": "2026-10-19 12:59",
+   "body": "<p><a href=\"../018/\"><code class=\"ref\"><b>^report(</b>18<b>)</b></code></a> found three causes, all from merging #2469 (modular editors) into the livelits branch, with neither branch broken on its own: 8 DefStaticsParity module cases (modules analyzed whole since the merge), one typed-table test (<code>Editing.TableDecorations 1</code>, from dev's canonical completion, #2374), and one mismatch in the slide corpus. As of 2026-10-19 each has a fix:</p><ul><li>the table test's input, so that its hidden error still comes from table syntax (<code>27f100e37c</code>);</li><li>the corpus mismatch, <b>a real bug in incremental statics</b>: a livelit use was not analyzed again when the livelit it applies changed, so after an edit it kept its old expansion (<code>1131a457e4</code>);</li><li>the 8 module cases, by #2699, which brings Andrew Blinn's per-member module analysis on Modules II (<code>a6b5478f52</code>, from #2687) into #2635, with one fix of its own: a livelit definition is no longer analyzed as a module (<code>223357135a</code>).</li></ul><p>On GitHub: #2635's Fast checks at <code>1131a457e4</code> fail only the 8 module cases now (5,552 tests run), and #2699's pass at <code>223357135a</code>; with #2699, DefStaticsParity passes 43 of 43 locally. #2635's conflicts with its base are resolved too (<code>cf325d4f61</code>). The whole story, with today's update, is <a href=\"../018/\"><code class=\"ref\"><b>^report(</b>18<b>)</b></code></a>.</p>",
    "meeting": "Confirm #2635 is green (this item is updated before Wednesday). The corpus bug is the kind the correctness item below is about: the parity tests caught it."
   },
   {
