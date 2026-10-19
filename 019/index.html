@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- theme: head begin -->
+<script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<!-- theme: head end -->
+<!-- nav: begin --><meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script><!-- nav: end -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tiles Across the Hazel UI</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8; --accent2: #0e7490; --cx: #d6d1c6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  .headline ol > li { margin: 8px 0; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); } .cv2 { color: var(--muted); }
+  figure.fig { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 16px 0; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 72ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; overflow-wrap: anywhere; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .cause { border-left: 4px solid var(--line); padding-left: 14px; margin: 18px 0; }
+  .cause.a { border-color: var(--accent); } .cause.b { border-color: var(--warn); } .cause.c { border-color: var(--accent2); }
+
+  svg.chart { width: 100%; height: auto; display: block; font: 12.5px system-ui, sans-serif; color: var(--ink); }
+  svg.chart .ct { fill: var(--ink); font-weight: 600; font-size: 14px; }
+  svg.chart .cl { fill: var(--ink); }
+  svg.chart .cv { fill: var(--muted); }
+  svg.chart .bn { font-weight: 700; font-size: 13px; }
+  svg.chart .grid { stroke: var(--line); stroke-width: 1; }
+  svg.chart .good { fill: var(--good); } svg.chart .bad { fill: var(--bad); } svg.chart .warn { fill: var(--warn); } svg.chart .cx { fill: var(--cx); }
+  svg.chart tspan.good { fill: var(--good); } svg.chart tspan.bad { fill: var(--bad); }
+  svg.chart .rd { fill: var(--bad); }
+  svg.chart .ring { fill: none; stroke: var(--good); stroke-width: 2; }
+  svg.chart .cb { stroke-width: 1.5; }
+  svg.chart .cb.a { fill: color-mix(in srgb, var(--accent) 16%, var(--paper)); stroke: var(--accent); }
+  svg.chart .cb.b { fill: color-mix(in srgb, var(--warn) 18%, var(--paper)); stroke: var(--warn); }
+  svg.chart .cb.c { fill: color-mix(in srgb, var(--accent2) 16%, var(--paper)); stroke: var(--accent2); }
+  svg.chart .br { fill: none; stroke-width: 1.8; }
+  svg.chart .br.a { stroke: var(--accent); } svg.chart .br.b { stroke: var(--warn); } svg.chart .br.c { stroke: var(--accent2); }
+
+  .col { stroke: var(--line); stroke-width: 1; fill: var(--paper); }
+  svg.chart .chip.edit { fill: color-mix(in srgb, var(--good) 18%, var(--paper)); stroke: var(--good); }
+  svg.chart .chip.select { fill: color-mix(in srgb, var(--accent2) 18%, var(--paper)); stroke: var(--accent2); }
+  svg.chart .chip.static { fill: color-mix(in srgb, var(--accent) 16%, var(--paper)); stroke: var(--accent); }
+  svg.chart .chip.text { fill: color-mix(in srgb, var(--warn) 16%, var(--paper)); stroke: var(--warn); stroke-dasharray: 4 3; }
+  h3.k { border-left: 6px solid var(--line); padding-left: 10px; }
+  h3.k.edit { border-color: var(--good); } h3.k.select { border-color: var(--accent2); }
+  h3.k.static { border-color: var(--accent); } h3.k.text { border-color: var(--warn); }
+  .kinds { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 14px 0; }
+  .kind { background: var(--paper); border: 1px solid var(--line); border-top-width: 4px; border-radius: 8px; padding: 8px 12px; font-size: 0.93em; }
+  .kind.edit { border-top-color: var(--good); } .kind.select { border-top-color: var(--accent2); }
+  .kind.static { border-top-color: var(--accent); } .kind.text { border-top-color: var(--warn); }
+  .kind b { display: block; margin-bottom: 2px; }
+</style>
+
+<body>
+<main>
+<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>19<b>)</b></code> · 2026-10-19</p>
+<h1>The Hazel UI draws syntax as tiles on 22 of 39 surfaces, but only 6 take a caret</h1>
+<p class="sub">Cyrus asked for two things on 2026-10-16: livelits' model views as read-only tiles, with the selection and right-click menu tiles have in the editor, and the explainer's examples as read-only tiles too. Both asks assume some views print syntax as text. Matthew asked for the whole picture: every place the Hazel UI shows a term, pattern, type or value, and how it draws it. For the meeting with Cyrus on 2026-10-21 (<code class="ref"><b>^ticket(</b>389<b>)</b></code>; this report is <code class="ref"><b>^ticket(</b>393<b>)</b></code>).</p>
+
+<div class="headline">
+<p><b>Short answers.</b> As of 2026-10-19, on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits &times; modular editors) at <code>b44bb9c50f</code>; 16 of the 39 surfaces were checked in the running app and the rest traced in the code.</p>
+<ol>
+  <li><b>Most surfaces that show syntax draw it as tiles: 22 of 39.</b> That counts every place the UI shows a term, pattern, type or value in normal use. Two more views are debug-only and are left out.</li>
+  <li><b>Only 6 of them take a caret.</b> Three are editors: the editor itself, a livelit's splices and the proof-step editors. Three are read-only: a livelit's model revealed with its eye, the stepper's steps, and dev's evaluation result. <b>Only the revealed model has the tiles' whole selection UX</b> (caret, Shift+Arrow selection, the inspector, and Hazel's right-click menu). The stepper and the result take a caret but open no menu.</li>
+  <li><b>16 surfaces draw tiles you can only look at:</b> the inspector's bar and full view, &Gamma;, the explainer's form and examples, probe values, the program's value, refractors and the Projectors card's splices, among others. They use the editor's tile renderer (<code>Code.view</code>) but none of its input handling, so none of them take a caret, a selection or a right-click.</li>
+  <li><b>17 surfaces print syntax as plain text:</b> the outline, the Projectors card's header, inline code in explanations, a livelit's head and params lines (HTML inputs, by design), the stepper's title bar, the Printarium, folded function chips, completions, and the coding agent's messages.</li>
+  <li><b>For Cyrus's asks, what is missing is selection, not tiles.</b> The Projectors card's splices and the refractors are already tiles; only the card's one-line header is text. The explainer's examples are tiles too, in a locked cell editor. What all of them lack is the revealed model's read-only selection, and one shared read-only, selectable view could give it to every look-only surface.</li>
+</ol>
+</div>
+
+<figure class="fig" id="map">
+<svg viewBox="0 0 900 624" role="img" class="chart" aria-label="Four columns of labelled chips. Tiles you edit: 3. Read-only tiles you can select: 3. Tiles you can only look at: 16. Plain text: 17.">
+<rect x="10" y="6" width="218" height="612" rx="10" class="col edit"/>
+<text x="20" y="28" class="ct">Tiles you edit</text>
+<text x="20" y="47" class="cv">3 surfaces</text>
+<rect x="18" y="64" width="82" height="26" rx="6" class="chip edit"/><text x="26" y="81" class="cl">The editor</text>
+<rect x="18" y="96" width="115" height="26" rx="6" class="chip edit"/><text x="26" y="113" class="cl">Livelit splices</text>
+<rect x="18" y="128" width="135" height="26" rx="6" class="chip edit"/><text x="26" y="145" class="cl">Proof step editors</text>
+<rect x="234" y="6" width="218" height="612" rx="10" class="col select"/>
+<text x="244" y="28" class="ct">Read-only tiles you can select</text>
+<text x="244" y="47" class="cv">3 surfaces</text>
+<rect x="242" y="64" width="141" height="26" rx="6" class="chip select"/><text x="250" y="81" class="cl">Livelit model (eye)</text>
+<rect x="242" y="96" width="102" height="26" rx="6" class="chip select"/><text x="250" y="113" class="cl">Stepper steps</text>
+<rect x="242" y="128" width="168" height="26" rx="6" class="chip select"/><text x="250" y="145" class="cl">Evaluation result (dev)</text>
+<rect x="458" y="6" width="218" height="612" rx="10" class="col static"/>
+<text x="468" y="28" class="ct">Tiles you can only look at</text>
+<text x="468" y="47" class="cv">16 surfaces</text>
+<rect x="466" y="64" width="102" height="26" rx="6" class="chip static"/><text x="474" y="81" class="cl">Inspector bar</text>
+<rect x="466" y="96" width="89" height="26" rx="6" class="chip static"/><text x="474" y="113" class="cl">Γ (context)</text>
+<rect x="466" y="128" width="108" height="26" rx="6" class="chip static"/><text x="474" y="145" class="cl">Problems panel</text>
+<rect x="466" y="160" width="115" height="26" rx="6" class="chip static"/><text x="474" y="177" class="cl">Explainer: form</text>
+<rect x="466" y="192" width="141" height="26" rx="6" class="chip static"/><text x="474" y="209" class="cl">Explainer: examples</text>
+<rect x="466" y="224" width="168" height="26" rx="6" class="chip static"/><text x="474" y="241" class="cl">Explainer: hazel blocks</text>
+<rect x="466" y="256" width="141" height="26" rx="6" class="chip static"/><text x="474" y="273" class="cl">Explainer: variants</text>
+<rect x="466" y="288" width="95" height="26" rx="6" class="chip static"/><text x="474" y="305" class="cl">Probe values</text>
+<rect x="466" y="320" width="155" height="26" rx="6" class="chip static"/><text x="474" y="337" class="cl">Program value (#2635)</text>
+<rect x="466" y="352" width="155" height="26" rx="6" class="chip static"/><text x="474" y="369" class="cl">Stopped / elaboration</text>
+<rect x="466" y="384" width="128" height="26" rx="6" class="chip static"/><text x="474" y="401" class="cl">Refractor splices</text>
+<rect x="466" y="416" width="174" height="26" rx="6" class="chip static"/><text x="474" y="433" class="cl">Projectors card: splices</text>
+<rect x="466" y="448" width="135" height="26" rx="6" class="chip static"/><text x="474" y="465" class="cl">Tables, type, fold</text>
+<rect x="466" y="480" width="89" height="26" rx="6" class="chip static"/><text x="474" y="497" class="cl">Proof boxes</text>
+<rect x="466" y="512" width="168" height="26" rx="6" class="chip static"/><text x="474" y="529" class="cl">Kind / derivation insp.</text>
+<rect x="466" y="544" width="141" height="26" rx="6" class="chip static"/><text x="474" y="561" class="cl">Agent: program view</text>
+<rect x="682" y="6" width="218" height="612" rx="10" class="col text"/>
+<text x="692" y="28" class="ct">Plain text</text>
+<text x="692" y="47" class="cv">17 surfaces</text>
+<rect x="690" y="64" width="168" height="26" rx="6" class="chip text"/><text x="698" y="81" class="cl">Projectors card: header</text>
+<rect x="690" y="96" width="115" height="26" rx="6" class="chip text"/><text x="698" y="113" class="cl">Outline sidebar</text>
+<rect x="690" y="128" width="128" height="26" rx="6" class="chip text"/><text x="698" y="145" class="cl">Split-cell labels</text>
+<rect x="690" y="160" width="128" height="26" rx="6" class="chip text"/><text x="698" y="177" class="cl">Livelit head line</text>
+<rect x="690" y="192" width="141" height="26" rx="6" class="chip text"/><text x="698" y="209" class="cl">Livelit params line</text>
+<rect x="690" y="224" width="161" height="26" rx="6" class="chip text"/><text x="698" y="241" class="cl">Explainer: inline code</text>
+<rect x="690" y="256" width="188" height="26" rx="6" class="chip text"/><text x="698" y="273" class="cl">Explainer: non-hazel block</text>
+<rect x="690" y="288" width="155" height="26" rx="6" class="chip text"/><text x="698" y="305" class="cl">Rule-failure messages</text>
+<rect x="690" y="320" width="161" height="26" rx="6" class="chip text"/><text x="698" y="337" class="cl">Explainer: livelit use</text>
+<rect x="690" y="352" width="128" height="26" rx="6" class="chip text"/><text x="698" y="369" class="cl">Stepper title bar</text>
+<rect x="690" y="384" width="82" height="26" rx="6" class="chip text"/><text x="698" y="401" class="cl">Printarium</text>
+<rect x="690" y="416" width="108" height="26" rx="6" class="chip text"/><text x="698" y="433" class="cl">Function chips</text>
+<rect x="690" y="448" width="141" height="26" rx="6" class="chip text"/><text x="698" y="465" class="cl">Sample-focus crumbs</text>
+<rect x="690" y="480" width="128" height="26" rx="6" class="chip text"/><text x="698" y="497" class="cl">Completion suffix</text>
+<rect x="690" y="512" width="122" height="26" rx="6" class="chip text"/><text x="698" y="529" class="cl">Completion chips</text>
+<rect x="690" y="544" width="141" height="26" rx="6" class="chip text"/><text x="698" y="561" class="cl">Names in inspectors</text>
+<rect x="690" y="576" width="115" height="26" rx="6" class="chip text"/><text x="698" y="593" class="cl">Agent: messages</text>
+</svg>
+<figcaption>Every surface of the Hazel UI that shows syntax in normal use, on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <code>b44bb9c50f</code>, in four columns from most to least interactive (debug-only views left out). The <a href="#surfaces">full list</a> gives the code behind each one and how it was checked.</figcaption>
+</figure>
+
+<h2 id="kinds">Four ways to draw syntax</h2>
+<p>Hazel's editor draws code as <i>tiles</i>: each token a span placed by the editor's layout, with holes, grout and indentation drawn the editor's way. The same renderer, <code>Code.view</code>, is called in many places besides the editor. What differs between those places is what comes with it: a zipper (the edit state with a caret) and an input handler, or nothing. That gives four kinds of surface, told apart here by what a click does, not by how the page looks:</p>
+<div class="kinds"><div class="kind edit"><b>Tiles you edit: 3</b>A zipper with input handling: caret, selection, typing, and Hazel's right-click menu (<code>CodeEditable</code>).</div><div class="kind select"><b>Read-only tiles you can select: 3</b>A zipper without edits: a caret, and in one case selection and the menu too (<code>CodeSelectable</code>, or the revealed model's sub-editor).</div><div class="kind static"><b>Tiles you can only look at: 16</b>Tiles from <code>Code.view</code> with nothing around them: no caret, no selection, no menu.</div><div class="kind text"><b>Plain text: 17</b>A string printed from the syntax (<code>Printer.of_segment</code>, <code>Segment.to_string</code>, <code>Typ.pretty_print</code>), shown in a span, an input or a tooltip.</div></div>
+<p class="note">A surface is classed by what it does, not by its classes in the page. The Projectors card's header is a single element with the token class holding a printed string, so it looks like a tile but counts as text. The explainer's examples sit in an editor element that takes focus when clicked, but no caret appears and no menu opens, so they count as tiles to look at.</p>
+
+<h2 id="surfaces">Every surface, by kind</h2>
+<p>Each row names a surface as someone using Hazel meets it, then gives what syntax it shows, what a click does, the code that draws it (paths under <code>src/</code> on #2635 at <code>b44bb9c50f</code>), and whether it was checked in the running app or traced in the code.</p>
+<h3 id="edit" class="k edit">Tiles you edit: 3</h3>
+<p>Only the places where a person writes code.</p>
+<div class="scroll"><table>
+<tr><th>Surface</th><th>Shows</th><th>What a click does</th><th>Drawn by</th><th>Checked</th></tr>
+<tr id="s-editor"><td><b>The editor</b><div class="note">Every mode: Scratch, Documentation, Tutorial, Exercises.</div></td><td>exp, pat, typ</td><td>Caret, selection, typing; right-click opens Hazel&#x27;s menu (Select term, Cut, Copy, Paste, Add probe ...).</td><td>CellEditor.re:423 (CodeEditable)<br>ScratchMode.re:687, TutorialMode.re:521, CodeExerciseMode.re:717</td><td>in the app</td></tr>
+<tr id="s-splices"><td><b>A livelit&#x27;s splices</b><div class="note">Inline, inside a livelit&#x27;s GUI.</div></td><td>exp</td><td>The same editor, scoped to the splice: caret, selection, typing.</td><td>CodeEditable.re:968-976 (SubEditor.mk)</td><td>in the code</td></tr>
+<tr id="s-proof"><td><b>Proof step editors</b><div class="note">Theorem and derivation exercises.</div></td><td>exp, derivations</td><td>Editable, like the editor.</td><td>InductionCase.re:308<br>MissingStep.re:595<br>InductionStep.re:373</td><td>in the code</td></tr>
+</table></div>
+<h3 id="select" class="k select">Read-only tiles you can select: 3</h3>
+<p>Read-only, with a caret. The revealed model is the one surface with everything tiles offer in the editor except edits: <code>Perform</code> refuses typing inside it. The stepper and the result show a caret but have no menu, and the stepper's caret does not move the inspector.</p>
+<div class="scroll"><table>
+<tr><th>Surface</th><th>Shows</th><th>What a click does</th><th>Drawn by</th><th>Checked</th></tr>
+<tr id="s-model"><td><b>A livelit&#x27;s model, revealed with the eye</b><div class="note">Click a livelit&#x27;s eye: the model line under its head line.</div></td><td>exp (the model)</td><td>Caret, Shift+Arrow selection, the inspector reads it, right-click opens Hazel&#x27;s menu; typing is refused.</td><td>LivelitProj.re (splice_view in the reveal pane)<br>Perform.re (in_revealed_model refuses text edits)</td><td>in the app</td></tr>
+<tr id="s-stepper"><td><b>The stepper&#x27;s steps</b><div class="note">A value&#x27;s Show steps, or the stepper view.</div></td><td>exp</td><td>Caret; no right-click menu, and the inspector does not follow it.</td><td>StepperEditor.re:133 (CodeSelectable)</td><td>in the app</td></tr>
+<tr id="s-result"><td><b>The evaluation result</b><div class="note">Under each cell on dev. On #2635 a program&#x27;s value is drawn by the program-value drawer instead (below).</div></td><td>value</td><td>Caret, and the inspector follows it; no right-click menu.</td><td>EvalResult.re:785 (CodeSelectable)<br>CellEditor.re:335</td><td>in the app</td></tr>
+</table></div>
+<h3 id="static" class="k static">Tiles you can only look at: 16</h3>
+<p>The largest group of tiles. Each is a <code>Code.view</code> of a segment, built for the view and thrown away, so there is no zipper to put a caret in. &Gamma; is the costliest: it prints every type in the context whole, the prelude's included, so it draws 6,802 tiles for a four-line program.</p>
+<div class="scroll"><table>
+<tr><th>Surface</th><th>Shows</th><th>What a click does</th><th>Drawn by</th><th>Checked</th></tr>
+<tr id="s-bar"><td><b>The cursor inspector&#x27;s bar and full view</b><div class="note">The bottom bar, and the full view its ⤢ opens.</div></td><td>typ, exp</td><td>None: no caret, no selection, no menu.</td><td>CursorInspector.re:142-186 (CodeViewable)</td><td>in the app</td></tr>
+<tr id="s-gamma"><td><b>Γ, the context inspector</b><div class="note">The Γ at the bottom bar&#x27;s left.</div></td><td>typ</td><td>None. Opening it on a four-line program draws 6,802 tiles: the prelude&#x27;s types, each printed whole.</td><td>ContextInspector.re:12 (CodeViewable.view_typ)</td><td>in the app</td></tr>
+<tr id="s-problems"><td><b>The Problems panel&#x27;s rows</b><div class="note">Right sidebar, Problems.</div></td><td>typ, exp</td><td>None (it reuses the inspector&#x27;s views).</td><td>ProblemSidebar.re:43-65</td><td>in the code</td></tr>
+<tr id="s-form"><td><b>The explainer&#x27;s syntactic form</b><div class="note">Right sidebar, Language Documentation: the form at the top.</div></td><td>exp, pat, typ</td><td>None.</td><td>ExplainThis.re:1732 (CodeWithStatics)</td><td>in the app</td></tr>
+<tr id="s-examples"><td><b>The explainer&#x27;s examples</b><div class="note">Under the form, with each example&#x27;s value.</div></td><td>exp, value</td><td>The editor takes focus, but no caret, no selection, no menu.</td><td>ExplainThis.re:457 (CellEditor, locked)<br>CellEditor.re:453 (CodeEditable, read-only)</td><td>in the app</td></tr>
+<tr id="s-fenced"><td><b>Fenced hazel blocks in docs</b><div class="note">Explanations, tutorial prompts, task references.</div></td><td>exp</td><td>None (a locked cell editor, as for examples).</td><td>ExplainThis.re:243 (CellEditor, locked)</td><td>in the code</td></tr>
+<tr id="s-variants"><td><b>The explainer&#x27;s menu of form variants</b><div class="note">The specificity menu over the form.</div></td><td>exp, pat</td><td>Picks a variant; no caret.</td><td>ExplainThis.re:375 (CodeViewable)</td><td>in the code</td></tr>
+<tr id="s-probes"><td><b>Probe values, env and call args</b><div class="note">Inline probes in the code.</div></td><td>value</td><td>Probe actions (pin, step into, navigate); no caret, no tile menu.</td><td>ProbeProj.re:813, 872, 924, 1218 (flex_code, tiles)</td><td>in the app</td></tr>
+<tr id="s-progval"><td><b>The program&#x27;s value (#2635)</b><div class="note">At the end of the program, on #2635.</div></td><td>value</td><td>The drawer takes focus; no caret; right-click offers only Show steps.</td><td>ProbeProj.re:2102 (program-value)<br>ProbeProj.re:1081 (Show steps)</td><td>in the app</td></tr>
+<tr id="s-stopped"><td><b>Stopped-evaluation and elaboration views</b><div class="note">When evaluation stops early, or is off.</div></td><td>value, exp</td><td>None.</td><td>EvalResult.re:872 (stopped)<br>EvalResult.re:1109 (elaboration)</td><td>in the code</td></tr>
+<tr id="s-refractors"><td><b>Refractors&#x27; splices</b><div class="note">Projector views beside the code.</div></td><td>exp</td><td>None.</td><td>RefractorView.re:276 (default_render_splice)<br>ProjectorView.re:614-627 (simple_code, Code.view)</td><td>in the code</td></tr>
+<tr id="s-cardbody"><td><b>The Projectors card&#x27;s splices</b><div class="note">Right sidebar, Projectors, under a docked projector&#x27;s header.</div></td><td>exp</td><td>None.</td><td>ProjectorView.re:1050 (default_render_splice)</td><td>in the code</td></tr>
+<tr id="s-projviews"><td><b>Table cells, the type projector, fold hovers</b><div class="note">Projectors in the code.</div></td><td>exp, typ</td><td>The projector&#x27;s own controls; no caret in the syntax.</td><td>TableProj, TypeProj, FoldProj.re:65 (view_seg, flex_code)<br>LivelitProj.re:1933-1936 (view_term)</td><td>in the code</td></tr>
+<tr id="s-proofboxes"><td><b>Stepper boxes in proofs</b><div class="note">Theorem exercises.</div></td><td>exp, derivations</td><td>None.</td><td>StepperTargetBox.re:36<br>AssumptionBox.re:64<br>MissingStep.re:581<br>InductionCase.re:367</td><td>in the code</td></tr>
+<tr id="s-kindinsp"><td><b>Kind and derivation inspectors</b><div class="note">Derivation exercises.</div></td><td>kind, typ</td><td>None.</td><td>Kind.re:11<br>DrvCursorInspector.re:13</td><td>in the code</td></tr>
+<tr id="s-agentprog"><td><b>The coding agent&#x27;s diffs and program view</b><div class="note">The Hazel Coding Agent panel.</div></td><td>exp</td><td>None.</td><td>ToolResultView.re:15</td><td>in the code</td></tr>
+</table></div>
+<h3 id="text" class="k text">Plain text: 17</h3>
+<p>Strings printed from syntax. Some are text by design: a livelit's head and params lines are inputs, to be edited as text. Some are text to save space (the Projectors card's header, the outline), and some because they are written as prose (inline code in explanations and tutorial prompts).</p>
+<div class="scroll"><table>
+<tr><th>Surface</th><th>Shows</th><th>What a click does</th><th>Drawn by</th><th>Checked</th></tr>
+<tr id="s-cardhead"><td><b>The Projectors card&#x27;s header</b><div class="note">Right sidebar, Projectors: a docked projector&#x27;s first line.</div></td><td>exp, pat (shortened)</td><td>None. One token-styled element holding the printed term, such as <code>^flag(true)</code>.</td><td>ProjectorView.re:564-586 (text_code)<br>ProjectorView.re:632 (chip_syntax)</td><td>in the app</td></tr>
+<tr id="s-outline"><td><b>The outline sidebar</b><div class="note">Left sidebar.</div></td><td>names, typ</td><td>Jumps to the definition.</td><td>OutlineTree.re:80 (Typ.pretty_print)<br>OutlineSidebar.re:1270</td><td>in the app</td></tr>
+<tr id="s-cellheads"><td><b>Labels of split cells (outline, Problems)</b><div class="note">Cells headed by a pattern, such as <code>(p, q)</code>.</div></td><td>pat</td><td>Jumps to the cell.</td><td>ScratchCell.re:85-118 (MarkerParse.to_text)<br>OutlineSidebar.re:554-560<br>ProblemSidebar.re:358-421</td><td>in the code</td></tr>
+<tr id="s-head"><td><b>A livelit&#x27;s head line</b><div class="note">Over the revealed model, such as <code>^flag</code>.</div></td><td>exp, typ</td><td>An HTML text input: edits the head as text.</td><td>LivelitProj.re:1597-1615 (Segment.to_string, Typ.pretty_print)<br>LivelitProj.re:1470 (input)</td><td>in the app</td></tr>
+<tr id="s-params"><td><b>A livelit&#x27;s params line</b><div class="note">Under the head line, for a livelit with parameters.</div></td><td>value</td><td>HTML inputs: edit each parameter as text.</td><td>LivelitProj.re:1707-1711<br>LivelitProj.re:1774 (input)</td><td>in the code</td></tr>
+<tr id="s-inline"><td><b>Inline `code` in explanations</b><div class="note">Explanations, tutorial prompts, task references.</div></td><td>names, literals, snippets</td><td>Hover highlights the term it names; no tiles.</td><td>ExplainThis.re:86-87, 146 (code_node)<br>TutorialMode.re:556, 636<br>TutorialReferencePanel.re:113</td><td>in the app</td></tr>
+<tr id="s-prepre"><td><b>A fenced block that is not hazel, or does not parse</b><div class="note">Falls back to text.</div></td><td>exp</td><td>None.</td><td>ExplainThis.re:212 (pre)</td><td>in the code</td></tr>
+<tr id="s-drvmsg"><td><b>Derivation rule-failure messages</b><div class="note">Derivation exercises.</div></td><td>derivation judgments</td><td>None.</td><td>ExplainThis.re:628-667 (Segment.to_string)</td><td>in the code</td></tr>
+<tr id="s-livelituse"><td><b>The explainer&#x27;s livelit-use panel</b><div class="note">With the caret on a livelit use.</div></td><td>exp</td><td>Its frame (<code>^name(</code>, labels, <code>=</code>, <code>)</code>) is text; its field values are tiles.</td><td>ExplainThis.re:1817-1849</td><td>in the code</td></tr>
+<tr id="s-stepbar"><td><b>The probe stepper&#x27;s title bar</b><div class="note">Over the stepper&#x27;s steps, such as <code>(p, [p.x, p.y])</code>.</div></td><td>exp</td><td>None (a tooltip repeats it).</td><td>CellEditor.re:384-391<br>ProbeSteps.re:197-212, 276-277</td><td>in the app</td></tr>
+<tr id="s-printarium"><td><b>The Probes panel&#x27;s Printarium</b><div class="note">Right sidebar, Probes.</div></td><td>value</td><td>None.</td><td>ProbeSidebar.re:443-449 (Printer.of_segment)<br>TutorialReferencePanel.re:170</td><td>in the code</td></tr>
+<tr id="s-fold"><td><b>Folded function chips in values</b><div class="note">Such as <code>&lt;anon fun&gt;</code> under the explainer&#x27;s examples, or <code>&lt;id@&lt;Int&gt;&gt;</code>.</div></td><td>value, typ</td><td>Unfolds the function.</td><td>FoldProj.re:91, 102<br>ExpToSegment.re:2131-2136<br>Transition.re:733 (Typ.pretty_print)</td><td>in the code</td></tr>
+<tr id="s-crumbs"><td><b>The sample-focus bar&#x27;s breadcrumbs</b><div class="note">Over the editor while a probe sample is focused.</div></td><td>names, typ</td><td>Moves between samples.</td><td>SampleFocusBar.re:189-199, 403, 478</td><td>in the code</td></tr>
+<tr id="s-complete"><td><b>The inline completion suggestion</b><div class="note">After a partial name, such as <code>ch</code> after <code>pea</code> when <code>peach</code> is in scope.</div></td><td>exp</td><td>Tab accepts it.</td><td>Code.re:169 (in-unparsed-buffer)</td><td>in the app</td></tr>
+<tr id="s-quiver"><td><b>Completion quiver chips</b><div class="note">Beside the caret.</div></td><td>delimiters</td><td>Inserts the delimiter.</td><td>QuiverDec.re:139, 186-197</td><td>in the code</td></tr>
+<tr id="s-names"><td><b>Names in the inspectors and Problems rows</b><div class="note">Such as a variable&#x27;s name before its type.</div></td><td>names, labels</td><td>None (the types beside them are tiles).</td><td>CursorInspector.re:19-26, 295, 343, 421, 711<br>ContextInspector.re:40, 64<br>ProblemCollection.re:238</td><td>in the code</td></tr>
+<tr id="s-agentmsg"><td><b>The coding agent&#x27;s messages and tool calls</b><div class="note">The Hazel Coding Agent panel.</div></td><td>exp, typ</td><td>None.</td><td>AgentMessageMarkdown.re:37, 124-130<br>ToolResultView.re:26, 227<br>ChatMessagesView.re:114-143 (ErrorPrint)</td><td>in the code</td></tr>
+</table></div>
+<h3 id="debug">Debug-only</h3>
+<p>Two more views print syntax as text, but only for debugging. They are not counted above.</p>
+<ul><li><b>The debug sidebar, raw mode</b> (AST dumps): None. DebugSidebar.re:180-397, 599</li><li><b>The debug console (F3 to F9)</b> (exp, value): Browser console only. DebugConsole.re:17-92 ProbeText.re:70, 154</li></ul>
+
+<h2 id="asks">What this means for the open asks</h2>
+<p><b>Livelits' model views as read-only tiles (<code class="ref"><b>^ticket(</b>387<b>)</b></code>).</b> The model revealed with a livelit's eye already is what Cyrus asked for: read-only tiles with a caret, selection and the right-click menu. The two other views of a livelit's syntax are tiles as well. A refractor's splices and the Projectors card's splices both go through <code>default_render_splice</code>, which calls <code>Code.view</code>, so they are tiles to look at, without selection. Only the card's header (<code>^flag(true)</code>) is text. So the work is to give those two the revealed model's selection, not to turn text into tiles. (An earlier reading, the same morning, took <code>default_render_splice</code> for text; the code and the app both say tiles.) The head and params lines stay text inputs, by Matthew's call.</p><p><b>The explainer's examples (<code class="ref"><b>^ticket(</b>388<b>)</b></code>).</b> They are tiles: each example is a cell editor with <code>~locked=true</code>, drawn read-only, with its value under it. Clicking one gives it focus and nothing else, so it shows no caret, no selection and no menu. What is text in the explainer is the inline <code>code</code> in its prose (such as <code>true</code> and <code>false</code> in the boolean literal's explanation), and any fenced block that is not marked <code>hazel</code> or does not parse.</p>
+
+<h2 id="next">What next</h2>
+<ol>
+  <li>Give the refractors' and the Projectors card's splices the revealed model's read-only selection: caret, Shift+Arrow and the right-click menu (<code class="ref"><b>^ticket(</b>387<b>)</b></code>). Decide whether the card's header stays text.</li>
+  <li>Make the explainer's examples selectable read-only tiles, and draw its inline <code>code</code> as tiles where the snippet parses, as fenced hazel blocks already are (<code class="ref"><b>^ticket(</b>388<b>)</b></code>).</li>
+  <li>Build one read-only, selectable tile view, from the revealed model's, and use it wherever selecting helps: the inspector's full view, &Gamma;, probe values and the program's value.</li>
+  <li>Give the stepper and the evaluation result Hazel's right-click menu, and let the stepper's caret move the inspector, as the result's does.</li>
+  <li>Find out why &Gamma; costs what it does: 6,802 tiles for a four-line program, because every prelude type is printed whole (<code class="ref"><b>^ticket(</b>396<b>)</b></code>, where opening &Gamma; on the Scenes slide froze the browser).</li>
+  <li>Reproduce by hand a stale value seen once during this survey: on #2635, after switching from a Documentation slide to Scratch and pasting a program (by a scripted paste), the program's value showed the previous slide's value, marked stopped, until the page was reloaded.</li>
+</ol>
+
+<h2 id="method">How this was put together</h2>
+<ul>
+  <li><b>The build:</b> <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (<code>integration/livelits-modular-editors</code>) at <code>b44bb9c50f</code>, built with the dev profile and served locally. Dev's evaluation result was checked on <a href="https://github.com/hazelgrove/hazel/pull/2698">#2698</a> at <code>4c9cc34d3b</code> (dev with &Gamma;'s long types), since #2635 draws a program's value differently.</li>
+  <li><b>In the app (16 surfaces):</b> in the Claude desktop app's browser pane, on Documentation &rsaquo; Livelits &rsaquo; Overview, Documentation &rsaquo; Probes, and small programs in Scratch. For each surface: how many token elements it draws, whether a click puts a caret in it or moves the inspector, and whether a right-click opens Hazel's context menu. The control was the editor, where right-click opens the menu (Select term, Cut, Copy, Paste, Add probe).</li>
+  <li><b>In the code:</b> a read-only sweep of <code>src/web</code> and <code>src/haz3lcore/projectors</code> for every view that draws syntax: the <code>Code.view</code> family, <code>CodeEditable</code>, <code>CodeSelectable</code>, and every printer (<code>Printer.of_segment</code>, <code>Segment.to_string</code>, <code>Typ.pretty_print</code>, <code>text_code</code>), with each call traced to the surface a person sees. Printing that is never shown (copying to the clipboard, measuring widths, comparisons, the agent's model context) is left out.</li>
+  <li><b>Not covered:</b> the exercise modes and the coding agent were traced in the code only, and hover cards were not surveyed. Each row of the table says how it was checked.</li>
+  <li><b>The data:</b> in this page's <code>&lt;script type="application/json" id="report-data"&gt;</code> element and in <code>019/data/surfaces.json</code>; the page is made by <code>019/drivers/gen019.py</code>.</li>
+  <li><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> is Matthew Hammer's branch, made and kept with Claude. Most of the views surveyed here come from dev, and are the Hazel team's work.</li>
+</ul>
+</main>
+<script type="application/json" id="report-data">{"report": 19, "title": "The Hazel UI draws syntax as tiles on 22 of 39 surfaces, but only 6 take a caret", "date": "2026-10-19", "question": "For the meeting with Cyrus on 2026-10-21 (^ticket(389)): how much of the Hazel UI shows syntax as tiles, and where is it text? From Matthew, after Cyrus asked for livelits' model views as read-only tiles with tiles' selection (^ticket(387)) and asked why the explainer's examples are not read-only tiles (^ticket(388)). (^ticket(393))", "build": "#2635 (integration/livelits-modular-editors) at b44bb9c50f; dev's evaluation result on #2698 at 4c9cc34d3b", "classes": {"edit": "Tiles you edit", "select": "Read-only tiles you can select", "static": "Tiles you can only look at", "text": "Plain text"}, "counts": {"edit": 3, "select": 3, "static": 16, "text": 17}, "surfaces": [{"id": "editor", "short": "The editor", "surface": "The editor", "cls": "edit", "shows": "exp, pat, typ", "interact": "Caret, selection, typing; right-click opens Hazel's menu (Select term, Cut, Copy, Paste, Add probe ...).", "code": ["CellEditor.re:423 (CodeEditable)", "ScratchMode.re:687, TutorialMode.re:521, CodeExerciseMode.re:717"], "checked": "app", "where": "Every mode: Scratch, Documentation, Tutorial, Exercises.", "seen": "normal"}, {"id": "splices", "short": "Livelit splices", "surface": "A livelit's splices", "cls": "edit", "shows": "exp", "interact": "The same editor, scoped to the splice: caret, selection, typing.", "code": ["CodeEditable.re:968-976 (SubEditor.mk)"], "checked": "code", "where": "Inline, inside a livelit's GUI.", "seen": "normal"}, {"id": "proof", "short": "Proof step editors", "surface": "Proof step editors", "cls": "edit", "shows": "exp, derivations", "interact": "Editable, like the editor.", "code": ["InductionCase.re:308", "MissingStep.re:595", "InductionStep.re:373"], "checked": "code", "where": "Theorem and derivation exercises.", "seen": "normal"}, {"id": "model", "short": "Livelit model (eye)", "surface": "A livelit's model, revealed with the eye", "cls": "select", "shows": "exp (the model)", "interact": "Caret, Shift+Arrow selection, the inspector reads it, right-click opens Hazel's menu; typing is refused.", "code": ["LivelitProj.re (splice_view in the reveal pane)", "Perform.re (in_revealed_model refuses text edits)"], "checked": "app", "where": "Click a livelit's eye: the model line under its head line.", "seen": "normal"}, {"id": "stepper", "short": "Stepper steps", "surface": "The stepper's steps", "cls": "select", "shows": "exp", "interact": "Caret; no right-click menu, and the inspector does not follow it.", "code": ["StepperEditor.re:133 (CodeSelectable)"], "checked": "app", "where": "A value's Show steps, or the stepper view.", "seen": "normal"}, {"id": "result", "short": "Evaluation result (dev)", "surface": "The evaluation result", "cls": "select", "shows": "value", "interact": "Caret, and the inspector follows it; no right-click menu.", "code": ["EvalResult.re:785 (CodeSelectable)", "CellEditor.re:335"], "checked": "app", "where": "Under each cell on dev. On #2635 a program's value is drawn by the program-value drawer instead (below).", "seen": "normal"}, {"id": "bar", "short": "Inspector bar", "surface": "The cursor inspector's bar and full view", "cls": "static", "shows": "typ, exp", "interact": "None: no caret, no selection, no menu.", "code": ["CursorInspector.re:142-186 (CodeViewable)"], "checked": "app", "where": "The bottom bar, and the full view its ⤢ opens.", "seen": "normal"}, {"id": "gamma", "short": "Γ (context)", "surface": "Γ, the context inspector", "cls": "static", "shows": "typ", "interact": "None. Opening it on a four-line program draws 6,802 tiles: the prelude's types, each printed whole.", "code": ["ContextInspector.re:12 (CodeViewable.view_typ)"], "checked": "app", "where": "The Γ at the bottom bar's left.", "seen": "normal"}, {"id": "problems", "short": "Problems panel", "surface": "The Problems panel's rows", "cls": "static", "shows": "typ, exp", "interact": "None (it reuses the inspector's views).", "code": ["ProblemSidebar.re:43-65"], "checked": "code", "where": "Right sidebar, Problems.", "seen": "normal"}, {"id": "form", "short": "Explainer: form", "surface": "The explainer's syntactic form", "cls": "static", "shows": "exp, pat, typ", "interact": "None.", "code": ["ExplainThis.re:1732 (CodeWithStatics)"], "checked": "app", "where": "Right sidebar, Language Documentation: the form at the top.", "seen": "normal"}, {"id": "examples", "short": "Explainer: examples", "surface": "The explainer's examples", "cls": "static", "shows": "exp, value", "interact": "The editor takes focus, but no caret, no selection, no menu.", "code": ["ExplainThis.re:457 (CellEditor, locked)", "CellEditor.re:453 (CodeEditable, read-only)"], "checked": "app", "where": "Under the form, with each example's value.", "seen": "normal"}, {"id": "fenced", "short": "Explainer: hazel blocks", "surface": "Fenced hazel blocks in docs", "cls": "static", "shows": "exp", "interact": "None (a locked cell editor, as for examples).", "code": ["ExplainThis.re:243 (CellEditor, locked)"], "checked": "code", "where": "Explanations, tutorial prompts, task references.", "seen": "normal"}, {"id": "variants", "short": "Explainer: variants", "surface": "The explainer's menu of form variants", "cls": "static", "shows": "exp, pat", "interact": "Picks a variant; no caret.", "code": ["ExplainThis.re:375 (CodeViewable)"], "checked": "code", "where": "The specificity menu over the form.", "seen": "normal"}, {"id": "probes", "short": "Probe values", "surface": "Probe values, env and call args", "cls": "static", "shows": "value", "interact": "Probe actions (pin, step into, navigate); no caret, no tile menu.", "code": ["ProbeProj.re:813, 872, 924, 1218 (flex_code, tiles)"], "checked": "app", "where": "Inline probes in the code.", "seen": "normal"}, {"id": "progval", "short": "Program value (#2635)", "surface": "The program's value (#2635)", "cls": "static", "shows": "value", "interact": "The drawer takes focus; no caret; right-click offers only Show steps.", "code": ["ProbeProj.re:2102 (program-value)", "ProbeProj.re:1081 (Show steps)"], "checked": "app", "where": "At the end of the program, on #2635.", "seen": "normal"}, {"id": "stopped", "short": "Stopped / elaboration", "surface": "Stopped-evaluation and elaboration views", "cls": "static", "shows": "value, exp", "interact": "None.", "code": ["EvalResult.re:872 (stopped)", "EvalResult.re:1109 (elaboration)"], "checked": "code", "where": "When evaluation stops early, or is off.", "seen": "normal"}, {"id": "refractors", "short": "Refractor splices", "surface": "Refractors' splices", "cls": "static", "shows": "exp", "interact": "None.", "code": ["RefractorView.re:276 (default_render_splice)", "ProjectorView.re:614-627 (simple_code, Code.view)"], "checked": "code", "where": "Projector views beside the code.", "seen": "normal"}, {"id": "cardbody", "short": "Projectors card: splices", "surface": "The Projectors card's splices", "cls": "static", "shows": "exp", "interact": "None.", "code": ["ProjectorView.re:1050 (default_render_splice)"], "checked": "code", "where": "Right sidebar, Projectors, under a docked projector's header.", "seen": "normal"}, {"id": "projviews", "short": "Tables, type, fold", "surface": "Table cells, the type projector, fold hovers", "cls": "static", "shows": "exp, typ", "interact": "The projector's own controls; no caret in the syntax.", "code": ["TableProj, TypeProj, FoldProj.re:65 (view_seg, flex_code)", "LivelitProj.re:1933-1936 (view_term)"], "checked": "code", "where": "Projectors in the code.", "seen": "normal"}, {"id": "proofboxes", "short": "Proof boxes", "surface": "Stepper boxes in proofs", "cls": "static", "shows": "exp, derivations", "interact": "None.", "code": ["StepperTargetBox.re:36", "AssumptionBox.re:64", "MissingStep.re:581", "InductionCase.re:367"], "checked": "code", "where": "Theorem exercises.", "seen": "normal"}, {"id": "kindinsp", "short": "Kind / derivation insp.", "surface": "Kind and derivation inspectors", "cls": "static", "shows": "kind, typ", "interact": "None.", "code": ["Kind.re:11", "DrvCursorInspector.re:13"], "checked": "code", "where": "Derivation exercises.", "seen": "normal"}, {"id": "agentprog", "short": "Agent: program view", "surface": "The coding agent's diffs and program view", "cls": "static", "shows": "exp", "interact": "None.", "code": ["ToolResultView.re:15"], "checked": "code", "where": "The Hazel Coding Agent panel.", "seen": "normal"}, {"id": "cardhead", "short": "Projectors card: header", "surface": "The Projectors card's header", "cls": "text", "shows": "exp, pat (shortened)", "interact": "None. One token-styled element holding the printed term, such as `^flag(true)`.", "code": ["ProjectorView.re:564-586 (text_code)", "ProjectorView.re:632 (chip_syntax)"], "checked": "app", "where": "Right sidebar, Projectors: a docked projector's first line.", "seen": "normal"}, {"id": "outline", "short": "Outline sidebar", "surface": "The outline sidebar", "cls": "text", "shows": "names, typ", "interact": "Jumps to the definition.", "code": ["OutlineTree.re:80 (Typ.pretty_print)", "OutlineSidebar.re:1270"], "checked": "app", "where": "Left sidebar.", "seen": "normal"}, {"id": "cellheads", "short": "Split-cell labels", "surface": "Labels of split cells (outline, Problems)", "cls": "text", "shows": "pat", "interact": "Jumps to the cell.", "code": ["ScratchCell.re:85-118 (MarkerParse.to_text)", "OutlineSidebar.re:554-560", "ProblemSidebar.re:358-421"], "checked": "code", "where": "Cells headed by a pattern, such as `(p, q)`.", "seen": "normal"}, {"id": "head", "short": "Livelit head line", "surface": "A livelit's head line", "cls": "text", "shows": "exp, typ", "interact": "An HTML text input: edits the head as text.", "code": ["LivelitProj.re:1597-1615 (Segment.to_string, Typ.pretty_print)", "LivelitProj.re:1470 (input)"], "checked": "app", "where": "Over the revealed model, such as `^flag`.", "seen": "normal"}, {"id": "params", "short": "Livelit params line", "surface": "A livelit's params line", "cls": "text", "shows": "value", "interact": "HTML inputs: edit each parameter as text.", "code": ["LivelitProj.re:1707-1711", "LivelitProj.re:1774 (input)"], "checked": "code", "where": "Under the head line, for a livelit with parameters.", "seen": "normal"}, {"id": "inline", "short": "Explainer: inline code", "surface": "Inline `code` in explanations", "cls": "text", "shows": "names, literals, snippets", "interact": "Hover highlights the term it names; no tiles.", "code": ["ExplainThis.re:86-87, 146 (code_node)", "TutorialMode.re:556, 636", "TutorialReferencePanel.re:113"], "checked": "app", "where": "Explanations, tutorial prompts, task references.", "seen": "normal"}, {"id": "prepre", "short": "Explainer: non-hazel block", "surface": "A fenced block that is not hazel, or does not parse", "cls": "text", "shows": "exp", "interact": "None.", "code": ["ExplainThis.re:212 (pre)"], "checked": "code", "where": "Falls back to text.", "seen": "normal"}, {"id": "drvmsg", "short": "Rule-failure messages", "surface": "Derivation rule-failure messages", "cls": "text", "shows": "derivation judgments", "interact": "None.", "code": ["ExplainThis.re:628-667 (Segment.to_string)"], "checked": "code", "where": "Derivation exercises.", "seen": "normal"}, {"id": "livelituse", "short": "Explainer: livelit use", "surface": "The explainer's livelit-use panel", "cls": "text", "shows": "exp", "interact": "Its frame (`^name(`, labels, `=`, `)`) is text; its field values are tiles.", "code": ["ExplainThis.re:1817-1849"], "checked": "code", "where": "With the caret on a livelit use.", "seen": "normal"}, {"id": "stepbar", "short": "Stepper title bar", "surface": "The probe stepper's title bar", "cls": "text", "shows": "exp", "interact": "None (a tooltip repeats it).", "code": ["CellEditor.re:384-391", "ProbeSteps.re:197-212, 276-277"], "checked": "app", "where": "Over the stepper's steps, such as `(p, [p.x, p.y])`.", "seen": "normal"}, {"id": "printarium", "short": "Printarium", "surface": "The Probes panel's Printarium", "cls": "text", "shows": "value", "interact": "None.", "code": ["ProbeSidebar.re:443-449 (Printer.of_segment)", "TutorialReferencePanel.re:170"], "checked": "code", "where": "Right sidebar, Probes.", "seen": "normal"}, {"id": "fold", "short": "Function chips", "surface": "Folded function chips in values", "cls": "text", "shows": "value, typ", "interact": "Unfolds the function.", "code": ["FoldProj.re:91, 102", "ExpToSegment.re:2131-2136", "Transition.re:733 (Typ.pretty_print)"], "checked": "code", "where": "Such as `<anon fun>` under the explainer's examples, or `<id@<Int>>`.", "seen": "normal"}, {"id": "crumbs", "short": "Sample-focus crumbs", "surface": "The sample-focus bar's breadcrumbs", "cls": "text", "shows": "names, typ", "interact": "Moves between samples.", "code": ["SampleFocusBar.re:189-199, 403, 478"], "checked": "code", "where": "Over the editor while a probe sample is focused.", "seen": "normal"}, {"id": "complete", "short": "Completion suffix", "surface": "The inline completion suggestion", "cls": "text", "shows": "exp", "interact": "Tab accepts it.", "code": ["Code.re:169 (in-unparsed-buffer)"], "checked": "app", "where": "After a partial name, such as `ch` after `pea` when `peach` is in scope.", "seen": "normal"}, {"id": "quiver", "short": "Completion chips", "surface": "Completion quiver chips", "cls": "text", "shows": "delimiters", "interact": "Inserts the delimiter.", "code": ["QuiverDec.re:139, 186-197"], "checked": "code", "where": "Beside the caret.", "seen": "normal"}, {"id": "names", "short": "Names in inspectors", "surface": "Names in the inspectors and Problems rows", "cls": "text", "shows": "names, labels", "interact": "None (the types beside them are tiles).", "code": ["CursorInspector.re:19-26, 295, 343, 421, 711", "ContextInspector.re:40, 64", "ProblemCollection.re:238"], "checked": "code", "where": "Such as a variable's name before its type.", "seen": "normal"}, {"id": "agentmsg", "short": "Agent: messages", "surface": "The coding agent's messages and tool calls", "cls": "text", "shows": "exp, typ", "interact": "None.", "code": ["AgentMessageMarkdown.re:37, 124-130", "ToolResultView.re:26, 227", "ChatMessagesView.re:114-143 (ErrorPrint)"], "checked": "code", "where": "The Hazel Coding Agent panel.", "seen": "normal"}, {"id": "debugsb", "short": "Debug sidebar", "surface": "The debug sidebar, raw mode", "cls": "text", "shows": "AST dumps", "interact": "None.", "code": ["DebugSidebar.re:180-397, 599"], "checked": "code", "where": "Debug builds and settings.", "seen": "debug"}, {"id": "debugcon", "short": "Debug console", "surface": "The debug console (F3 to F9)", "cls": "text", "shows": "exp, value", "interact": "Browser console only.", "code": ["DebugConsole.re:17-92", "ProbeText.re:70, 154"], "checked": "code", "where": "Browser console.", "seen": "debug"}]}</script>
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
+<!-- ref-cards: begin -->
+<style>
+  .ref-card { position: absolute; z-index: 40; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
+  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
+    vertical-align: 1px; background: #6e7781; }
+  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
+  .rc-state.done { background: #8250df; }
+</style>
+<script>
+/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
+   ticket from the work dashboard's data (its area, its status, its first
+   line), carried by the dashboard's own pages and read live from the
+   published data anywhere else; a report from its own page, live (its
+   title, date and opening). Once per page load each. */
+(() => {
+  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
+  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
+  /* the dashboard itself carries its tickets (made with the page, changed
+     with it); any other page asks the published data */
+  const EMBED = null;
+  let data = EMBED ? Promise.resolve(EMBED) : null;
+  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
+  const pages = new Map();
+  const loadReport = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
+      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
+      let p = h1 && h1.nextElementSibling;
+      while (p && p.tagName !== "P") p = p.nextElementSibling;
+      const label = (doc.querySelector(".series") || {}).textContent || "";
+      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
+               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
+    }).catch(() => null));
+    return pages.get(url);
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
+  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
+  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
+  const ticketCard = (n, d) => {
+    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
+    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
+    const q = (d.queue || []).indexOf(n);
+    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
+      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
+      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
+    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
+      `<div class="rc-title">${esc(lead(t.text))}</div>` +
+      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
+      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
+  };
+  const reportCard = (n, r) => r
+    ? `<div class="rc-head">^report(${n}) · Hazel performance analysis${r.date ? " · " + esc(r.date) : ""}</div>` +
+      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
+    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
+    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = (a, ref) => {
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
+      card.hidden = false; place(a);
+      let html;
+      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
+      else html = reportCard(ref.n, await loadReport(a.href));
+      if (over !== a) return;
+      card.innerHTML = html; place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- ref-cards: end -->
+<!-- pr-cards: begin -->
+<style>
+  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-19T16:41:40Z"}, "hazelgrove/hazel#2698": {"author": "matthewhammer", "comments": 1, "created": "2026-10-19T16:07:08Z", "kind": "pull", "state": "draft", "title": "non-`dev` (`cursor-inspector-full-types`): Gamma can show a long type whole, on several lines", "updated": "2026-10-19T16:41:41Z"}}, BUILT = "2026-10-19";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  const ask = key => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#");
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
+                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[2];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
+<!-- steps: begin -->
+<style>
+  button.mint { margin-left: 4px; font: inherit; font-size: 0.75em; padding: 0 6px; border: 1px solid var(--line, #ccc);
+    border-radius: 4px; background: transparent; color: var(--muted, #666); cursor: pointer; vertical-align: 1px; }
+  button.mint:hover { color: inherit; }
+  button.mint.done { color: var(--good, #15803d); border-color: var(--good, #15803d); }
+  a.step-link { color: var(--muted, #666); text-decoration: none; font-size: 0.85em; margin-left: 4px; }
+  a.step-link:hover { text-decoration: underline; }
+  li:target { background: color-mix(in srgb, var(--good, #15803d) 12%, transparent); border-radius: 6px; }
+</style>
+<script>
+/* Each "What next" step: a link to it, and a button copying a request to
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
+(() => {
+  const h = document.getElementById("next");
+  if (!h) return;
+  let list = h.nextElementSibling;
+  while (list && !/^(OL|UL)$/.test(list.tagName)) {
+    if (list.tagName === "H2") return;
+    list = list.nextElementSibling;
+  }
+  if (!list) return;
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
+  [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
+    const n = i + 1;
+    if (!li.id) li.id = "step-" + n;
+    const b = li.querySelector("b, strong");
+    const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
+    const url = base + "#" + li.id;
+    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
+    const a = document.createElement("a");
+    a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "mint"; btn.textContent = "copy for a ticket";
+    btn.title = "Copies a request to mint a ticket for this step, to paste to Claude";
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) {
+        const t = document.createElement("textarea"); t.value = text; document.body.append(t);
+        t.select(); document.execCommand("copy"); t.remove();
+      }
+      btn.textContent = "copied"; btn.classList.add("done");
+      setTimeout(() => { btn.textContent = "copy for a ticket"; btn.classList.remove("done"); }, 1500);
+    });
+    li.append(" ", a, " ", btn);
+  });
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+})();
+</script>
+<!-- steps: end -->
+<!-- theme: begin -->
+<style>
+  .theme-toggle { position: fixed; top: 10px; right: 10px; z-index: 30; font: 13px system-ui, sans-serif; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--muted, GrayText);
+    cursor: pointer; opacity: 0.85; }
+  .theme-toggle:hover { opacity: 1; color: var(--ink, CanvasText); }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+/* The theme switch: Auto (the system's choice), Light, Dark; remembered for this site. */
+(() => {
+  const order = ["auto", "light", "dark"], label = { auto: "◐ auto", light: "☀ light", dark: "☾ dark" };
+  const get = () => { try { return localStorage.getItem("theme") || "auto"; } catch (_) { return "auto"; } };
+  const apply = m => m === "auto" ? document.documentElement.removeAttribute("data-theme")
+                                  : document.documentElement.setAttribute("data-theme", m);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "theme-toggle";
+  const show = () => { const m = get(); b.textContent = label[m] || label.auto;
+    b.title = "Theme: " + m + ". Click for " + order[(order.indexOf(m) + 1) % 3] + "; remembered on this site."; };
+  b.addEventListener("click", () => {
+    const m = order[(order.indexOf(get()) + 1) % 3];
+    try { m === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", m); } catch (_) {}
+    apply(m); show();
+  });
+  window.addEventListener("storage", e => { if (e.key === "theme") { apply(get()); show(); } });
+  show(); document.body.append(b);
+})();
+</script>
+<!-- theme: end -->
+</body>
+</html>

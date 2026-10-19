@@ -1,0 +1,610 @@
+{
+ "build": "#2635 at b44bb9c50f",
+ "surfaces": [
+  {
+   "id": "editor",
+   "short": "The editor",
+   "surface": "The editor",
+   "cls": "edit",
+   "shows": "exp, pat, typ",
+   "interact": "Caret, selection, typing; right-click opens Hazel's menu (Select term, Cut, Copy, Paste, Add probe ...).",
+   "code": [
+    "CellEditor.re:423 (CodeEditable)",
+    "ScratchMode.re:687, TutorialMode.re:521, CodeExerciseMode.re:717"
+   ],
+   "checked": "app",
+   "where": "Every mode: Scratch, Documentation, Tutorial, Exercises.",
+   "seen": "normal"
+  },
+  {
+   "id": "splices",
+   "short": "Livelit splices",
+   "surface": "A livelit's splices",
+   "cls": "edit",
+   "shows": "exp",
+   "interact": "The same editor, scoped to the splice: caret, selection, typing.",
+   "code": [
+    "CodeEditable.re:968-976 (SubEditor.mk)"
+   ],
+   "checked": "code",
+   "where": "Inline, inside a livelit's GUI.",
+   "seen": "normal"
+  },
+  {
+   "id": "proof",
+   "short": "Proof step editors",
+   "surface": "Proof step editors",
+   "cls": "edit",
+   "shows": "exp, derivations",
+   "interact": "Editable, like the editor.",
+   "code": [
+    "InductionCase.re:308",
+    "MissingStep.re:595",
+    "InductionStep.re:373"
+   ],
+   "checked": "code",
+   "where": "Theorem and derivation exercises.",
+   "seen": "normal"
+  },
+  {
+   "id": "model",
+   "short": "Livelit model (eye)",
+   "surface": "A livelit's model, revealed with the eye",
+   "cls": "select",
+   "shows": "exp (the model)",
+   "interact": "Caret, Shift+Arrow selection, the inspector reads it, right-click opens Hazel's menu; typing is refused.",
+   "code": [
+    "LivelitProj.re (splice_view in the reveal pane)",
+    "Perform.re (in_revealed_model refuses text edits)"
+   ],
+   "checked": "app",
+   "where": "Click a livelit's eye: the model line under its head line.",
+   "seen": "normal"
+  },
+  {
+   "id": "stepper",
+   "short": "Stepper steps",
+   "surface": "The stepper's steps",
+   "cls": "select",
+   "shows": "exp",
+   "interact": "Caret; no right-click menu, and the inspector does not follow it.",
+   "code": [
+    "StepperEditor.re:133 (CodeSelectable)"
+   ],
+   "checked": "app",
+   "where": "A value's Show steps, or the stepper view.",
+   "seen": "normal"
+  },
+  {
+   "id": "result",
+   "short": "Evaluation result (dev)",
+   "surface": "The evaluation result",
+   "cls": "select",
+   "shows": "value",
+   "interact": "Caret, and the inspector follows it; no right-click menu.",
+   "code": [
+    "EvalResult.re:785 (CodeSelectable)",
+    "CellEditor.re:335"
+   ],
+   "checked": "app",
+   "where": "Under each cell on dev. On #2635 a program's value is drawn by the program-value drawer instead (below).",
+   "seen": "normal"
+  },
+  {
+   "id": "bar",
+   "short": "Inspector bar",
+   "surface": "The cursor inspector's bar and full view",
+   "cls": "static",
+   "shows": "typ, exp",
+   "interact": "None: no caret, no selection, no menu.",
+   "code": [
+    "CursorInspector.re:142-186 (CodeViewable)"
+   ],
+   "checked": "app",
+   "where": "The bottom bar, and the full view its ⤢ opens.",
+   "seen": "normal"
+  },
+  {
+   "id": "gamma",
+   "short": "Γ (context)",
+   "surface": "Γ, the context inspector",
+   "cls": "static",
+   "shows": "typ",
+   "interact": "None. Opening it on a four-line program draws 6,802 tiles: the prelude's types, each printed whole.",
+   "code": [
+    "ContextInspector.re:12 (CodeViewable.view_typ)"
+   ],
+   "checked": "app",
+   "where": "The Γ at the bottom bar's left.",
+   "seen": "normal"
+  },
+  {
+   "id": "problems",
+   "short": "Problems panel",
+   "surface": "The Problems panel's rows",
+   "cls": "static",
+   "shows": "typ, exp",
+   "interact": "None (it reuses the inspector's views).",
+   "code": [
+    "ProblemSidebar.re:43-65"
+   ],
+   "checked": "code",
+   "where": "Right sidebar, Problems.",
+   "seen": "normal"
+  },
+  {
+   "id": "form",
+   "short": "Explainer: form",
+   "surface": "The explainer's syntactic form",
+   "cls": "static",
+   "shows": "exp, pat, typ",
+   "interact": "None.",
+   "code": [
+    "ExplainThis.re:1732 (CodeWithStatics)"
+   ],
+   "checked": "app",
+   "where": "Right sidebar, Language Documentation: the form at the top.",
+   "seen": "normal"
+  },
+  {
+   "id": "examples",
+   "short": "Explainer: examples",
+   "surface": "The explainer's examples",
+   "cls": "static",
+   "shows": "exp, value",
+   "interact": "The editor takes focus, but no caret, no selection, no menu.",
+   "code": [
+    "ExplainThis.re:457 (CellEditor, locked)",
+    "CellEditor.re:453 (CodeEditable, read-only)"
+   ],
+   "checked": "app",
+   "where": "Under the form, with each example's value.",
+   "seen": "normal"
+  },
+  {
+   "id": "fenced",
+   "short": "Explainer: hazel blocks",
+   "surface": "Fenced hazel blocks in docs",
+   "cls": "static",
+   "shows": "exp",
+   "interact": "None (a locked cell editor, as for examples).",
+   "code": [
+    "ExplainThis.re:243 (CellEditor, locked)"
+   ],
+   "checked": "code",
+   "where": "Explanations, tutorial prompts, task references.",
+   "seen": "normal"
+  },
+  {
+   "id": "variants",
+   "short": "Explainer: variants",
+   "surface": "The explainer's menu of form variants",
+   "cls": "static",
+   "shows": "exp, pat",
+   "interact": "Picks a variant; no caret.",
+   "code": [
+    "ExplainThis.re:375 (CodeViewable)"
+   ],
+   "checked": "code",
+   "where": "The specificity menu over the form.",
+   "seen": "normal"
+  },
+  {
+   "id": "probes",
+   "short": "Probe values",
+   "surface": "Probe values, env and call args",
+   "cls": "static",
+   "shows": "value",
+   "interact": "Probe actions (pin, step into, navigate); no caret, no tile menu.",
+   "code": [
+    "ProbeProj.re:813, 872, 924, 1218 (flex_code, tiles)"
+   ],
+   "checked": "app",
+   "where": "Inline probes in the code.",
+   "seen": "normal"
+  },
+  {
+   "id": "progval",
+   "short": "Program value (#2635)",
+   "surface": "The program's value (#2635)",
+   "cls": "static",
+   "shows": "value",
+   "interact": "The drawer takes focus; no caret; right-click offers only Show steps.",
+   "code": [
+    "ProbeProj.re:2102 (program-value)",
+    "ProbeProj.re:1081 (Show steps)"
+   ],
+   "checked": "app",
+   "where": "At the end of the program, on #2635.",
+   "seen": "normal"
+  },
+  {
+   "id": "stopped",
+   "short": "Stopped / elaboration",
+   "surface": "Stopped-evaluation and elaboration views",
+   "cls": "static",
+   "shows": "value, exp",
+   "interact": "None.",
+   "code": [
+    "EvalResult.re:872 (stopped)",
+    "EvalResult.re:1109 (elaboration)"
+   ],
+   "checked": "code",
+   "where": "When evaluation stops early, or is off.",
+   "seen": "normal"
+  },
+  {
+   "id": "refractors",
+   "short": "Refractor splices",
+   "surface": "Refractors' splices",
+   "cls": "static",
+   "shows": "exp",
+   "interact": "None.",
+   "code": [
+    "RefractorView.re:276 (default_render_splice)",
+    "ProjectorView.re:614-627 (simple_code, Code.view)"
+   ],
+   "checked": "code",
+   "where": "Projector views beside the code.",
+   "seen": "normal"
+  },
+  {
+   "id": "cardbody",
+   "short": "Projectors card: splices",
+   "surface": "The Projectors card's splices",
+   "cls": "static",
+   "shows": "exp",
+   "interact": "None.",
+   "code": [
+    "ProjectorView.re:1050 (default_render_splice)"
+   ],
+   "checked": "code",
+   "where": "Right sidebar, Projectors, under a docked projector's header.",
+   "seen": "normal"
+  },
+  {
+   "id": "projviews",
+   "short": "Tables, type, fold",
+   "surface": "Table cells, the type projector, fold hovers",
+   "cls": "static",
+   "shows": "exp, typ",
+   "interact": "The projector's own controls; no caret in the syntax.",
+   "code": [
+    "TableProj, TypeProj, FoldProj.re:65 (view_seg, flex_code)",
+    "LivelitProj.re:1933-1936 (view_term)"
+   ],
+   "checked": "code",
+   "where": "Projectors in the code.",
+   "seen": "normal"
+  },
+  {
+   "id": "proofboxes",
+   "short": "Proof boxes",
+   "surface": "Stepper boxes in proofs",
+   "cls": "static",
+   "shows": "exp, derivations",
+   "interact": "None.",
+   "code": [
+    "StepperTargetBox.re:36",
+    "AssumptionBox.re:64",
+    "MissingStep.re:581",
+    "InductionCase.re:367"
+   ],
+   "checked": "code",
+   "where": "Theorem exercises.",
+   "seen": "normal"
+  },
+  {
+   "id": "kindinsp",
+   "short": "Kind / derivation insp.",
+   "surface": "Kind and derivation inspectors",
+   "cls": "static",
+   "shows": "kind, typ",
+   "interact": "None.",
+   "code": [
+    "Kind.re:11",
+    "DrvCursorInspector.re:13"
+   ],
+   "checked": "code",
+   "where": "Derivation exercises.",
+   "seen": "normal"
+  },
+  {
+   "id": "agentprog",
+   "short": "Agent: program view",
+   "surface": "The coding agent's diffs and program view",
+   "cls": "static",
+   "shows": "exp",
+   "interact": "None.",
+   "code": [
+    "ToolResultView.re:15"
+   ],
+   "checked": "code",
+   "where": "The Hazel Coding Agent panel.",
+   "seen": "normal"
+  },
+  {
+   "id": "cardhead",
+   "short": "Projectors card: header",
+   "surface": "The Projectors card's header",
+   "cls": "text",
+   "shows": "exp, pat (shortened)",
+   "interact": "None. One token-styled element holding the printed term, such as `^flag(true)`.",
+   "code": [
+    "ProjectorView.re:564-586 (text_code)",
+    "ProjectorView.re:632 (chip_syntax)"
+   ],
+   "checked": "app",
+   "where": "Right sidebar, Projectors: a docked projector's first line.",
+   "seen": "normal"
+  },
+  {
+   "id": "outline",
+   "short": "Outline sidebar",
+   "surface": "The outline sidebar",
+   "cls": "text",
+   "shows": "names, typ",
+   "interact": "Jumps to the definition.",
+   "code": [
+    "OutlineTree.re:80 (Typ.pretty_print)",
+    "OutlineSidebar.re:1270"
+   ],
+   "checked": "app",
+   "where": "Left sidebar.",
+   "seen": "normal"
+  },
+  {
+   "id": "cellheads",
+   "short": "Split-cell labels",
+   "surface": "Labels of split cells (outline, Problems)",
+   "cls": "text",
+   "shows": "pat",
+   "interact": "Jumps to the cell.",
+   "code": [
+    "ScratchCell.re:85-118 (MarkerParse.to_text)",
+    "OutlineSidebar.re:554-560",
+    "ProblemSidebar.re:358-421"
+   ],
+   "checked": "code",
+   "where": "Cells headed by a pattern, such as `(p, q)`.",
+   "seen": "normal"
+  },
+  {
+   "id": "head",
+   "short": "Livelit head line",
+   "surface": "A livelit's head line",
+   "cls": "text",
+   "shows": "exp, typ",
+   "interact": "An HTML text input: edits the head as text.",
+   "code": [
+    "LivelitProj.re:1597-1615 (Segment.to_string, Typ.pretty_print)",
+    "LivelitProj.re:1470 (input)"
+   ],
+   "checked": "app",
+   "where": "Over the revealed model, such as `^flag`.",
+   "seen": "normal"
+  },
+  {
+   "id": "params",
+   "short": "Livelit params line",
+   "surface": "A livelit's params line",
+   "cls": "text",
+   "shows": "value",
+   "interact": "HTML inputs: edit each parameter as text.",
+   "code": [
+    "LivelitProj.re:1707-1711",
+    "LivelitProj.re:1774 (input)"
+   ],
+   "checked": "code",
+   "where": "Under the head line, for a livelit with parameters.",
+   "seen": "normal"
+  },
+  {
+   "id": "inline",
+   "short": "Explainer: inline code",
+   "surface": "Inline `code` in explanations",
+   "cls": "text",
+   "shows": "names, literals, snippets",
+   "interact": "Hover highlights the term it names; no tiles.",
+   "code": [
+    "ExplainThis.re:86-87, 146 (code_node)",
+    "TutorialMode.re:556, 636",
+    "TutorialReferencePanel.re:113"
+   ],
+   "checked": "app",
+   "where": "Explanations, tutorial prompts, task references.",
+   "seen": "normal"
+  },
+  {
+   "id": "prepre",
+   "short": "Explainer: non-hazel block",
+   "surface": "A fenced block that is not hazel, or does not parse",
+   "cls": "text",
+   "shows": "exp",
+   "interact": "None.",
+   "code": [
+    "ExplainThis.re:212 (pre)"
+   ],
+   "checked": "code",
+   "where": "Falls back to text.",
+   "seen": "normal"
+  },
+  {
+   "id": "drvmsg",
+   "short": "Rule-failure messages",
+   "surface": "Derivation rule-failure messages",
+   "cls": "text",
+   "shows": "derivation judgments",
+   "interact": "None.",
+   "code": [
+    "ExplainThis.re:628-667 (Segment.to_string)"
+   ],
+   "checked": "code",
+   "where": "Derivation exercises.",
+   "seen": "normal"
+  },
+  {
+   "id": "livelituse",
+   "short": "Explainer: livelit use",
+   "surface": "The explainer's livelit-use panel",
+   "cls": "text",
+   "shows": "exp",
+   "interact": "Its frame (`^name(`, labels, `=`, `)`) is text; its field values are tiles.",
+   "code": [
+    "ExplainThis.re:1817-1849"
+   ],
+   "checked": "code",
+   "where": "With the caret on a livelit use.",
+   "seen": "normal"
+  },
+  {
+   "id": "stepbar",
+   "short": "Stepper title bar",
+   "surface": "The probe stepper's title bar",
+   "cls": "text",
+   "shows": "exp",
+   "interact": "None (a tooltip repeats it).",
+   "code": [
+    "CellEditor.re:384-391",
+    "ProbeSteps.re:197-212, 276-277"
+   ],
+   "checked": "app",
+   "where": "Over the stepper's steps, such as `(p, [p.x, p.y])`.",
+   "seen": "normal"
+  },
+  {
+   "id": "printarium",
+   "short": "Printarium",
+   "surface": "The Probes panel's Printarium",
+   "cls": "text",
+   "shows": "value",
+   "interact": "None.",
+   "code": [
+    "ProbeSidebar.re:443-449 (Printer.of_segment)",
+    "TutorialReferencePanel.re:170"
+   ],
+   "checked": "code",
+   "where": "Right sidebar, Probes.",
+   "seen": "normal"
+  },
+  {
+   "id": "fold",
+   "short": "Function chips",
+   "surface": "Folded function chips in values",
+   "cls": "text",
+   "shows": "value, typ",
+   "interact": "Unfolds the function.",
+   "code": [
+    "FoldProj.re:91, 102",
+    "ExpToSegment.re:2131-2136",
+    "Transition.re:733 (Typ.pretty_print)"
+   ],
+   "checked": "code",
+   "where": "Such as `<anon fun>` under the explainer's examples, or `<id@<Int>>`.",
+   "seen": "normal"
+  },
+  {
+   "id": "crumbs",
+   "short": "Sample-focus crumbs",
+   "surface": "The sample-focus bar's breadcrumbs",
+   "cls": "text",
+   "shows": "names, typ",
+   "interact": "Moves between samples.",
+   "code": [
+    "SampleFocusBar.re:189-199, 403, 478"
+   ],
+   "checked": "code",
+   "where": "Over the editor while a probe sample is focused.",
+   "seen": "normal"
+  },
+  {
+   "id": "complete",
+   "short": "Completion suffix",
+   "surface": "The inline completion suggestion",
+   "cls": "text",
+   "shows": "exp",
+   "interact": "Tab accepts it.",
+   "code": [
+    "Code.re:169 (in-unparsed-buffer)"
+   ],
+   "checked": "app",
+   "where": "After a partial name, such as `ch` after `pea` when `peach` is in scope.",
+   "seen": "normal"
+  },
+  {
+   "id": "quiver",
+   "short": "Completion chips",
+   "surface": "Completion quiver chips",
+   "cls": "text",
+   "shows": "delimiters",
+   "interact": "Inserts the delimiter.",
+   "code": [
+    "QuiverDec.re:139, 186-197"
+   ],
+   "checked": "code",
+   "where": "Beside the caret.",
+   "seen": "normal"
+  },
+  {
+   "id": "names",
+   "short": "Names in inspectors",
+   "surface": "Names in the inspectors and Problems rows",
+   "cls": "text",
+   "shows": "names, labels",
+   "interact": "None (the types beside them are tiles).",
+   "code": [
+    "CursorInspector.re:19-26, 295, 343, 421, 711",
+    "ContextInspector.re:40, 64",
+    "ProblemCollection.re:238"
+   ],
+   "checked": "code",
+   "where": "Such as a variable's name before its type.",
+   "seen": "normal"
+  },
+  {
+   "id": "agentmsg",
+   "short": "Agent: messages",
+   "surface": "The coding agent's messages and tool calls",
+   "cls": "text",
+   "shows": "exp, typ",
+   "interact": "None.",
+   "code": [
+    "AgentMessageMarkdown.re:37, 124-130",
+    "ToolResultView.re:26, 227",
+    "ChatMessagesView.re:114-143 (ErrorPrint)"
+   ],
+   "checked": "code",
+   "where": "The Hazel Coding Agent panel.",
+   "seen": "normal"
+  },
+  {
+   "id": "debugsb",
+   "short": "Debug sidebar",
+   "surface": "The debug sidebar, raw mode",
+   "cls": "text",
+   "shows": "AST dumps",
+   "interact": "None.",
+   "code": [
+    "DebugSidebar.re:180-397, 599"
+   ],
+   "checked": "code",
+   "where": "Debug builds and settings.",
+   "seen": "debug"
+  },
+  {
+   "id": "debugcon",
+   "short": "Debug console",
+   "surface": "The debug console (F3 to F9)",
+   "cls": "text",
+   "shows": "exp, value",
+   "interact": "Browser console only.",
+   "code": [
+    "DebugConsole.re:17-92",
+    "ProbeText.re:70, 154"
+   ],
+   "checked": "code",
+   "where": "Browser console.",
+   "seen": "debug"
+  }
+ ]
+}
