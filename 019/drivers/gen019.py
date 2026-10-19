@@ -55,7 +55,7 @@ fig1 = "\n".join(svg)
 # ---- thumbnail: the four counts as bars ----
 tb = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">',
       "<style>.e{fill:#15803d}.s{fill:#0e7490}.t{fill:#6d28d9}.x{fill:#b45309}.l{fill:#1f2328;font:600 15px system-ui,sans-serif}"
-      "@media (prefers-color-scheme: dark){.e{fill:#4ade80}.s{fill:#67e8f9}.t{fill:#c4b5fd}.x{fill:#fbbf24}.l{fill:#e8e6e3}}</style>"]
+      "@media (prefers-color-scheme: dark) {.e{fill:#4ade80}.s{fill:#67e8f9}.t{fill:#c4b5fd}.x{fill:#fbbf24}.l{fill:#e8e6e3}}</style>"]
 mx = max(len(v) for v in by.values())
 for i, (c, k) in enumerate(zip([c for c, _, _ in CLASSES], ["e", "s", "t", "x"])):
     h = 120 * len(by[c]) / mx
