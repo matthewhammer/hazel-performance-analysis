@@ -30,11 +30,19 @@ if not os.path.isdir(dest):
 run("git", "pull", "-q", "--rebase", cwd=SITE)
 run("cp", "-r", f"{nnn}/index.html", f"{nnn}/img", f"{nnn}/data", f"{nnn}/drivers", dest + "/")
 msg = f"^report({int(nnn)}), the agenda: {what}"
+# Pushing this repository publishes every commit not yet pushed, and drafts (reports Matthew has not read) may be
+# among them (2026-10-19: report 21's draft went out with an agenda update). So push it only when the agenda's
+# commit is the only one waiting; otherwise leave it local and say so. The homepage is pushed either way.
+waiting = subprocess.run(["git", "rev-list", "--count", "origin/main..HEAD"], cwd=ROOT,
+                         capture_output=True, text=True).stdout.strip()
 for repo, path in ((ROOT, nnn), (SITE, f"hazel/reports/{nnn}")):
     run("git", "add", path, cwd=repo)
     if subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=repo).returncode:
         run("git", "commit", "-q", "-m", msg + TRAILER, cwd=repo)
         if repo == SITE:
             run("git", "pull", "-q", "--rebase", cwd=SITE)
+        if repo == ROOT and waiting != "0":
+            print(f"not pushing {ROOT}: {waiting} other commit(s) wait unpushed (drafts?); the agenda's commit stays local too")
+            continue
         run("git", "push", "-q", "origin", "HEAD", cwd=repo)
 print(f"published: https://matthewhammer.org/hazel/reports/{nnn}/ (live after the Pages build, about 2 minutes)")
