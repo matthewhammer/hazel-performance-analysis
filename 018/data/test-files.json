@@ -1,0 +1,33 @@
+{
+ "dev": {
+  "defstatics_tests": [],
+  "table_decorations_test": false
+ },
+ "#2597 (f8ae6f2b9c)": {
+  "defstatics_tests": [],
+  "table_decorations_test": true
+ },
+ "#2469 merged (19fef7c9bb)": {
+  "defstatics_tests": [
+   "test/Test_DefStaticsParity.re",
+   "test/Test_ModRoot.re"
+  ],
+  "table_decorations_test": false
+ },
+ "#2635 first run (42f1ab0be7)": {
+  "defstatics_tests": [
+   "test/Test_DefStaticsParity.re",
+   "test/Test_LabelBench.re",
+   "test/Test_ModRoot.re",
+   "test/Test_TypeDeps.re"
+  ],
+  "table_decorations_test": true
+ },
+ "#2635 now (9e7258b55b)": {
+  "defstatics_tests": [
+   "test/Test_DefStaticsParity.re",
+   "test/Test_ModRoot.re"
+  ],
+  "table_decorations_test": true
+ }
+}

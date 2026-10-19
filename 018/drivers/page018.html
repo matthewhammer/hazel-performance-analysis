@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why #2635 Fails CI</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8; --accent2: #0e7490; --cx: #d6d1c6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  .headline ol > li { margin: 8px 0; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); } .cv2 { color: var(--muted); }
+  figure.fig { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 16px 0; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 72ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; overflow-wrap: anywhere; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .cause { border-left: 4px solid var(--line); padding-left: 14px; margin: 18px 0; }
+  .cause.a { border-color: var(--accent); } .cause.b { border-color: var(--warn); } .cause.c { border-color: var(--accent2); }
+
+  svg.chart { width: 100%; height: auto; display: block; font: 12.5px system-ui, sans-serif; color: var(--ink); }
+  svg.chart .ct { fill: var(--ink); font-weight: 600; font-size: 14px; }
+  svg.chart .cl { fill: var(--ink); }
+  svg.chart .cv { fill: var(--muted); }
+  svg.chart .bn { font-weight: 700; font-size: 13px; }
+  svg.chart .grid { stroke: var(--line); stroke-width: 1; }
+  svg.chart .good { fill: var(--good); } svg.chart .bad { fill: var(--bad); } svg.chart .warn { fill: var(--warn); } svg.chart .cx { fill: var(--cx); }
+  svg.chart tspan.good { fill: var(--good); } svg.chart tspan.bad { fill: var(--bad); }
+  svg.chart .rd { fill: var(--bad); }
+  svg.chart .ring { fill: none; stroke: var(--good); stroke-width: 2; }
+  svg.chart .cb { stroke-width: 1.5; }
+  svg.chart .cb.a { fill: color-mix(in srgb, var(--accent) 16%, var(--paper)); stroke: var(--accent); }
+  svg.chart .cb.b { fill: color-mix(in srgb, var(--warn) 18%, var(--paper)); stroke: var(--warn); }
+  svg.chart .cb.c { fill: color-mix(in srgb, var(--accent2) 16%, var(--paper)); stroke: var(--accent2); }
+  svg.chart .br { fill: none; stroke-width: 1.8; }
+  svg.chart .br.a { stroke: var(--accent); } svg.chart .br.b { stroke: var(--warn); } svg.chart .br.c { stroke: var(--accent2); }
+</style>
+</head>
+<body>
+<main>
+<p class="series"><a href="../">Hazel performance analysis</a> · report 018 · 2026-10-19</p>
+<h1>{{TITLE}}</h1>
+<p class="sub">Cyrus asked why CI fails on #2635, the branch that merges modular editors (#2469) into the livelits branch (#2597). The answer, from all {{RUNS}} of #2635's CI runs, the failing tests in {{NSAMPLED}} of them, and both parents' runs over the same eighteen days.</p>
+
+<div class="headline">
+<p><b>Short answers.</b> As of 2026-10-19 at 09:55 MDT. Every run is linked below, and its numbers are in this page's data.</p>
+<ol>
+  <li><b>It is the merge, and it has been since the first run.</b> #2635 has run CI {{RUNS}} times since it was made on 2026-10-01, and it has never passed: {{RED}} runs failed and {{CANCELLED}} were cancelled by a newer push. Every failing run read ({{NSAMPLED}} of the {{RED}}, from the first, on 10-01, to the last, on 10-17) fails the same tests: 8 until 10-17, and 10 once the branch took #2469's reorganized tests that day.</li>
+  <li><b>Each parent passes on its own, with the same tests.</b> #2597 is green at <code>f8ae6f2b9c</code> (4,522 tests in Fast checks and 4,974 in Full tests). #2469 is green at <code>c349058154</code> (4,810 and 5,202), which contains the commit #2635 took on 10-17, with the same <code>Test_DefStaticsParity.re</code>. Over these days #2597 had {{G97}} green runs and #2469 {{G69}}; #2635 had none. Each failing test belongs to one side: the module-analysis tests are #2469's, and the table test is the livelits branch's.</li>
+  <li><b>Three causes, all known since the merge.</b> Two were written into its commit messages on 10-01, and all three have been listed as the branch's known failures since 10-10:
+    <ul>
+      <li><b>8 tests:</b> #2469 analyzes a module one member at a time, using dev's module statics. Modules II, which is on the livelits branch only, replaced those statics. So the merge analyzes a module literal whole, and the tests' counts of what is re-analyzed come out low.</li>
+      <li><b>1 test:</b> dev's canonical completion closes a stray <code>[</code> inside a table cell. #2469 has it through dev. #2597 does not: its dev is from the morning of 09-22, hours before canonical completion (#2374) landed. So the livelits table test's input no longer makes the hidden error it checks for.</li>
+      <li><b>1 test:</b> one livelits document elaborates differently per item than as a whole program. Its cause has not been found. <span class="note"><b>Update, 2026-10-19:</b> found and fixed, <a href="#update">below</a>.</span></li>
+    </ul></li>
+  <li><b>The fix for the 8 already exists.</b> Andrew's #2687 (the standard library, into #2469) carries modular editors with Modules II, and on 10-18 he rebuilt the per-member analysis on Modules II (<code>00bc805ca1</code>). Its CI is green, with the same DefStaticsParity cases and the same expected counts ({{T87F}} and {{T87U}} tests). Taking that into #2635 should clear the 8. It may need adapting, because #2687 has Modules II parts 1 and 2 as they are now, and #2635 has parts 1 to 3 as they were on 09-16. That leaves two: the table test needs a new input, and the one mismatch needs finding. The table test will also fail on #2597 itself when it next merges dev, which is {{BEHIND}} commits ahead. Cyrus's plan for merging into dev puts Andrew's modular editing PRs ahead of the livelits and performance PRs, so the rebuilt analysis reaches the livelits branch through dev in any case; taking it into #2635 now would only get there first.</li>
+</ol>
+</div>
+
+<div class="headline" style="border-left-color: var(--warn); margin-top: 14px">
+<p><b>Update, 2026-10-19 at 12:45 MDT: each of the three causes has a fix.</b> The third cause is found, and it was a real bug in incremental statics: a livelit use was not analyzed again when the livelit it applies changed (<code>1131a457e4</code>). The table test has an input whose error stays hidden under canonical completion (<code>27f100e37c</code>). And #2699, a draft into #2635, brings in Andrew's per-member analysis on Modules II, with one fix of its own (<code>223357135a</code>). On GitHub, #2635's Fast checks at <code>1131a457e4</code> now fail only the 8 module tests (5,552 tests run), and #2699's pass; #2699 merges into #2635 once its Full tests pass too. Details in <a href="#update">the update below</a>.</p>
+</div>
+
+<figure class="fig" id="runs">
+{{FIG1}}
+<figcaption>Every CI run on the four branches, 2026-10-01 to 2026-10-19, one tick each: <span class="good">green</span> passed, <span class="bad">red</span> failed, grey cancelled (a newer push replaced it). The dots above #2635 mark the failing runs read, each with its number of failed tests. The circled ticks are the commits that #2635's last run is compared with. #2687 is Andrew's branch that carries the per-member analysis rebuilt on Modules II. Its red runs, from 10-16 to 10-18, failed three other DefStaticsParity cases (moving a member above or below, and mega-1k), and none since. #2469's own red runs come and go within hours (it is under active work; see <a href="#not">below</a>). #2635's have never stopped.</figcaption>
+</figure>
+
+<figure class="fig" id="causes">
+{{FIG2}}
+<figcaption>The ten tests that fail on #2635's last run, grouped by cause. For the eight module tests, the numbers are the test's expected and received counts of what is re-analyzed after an edit. The table test checks a flag: expected true, received false. The corpus test reports a mismatch at a livelit application.</figcaption>
+</figure>
+
+<h2 id="really">Red since the first run</h2>
+<p>#2635 (<code>integration/livelits-modular-editors</code>) was made on 2026-10-01 from the livelits branch, by merging dev (at <code>9b3f18323a</code>, modular editors' base) and then #2469's own commits. Since then it has taken the livelits branch's later work as cherry-picks, and on 10-17 it took #2469 again, at <code>19fef7c9bb</code>. Its CI has run {{RUNS}} times and has never passed. Of the {{RED}} failing runs, these {{NSAMPLED}} were read in full: the first and the last, about every sixth in between, and the one just before the 10-17 update.</p>
+<div class="scroll"><table>
+<tr><th>Run started (UTC)</th><th>Head</th><th>Run</th><th>Failed</th><th>Tests run</th><th>Failing tests (Fast checks)</th></tr>
+{{SAMPLED}}
+</table></div>
+<p>The list is the same on every run until 10-17. On that day, the update brought #2469's reorganized tests. Andrew had moved the module-analysis checks from ModRoot, TypeDeps and LabelBench into DefStaticsParity and added cases of the same kind. So the names changed and the count went from 8 to 10, but the causes did not. The same update also brought four new failures where #2469's code met things only #2635 has. Those were fixed in <code>9e7258b55b</code> (keys, renames, hinted tests, do-blocks), and the ten in the last run are what is left.</p>
+
+<h2 id="why">The three causes</h2>
+
+<div class="cause a">
+<h3>1. Per-member module analysis meets Modules II (8 tests)</h3>
+<p>#2469's statics work per item: a top-level definition is analyzed on its own, and after an edit only the items it touches are analyzed again. Inside a module literal, #2469 goes further and works per member. Its DefStaticsParity tests count the units analyzed after an edit. For example, "item + 1 member re-analyzed" expects 2: the member and the item around it.</p>
+<p>That per-member path reads modules through dev's module statics (<code>value_exports</code>, <code>collect_type_exports</code>, <code>module_actual_type</code>, and the labeled-tuple lowering). Modules II, which is on the livelits branch only, replaced those with signatures, sealing and abstract members. To make the merge build, <code>43089b065d</code> (2026-10-01) has DefStatics analyze a module literal whole, as one item, and says so: per-member analysis "is off until it is rebuilt on Modules II". The trial merge on 10-17 (<code>8c968efcc4</code>) restates it.</p>
+<p>So the counts come out low: the whole module is one unit, re-analyzed all at once, where #2469 would re-analyze one member and the item around it. The results are right. DefStaticsParity's other tests, which compare per-item results with whole-program results, pass on the merge. What is lost is granularity, which on a large module is a cost in time.</p>
+<p><b>The rebuild has been done, on another branch.</b> Andrew's #2687 ("Standard library in Hazel source", <code>stdlib</code> into <code>modular-editors</code>) has merged Modules II parts 1 and 2 (#2493 and #2494) since 10-16. In <code>00bc805ca1</code> (2026-10-18) he rebuilt the module part of per-item statics on Modules II. Members are lowered against the signature, the module's type is its signature type, and a signature the members do not meet still analyzes the item whole. His message measures "edits in mega-mod-1k wrapped or sealed in a module: ~100 → 7ms". #2687's CI has passed since 10-18, with every DefStaticsParity case named below present, their expected counts unchanged, and the corpus test still in: {{T87F}} tests in Fast checks and {{T87U}} in Full tests at <code>5cf71f2d30</code>. #2635's Modules II is older, parts 1 to 3 as merged into the livelits branch on 09-16, so the port may need adapting to part 3 (abstract type members, sealing, path types). Under Cyrus's merge plan (<a href="#next">What next</a>, step 4), Andrew's modular editing PRs go into dev before the livelits PRs, so the livelits branch will take this rebuild from dev when it next merges dev, and adapt it to part 3 then if it has not been done already.</p>
+<div class="scroll"><table>
+<tr><th>Test (last run)</th><th>What it covers</th><th>Check</th><th>Expected</th><th>Received</th></tr>
+{{A_ROWS}}
+</table></div>
+<p class="note">The same checks on the first run (10-01), under their old names:</p>
+<div class="scroll"><table>
+<tr><th>Test (first run)</th><th>What it covers</th><th>Check</th><th>Expected</th><th>Received</th></tr>
+{{OLD_ROWS}}
+</table></div>
+</div>
+
+<div class="cause b">
+<h3>2. A livelits table test meets dev's canonical completion (1 test)</h3>
+<p><code>Editing.TableDecorations 1</code> ("typed table: hidden row error draws no arms, flags the chrome") puts a stray <code>[</code> in a table cell. Its error then lands in a row the table hides, and the test checks that the table's chrome flags it. Since 2026-09-22 (#2374), dev's canonical completion closes a stray bracket where it stands. So the error lands in the cell, where it can be seen, and the chrome is right not to flag it: expected <code>true</code>, received <code>false</code>. The test needs an input whose error is really hidden. <code>11fbc4480d</code> (2026-10-01) left it failing on purpose and says why.</p>
+<p>#2469 does not cause this: it carries the completion only because it is based on a newer dev. The livelits branch #2597 is still on dev as of the morning of 2026-09-22 (<code>2f9f2f6424</code>, just before #2374), {{BEHIND}} commits behind. It will meet the same failure when it next merges dev.</p>
+</div>
+
+<div class="cause c">
+<h3>3. One livelits document elaborates differently per item (1 test)</h3>
+<p>DefStaticsParity's corpus test ("the slide corpus through calc_auto") elaborates every program in the slide corpus twice, per item and as a whole program, and compares the two. One document differs: <code>docs/livelits/expansion-errors/macro-result.hz</code>, at a livelit application and at the let around it. A local run when the branch was made, on 10-01, found the per-item elaboration reading <code>a + 2</code> where the whole-program one reads <code>a + 1</code>. The <code>2</code> is a literal whose source appears in no program, which suggests something carried over between documents in the corpus run. It has been listed among the branch's known failures since <code>cefa5c2c5c</code> (2026-10-10), and its cause has not been found. Of the ten failures, this is the one that may be a real bug rather than a known gap.</p>
+<p class="note"><b>Update, 2026-10-19:</b> the cause is found: after the corpus test's edit, a livelit use kept the expansion of the edited definition. See <a href="#update">the update</a>.</p>
+</div>
+
+<h2 id="sides">Which side each test comes from</h2>
+<p>Where each failing test's file exists. The module-analysis tests are on #2469's side only, and the table test only on the livelits side, so neither parent's CI runs the other side's tests.</p>
+<div class="scroll"><table>
+<tr><th>Commit</th><th>Module-analysis tests</th><th>TableDecorations test</th></tr>
+{{FILE_ROWS}}
+</table></div>
+
+<h2 id="not">Three things that are not the cause</h2>
+<ul>
+  <li><b>The 10-17 update.</b> It renamed and added tests, from 8 failures to 10 (<a href="#really">above</a>). The same three causes were behind both lists.</li>
+  <li><b>#2469 being red today.</b> #2469's head as of this morning, <code>a41b292007</code> (2026-10-19, 08:12 MDT), fails 7 of its own tests in Fast checks ({{TODAY_FAILS}}; {{TODAY_TESTS}} tests run), with Full tests still running. This is work in progress on #2469 itself, which goes red and back to green within hours (the timeline). #2635 has not taken it.</li>
+  <li><b>#2635's conflict with its base.</b> GitHub shows #2635 as conflicting with <code>integration/livelits-splicerefs-full</code> (#2597's branch) in {{CONFLICTS}} files. That is how it has been kept up to date, not a failure: of the livelits branch's {{FULL_SINCE}} commits since 10-01, {{CHERRY}} are on #2635 as cherry-picks, and none as a merge. So git sees each change twice. It needs a merge before its next CI run, but that will not change the tests.</li>
+</ul>
+
+<h2 id="update">Update, 2026-10-19 at 12:45 MDT: a fix for each cause</h2>
+<ul>
+  <li><b>The corpus document (cause 3):</b> the corpus test analyzes each document, edits it (a <code>1</code> becomes a <code>2</code>), analyzes it again, and then analyzes the original once more. On <code>macro-result.hz</code> that last analysis kept the edited expansion: <code>^^livelit(^inc(...))</code> elaborated to <code>a + 2</code>, where a cold analysis and monolithic statics both give <code>a + 1</code>. A use records the livelit it applies as <code>^inc</code> among the names it depends on, but DefStatics named a livelit's own entry plain <code>inc</code>, so a changed livelit marked nothing stale. <code>1131a457e4</code> names it <code>^inc</code>. The bug was in incremental statics, not in the test.</li>
+  <li><b>The table test (cause 2):</b> <code>27f100e37c</code> gives the row a wrong label (<code>c</code>, not <code>bc</code>): an error in table syntax that the projector hides, whatever completion does. The state from the original crash report, a stray bracket typed into a cell, is still drawn and checked. #2597 still has the old input, which will fail there at its next merge with dev.</li>
+  <li><b>The 8 module tests (cause 1):</b> #2699 ports Andrew's per-member analysis on Modules II into #2635: his <code>a6b5478f52</code>, the form from before spans stage 6, which #2635 does not have (<code>00bc805ca1</code> re-ported it onto stage 6), fitted to #2635's Modules II part 3. That cleared the 8, but its CI then failed the corpus test on another document, <code>color-fig3.hz</code>. A livelit definition, <code>let ^color = { ... }</code>, binds a variable, so the per-member path took it for a module and analyzed it member by member, skipping what Statics does with a livelit definition. <code>223357135a</code> keeps a livelit definition whole. With #2635's fixes merged in, #2699 passes all 43 DefStaticsParity cases locally, and its Fast checks pass on GitHub.</li>
+  <li><b>The conflicts:</b> <code>cf325d4f61</code> merges the livelits branch into #2635, keeping #2635's side of every conflict, since each of #2597's commits since the merge base was already there. GitHub now shows #2635 as mergeable.</li>
+  <li>So, of the steps below: 1 is done through #2699, 3 and 5 are done, and 2 is done on #2635 but not yet on #2597.</li>
+</ul>
+
+<h2 id="next">What next</h2>
+<ol>
+  <li>Bring Andrew's per-member analysis on Modules II (<code>00bc805ca1</code>, on #2687) into #2635, adapted to Modules II part 3. Until then, skip the 8 cases when Modules II is on, each with a reason that links here, so that a red run means something new. Since the analysis reaches the livelits branch through dev anyway (step 4), a port now is a separate, exploratory draft: it finds out early what part 3 needs.</li>
+  <li>Give <code>Editing.TableDecorations 1</code> an input whose error stays hidden under canonical completion, on #2597 too, ahead of its next merge with dev.</li>
+  <li>Find why <code>macro-result.hz</code> elaborates differently per item: run DefStaticsParity's corpus test on that document alone and read its saved output.</li>
+  <li>Follow Cyrus's plan for merging into dev, broadly: first the PRs that have been waiting (which ones is not settled yet), then Andrew's modular editing PRs (#2469, with #2687 in it), then the livelits and performance PRs, in an order still to be decided. Agree with Andrew that #2687 goes into #2469 before #2469 goes to dev, so that the per-member analysis on Modules II arrives with it.</li>
+  <li>Merge the livelits branch into #2635 instead of cherry-picking, to clear the {{CONFLICTS}} conflicting files before its next CI run.</li>
+</ol>
+
+<h2 id="method">How this was put together</h2>
+<ul>
+  <li><b>The runs:</b> every CI run on the four branches since 2026-10-01, listed through GitHub's Actions API on 2026-10-19 between 09:40 and 09:55 MDT. A run counts as green, red or cancelled as GitHub gives its conclusion.</li>
+  <li><b>The failures:</b> each run read is its Fast checks job's log (and, for #2635's last run, Full tests too). The log gives alcotest's summary (failures, tests run, time) and each failing test's first failed check, with expected and received values. Each run read is linked in the table, and its job id is in the data.</li>
+  <li><b>The causes:</b> from the commit messages that recorded them (<code>43089b065d</code> and <code>11fbc4480d</code> on 2026-10-01, <code>cefa5c2c5c</code> on 2026-10-10, and <code>8c968efcc4</code> and <code>9e7258b55b</code> on 2026-10-17), checked against the logs. Which branch has which test file, and the ancestry facts, come from git (<code>merge-base</code>, <code>cherry</code>, <code>merge-tree</code>). The <code>a + 2</code> reading is from a local run on 10-01 and was not repeated for this report.</li>
+  <li><b>Not done:</b> no tests were run for this report, and no fix was tried. Every number is from CI's own runs.</li>
+  <li><b>The data:</b> in this page's <code>&lt;script type="application/json" id="report-data"&gt;</code> element and in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/018/data"><code>018/data/</code></a> (the runs, the runs read with their failures, the parents, the test files, and the git facts). The collector and this page's generator are in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/018/drivers"><code>018/drivers/</code></a>. The job logs themselves are on GitHub, linked from each run.</li>
+  <li>#2635 is Matthew Hammer's branch, made and kept with Claude. #2469 and #2687 are Andrew's. Modules II is Alexander's (#2493 and the parts stacked on it), merged into the livelits branch.</li>
+</ul>
+</main>
+<script type="application/json" id="report-data">{{DATA}}</script>
+</body>
+</html>

@@ -1,0 +1,886 @@
+[
+ {
+  "run": 36890639241,
+  "head": "1a2f0338fb",
+  "conclusion": "failure",
+  "created": "2026-10-01T16:15:37Z",
+  "fast": {
+   "job": 110465079195,
+   "failures": 8,
+   "seconds": 638.504,
+   "tests": 5281,
+   "failing": [
+    {
+     "group": "DefStaticsParity",
+     "n": 1,
+     "name": "the slide corpus through calc_auto",
+     "check": "../hazel-programs/docs/livelits/expansion-errors/macro-result.hz: elaboration vs monolithic at Let expression Haz3lcore.Id.v(\"18091d00-0000-4000-a7fe-7681c0a3d8e3\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"19091d00-0000-4000-a7fe-7681c0a3d8e3\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"f5091d00-0000-4000-a7fe-7681c0a3d8e3\")",
+     "expected": null,
+     "received": null
+    },
+    {
+     "group": "LabelBench",
+     "n": 0,
+     "name": "in-situ incremental calc",
+     "check": "incr calc: item + 1 member",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 7,
+     "name": "statics incremental",
+     "check": "6 items",
+     "expected": "6",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 9,
+     "name": "corpus mega-mod-1k",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 10,
+     "name": "big module (stage D)",
+     "check": "3 analyzed at depth 2",
+     "expected": "3",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 11,
+     "name": "recursive type export",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "TypeDeps",
+     "n": 0,
+     "name": "module member retype",
+     "check": "member-retype: analyzed",
+     "expected": "4",
+     "received": "2"
+    },
+    {
+     "group": "Editing.TableDecorations",
+     "n": 1,
+     "name": "typed table: hidden row error draws no arms, flags the chrome",
+     "check": "projector chrome reports the hidden row error",
+     "expected": "true",
+     "received": "false"
+    }
+   ]
+  }
+ },
+ {
+  "run": 36899430811,
+  "head": "42f1ab0be7",
+  "conclusion": "failure",
+  "created": "2026-10-01T17:26:49Z",
+  "fast": {
+   "job": 110494590894,
+   "failures": 8,
+   "seconds": 463.502,
+   "tests": 5281,
+   "failing": [
+    {
+     "group": "DefStaticsParity",
+     "n": 1,
+     "name": "the slide corpus through calc_auto",
+     "check": "../hazel-programs/docs/livelits/expansion-errors/macro-result.hz: elaboration vs monolithic at Let expression Haz3lcore.Id.v(\"18091d00-0000-4000-a920-0303d7ba2294\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"19091d00-0000-4000-a920-0303d7ba2294\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"f5091d00-0000-4000-a920-0303d7ba2294\")",
+     "expected": null,
+     "received": null
+    },
+    {
+     "group": "LabelBench",
+     "n": 0,
+     "name": "in-situ incremental calc",
+     "check": "incr calc: item + 1 member",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 7,
+     "name": "statics incremental",
+     "check": "6 items",
+     "expected": "6",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 9,
+     "name": "corpus mega-mod-1k",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 10,
+     "name": "big module (stage D)",
+     "check": "3 analyzed at depth 2",
+     "expected": "3",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 11,
+     "name": "recursive type export",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "TypeDeps",
+     "n": 0,
+     "name": "module member retype",
+     "check": "member-retype: analyzed",
+     "expected": "4",
+     "received": "2"
+    },
+    {
+     "group": "Editing.TableDecorations",
+     "n": 1,
+     "name": "typed table: hidden row error draws no arms, flags the chrome",
+     "check": "projector chrome reports the hidden row error",
+     "expected": "true",
+     "received": "false"
+    }
+   ]
+  }
+ },
+ {
+  "run": 37146802267,
+  "head": "493adc0761",
+  "conclusion": "failure",
+  "created": "2026-10-03T19:08:14Z",
+  "fast": {
+   "job": 111272333648,
+   "failures": 8,
+   "seconds": 525.991,
+   "tests": 5291,
+   "failing": [
+    {
+     "group": "DefStaticsParity",
+     "n": 1,
+     "name": "the slide corpus through calc_auto",
+     "check": "../hazel-programs/docs/livelits/expansion-errors/macro-result.hz: elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"7d931d00-0000-4000-8f20-56552a951df1\"); elaboration vs monolithic at Let expression Haz3lcore.Id.v(\"a0921d00-0000-4000-8f20-56552a951df1\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"a1921d00-0000-4000-8f20-56552a951df1\")",
+     "expected": null,
+     "received": null
+    },
+    {
+     "group": "LabelBench",
+     "n": 0,
+     "name": "in-situ incremental calc",
+     "check": "incr calc: item + 1 member",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 7,
+     "name": "statics incremental",
+     "check": "6 items",
+     "expected": "6",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 9,
+     "name": "corpus mega-mod-1k",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 10,
+     "name": "big module (stage D)",
+     "check": "3 analyzed at depth 2",
+     "expected": "3",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 11,
+     "name": "recursive type export",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "TypeDeps",
+     "n": 0,
+     "name": "module member retype",
+     "check": "member-retype: analyzed",
+     "expected": "4",
+     "received": "2"
+    },
+    {
+     "group": "Editing.TableDecorations",
+     "n": 1,
+     "name": "typed table: hidden row error draws no arms, flags the chrome",
+     "check": "projector chrome reports the hidden row error",
+     "expected": "true",
+     "received": "false"
+    }
+   ]
+  }
+ },
+ {
+  "run": 37353713816,
+  "head": "109d3557c8",
+  "conclusion": "failure",
+  "created": "2026-10-05T18:08:36Z",
+  "fast": {
+   "job": 111910680868,
+   "failures": 8,
+   "seconds": 357.25,
+   "tests": 5304,
+   "failing": [
+    {
+     "group": "DefStaticsParity",
+     "n": 1,
+     "name": "the slide corpus through calc_auto",
+     "check": "../hazel-programs/docs/livelits/expansion-errors/macro-result.hz: elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"2cc21c00-0000-4000-b1c8-30b3f03d2ecf\"); elaboration vs monolithic at Let expression Haz3lcore.Id.v(\"4fc11c00-0000-4000-b1c8-30b3f03d2ecf\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"50c11c00-0000-4000-b1c8-30b3f03d2ecf\")",
+     "expected": null,
+     "received": null
+    },
+    {
+     "group": "LabelBench",
+     "n": 0,
+     "name": "in-situ incremental calc",
+     "check": "incr calc: item + 1 member",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 7,
+     "name": "statics incremental",
+     "check": "6 items",
+     "expected": "6",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 9,
+     "name": "corpus mega-mod-1k",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 10,
+     "name": "big module (stage D)",
+     "check": "3 analyzed at depth 2",
+     "expected": "3",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 11,
+     "name": "recursive type export",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "TypeDeps",
+     "n": 0,
+     "name": "module member retype",
+     "check": "member-retype: analyzed",
+     "expected": "4",
+     "received": "2"
+    },
+    {
+     "group": "Editing.TableDecorations",
+     "n": 1,
+     "name": "typed table: hidden row error draws no arms, flags the chrome",
+     "check": "projector chrome reports the hidden row error",
+     "expected": "true",
+     "received": "false"
+    }
+   ]
+  }
+ },
+ {
+  "run": 38055383868,
+  "head": "cefa5c2c5c",
+  "conclusion": "failure",
+  "created": "2026-10-10T13:21:08Z",
+  "fast": {
+   "job": 114222653431,
+   "failures": 8,
+   "seconds": 421.074,
+   "tests": 5326,
+   "failing": [
+    {
+     "group": "DefStaticsParity",
+     "n": 1,
+     "name": "the slide corpus through calc_auto",
+     "check": "../hazel-programs/docs/livelits/expansion-errors/macro-result.hz: elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"daff1b00-0000-4000-b992-64434db2cbd8\"); elaboration vs monolithic at Let expression Haz3lcore.Id.v(\"fdfe1b00-0000-4000-b992-64434db2cbd8\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"fefe1b00-0000-4000-b992-64434db2cbd8\")",
+     "expected": null,
+     "received": null
+    },
+    {
+     "group": "LabelBench",
+     "n": 0,
+     "name": "in-situ incremental calc",
+     "check": "incr calc: item + 1 member",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 7,
+     "name": "statics incremental",
+     "check": "6 items",
+     "expected": "6",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 9,
+     "name": "corpus mega-mod-1k",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 10,
+     "name": "big module (stage D)",
+     "check": "3 analyzed at depth 2",
+     "expected": "3",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 11,
+     "name": "recursive type export",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "TypeDeps",
+     "n": 0,
+     "name": "module member retype",
+     "check": "member-retype: analyzed",
+     "expected": "4",
+     "received": "2"
+    },
+    {
+     "group": "Editing.TableDecorations",
+     "n": 1,
+     "name": "typed table: hidden row error draws no arms, flags the chrome",
+     "check": "projector chrome reports the hidden row error",
+     "expected": "true",
+     "received": "false"
+    }
+   ]
+  }
+ },
+ {
+  "run": 38098251585,
+  "head": "602498d7aa",
+  "conclusion": "failure",
+  "created": "2026-10-11T00:23:19Z",
+  "fast": {
+   "job": 114348642360,
+   "failures": 8,
+   "seconds": 550.944,
+   "tests": 5343,
+   "failing": [
+    {
+     "group": "DefStaticsParity",
+     "n": 1,
+     "name": "the slide corpus through calc_auto",
+     "check": "../hazel-programs/docs/livelits/expansion-errors/macro-result.hz: elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"8be91b00-0000-0000-1a4e-1a920ebc6ddb\"); elaboration vs monolithic at Let expression Haz3lcore.Id.v(\"aee81b00-0000-0000-1a4e-1a920ebc6ddb\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"afe81b00-0000-0000-1a4e-1a920ebc6ddb\")",
+     "expected": null,
+     "received": null
+    },
+    {
+     "group": "LabelBench",
+     "n": 0,
+     "name": "in-situ incremental calc",
+     "check": "incr calc: item + 1 member",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 7,
+     "name": "statics incremental",
+     "check": "6 items",
+     "expected": "6",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 9,
+     "name": "corpus mega-mod-1k",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 10,
+     "name": "big module (stage D)",
+     "check": "3 analyzed at depth 2",
+     "expected": "3",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 11,
+     "name": "recursive type export",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "TypeDeps",
+     "n": 0,
+     "name": "module member retype",
+     "check": "member-retype: analyzed",
+     "expected": "4",
+     "received": "2"
+    },
+    {
+     "group": "Editing.TableDecorations",
+     "n": 1,
+     "name": "typed table: hidden row error draws no arms, flags the chrome",
+     "check": "projector chrome reports the hidden row error",
+     "expected": "true",
+     "received": "false"
+    }
+   ]
+  }
+ },
+ {
+  "run": 38216998783,
+  "head": "126f595ce9",
+  "conclusion": "failure",
+  "created": "2026-10-12T07:18:24Z",
+  "fast": {
+   "job": 114704055136,
+   "failures": 8,
+   "seconds": 705.462,
+   "tests": 5390,
+   "failing": [
+    {
+     "group": "DefStaticsParity",
+     "n": 1,
+     "name": "the slide corpus through calc_auto",
+     "check": "../hazel-programs/docs/livelits/expansion-errors/macro-result.hz: elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"c52d2000-0000-0000-31c9-885b5fc0c73a\"); elaboration vs monolithic at Let expression Haz3lcore.Id.v(\"e82c2000-0000-0000-31c9-885b5fc0c73a\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"e92c2000-0000-0000-31c9-885b5fc0c73a\")",
+     "expected": null,
+     "received": null
+    },
+    {
+     "group": "LabelBench",
+     "n": 0,
+     "name": "in-situ incremental calc",
+     "check": "incr calc: item + 1 member",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 7,
+     "name": "statics incremental",
+     "check": "6 items",
+     "expected": "6",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 9,
+     "name": "corpus mega-mod-1k",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 10,
+     "name": "big module (stage D)",
+     "check": "3 analyzed at depth 2",
+     "expected": "3",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 11,
+     "name": "recursive type export",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "TypeDeps",
+     "n": 0,
+     "name": "module member retype",
+     "check": "member-retype: analyzed",
+     "expected": "4",
+     "received": "2"
+    },
+    {
+     "group": "Editing.TableDecorations",
+     "n": 1,
+     "name": "typed table: hidden row error draws no arms, flags the chrome",
+     "check": "projector chrome reports the hidden row error",
+     "expected": "true",
+     "received": "false"
+    }
+   ]
+  }
+ },
+ {
+  "run": 38562046525,
+  "head": "41897ec3a5",
+  "conclusion": "failure",
+  "created": "2026-10-14T12:12:08Z",
+  "fast": {
+   "job": 115845265506,
+   "failures": 8,
+   "seconds": 584.875,
+   "tests": 5390,
+   "failing": [
+    {
+     "group": "DefStaticsParity",
+     "n": 1,
+     "name": "the slide corpus through calc_auto",
+     "check": "../hazel-programs/docs/livelits/expansion-errors/macro-result.hz: elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"d5a21c00-0000-0000-2b62-348a87208a16\"); elaboration vs monolithic at Let expression Haz3lcore.Id.v(\"f8a11c00-0000-0000-2b62-348a87208a16\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"f9a11c00-0000-0000-2b62-348a87208a16\")",
+     "expected": null,
+     "received": null
+    },
+    {
+     "group": "LabelBench",
+     "n": 0,
+     "name": "in-situ incremental calc",
+     "check": "incr calc: item + 1 member",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 7,
+     "name": "statics incremental",
+     "check": "6 items",
+     "expected": "6",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 9,
+     "name": "corpus mega-mod-1k",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 10,
+     "name": "big module (stage D)",
+     "check": "3 analyzed at depth 2",
+     "expected": "3",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 11,
+     "name": "recursive type export",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "TypeDeps",
+     "n": 0,
+     "name": "module member retype",
+     "check": "member-retype: analyzed",
+     "expected": "4",
+     "received": "2"
+    },
+    {
+     "group": "Editing.TableDecorations",
+     "n": 1,
+     "name": "typed table: hidden row error draws no arms, flags the chrome",
+     "check": "projector chrome reports the hidden row error",
+     "expected": "true",
+     "received": "false"
+    }
+   ]
+  }
+ },
+ {
+  "run": 38997939260,
+  "head": "438812718b",
+  "conclusion": "failure",
+  "created": "2026-10-17T03:13:13Z",
+  "fast": {
+   "job": 117294515448,
+   "failures": 8,
+   "seconds": 543.194,
+   "tests": 5391,
+   "failing": [
+    {
+     "group": "DefStaticsParity",
+     "n": 1,
+     "name": "the slide corpus through calc_auto",
+     "check": "../hazel-programs/docs/livelits/expansion-errors/macro-result.hz: elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"d5a21c00-0000-0000-2692-08e6a5412ecc\"); elaboration vs monolithic at Let expression Haz3lcore.Id.v(\"f8a11c00-0000-0000-2692-08e6a5412ecc\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"f9a11c00-0000-0000-2692-08e6a5412ecc\")",
+     "expected": null,
+     "received": null
+    },
+    {
+     "group": "LabelBench",
+     "n": 0,
+     "name": "in-situ incremental calc",
+     "check": "incr calc: item + 1 member",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 7,
+     "name": "statics incremental",
+     "check": "6 items",
+     "expected": "6",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 9,
+     "name": "corpus mega-mod-1k",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 10,
+     "name": "big module (stage D)",
+     "check": "3 analyzed at depth 2",
+     "expected": "3",
+     "received": "1"
+    },
+    {
+     "group": "ModRoot",
+     "n": 11,
+     "name": "recursive type export",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "TypeDeps",
+     "n": 0,
+     "name": "module member retype",
+     "check": "member-retype: analyzed",
+     "expected": "4",
+     "received": "2"
+    },
+    {
+     "group": "Editing.TableDecorations",
+     "n": 1,
+     "name": "typed table: hidden row error draws no arms, flags the chrome",
+     "check": "projector chrome reports the hidden row error",
+     "expected": "true",
+     "received": "false"
+    }
+   ]
+  }
+ },
+ {
+  "run": 39031252985,
+  "head": "9e7258b55b",
+  "conclusion": "failure",
+  "created": "2026-10-17T12:06:53Z",
+  "fast": {
+   "job": 117391986140,
+   "failures": 10,
+   "seconds": 664.255,
+   "tests": 5551,
+   "failing": [
+    {
+     "group": "DefStaticsParity",
+     "n": 1,
+     "name": "the app's path reuses its slot",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 2,
+     "name": "the slide corpus through calc_auto",
+     "check": "../hazel-programs/docs/livelits/expansion-errors/macro-result.hz: elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"207f2100-0000-0000-1306-487fda5a8b48\"); elaboration vs monolithic at Let expression Haz3lcore.Id.v(\"437e2100-0000-0000-1306-487fda5a8b48\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"447e2100-0000-0000-1306-487fda5a8b48\")",
+     "expected": null,
+     "received": null
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 4,
+     "name": "a module root's items",
+     "check": "5 mod items + the exports tail",
+     "expected": "6",
+     "received": "1"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 33,
+     "name": "a member retype",
+     "check": "step 1 analyzed",
+     "expected": "4",
+     "received": "2"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 38,
+     "name": "a module root",
+     "check": "step 1 analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 39,
+     "name": "a recursive type export",
+     "check": "step 1 analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 40,
+     "name": "mega-1k",
+     "check": "step 1 analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 41,
+     "name": "mega-mod-1k",
+     "check": "step 1 analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 42,
+     "name": "mega-mod-1k in one module",
+     "check": "step 1 analyzed",
+     "expected": "3",
+     "received": "1"
+    },
+    {
+     "group": "Editing.TableDecorations",
+     "n": 1,
+     "name": "typed table: hidden row error draws no arms, flags the chrome",
+     "check": "projector chrome reports the hidden row error",
+     "expected": "true",
+     "received": "false"
+    }
+   ]
+  },
+  "full": {
+   "job": 117391986267,
+   "failures": 10,
+   "seconds": 5346.17,
+   "tests": 6094,
+   "failing": [
+    {
+     "group": "DefStaticsParity",
+     "n": 1,
+     "name": "the app's path reuses its slot",
+     "check": "item + 1 member re-analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 2,
+     "name": "the slide corpus through calc_auto",
+     "check": "../hazel-programs/docs/livelits/expansion-errors/macro-result.hz: elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"3ae02500-0000-0000-0ad8-338b84916c0a\"); elaboration vs monolithic at Let expression Haz3lcore.Id.v(\"5ddf2500-0000-0000-0ad8-338b84916c0a\"); elaboration vs monolithic at Livelit application Haz3lcore.Id.v(\"5edf2500-0000-0000-0ad8-338b84916c0a\")",
+     "expected": null,
+     "received": null
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 4,
+     "name": "a module root's items",
+     "check": "5 mod items + the exports tail",
+     "expected": "6",
+     "received": "1"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 33,
+     "name": "a member retype",
+     "check": "step 1 analyzed",
+     "expected": "4",
+     "received": "2"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 38,
+     "name": "a module root",
+     "check": "step 1 analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 39,
+     "name": "a recursive type export",
+     "check": "step 1 analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 40,
+     "name": "mega-1k",
+     "check": "step 1 analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 41,
+     "name": "mega-mod-1k",
+     "check": "step 1 analyzed",
+     "expected": "2",
+     "received": "1"
+    },
+    {
+     "group": "DefStaticsParity",
+     "n": 42,
+     "name": "mega-mod-1k in one module",
+     "check": "step 1 analyzed",
+     "expected": "3",
+     "received": "1"
+    },
+    {
+     "group": "Editing.TableDecorations",
+     "n": 1,
+     "name": "typed table: hidden row error draws no arms, flags the chrome",
+     "check": "projector chrome reports the hidden row error",
+     "expected": "true",
+     "received": "false"
+    }
+   ]
+  }
+ }
+]

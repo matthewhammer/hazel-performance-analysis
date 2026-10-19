@@ -1,0 +1,119 @@
+{
+ "2597": {
+  "label": "#2597, integration/livelits-splicerefs-full, at f8ae6f2b9c",
+  "run": 38744490569,
+  "head": "f8ae6f2b9c",
+  "created": "2026-10-15T13:38:58Z",
+  "conclusion": "success",
+  "fast": {
+   "job": 116454436429,
+   "failures": 0,
+   "seconds": 400.733,
+   "tests": 4522,
+   "failing": []
+  },
+  "full": {
+   "job": 116454436778,
+   "failures": 0,
+   "seconds": 2978.537,
+   "tests": 4974,
+   "failing": []
+  }
+ },
+ "2469_merged": {
+  "label": "#2469, modular-editors, at c349058154 (contains 19fef7c9bb, what #2635 merged on 10-17)",
+  "run": 39084361379,
+  "head": "c349058154",
+  "created": "2026-10-18T00:52:15Z",
+  "conclusion": "success",
+  "fast": {
+   "job": 117547721978,
+   "failures": 0,
+   "seconds": 366.019,
+   "tests": 4810,
+   "failing": []
+  },
+  "full": {
+   "job": 117547721819,
+   "failures": 0,
+   "seconds": 1933.826,
+   "tests": 5202,
+   "failing": []
+  }
+ },
+ "2469_today": {
+  "label": "#2469, modular-editors, at a41b292007 (2026-10-19 08:12 MDT)",
+  "run": 39275903283,
+  "head": "a41b292007",
+  "created": "2026-10-19T15:12:27Z",
+  "conclusion": "in_progress",
+  "fast": {
+   "job": 118140009364,
+   "failures": 7,
+   "seconds": 485.855,
+   "tests": 5084,
+   "failing": [
+    {
+     "group": "OpenMember",
+     "n": 0,
+     "name": "undo and redo read the members per item"
+    },
+    {
+     "group": "OpenMember",
+     "n": 1,
+     "name": "the same at an Exp root, the module bound by `in`"
+    },
+    {
+     "group": "OpenMember",
+     "n": 2,
+     "name": "undo keeps a pin below the open form"
+    },
+    {
+     "group": "OpenMember",
+     "n": 3,
+     "name": "a zoomed module's statics, per item"
+    },
+    {
+     "group": "OpenMember",
+     "n": 4,
+     "name": "outline ops refuse the open form's item"
+    },
+    {
+     "group": "OpenMember",
+     "n": 5,
+     "name": "a crash in the undo's analysis saves the program whole"
+    },
+    {
+     "group": "ItemSpans",
+     "n": 6,
+     "name": "Read: typing a member near List's top"
+    }
+   ]
+  },
+  "full": {
+   "job": 118140009933,
+   "status": "in_progress"
+  }
+ },
+ "2687": {
+  "label": "#2687 (Andrew's stdlib branch, into modular-editors), at 5cf71f2d30: modular editors + Modules II parts 1-2 + DefStatics' per-member path ported onto Modules II (00bc805ca1)",
+  "run": 39195250645,
+  "head": "5cf71f2d30",
+  "created": "2026-10-19T03:33:33Z",
+  "conclusion": "success",
+  "fast": {
+   "job": 117876593029,
+   "failures": 0,
+   "seconds": 493.208,
+   "tests": 5298,
+   "failing": []
+  },
+  "full": {
+   "job": 117876593166,
+   "failures": 0,
+   "seconds": 1986.195,
+   "tests": 5709,
+   "failing": []
+  }
+ }
+}

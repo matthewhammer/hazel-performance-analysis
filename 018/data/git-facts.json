@@ -1,0 +1,83 @@
+{
+ "dev_head": "30b68d428a",
+ "full_head": "f8ae6f2b9c",
+ "full_in_2635": false,
+ "merge_base_2635_full": "3efe8c7e52",
+ "full_commits_since_merge": 110,
+ "full_commits_cherry_picked": 79,
+ "conflicted_files_2635_with_full": [
+  "src/haz3lcore/derived/Measured.re",
+  "src/haz3lcore/lang/MakeTerm.re",
+  "src/haz3lcore/projectors/implementations/LivelitProj.re",
+  "src/haz3lcore/zipper/action/Perform.re",
+  "src/language/dynamics/CallMemo.re",
+  "src/language/dynamics/Evaluator.re",
+  "src/language/dynamics/IncrEval.re",
+  "src/language/statics/Statics.re",
+  "src/language/term/Equality.re",
+  "src/language/term/Exp.re",
+  "src/util/Id.re",
+  "src/web/Main.re",
+  "src/web/Settings.re",
+  "src/web/app/History.re",
+  "src/web/app/editors/result/EvalResult.re",
+  "src/web/app/inspector/CursorInspector.re",
+  "src/web/init/Init.re",
+  "src/web/util/WorkerServer.re",
+  "test/Test_ApplyWorkerMessages.re",
+  "test/Test_PaneLayout.re",
+  "test/Test_ReparseDocSlides.re",
+  "test/Test_TextRoundtrip.re",
+  "test/Test_Undo.re",
+  "test/Test_WorkerServer.re",
+  "test/haz3ltest.re"
+ ],
+ "dev_canonical_completion_merge_9b3f18323a_in_dev": true,
+ "dev_canonical_completion_merge_9b3f18323a_in_full": false,
+ "full_dev_base": "2f9f2f6424",
+ "full_behind_dev": 484,
+ "19fef7c9bb_in_c349058154": true,
+ "defstaticsparity_same_c349_and_2635": true,
+ "modules_ii_parts": {
+  "1-sig-types": {
+   "head": "f877b87c13",
+   "in_2687_stdlib": true,
+   "in_2635": false
+  },
+  "2-width-subtyping": {
+   "head": "6a1fe82f5e",
+   "in_2687_stdlib": true,
+   "in_2635": false
+  },
+  "3-abstract-types": {
+   "head": "431b8d9c04",
+   "in_2687_stdlib": false,
+   "in_2635": false
+  }
+ },
+ "modules_ii_on_2635": "c54b1068f9 2026-09-16T10:42:10-06:00 Merge Modules II part 3, and check a livelit against a livelit signature",
+ "port_2687": "00bc805ca1 2026-10-18T14:12:52-07:00 disconcision Merge origin/modular-editors: spans stage 6 (DefStatics by delta), ported onto Modules II",
+ "port_2687_message": "Merge origin/modular-editors: spans stage 6 (DefStatics by delta), ported onto Modules II\n\nThe branch-neutral parts (sums, step_chain, deltas, nest_map, co_union,\nhead_equal, calc_chain) as on modular-editors. calc_module_item's\ninterface part rebuilt on Modules II:\n- lower_members lowers members against the signature (item_ana_labels),\n  reusing a member's wrapper while it and its expectations are the same;\n  the tail is lower_tail by export names;\n- the module type is module_sig_type, the old object kept while equal;\n- a signature the members don't meet still analyzes the item whole;\n- the module value is refold_module_elab, and there is no M.T alias.\nKept: the library ctx_in, ttransit's dirty values, ctor deltas.\nEdits in mega-mod-1k wrapped or sealed in a module: ~100 → 7ms.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+ "defstaticsparity_cases_on_2687": {
+  "the app's path reuses its slot": true,
+  "a module root's items": true,
+  "a member retype": true,
+  "a recursive type export": true,
+  "mega-mod-1k in one module": true,
+  "the slide corpus": true
+ },
+ "defstaticsparity_lines_removed_2635_to_2687": [
+  "-    ~env=Builtins.env_init,",
+  "-          Statics.mk_unmemoized(settings, DefStatics.ctx0, ds.term);",
+  "-  let (map0, _) = Statics.mk_unmemoized(settings, DefStatics.ctx0, term);",
+  "-      Evaluator.evaluate(~eval_info, ~env=Builtins.env_init, elab);",
+  "-    Statics.mk_unmemoized(~probe_ids, settings, DefStatics.ctx0, term);",
+  "-  @ corpus,"
+ ],
+ "gaps_recorded": {
+  "43089b065d": "43089b065d 2026-10-01T09:02:07-06:00 Make the modular-editors merge build: splices, Modules II, chunks",
+  "11fbc4480d": "11fbc4480d 2026-10-01T08:55:37-06:00 Fix what the dev merge broke: module values, ctor names, two goldens",
+  "8c968efcc4": "8c968efcc4 2026-10-16T21:40:16-06:00 TRIAL: merge #2469 (modular-editors, 19fef7c9bb) into #2635 (438812718b)",
+  "9e7258b55b": "9e7258b55b 2026-10-16T23:46:53-06:00 TRIAL: the merge's new test failures, fixed: keys, renames, hinted tests, do-blocks"
+ }
+}
