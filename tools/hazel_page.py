@@ -6,7 +6,7 @@
 Reads each report's number, date and title from the cards in
 series/index.html (newest first, as there) and writes them between the
 page's <!-- reports: begin --> and <!-- reports: end --> markers, as links
-to performance-analysis/NNN/. Idempotent: run it whenever a report is
+to reports/NNN/. Idempotent: run it whenever a report is
 published, after updating the series index."""
 import os, re, sys
 
@@ -21,7 +21,7 @@ if not cards:
 items = []
 for nnn, date, title in cards:
     n = int(nnn)
-    items.append(f'        <li><a href="performance-analysis/{nnn}/"><code class="ref"><b>^report(</b>{n}<b>)</b></code> '
+    items.append(f'        <li><a href="reports/{nnn}/"><code class="ref"><b>^report(</b>{n}<b>)</b></code> '
                  f'<span class="t">{title}</span></a><span class="date">{date}</span></li>')
 block = ("<!-- reports: begin -->\n      <ol class=\"reports\">\n" + "\n".join(items) +
          "\n      </ol>\n<!-- reports: end -->")

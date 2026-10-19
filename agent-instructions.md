@@ -1,6 +1,6 @@
-# Hazel performance analysis: agent instructions
+# Hazel reports: agent instructions
 
-How Matthew and his agent write the **Hazel performance analysis** series: what it is for, who reads it, and how a report is made, checked and published. Read this before writing or changing a report.
+How Matthew and his agent write the **Hazel reports** series: what it is for, who reads it, and how a report is made, checked and published. Read this before writing or changing a report.
 
 ## Purpose and audience
 
@@ -28,7 +28,7 @@ The series is **not our working record.** That is `hazel-work-notes` (public, bu
 | Patches tried and not kept | `patches/`, named for what they do. |
 | Local preview | `series/` served at http://localhost:8131/series/ (launch entry `perf-report`). |
 | The nav bar | Every report page loads the nav bar Matthew's pages share (ticket 296): `tools/add_theme.py`, which every report runs through, puts it in with the theme switch. How it fits together: https://github.com/matthewhammer/matthewhammer.github.io/blob/master/nav/agent-instructions.md . |
-| Published | https://matthewhammer.org/hazel/performance-analysis/ (HTTPS since 2026-10-15; old http:// links redirect). |
+| Published | https://matthewhammer.org/hazel/reports/ (HTTPS since 2026-10-15; old http:// links redirect). |
 
 ## Writing a report
 
@@ -46,7 +46,7 @@ The series is **not our working record.** That is `hazel-work-notes` (public, bu
 - **Our own numbers in our own syntax** (Matthew's, 2026-10-14). The series is made of **reports**; "issue" is GitHub's word, kept for GitHub's issues (the tracking issue #2609). A report is `^report(N)` and a ticket on the work dashboard `^ticket(N)`: no leading zeros, so they can pass 999, shown in monospace with `^report(` and `)` in bold. Write them that way in prose and in chat. Run `python3 tools/report_refs.py NNN/index.html` on a new or changed page (idempotent, like add_steps): it turns a written "report 013" into the chip, links it (`../NNN/`, or `NNN/` from the series index), and adds the chips' style. The folders keep their three digits (`013/`).
 - **Every PR or issue number is a link** (Matthew's rule, 2026-10-14), in every report, the series index and `^report(1)`'s page, tables included. Run `python3 tools/link_prs.py NNN/index.html` on a new report before publishing (idempotent, like add_steps; run it again after regenerating, and on any page you change). It links each bare `#N` or `owner/repo#N` to GitHub as `/pull/N` or `/issues/N` (asking GitHub which, remembered in `tools/pr_kinds.json`), and gives every such link a card on hover or focus: title, state, author, dates and comments, asked of GitHub live once per page load, falling back to what GitHub said when the page was built (`tools/pr_cards.html`, inserted between `pr-cards` markers).
 - **Matthew's kids are M and N,** never by name.
-- **Every "What next" step gets a link and a ticket button.** Run `python3 tools/add_steps.py NNN/index.html` on a new report before publishing (it is idempotent, so run it again after regenerating). Each step of the list after `<h2 id="next">` gets an anchor (`#step-N`) and a "copy for a ticket" button that copies `Mint a ticket for this step: Hazel performance analysis, ^report(N), What next, step N: "...". URL`, for Matthew to paste to Claude. Steps have no ticket numbers in the report: a ticket is minted, in the work notes, only when he asks.
+- **Every "What next" step gets a link and a ticket button.** Run `python3 tools/add_steps.py NNN/index.html` on a new report before publishing (it is idempotent, so run it again after regenerating). Each step of the list after `<h2 id="next">` gets an anchor (`#step-N`) and a "copy for a ticket" button that copies `Mint a ticket for this step: Hazel reports, ^report(N), What next, step N: "...". URL`, for Matthew to paste to Claude. Steps have no ticket numbers in the report: a ticket is minted, in the work notes, only when he asks.
 - **Every page gets the theme switch.** Run `python3 tools/add_theme.py NNN/index.html` on a new report (idempotent, like add_steps). It adds a button, top right, cycling Auto / Light / Dark, remembered per site; the page's CSS must define its dark colours under both `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) ... }` and `:root[data-theme="dark"]`. A drawing shown with `<img>` follows the system theme, not the switch: give a theme-aware SVG a light and a dark copy with `python3 tools/theme_variants.py NNN/img/thumb.svg` and show both, as `img.light` and `img.dark` (009's card in `series/index.html`). Thumbnails are transparent, or dark-friendly, except 002 to 004, which show the app as it looks.
 - **When adding a report, read the others.** Link back to what it builds on. Where it explains or corrects an earlier report, add a dated note there (below).
 
@@ -62,7 +62,7 @@ A published report's story is never rewritten. **Pictures that only illustrate w
 
 A report is drafted here and previewed locally. **Matthew reviews it and says when to publish.** While it waits for him, say so in the Hazel Work Dashboard's current-ticket note (where the draft is, the local URL, the commit), as `~/hazel-work-notes/agent-instructions.md` describes: he reads the published dashboard from other computers to see that he is the one holding it up. Then:
 
-1. Copy the report, and any reports with new dated notes, to `~/matthewhammer.github.io/hazel/performance-analysis/`. Update the series index there with the new card.
+1. Copy the report, and any reports with new dated notes, to `~/matthewhammer.github.io/hazel/reports/`. Update the series index there with the new card.
 2. Give the card a thumbnail that says the report's point at a glance: a transparent SVG, `NNN/img/thumb.svg`, with its light colours in plain rules and its dark ones in one `@media (prefers-color-scheme: dark)` block, split with `tools/theme_variants.py` into `thumb-light.svg` and `thumb-dark.svg`, both in the card as `img.light` and `img.dark`. Check both on a white and on a dark card. Only a picture of the app itself (002 to 004) stays a PNG on a light ground.
 3. List it on the homepage's Hazel page (http://matthewhammer.org/hazel/, "Matthew Hammer and Hazel"): `python3 tools/hazel_page.py` rewrites that page's list of reports from the series index's cards (idempotent).
 4. Pull first (`git pull --rebase`): the dashboard publishes into that repository by itself, up to every ten minutes, so its master is usually ahead of the checkout (^ticket(181), 2026-10-16). Then push, wait for the Pages run, and check the live pages over HTTPS.

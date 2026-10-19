@@ -82,7 +82,7 @@
 
 <body>
 <main>
-<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>19<b>)</b></code> · 2026-10-19</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>19<b>)</b></code> · 2026-10-19</p>
 <h1>The Hazel UI draws syntax as tiles on 22 of 39 surfaces, but only 6 take a caret</h1>
 <p class="sub">Cyrus asked for two things on 2026-10-16: livelits' model views as read-only tiles, with the selection and right-click menu tiles have in the editor, and the explainer's examples as read-only tiles too. Both asks assume some views print syntax as text. Matthew asked for the whole picture: every place the Hazel UI shows a term, pattern, type or value, and how it draws it. For the meeting with Cyrus on 2026-10-21 (<code class="ref"><b>^ticket(</b>389<b>)</b></code>; this report is <code class="ref"><b>^ticket(</b>393<b>)</b></code>).</p>
 
@@ -311,7 +311,7 @@
       (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
   };
   const reportCard = (n, r) => r
-    ? `<div class="rc-head">^report(${n}) · Hazel performance analysis${r.date ? " · " + esc(r.date) : ""}</div>` +
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
       `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
     : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
   let card = null, over = null, timer = null;
@@ -457,14 +457,14 @@
   const label = (document.querySelector(".series") || document.body).textContent;
   const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
   const report = m ? String(Number(m[1])) : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
+  const base = "http://matthewhammer.org/hazel/reports/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+    const text = "Mint a ticket for this step: Hazel reports, ^report(" + report +
       "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";

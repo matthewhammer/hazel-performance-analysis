@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- nav: begin --><meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script><!-- nav: end -->
 <!-- theme: head begin -->
 <script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
 <!-- theme: head end -->
@@ -62,7 +63,7 @@
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>8<b>)</b></code> · 2026-10-12</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>8<b>)</b></code> · 2026-10-12</p>
 <h1>One slider, three ways: what modular editing saves</h1>
 <p class="sub">A question about the two livelits branches. <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> has no modular editing, and <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> has it, from <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> (modular editors). How long does one slider change take on a complex picture, the Livelit Playground's Full Body slide? The hypothesis: <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> is much faster, especially in its UX outline mode, showing only the slider and the picture, because it doesn't reprocess the unrelated code. A third set-up separates the two halves of that hypothesis.</p>
 
@@ -255,14 +256,14 @@
   const label = (document.querySelector(".series") || document.body).textContent;
   const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
   const report = m ? String(Number(m[1])) : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
+  const base = "http://matthewhammer.org/hazel/reports/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+    const text = "Mint a ticket for this step: Hazel reports, ^report(" + report +
       "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
@@ -681,7 +682,7 @@
  ],
  "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/008/data",
  "cross_check_2026_10_15": {
-  "source": "^report(15), https://matthewhammer.org/hazel/performance-analysis/015/ (its data: 015/data/hazel_fullbody_C.json, hazel_fullbody_B.json)",
+  "source": "^report(15), https://matthewhammer.org/hazel/reports/015/ (its data: 015/data/hazel_fullbody_C.json, hazel_fullbody_B.json)",
   "build": {
    "pr": "hazelgrove/hazel#2635",
    "commit": "032fe3aca6"
@@ -761,7 +762,7 @@
       (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
   };
   const reportCard = (n, r) => r
-    ? `<div class="rc-head">^report(${n}) · Hazel performance analysis${r.date ? " · " + esc(r.date) : ""}</div>` +
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
       `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
     : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
   let card = null, over = null, timer = null;

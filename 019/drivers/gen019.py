@@ -117,7 +117,7 @@ data_js = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
 page = f"""{head}
 <body>
 <main>
-<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>19<b>)</b></code> · {M["date"]}</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>19<b>)</b></code> · {M["date"]}</p>
 <h1>{M["title"]}</h1>
 <p class="sub">{M["sub"]}</p>
 

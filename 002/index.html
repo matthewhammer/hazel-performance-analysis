@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- nav: begin --><meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script><!-- nav: end -->
 <!-- theme: head begin -->
 <script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
 <!-- theme: head end -->
@@ -60,7 +61,7 @@
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>2<b>)</b></code> · 2026-10-11</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>2<b>)</b></code> · 2026-10-11</p>
 <h1>From a game to a slide deck: Messed Up Dress Up in Hazel</h1>
 <p class="dedicated">Dedicated to a resonance between research and play &mdash; <a href="#dedication">see the dedication at the end</a>.</p>
 <p class="sub">How a plain HTML/JS prototype, played by real players, became Hazel slides you can use: hair on the head, a neck, arms, a shirt with a style and a size, hands, eyes and a mouth. Branch <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), with the slides kept in step on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>. Measured 2026-10-11 on dev builds, in headless Firefox.</p>
@@ -211,14 +212,14 @@
   const label = (document.querySelector(".series") || document.body).textContent;
   const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
   const report = m ? String(Number(m[1])) : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
+  const base = "http://matthewhammer.org/hazel/reports/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+    const text = "Mint a ticket for this step: Hazel reports, ^report(" + report +
       "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
@@ -333,7 +334,7 @@
       (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
   };
   const reportCard = (n, r) => r
-    ? `<div class="rc-head">^report(${n}) · Hazel performance analysis${r.date ? " · " + esc(r.date) : ""}</div>` +
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
       `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
     : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
   let card = null, over = null, timer = null;

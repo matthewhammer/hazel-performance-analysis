@@ -120,7 +120,7 @@ page = f"""<!doctype html>
 </head>
 <body>
 <main>
-<p class="series"><a href="../">Hazel performance analysis</a> · report 016 · 2026-10-15</p>
+<p class="series"><a href="../">Hazel reports</a> · report 016 · 2026-10-15</p>
 <h1>Two fixes for a drag, measured side by side</h1>
 <p class="sub">On <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, dragging a slider in the Livelit Playground's Full Body slide for a second and a half froze the page for about three seconds in report 015, and longer for a longer drag. Every value a drag passes through makes the page recalculate, and a drag passes through dozens. Two fixes were built on the way: keeping only the newest preview while one is on its way, and evaluating the livelit views in the evaluation worker instead of on the page. Measured one session at a time, earlier the same day, neither could be told apart from the drift between sessions. This report measures them again with the builds side by side, drag by drag, and with the head measured twice as a control.</p>
 

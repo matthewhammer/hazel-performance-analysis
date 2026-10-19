@@ -8,7 +8,7 @@ import json, html, os, re
 A = json.load(open("020/data/agenda.json"))
 # the agenda is public (Matthew, 2026-10-19): a report it cites that is not published yet is a chip without a link,
 # never a link that fails; it links once that report is published
-PUBLISHED = os.path.expanduser("~/matthewhammer.github.io/hazel/performance-analysis")
+PUBLISHED = os.path.expanduser("~/matthewhammer.github.io/hazel/reports")
 
 
 def unlink_unpublished(s):
@@ -101,7 +101,7 @@ page = f"""<!doctype html>
 </head>
 <body>
 <main>
-<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>{A["report"]}<b>)</b></code> · agenda <span class="wip">work in progress</span> · started {A["started"]}, updated {esc(A["updated"])}</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>{A["report"]}<b>)</b></code> · agenda <span class="wip">work in progress</span> · started {A["started"]}, updated {esc(A["updated"])}</p>
 <h1>{A["title"]}</h1>
 <p class="sub">{A["sub"]}</p>
 

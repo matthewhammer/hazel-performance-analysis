@@ -284,7 +284,7 @@ page = f"""<!doctype html>
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · report 015 · 2026-10-15</p>
+<p class="series"><a href="../">Hazel reports</a> · report 015 · 2026-10-15</p>
 <h1>Dress Up and its livelits, side by side</h1>
 <p class="sub">How does Messed Up Dress Up, the plain-JavaScript game Matthew's kids M and N play and design, perform today against the same features built as livelits in Hazel? And what could close the gap over the next eleven months? Matthew asked both on 2026-10-15. Dress Up is where each toy is tried first; report 002 described how its pieces became the Livelit Playground's slides. This report puts the two side by side with one measurement, a real drag of a slider, in one browser on one machine, and then guesses, as a guess, at what is reachable by September 2027.</p>
 

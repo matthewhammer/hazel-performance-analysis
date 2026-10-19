@@ -1,8 +1,8 @@
-# Hazel performance analysis
+# Hazel reports
 
-**▶ Read the series at https://matthewhammer.org/hazel/performance-analysis/**
+**▶ Read the series at https://matthewhammer.org/hazel/reports/**
 
-A series of reports on making [Hazel](https://hazel.org) responsive enough for its livelits to feel like plain apps: what we measured, what we found, what we fixed, and what's left. By Matthew Hammer, working with Claude, for Cyrus, the Hazel team and anyone following the work.
+Reports on the [Hazel](https://hazel.org) work: most of them on making Hazel responsive enough for its livelits to feel like plain apps (what we measured, what we found, what we fixed, and what's left), and others on what else comes up, such as a survey of the UI, why a branch failed CI, or a meeting's agenda. The series was called Hazel performance analysis until 2026-10-19; its old addresses forward here. By Matthew Hammer, working with Claude, for Cyrus, the Hazel team and anyone following the work.
 
 | Report | |
 |---|---|

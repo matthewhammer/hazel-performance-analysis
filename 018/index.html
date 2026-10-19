@@ -68,7 +68,7 @@
 </head>
 <body>
 <main>
-<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>18<b>)</b></code> · 2026-10-19</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>18<b>)</b></code> · 2026-10-19</p>
 <h1><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> has failed CI on every run since the merge, for three known reasons</h1>
 <p class="sub">Cyrus asked why CI fails on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, the branch that merges modular editors (<a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>) into the livelits branch (<a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>). The answer, from all 97 of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s CI runs, the failing tests in 10 of them, and both parents' runs over the same eighteen days.</p>
 
@@ -247,7 +247,7 @@
       (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
   };
   const reportCard = (n, r) => r
-    ? `<div class="rc-head">^report(${n}) · Hazel performance analysis${r.date ? " · " + esc(r.date) : ""}</div>` +
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
       `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
     : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
   let card = null, over = null, timer = null;
@@ -394,14 +394,14 @@
   const label = (document.querySelector(".series") || document.body).textContent;
   const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
   const report = m ? String(Number(m[1])) : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
+  const base = "http://matthewhammer.org/hazel/reports/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+    const text = "Mint a ticket for this step: Hazel reports, ^report(" + report +
       "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";

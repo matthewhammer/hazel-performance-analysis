@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- nav: begin --><meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script><!-- nav: end -->
 <!-- theme: head begin -->
 <script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
 <!-- theme: head end -->
@@ -61,7 +62,7 @@
 <body>
 <main>
 
-<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>7<b>)</b></code> · 2026-10-12</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>7<b>)</b></code> · 2026-10-12</p>
 <h1>Five minutes to the first picture</h1>
 <p class="sub">On <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, the full livelits branch, the Livelit Playground's Scenes slide has taken about five minutes to draw its first picture, and the Witch slide almost three. <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> draws both in about 12 seconds. <a href="../004/"><code class="ref"><b>^report(</b>4<b>)</b></code></a> reported this, and put it down to <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> lacking the speedups of <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> (modular editors). This report asks whether it is really that long, and why, and tries a fix.</p>
 
@@ -195,14 +196,14 @@
   const label = (document.querySelector(".series") || document.body).textContent;
   const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
   const report = m ? String(Number(m[1])) : "?";
-  const base = "http://matthewhammer.org/hazel/performance-analysis/" + report.padStart(3, "0") + "/";
+  const base = "http://matthewhammer.org/hazel/reports/" + report.padStart(3, "0") + "/";
   [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
     const n = i + 1;
     if (!li.id) li.id = "step-" + n;
     const b = li.querySelector("b, strong");
     const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
     const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel performance analysis, ^report(" + report +
+    const text = "Mint a ticket for this step: Hazel reports, ^report(" + report +
       "), What next, step " + n + ': "' + title + '". ' + url;
     const a = document.createElement("a");
     a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
@@ -317,7 +318,7 @@
       (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
   };
   const reportCard = (n, r) => r
-    ? `<div class="rc-head">^report(${n}) · Hazel performance analysis${r.date ? " · " + esc(r.date) : ""}</div>` +
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
       `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
     : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
   let card = null, over = null, timer = null;

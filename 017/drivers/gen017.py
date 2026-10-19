@@ -211,7 +211,7 @@ table.prs td {{ vertical-align: top; }} table.prs td:first-child {{ min-width: 6
 </head>
 <body>
 <main>
-<p class="series"><a href="../">Hazel performance analysis</a> · report 017 · 2026-10-15</p>
+<p class="series"><a href="../">Hazel reports</a> · report 017 · 2026-10-15</p>
 <h1>Fourteen performance PRs to dev, and a plan to merge them</h1>
 <p class="sub">Since late September, the profiling behind this series has produced fourteen pull requests to <code>dev</code>: statics, loading text, the evaluator, the worker, the editor, and CI. Each is small, measured and tested, and none has been reviewed. This report is for whoever reviews them (Cyrus, Alexander, Andrew, Matt K): for each PR, what it buys and where that was measured, the honest reasons not to merge it yet, and what to look at; then the order to merge them in, which ones depend on or conflict with which, and what each needs first.</p>
 

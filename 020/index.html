@@ -60,7 +60,7 @@
 </head>
 <body>
 <main>
-<p class="series"><a href="../">Hazel performance analysis</a> · <code class="ref"><b>^report(</b>20<b>)</b></code> · agenda <span class="wip">work in progress</span> · started 2026-10-19, updated 2026-10-19 13:17 MDT</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>20<b>)</b></code> · agenda <span class="wip">work in progress</span> · started 2026-10-19, updated 2026-10-19 13:17 MDT</p>
 <h1>Agenda: Matthew and Cyrus, Wednesday 2026-10-21</h1>
 <p class="sub">The topics Matthew brings to his meeting with Cyrus on Wednesday 2026-10-21. Most are Cyrus's own questions from their meeting on Friday 2026-10-16. <b>A work in progress:</b> compiled over the two days before the meeting and updated as items move, so each item says where it stands, as of when, and what it needs from the meeting.</p>
 
@@ -222,7 +222,7 @@
       (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
   };
   const reportCard = (n, r) => r
-    ? `<div class="rc-head">^report(${n}) · Hazel performance analysis${r.date ? " · " + esc(r.date) : ""}</div>` +
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
       `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
     : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
   let card = null, over = null, timer = null;
