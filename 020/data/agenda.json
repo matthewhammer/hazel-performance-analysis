@@ -3,7 +3,7 @@
  "kind": "agenda",
  "meeting": "2026-10-21",
  "started": "2026-10-19",
- "updated": "2026-10-20 10:11",
+ "updated": "2026-10-20 10:24",
  "page_title": "Agenda for October 21",
  "title": "Agenda: Matthew and Cyrus, Wednesday 2026-10-21",
  "sub": "The topics Matthew brings to his meeting with Cyrus on Wednesday 2026-10-21. Most are Cyrus's own questions from their meeting on Friday 2026-10-16. <b>A work in progress:</b> compiled over the two days before the meeting and updated as items move, so each item says where it stands, as of when, and what it needs from the meeting.",
@@ -90,6 +90,17 @@
     2490
    ],
    "meeting": "Is an argument per PR, plus the tests, what Cyrus had in mind? Which PRs first?"
+  },
+  {
+   "id": "guards",
+   "title": "Guarding correctness in CI, as the performance work caches more",
+   "asked": "Matthew, 2026-10-20, for Cyrus's question",
+   "ticket": 465,
+   "status": "proposal",
+   "tone": "accent2",
+   "as_of": "2026-10-20 10:24",
+   "body": "<p>What guards results today, and what would guard the caches and reuse the performance PRs add (#2609). Today: <code>DefStaticsParity</code> checks that statics redone per definition agree with statics from scratch; the performance budgets (#2678) check cost, not results; and #2700 (a draft, green) turns the incremental-against-fresh property back on for evaluation results and adds <code>Evaluator.IncrCorpus</code>: 150 literal edits over the 73 corpus programs, each incremental result checked against evaluation from scratch. It was checked by mutation: with the reuse check made to ignore changed dependencies, it fails.</p><p>Proposed, in this order:</p><ol><li><b>Every cache has an off switch, and CI compares on against off.</b> One differential harness over the slide corpus: types, marks, elaborations (ids aside), values, probes and test results, after random edits and from scratch, with each cache on and off. A performance PR registers its switch and gets the check. #2700's corpus test is its first case.</li><li><b>The guards are tested too.</b> For each cache, a deliberately wrong variant (a dependency ignored, a hash made to collide) must make the suite fail; run weekly, beside the extended tests. A guard that cannot fail guards nothing.</li><li><b>Hash keys are checked for soundness.</b> Equal hash implies equal term, for the type hash (#2661, #2681) and the term hash (#2673), with a census over the corpus.</li><li><b>Every load path gives the same program.</b> The fast loader, the recovering parser (#2610's segmented one), a saved slide's round trip and typing. ^report(21) found #2610's fallback turning <code>x - y</code> into <code>x ¿ -y</code>; ^ticket(472) is checking a saved Scenes slide whose livelit uses came back broken.</li><li><b>The stack is tested merged.</b> ^report(18)'s regressions came from merging two branches each green alone (#2469 into the livelits branch). A scheduled job that merges dev, #2469, #2597 and the performance PRs and runs both suites would find those before anyone merges.</li><li><b>The checks are required</b> (the item on gating dev, below): Fast checks required for dev, after quarantining <code>Evaluator.Properties</code>.</li><li><b>Each performance PR says what it caches,</b> as ^report(21) writes each one up: the key, what invalidates it, what it assumes, and the test that fails if the invalidation is wrong.</li></ol>",
+   "meeting": "Which of these Cyrus wants, in which order, and which should become required checks; and whether #2700 comes out of draft first."
   },
   {
    "id": "merge",
