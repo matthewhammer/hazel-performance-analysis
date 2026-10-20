@@ -59,6 +59,11 @@ def info(repo, n):
             info_cache[key] = json.loads(out.stdout)
         except ValueError:
             raise SystemExit(f"cannot read {key}: {out.stderr.strip()[:200]}")
+        # (^ticket(478)) a PR's base branch, which the card shows: dev or not
+        if info_cache[key].get("kind") == "pull":
+            base = subprocess.run(["gh", "api", f"repos/{repo}/pulls/{n}", "--jq", ".base.ref"], capture_output=True, text=True).stdout.strip()
+            if base:
+                info_cache[key]["base"] = base
     return info_cache[key]
 
 CARDS = open(os.path.join(HERE, "pr_cards.html"), encoding="utf-8").read()
