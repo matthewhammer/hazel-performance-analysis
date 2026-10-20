@@ -44,6 +44,14 @@
   <script>if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) document.getElementById("dashboard-link").href = "http://localhost:8000/";</script>
   <ol class="issues" reversed>
     <li>
+      <a class="thumb" href="023/"><img class="light" src="023/img/thumb-light.svg" alt="#2635's CI runs as tick marks: 97 red and grey from 1 October to report 18, none green; six since, two green and four cancelled by a newer push."><img class="dark" src="023/img/thumb-dark.svg" alt="#2635's CI runs as tick marks: 97 red and grey from 1 October to report 18, none green; six since, two green and four cancelled by a newer push."></a>
+      <div>
+      <div class="num"><a href="023/"><code class="ref"><b>^report(</b>23<b>)</b></code></a> · 2026-10-19</div>
+      <div class="title"><a href="023/">#2635 is green: report 18's next steps, followed up</a></div>
+      <p class="blurb">What happened after <a href="018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>: <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors) passed CI twice on 2026-10-19, its first green runs since it was made, with all three causes fixed, one of them a real bug in incremental statics. Of report 18's five next steps two are done, two partly, and one, the plan for merging into dev, is for the meeting with Cyrus (<a href="020/"><code class="ref"><b>^report(</b>20<b>)</b></code></a>).</p>
+      </div>
+    </li>
+    <li>
       <a class="thumb" href="020/"><img class="light" src="020/img/thumb-light.svg" alt="A calendar page for October 21 beside seven bars, one per agenda item, each in the colour of its status."><img class="dark" src="020/img/thumb-dark.svg" alt="A calendar page for October 21 beside seven bars, one per agenda item, each in the colour of its status."></a>
       <div>
       <div class="num"><a href="020/"><code class="ref"><b>^report(</b>20<b>)</b></code></a> · 2026-10-19</div>
@@ -243,7 +251,8 @@
 <!-- refs: end -->
 <!-- ref-cards: begin -->
 <style>
-  .ref-card { position: absolute; z-index: 40; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .ref-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
     padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
     color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
   .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
@@ -334,7 +343,8 @@
 <!-- ref-cards: end -->
 <!-- pr-cards: begin -->
 <style>
-  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
     padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
     color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
   .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
@@ -350,7 +360,7 @@
    number per page load; if GitHub does not answer, what it said when the
    page was built (tools/link_prs.py writes this block). */
 (() => {
-  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 17, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-19T15:35:27Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-15T14:33:10Z"}, "hazelgrove/hazel#2608": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T12:03:57Z", "kind": "pull", "state": "open", "title": "Leave the source's whitespace and comments out of elaborations", "updated": "2026-09-30T00:37:35Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-17T12:06:48Z"}, "hazelgrove/hazel#2687": {"author": "disconcision", "comments": 1, "created": "2026-10-17T01:26:52Z", "kind": "pull", "state": "draft", "title": "Standard library in Hazel source", "updated": "2026-10-19T04:11:24Z"}}, BUILT = "2026-10-19";
+  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 17, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-20T04:06:54Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-19T20:58:22Z"}, "hazelgrove/hazel#2608": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T12:03:57Z", "kind": "pull", "state": "open", "title": "Leave the source's whitespace and comments out of elaborations", "updated": "2026-09-30T00:37:35Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 3, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-19T22:24:33Z"}, "hazelgrove/hazel#2687": {"author": "disconcision", "comments": 1, "created": "2026-10-17T01:26:52Z", "kind": "pull", "state": "draft", "title": "Standard library in Hazel source", "updated": "2026-10-20T06:16:07Z"}}, BUILT = "2026-10-20";
   const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
   const asked = new Map();
   const ask = key => {
