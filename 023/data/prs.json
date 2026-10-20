@@ -1,0 +1,74 @@
+{
+ "2635": {
+  "title": "Livelits × modular editors: merge #2469 into the livelits branch",
+  "state": "open",
+  "merged_at": null,
+  "head": "integration/livelits-modular-editors",
+  "head_sha": "5961401df2",
+  "base": "integration/livelits-splicerefs-full",
+  "mergeable": false,
+  "mergeable_state": "dirty",
+  "updated_at": "2026-10-19T22:24:33Z"
+ },
+ "2699": {
+  "title": "non-`dev` (`integration/livelits-modular-editors`): Exploratory: per-member module analysis on Modules II, after Andrew's stdlib port",
+  "state": "closed",
+  "merged_at": "2026-10-19T19:33:23Z",
+  "head": "explore/2635-per-member-modules-ii",
+  "head_sha": "223357135a",
+  "base": "integration/livelits-modular-editors",
+  "mergeable": null,
+  "mergeable_state": "unknown",
+  "updated_at": "2026-10-19T19:33:25Z",
+  "commits": [
+   {
+    "sha": "18a657f23e",
+    "message": "EXPLORATORY: per-member module analysis on Modules II, after Andrew's stdlib port",
+    "author": "Matthew Hammer"
+   },
+   {
+    "sha": "206aed1715",
+    "message": "Merge #2635 (1131a457e4) into #2699, for the corpus and typed-table fixes",
+    "author": "Matthew Hammer"
+   },
+   {
+    "sha": "223357135a",
+    "message": "A livelit definition stays a plain item, not a module of members",
+    "author": "Matthew Hammer"
+   }
+  ]
+ },
+ "2597": {
+  "title": "User-Defined Livelits, as in PLDI '21, and beyond.",
+  "state": "open",
+  "merged_at": null,
+  "head": "integration/livelits-splicerefs-full",
+  "head_sha": "8a03584ef6",
+  "base": "integration/livelits-splicerefs",
+  "mergeable": true,
+  "mergeable_state": "clean",
+  "updated_at": "2026-10-19T20:58:22Z"
+ },
+ "2469": {
+  "title": "Modular editors",
+  "state": "open",
+  "merged_at": null,
+  "head": "modular-editors",
+  "head_sha": "1290464a1a",
+  "base": "dev",
+  "mergeable": false,
+  "mergeable_state": "dirty",
+  "updated_at": "2026-10-20T04:06:54Z"
+ },
+ "2687": {
+  "title": "Standard library in Hazel source",
+  "state": "open",
+  "merged_at": null,
+  "head": "stdlib",
+  "head_sha": "aa9aeda1e9",
+  "base": "modular-editors",
+  "mergeable": true,
+  "mergeable_state": "unstable",
+  "updated_at": "2026-10-20T03:27:20Z"
+ }
+}

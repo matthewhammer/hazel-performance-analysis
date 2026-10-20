@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- theme: head begin -->
+<script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<!-- theme: head end -->
+<!-- nav: begin --><meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script><!-- nav: end -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>#2635 Is Green</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8; --accent2: #0e7490; --cx: #d6d1c6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 22px 0 6px; }
+  p, li { max-width: 72ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  .headline ol > li { margin: 8px 0; }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); } .cv2 { color: var(--muted); }
+  figure.fig { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 16px 0; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 72ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; overflow-wrap: anywhere; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .cause { border-left: 4px solid var(--line); padding-left: 14px; margin: 18px 0; }
+  .cause.a { border-color: var(--accent); } .cause.b { border-color: var(--warn); } .cause.c { border-color: var(--accent2); }
+
+  svg.chart { width: 100%; height: auto; display: block; font: 12.5px system-ui, sans-serif; color: var(--ink); }
+  svg.chart .ct { fill: var(--ink); font-weight: 600; font-size: 14px; }
+  svg.chart .cl { fill: var(--ink); }
+  svg.chart .cv { fill: var(--muted); }
+  svg.chart .bn { font-weight: 700; font-size: 13px; }
+  svg.chart .grid { stroke: var(--line); stroke-width: 1; }
+  svg.chart .good { fill: var(--good); } svg.chart .bad { fill: var(--bad); } svg.chart .warn { fill: var(--warn); } svg.chart .cx { fill: var(--cx); }
+  svg.chart tspan.good { fill: var(--good); } svg.chart tspan.bad { fill: var(--bad); }
+  svg.chart .rd { fill: var(--bad); }
+  svg.chart .ring { fill: none; stroke: var(--good); stroke-width: 2; }
+  svg.chart .cb { stroke-width: 1.5; }
+  svg.chart .cb.a { fill: color-mix(in srgb, var(--accent) 16%, var(--paper)); stroke: var(--accent); }
+  svg.chart .cb.b { fill: color-mix(in srgb, var(--warn) 18%, var(--paper)); stroke: var(--warn); }
+  svg.chart .cb.c { fill: color-mix(in srgb, var(--accent2) 16%, var(--paper)); stroke: var(--accent2); }
+  svg.chart .br { fill: none; stroke-width: 1.8; }
+  svg.chart .br.a { stroke: var(--accent); } svg.chart .br.b { stroke: var(--warn); } svg.chart .br.c { stroke: var(--accent2); }
+
+  .card { display: inline-block; min-width: 150px; margin: 4px 8px 4px 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  .card b { font-size: 1.5em; display: block; }
+</style>
+</head>
+<body>
+<main>
+<p class="series">Hazel reports · <code class="ref"><b>^report(</b>23<b>)</b></code> · draft, 2026-10-19</p>
+<h1><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> Is Green</h1>
+<p class="sub"><a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a> answered Cyrus's question of 2026-10-16, why CI fails on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors), with three causes, and ended with five next steps. What happened to each step, and what is known now? Matthew asked on 2026-10-19, once the agenda for the next meeting with Cyrus, <a href="../020/"><code class="ref"><b>^report(</b>20<b>)</b></code></a>, could mark <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> green.</p>
+
+<div class="headline">
+<p><b>Short answers.</b> As of 2026-10-20 04:24 UTC (2026-10-19 evening, Mountain time). Every run is linked below, and its numbers are in this page's data.</p>
+<ol>
+<li><b><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> has passed CI twice, its first green runs since it was made on 2026-10-01.</b> First on <a href="https://github.com/hazelgrove/hazel/commit/90ed4505bf"><code>90ed4505bf</code></a>, the merge of <a href="https://github.com/hazelgrove/hazel/pull/2699">#2699</a>: Fast checks ran 5,553 tests and Full tests 6,098, none failing (1 h 28 min for Full tests). Then on <a href="https://github.com/hazelgrove/hazel/commit/5961401df2"><code>5961401df2</code></a>, one more commit on top, with the same counts. <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a> counted 97 runs and none green; since then 2 green, 0 red, and 4 cancelled by a newer push.
+<div><span class="card"><b class="bad">0 of 97</b>runs green before <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a></span><span class="card"><b class="good">2 of 2</b>finished runs green since</span></div></li>
+<li><b>Each of <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>'s three causes is fixed on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, and one was a real bug.</b> The 8 module cases pass with Andrew Blinn's per-member analysis on Modules II (through <a href="https://github.com/hazelgrove/hazel/pull/2699">#2699</a>); the table test has an input whose error the table hides whatever completion does (<a href="https://github.com/hazelgrove/hazel/commit/27f100e37c"><code>27f100e37c</code></a>); and the corpus mismatch was incremental statics keeping a livelit use's old expansion after the livelit changed (<a href="https://github.com/hazelgrove/hazel/commit/1131a457e4"><code>1131a457e4</code></a>).</li>
+<li><b>Of its five next steps, two are done, two partly, and one is for the meeting.</b> Left over: <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> still has the old table-test input (it will fail when <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> next merges dev, now 494 commits ahead of it); <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> conflicts with its base again in 1 file, since <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> took two commits that evening; and the plan for merging into dev is <a href="../020/#merge">item 6</a> of the agenda.</li>
+<li><b>Both parents are green too</b>: <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> at <a href="https://github.com/hazelgrove/hazel/commit/8a03584ef6"><code>8a03584ef6</code></a> (4,523 + 4,977 tests) and <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> at <a href="https://github.com/hazelgrove/hazel/commit/1290464a1a"><code>1290464a1a</code></a> (5,131 + 5,538). <a href="https://github.com/hazelgrove/hazel/pull/2687">#2687</a>'s newest finished run failed one test of its own (below), which is Andrew's work in progress, not <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s.</li>
+</ol>
+</div>
+
+<figure class="fig"><svg class="chart" viewBox="0 0 920 374" role="img" aria-label="Report 18's five next steps and where each stands: three done or partly done on #2635, one open for the meeting."><text x="0" y="18" class="ct">report 18's five next steps, as of 2026-10-20 04:24 UTC</text><rect x="0" y="34" width="920" height="58" rx="8" class="cb" fill="none" stroke="currentColor" stroke-opacity="0.18"/><rect x="0" y="34" width="10" height="58" rx="3" class="good"/><text x="24" y="58" class="cl bn">1. Per-member analysis on Modules II, into #2635</text><text x="24" y="78" class="cv">#2699 merged: the 8 module cases pass</text><text x="906" y="68" text-anchor="end" class="bn good">done</text><rect x="0" y="102" width="920" height="58" rx="8" class="cb" fill="none" stroke="currentColor" stroke-opacity="0.18"/><rect x="0" y="102" width="10" height="58" rx="3" class="warn"/><text x="24" y="126" class="cl bn">2. The table test&#x27;s input, on #2635 and #2597</text><text x="24" y="146" class="cv">#2635: done · #2597: still the old input</text><text x="906" y="136" text-anchor="end" class="bn warn">partly</text><rect x="0" y="170" width="920" height="58" rx="8" class="cb" fill="none" stroke="currentColor" stroke-opacity="0.18"/><rect x="0" y="170" width="10" height="58" rx="3" class="good"/><text x="24" y="194" class="cl bn">3. Why macro-result.hz differs per item</text><text x="24" y="214" class="cv">a real bug in incremental statics, fixed</text><text x="906" y="204" text-anchor="end" class="bn good">done</text><rect x="0" y="238" width="920" height="58" rx="8" class="cb" fill="none" stroke="currentColor" stroke-opacity="0.18"/><rect x="0" y="238" width="10" height="58" rx="3" class="cx"/><text x="24" y="262" class="cl bn">4. The merge plan for dev</text><text x="24" y="282" class="cv">for the 2026-10-21 meeting (report 20, item 6)</text><text x="906" y="272" text-anchor="end" class="bn cx">open</text><rect x="0" y="306" width="920" height="58" rx="8" class="cb" fill="none" stroke="currentColor" stroke-opacity="0.18"/><rect x="0" y="306" width="10" height="58" rx="3" class="warn"/><text x="24" y="330" class="cl bn">5. Merge the livelits branch into #2635</text><text x="24" y="350" class="cv">merged · 1 file conflicts again since #2597 moved</text><text x="906" y="340" text-anchor="end" class="bn warn">partly</text></svg>
+<figcaption><a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>'s five next steps, each with where it stands. Green: done; amber: done on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> but not everywhere it is needed; grey: open, for the meeting on 2026-10-21.</figcaption></figure>
+
+<h2 id="question">The question, and <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>'s answer</h2>
+<p>Cyrus asked, at his meeting with Matthew on 2026-10-16, why CI fails on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, the branch that merges modular editors (<a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>) into the livelits branch (<a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>). <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a> read all 97 of <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s CI runs and found that it had never passed, failing the same tests every time, for three causes that came from the merge itself, with neither parent broken on its own:</p>
+<ul>
+<li><b>8 module tests:</b> <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> analyzes a module one member at a time on dev's module statics, which Modules II (on the livelits branch only) replaced, so the merge analyzed a module literal whole and the tests' counts came out low (<a href="../018/#causes">cause 1</a>);</li>
+<li><b>1 table test:</b> dev's canonical completion (<a href="https://github.com/hazelgrove/hazel/pull/2374">#2374</a>) closes the stray bracket the test relied on, so its error no longer landed in a hidden row (cause 2);</li>
+<li><b>1 corpus test:</b> one livelits document elaborated differently per item than as a whole program, cause unknown when the report was first written (cause 3).</li>
+</ul>
+<p>Its update at 12:45 MDT the same day had a fix for each, and its <a href="../018/#next">What next</a> listed five steps. This report takes them one by one.</p>
+
+<h2 id="steps">The five steps, then and now</h2>
+<div class="scroll"><table>
+<tr><th>Step</th><th><a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a> said</th><th>Now</th><th>What happened</th></tr>
+<tr><td class="n">1</td><td>Bring Andrew&#x27;s per-member analysis on Modules II into <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, adapted to Modules II part 3.</td><td class="good"><b>done</b></td><td>Done through <a href="https://github.com/hazelgrove/hazel/pull/2699">#2699</a>, merged into <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> on 2026-10-19 (its merge commit <a href="https://github.com/hazelgrove/hazel/commit/90ed4505bf"><code>90ed4505bf</code></a>): Andrew Blinn's per-member module analysis on Modules II, fitted to <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s Modules II part 3, and one fix of its own, a livelit definition analyzed whole, not as a module (<a href="https://github.com/hazelgrove/hazel/commit/223357135a"><code>223357135a</code></a>). The 8 module cases pass.</td></tr><tr><td class="n">2</td><td>Give Editing.TableDecorations 1 an input whose error stays hidden under canonical completion, on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> too.</td><td class="warn"><b>partly</b></td><td>Done on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (<a href="https://github.com/hazelgrove/hazel/commit/27f100e37c"><code>27f100e37c</code></a>: the row gets a wrong label, an error in table syntax that the projector hides, whatever completion does). Not yet on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, which still has the old input: it passes there only because <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s dev predates canonical completion, and it is now 494 commits behind dev.</td></tr><tr><td class="n">3</td><td>Find why macro-result.hz elaborates differently per item.</td><td class="good"><b>done</b></td><td>Found and fixed (<a href="https://github.com/hazelgrove/hazel/commit/1131a457e4"><code>1131a457e4</code></a>): a real bug in incremental statics. A livelit use records the livelit it applies as <code>^inc</code> among the names it depends on, but DefStatics named the livelit's own entry plain <code>inc</code>, so a changed livelit marked no use stale, and after an edit the use kept its old expansion. DefStatics is <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>'s, so <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, which has no DefStatics, never had the bug.</td></tr><tr><td class="n">4</td><td>Follow Cyrus&#x27;s plan for merging into dev: first the PRs that have been waiting, then Andrew&#x27;s modular editing PRs (<a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>, with <a href="https://github.com/hazelgrove/hazel/pull/2687">#2687</a> in it), then the livelits and performance PRs.</td><td class="cv2"><b>open</b></td><td>For the meeting: <a href="../020/#merge">item 6 of the agenda for 2026-10-21</a>, <a href="../020/"><code class="ref"><b>^report(</b>20<b>)</b></code></a>, with <a href="../020/#gate">item 7</a> (requiring the test jobs for merging into dev).</td></tr><tr><td class="n">5</td><td>Merge the livelits branch into <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> instead of cherry-picking, to clear the 25 conflicting files before its next CI run.</td><td class="warn"><b>partly</b></td><td>Done (<a href="https://github.com/hazelgrove/hazel/commit/cf325d4f61"><code>cf325d4f61</code></a>: a merge keeping <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s side, every one of <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s commits since the merge base being there already): GitHub showed <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> mergeable, and its CI ran green twice after. Since then <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> took two more commits on 2026-10-19 (<a href="https://github.com/hazelgrove/hazel/commit/54e5a66bf2"><code>54e5a66bf2</code></a>, <a href="https://github.com/hazelgrove/hazel/commit/8a03584ef6"><code>8a03584ef6</code></a>), and <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> conflicts with it again, now in 1 file (<code>test/Test_ContextInspector.re</code>).</td></tr>
+</table></div>
+
+<h2 id="runs"><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s CI since then</h2>
+<figure class="fig"><svg class="chart" viewBox="0 0 920 204" role="img" aria-label="CI runs on #2635, #2597, #2469 and #2687 since report 18: #2635 two green and the rest cancelled by newer pushes; #2597 and #2469 green; #2687 one red, one green, one running."><text x="0" y="18" class="ct">Every CI run since report 18 was written (2026-10-19 15:55 UTC)</text><text x="0" y="54" class="cl bn">#2635 livelits × modular editors</text><text x="0" y="70" class="cv">2 green · 4 cancelled</text><line x1="250" x2="900" y1="56" y2="56" class="grid"/><rect x="528.0" y="44" width="6" height="24" rx="2" class="good"><title>2026-10-19T21:07 5961401df2 success</title></rect><rect x="443.5" y="44" width="6" height="24" rx="2" class="good"><title>2026-10-19T19:33 90ed4505bf success</title></rect><rect x="358.0" y="44" width="6" height="24" rx="2" class="cx"><title>2026-10-19T17:58 1131a457e4 cancelled</title></rect><rect x="340.0" y="44" width="6" height="24" rx="2" class="cx"><title>2026-10-19T17:38 27f100e37c cancelled</title></rect><rect x="337.1" y="44" width="6" height="24" rx="2" class="cx"><title>2026-10-19T17:35 cf325d4f61 cancelled</title></rect><rect x="289.0" y="44" width="6" height="24" rx="2" class="cx"><title>2026-10-19T16:41 b44bb9c50f cancelled</title></rect><text x="0" y="94" class="cl bn">#2597 the livelits branch</text><text x="0" y="110" class="cv">1 green</text><line x1="250" x2="900" y1="96" y2="96" class="grid"/><rect x="482.1" y="84" width="6" height="24" rx="2" class="good"><title>2026-10-19T20:16 8a03584ef6 success</title></rect><text x="0" y="134" class="cl bn">#2469 modular editors</text><text x="0" y="150" class="cv">6 green · 2 cancelled</text><line x1="250" x2="900" y1="136" y2="136" class="grid"/><rect x="860.3" y="124" width="6" height="24" rx="2" class="good"><title>2026-10-20T03:16 1290464a1a success</title></rect><rect x="839.2" y="124" width="6" height="24" rx="2" class="cx"><title>2026-10-20T02:53 b529477e37 cancelled</title></rect><rect x="755.3" y="124" width="6" height="24" rx="2" class="good"><title>2026-10-20T01:19 7377d1523c success</title></rect><rect x="703.4" y="124" width="6" height="24" rx="2" class="good"><title>2026-10-20T00:22 b2a4366366 success</title></rect><rect x="615.6" y="124" width="6" height="24" rx="2" class="good"><title>2026-10-19T22:44 2deccc25bf success</title></rect><rect x="595.7" y="124" width="6" height="24" rx="2" class="cx"><title>2026-10-19T22:22 d693ce1376 cancelled</title></rect><rect x="453.9" y="124" width="6" height="24" rx="2" class="good"><title>2026-10-19T19:44 9f18e3a6db success</title></rect><rect x="378.4" y="124" width="6" height="24" rx="2" class="good"><title>2026-10-19T18:21 411db92bd2 success</title></rect><text x="0" y="174" class="cl bn">#2687 modular editors + stdlib</text><text x="0" y="190" class="cv">1 green · 2 red · 7 cancelled · 1 running</text><line x1="250" x2="900" y1="176" y2="176" class="grid"/><rect x="870.0" y="164" width="6" height="24" rx="2" class="warn"><title>2026-10-20T03:27 aa9aeda1e9 in_progress</title></rect><rect x="850.3" y="164" width="6" height="24" rx="2" class="cx"><title>2026-10-20T03:05 c722554fa0 cancelled</title></rect><rect x="770.8" y="164" width="6" height="24" rx="2" class="bad"><title>2026-10-20T01:37 939cd7f7c7 failure</title></rect><rect x="749.8" y="164" width="6" height="24" rx="2" class="cx"><title>2026-10-20T01:13 176d2565d1 cancelled</title></rect><rect x="739.3" y="164" width="6" height="24" rx="2" class="cx"><title>2026-10-20T01:02 52872db9dc cancelled</title></rect><rect x="715.9" y="164" width="6" height="24" rx="2" class="cx"><title>2026-10-20T00:36 e17a9a3257 cancelled</title></rect><rect x="680.6" y="164" width="6" height="24" rx="2" class="cx"><title>2026-10-19T23:56 d87dcc4417 cancelled</title></rect><rect x="644.0" y="164" width="6" height="24" rx="2" class="cx"><title>2026-10-19T23:16 04c75fd4fe cancelled</title></rect><rect x="610.5" y="164" width="6" height="24" rx="2" class="cx"><title>2026-10-19T22:38 fc0fdfc55f cancelled</title></rect><rect x="463.1" y="164" width="6" height="24" rx="2" class="good"><title>2026-10-19T19:55 8c9d437863 success</title></rect><rect x="370.4" y="164" width="6" height="24" rx="2" class="bad"><title>2026-10-19T18:12 de0c77b302 failure</title></rect></svg>
+<figcaption>Every CI run on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, its two parents and <a href="https://github.com/hazelgrove/hazel/pull/2687">#2687</a> from 15:55 UTC on 2026-10-19, when <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>'s data was read, to 2026-10-20 04:24 UTC: one tick each, green passed, red failed, grey cancelled (a newer push replaced it), amber running. <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s cancelled runs are four commits of its afternoon, among them the merge of the livelits branch, the table test's input and the statics fix, each replaced by the next push before its tests finished.</figcaption></figure>
+<div class="scroll"><table>
+<tr><th>Started (UTC)</th><th>Head</th><th>Run</th><th>Verdict</th><th>Fast checks</th><th>Full tests</th></tr>
+<tr><td class="n">2026-10-19 21:07</td><td><a href="https://github.com/hazelgrove/hazel/commit/5961401df2"><code>5961401df2</code></a></td><td><a href="https://github.com/hazelgrove/hazel/actions/runs/39324951858">run</a></td><td class="good">success</td><td class="n">5,553, 0 failed, 12 min</td><td class="n">6,098, 0 failed, 1 h 14 min</td></tr><tr><td class="n">2026-10-19 19:33</td><td><a href="https://github.com/hazelgrove/hazel/commit/90ed4505bf"><code>90ed4505bf</code></a></td><td><a href="https://github.com/hazelgrove/hazel/actions/runs/39311969979">run</a></td><td class="good">success</td><td class="n">5,553, 0 failed, 15 min</td><td class="n">6,098, 0 failed, 1 h 28 min</td></tr><tr><td class="n">2026-10-19 17:58</td><td><a href="https://github.com/hazelgrove/hazel/commit/1131a457e4"><code>1131a457e4</code></a></td><td><a href="https://github.com/hazelgrove/hazel/actions/runs/39298635936">run</a></td><td class="cv2">cancelled</td><td class="cv2">(a newer push replaced it)</td><td></td></tr><tr><td class="n">2026-10-19 17:38</td><td><a href="https://github.com/hazelgrove/hazel/commit/27f100e37c"><code>27f100e37c</code></a></td><td><a href="https://github.com/hazelgrove/hazel/actions/runs/39295833004">run</a></td><td class="cv2">cancelled</td><td class="cv2">(a newer push replaced it)</td><td></td></tr><tr><td class="n">2026-10-19 17:35</td><td><a href="https://github.com/hazelgrove/hazel/commit/cf325d4f61"><code>cf325d4f61</code></a></td><td><a href="https://github.com/hazelgrove/hazel/actions/runs/39295375280">run</a></td><td class="cv2">cancelled</td><td class="cv2">(a newer push replaced it)</td><td></td></tr><tr><td class="n">2026-10-19 16:41</td><td><a href="https://github.com/hazelgrove/hazel/commit/b44bb9c50f"><code>b44bb9c50f</code></a></td><td><a href="https://github.com/hazelgrove/hazel/actions/runs/39287564407">run</a></td><td class="cv2">cancelled</td><td class="cv2">(a newer push replaced it)</td><td></td></tr>
+</table></div>
+<p>The two green runs are the first in <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s history. Fast checks ran one test more than at <a href="https://github.com/hazelgrove/hazel/commit/1131a457e4"><code>1131a457e4</code></a> in <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>'s update (5,552 then, 5,553 now). The times are the test suite's own, as alcotest reports them.</p>
+
+<h2 id="parents">The parents and <a href="https://github.com/hazelgrove/hazel/pull/2687">#2687</a></h2>
+<div class="scroll"><table>
+<tr><th>Branch</th><th>Head</th><th>Run</th><th>Verdict</th><th>Fast checks</th><th>Full tests</th></tr>
+<tr><td><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> the livelits branch</td><td><a href="https://github.com/hazelgrove/hazel/commit/8a03584ef6"><code>8a03584ef6</code></a></td><td><a href="https://github.com/hazelgrove/hazel/actions/runs/39317906970">run</a></td><td class="good">success</td><td class="n">4,523, 0 failed</td><td class="n">4,977, 0 failed</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> modular editors</td><td><a href="https://github.com/hazelgrove/hazel/commit/1290464a1a"><code>1290464a1a</code></a></td><td><a href="https://github.com/hazelgrove/hazel/actions/runs/39363428814">run</a></td><td class="good">success</td><td class="n">5,131, 0 failed</td><td class="n">5,538, 0 failed</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2687">#2687</a> modular editors + the standard library</td><td><a href="https://github.com/hazelgrove/hazel/commit/939cd7f7c7"><code>939cd7f7c7</code></a></td><td><a href="https://github.com/hazelgrove/hazel/actions/runs/39354437267">run</a></td><td class="bad">failure</td><td class="n">5,423, 0 failed</td><td class="n">5,837, 1 failed</td></tr>
+</table></div>
+<p><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> took two commits on 2026-10-19 after <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>: a revealed livelit model selects whole tiles and no longer blanks the editor (<a href="https://github.com/hazelgrove/hazel/commit/54e5a66bf2"><code>54e5a66bf2</code></a>), and Γ outlines a type too large to show (<a href="https://github.com/hazelgrove/hazel/commit/8a03584ef6"><code>8a03584ef6</code></a>). Both answer items of the agenda (<a href="../020/#model">item 2</a> and <a href="../020/#gamma">item 4</a>). <a href="https://github.com/hazelgrove/hazel/pull/2687">#2687</a>'s newest finished run, on <a href="https://github.com/hazelgrove/hazel/commit/939cd7f7c7"><code>939cd7f7c7</code></a>, passed Fast checks and failed one of 5,837 Full tests: <code>WorldTree 3</code>, "the corpus in one document", which raised <code>Not_found</code>. That is <a href="https://github.com/hazelgrove/hazel/pull/2687">#2687</a>'s own test on its own work, which goes red and back within hours, as <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a> found for <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>; a newer run of it was still going when this was collected.</p>
+
+<h2 id="still">What is still open</h2>
+<ul>
+<li><b><a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s table test.</b> Its input is still the stray bracket, and it passes only because <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s dev (<a href="https://github.com/hazelgrove/hazel/commit/2f9f2f6424"><code>2f9f2f6424</code></a>) is from before canonical completion. <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> is 494 commits behind dev (484 when <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a> counted), so this test will fail at its next merge of dev unless <a href="https://github.com/hazelgrove/hazel/commit/27f100e37c"><code>27f100e37c</code></a>'s input goes there first.</li>
+<li><b><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s conflict with its base.</b> GitHub shows <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> conflicting with <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s branch again, in 1 file: <code>test/Test_ContextInspector.re</code>, from <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s two commits of that evening. Like the 25 files of <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>, it is how <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> is kept up to date (by taking <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s work across), not a failure; a merge clears it before <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s next run.</li>
+<li><b>The merge plan for dev,</b> for the meeting (<a href="../020/#merge"><code class="ref"><b>^report(</b>20<b>)</b></code>, item 6</a>). <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> is now 15 commits behind dev, through <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a>'s own merges of dev; <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> is 494.</li>
+</ul>
+
+<h2 id="next">What next</h2>
+<ol>
+<li>Give <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> the table test's new input (<a href="https://github.com/hazelgrove/hazel/commit/27f100e37c"><code>27f100e37c</code></a>) before it next merges dev.</li>
+<li>Merge <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>'s two commits of 2026-10-19 into <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, to clear the conflict in <code>test/Test_ContextInspector.re</code> before <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s next CI run.</li>
+<li>Settle the order of merging into dev at the meeting on 2026-10-21 (<a href="../020/"><code class="ref"><b>^report(</b>20<b>)</b></code></a>, item 6), and whether the test jobs are required for it (item 7).</li>
+</ol>
+
+<h2 id="method">How this was put together</h2>
+<ul>
+<li><b>The runs:</b> every CI run on the four branches created since 2026-10-19 15:55 UTC (when <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>'s runs were listed), from GitHub's Actions API at 2026-10-20T04:24+00:00. A run counts as green, red or cancelled as GitHub gives its conclusion.</li>
+<li><b>The test counts:</b> each finished run's Fast checks and Full tests job logs, read for alcotest's summary line (tests run, failures, seconds), as <a href="../018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a> read them.</li>
+<li><b>The steps:</b> each fix's commit checked with git for being on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> and on <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a> (<code>merge-base --is-ancestor</code>), the conflict with <code>git merge-tree</code> between the two branches' heads, and how far behind dev each branch is from its merge base with dev.</li>
+<li><b>Not done:</b> no tests were run for this report; every number is from CI's own runs.</li>
+<li><b>The data:</b> in this page's <code>&lt;script type="application/json" id="report-data"&gt;</code> element and in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/023/data">023/data/</a> (the runs, the parents' newest runs, the PRs, the git facts). The collector and this page's generator are in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/023/drivers">023/drivers/</a>.</li>
+<li><a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> is Matthew Hammer's branch, made and kept with Claude. <a href="https://github.com/hazelgrove/hazel/pull/2469">#2469</a> and <a href="https://github.com/hazelgrove/hazel/pull/2687">#2687</a> are Andrew Blinn's, and the per-member analysis on Modules II is his (<a href="https://github.com/hazelgrove/hazel/commit/00bc805ca1"><code>00bc805ca1</code></a> on <a href="https://github.com/hazelgrove/hazel/pull/2687">#2687</a>). Modules II is Alexander's.</li>
+</ul>
+</main>
+<script type="application/json" id="report-data">{"report": "^report(23)", "follows": "^report(18), https://matthewhammer.org/hazel/reports/018/", "collected_at": "2026-10-20T04:24+00:00", "how": "GitHub's Actions API (each branch's CI runs since 2026-10-19T15:55Z; each finished run's Fast checks and Full tests job logs, read for alcotest's summary line) and git on a checkout of hazelgrove/hazel with the four branches fetched", "runs": {"2635": {"branch": "integration/livelits-modular-editors", "runs": [{"run": 39324951858, "head": "5961401df2", "conclusion": "success", "created": "2026-10-19T21:07:14Z", "updated": "2026-10-19T22:23:50Z", "fast": {"job": 118308233382, "status": "completed", "conclusion": "success", "started": "2026-10-19T21:07:18Z", "completed": "2026-10-19T21:23:27Z", "failures": 0, "seconds": 724.356, "tests": 5553}, "full": {"job": 118308231937, "status": "completed", "conclusion": "success", "started": "2026-10-19T21:07:17Z", "completed": "2026-10-19T22:23:50Z", "failures": 0, "seconds": 4424.127, "tests": 6098}}, {"run": 39311969979, "head": "90ed4505bf", "conclusion": "success", "created": "2026-10-19T19:33:25Z", "updated": "2026-10-19T21:06:22Z", "fast": {"job": 118264127482, "status": "completed", "conclusion": "success", "started": "2026-10-19T19:34:34Z", "completed": "2026-10-19T19:52:59Z", "failures": 0, "seconds": 878.348, "tests": 5553}, "full": {"job": 118264127053, "status": "completed", "conclusion": "success", "started": "2026-10-19T19:34:33Z", "completed": "2026-10-19T21:06:21Z", "failures": 0, "seconds": 5308.318, "tests": 6098}}, {"run": 39298635936, "head": "1131a457e4", "conclusion": "cancelled", "created": "2026-10-19T17:58:19Z", "updated": "2026-10-19T19:34:31Z"}, {"run": 39295833004, "head": "27f100e37c", "conclusion": "cancelled", "created": "2026-10-19T17:38:19Z", "updated": "2026-10-19T17:59:02Z"}, {"run": 39295375280, "head": "cf325d4f61", "conclusion": "cancelled", "created": "2026-10-19T17:35:10Z", "updated": "2026-10-19T17:38:39Z"}, {"run": 39287564407, "head": "b44bb9c50f", "conclusion": "cancelled", "created": "2026-10-19T16:41:42Z", "updated": "2026-10-19T17:36:18Z"}]}, "2597": {"branch": "integration/livelits-splicerefs-full", "runs": [{"run": 39317906970, "head": "8a03584ef6", "conclusion": "success", "created": "2026-10-19T20:16:16Z", "updated": "2026-10-19T20:57:47Z"}]}, "2469": {"branch": "modular-editors", "runs": [{"run": 39363428814, "head": "1290464a1a", "conclusion": "success", "created": "2026-10-20T03:16:33Z", "updated": "2026-10-20T04:05:46Z"}, {"run": 39361322419, "head": "b529477e37", "conclusion": "cancelled", "created": "2026-10-20T02:53:08Z", "updated": "2026-10-20T03:16:49Z"}, {"run": 39352816178, "head": "7377d1523c", "conclusion": "success", "created": "2026-10-20T01:19:50Z", "updated": "2026-10-20T02:04:41Z"}, {"run": 39347229837, "head": "b2a4366366", "conclusion": "success", "created": "2026-10-20T00:22:15Z", "updated": "2026-10-20T00:56:40Z"}, {"run": 39337055925, "head": "2deccc25bf", "conclusion": "success", "created": "2026-10-19T22:44:36Z", "updated": "2026-10-19T23:21:58Z"}, {"run": 39334487924, "head": "d693ce1376", "conclusion": "cancelled", "created": "2026-10-19T22:22:33Z", "updated": "2026-10-19T22:44:53Z"}, {"run": 39313554158, "head": "9f18e3a6db", "conclusion": "success", "created": "2026-10-19T19:44:58Z", "updated": "2026-10-19T20:18:10Z"}, {"run": 39301757144, "head": "411db92bd2", "conclusion": "success", "created": "2026-10-19T18:21:02Z", "updated": "2026-10-19T19:00:37Z"}]}, "2687": {"branch": "stdlib", "runs": [{"run": 39364376323, "head": "aa9aeda1e9", "conclusion": "in_progress", "created": "2026-10-20T03:27:21Z", "updated": "2026-10-20T03:28:21Z"}, {"run": 39362442245, "head": "c722554fa0", "conclusion": "cancelled", "created": "2026-10-20T03:05:26Z", "updated": "2026-10-20T03:28:18Z"}, {"run": 39354437267, "head": "939cd7f7c7", "conclusion": "failure", "created": "2026-10-20T01:37:09Z", "updated": "2026-10-20T02:12:35Z"}, {"run": 39352257615, "head": "176d2565d1", "conclusion": "cancelled", "created": "2026-10-20T01:13:47Z", "updated": "2026-10-20T01:37:26Z"}, {"run": 39351138569, "head": "52872db9dc", "conclusion": "cancelled", "created": "2026-10-20T01:02:03Z", "updated": "2026-10-20T01:14:04Z"}, {"run": 39348603691, "head": "e17a9a3257", "conclusion": "cancelled", "created": "2026-10-20T00:36:04Z", "updated": "2026-10-20T01:02:21Z"}, {"run": 39344674060, "head": "d87dcc4417", "conclusion": "cancelled", "created": "2026-10-19T23:56:55Z", "updated": "2026-10-20T00:36:22Z"}, {"run": 39340509056, "head": "04c75fd4fe", "conclusion": "cancelled", "created": "2026-10-19T23:16:13Z", "updated": "2026-10-19T23:57:13Z"}, {"run": 39336422443, "head": "fc0fdfc55f", "conclusion": "cancelled", "created": "2026-10-19T22:38:57Z", "updated": "2026-10-19T23:16:31Z"}, {"run": 39314959380, "head": "8c9d437863", "conclusion": "success", "created": "2026-10-19T19:55:11Z", "updated": "2026-10-19T20:35:31Z"}, {"run": 39300537779, "head": "de0c77b302", "conclusion": "failure", "created": "2026-10-19T18:12:08Z", "updated": "2026-10-19T19:20:13Z"}]}}, "newest_finished_parents": {"2597": {"run": 39317906970, "head": "8a03584ef6", "conclusion": "success", "created": "2026-10-19T20:16:16Z", "updated": "2026-10-19T20:57:47Z", "fast": {"job": 118284068053, "status": "completed", "conclusion": "success", "started": "2026-10-19T20:16:20Z", "completed": "2026-10-19T20:26:48Z", "failures": 0, "seconds": 384.687, "tests": 4523}, "full": {"job": 118284067623, "status": "completed", "conclusion": "success", "started": "2026-10-19T20:16:20Z", "completed": "2026-10-19T20:57:46Z", "failures": 0, "seconds": 2325.908, "tests": 4977}}, "2469": {"run": 39363428814, "head": "1290464a1a", "conclusion": "success", "created": "2026-10-20T03:16:33Z", "updated": "2026-10-20T04:05:46Z", "fast": {"job": 118434699673, "status": "completed", "conclusion": "success", "started": "2026-10-20T03:16:53Z", "completed": "2026-10-20T03:34:06Z", "failures": 0, "seconds": 778.51, "tests": 5131}, "full": {"job": 118434699449, "status": "completed", "conclusion": "success", "started": "2026-10-20T03:16:52Z", "completed": "2026-10-20T04:05:45Z", "failures": 0, "seconds": 2739.379, "tests": 5538}}, "2687": {"run": 39354437267, "head": "939cd7f7c7", "conclusion": "failure", "created": "2026-10-20T01:37:09Z", "updated": "2026-10-20T02:12:35Z", "fast": {"job": 118405949154, "status": "completed", "conclusion": "success", "started": "2026-10-20T01:37:28Z", "completed": "2026-10-20T01:49:06Z", "failures": 0, "seconds": 478.44, "tests": 5423}, "full": {"job": 118405948841, "status": "completed", "conclusion": "failure", "started": "2026-10-20T01:37:28Z", "completed": "2026-10-20T02:12:34Z", "failures": 1, "seconds": 1948.817, "tests": 5837}}}, "prs": {"2635": {"title": "Livelits × modular editors: merge #2469 into the livelits branch", "state": "open", "merged_at": null, "head": "integration/livelits-modular-editors", "head_sha": "5961401df2", "base": "integration/livelits-splicerefs-full", "mergeable": false, "mergeable_state": "dirty", "updated_at": "2026-10-19T22:24:33Z"}, "2699": {"title": "non-`dev` (`integration/livelits-modular-editors`): Exploratory: per-member module analysis on Modules II, after Andrew's stdlib port", "state": "closed", "merged_at": "2026-10-19T19:33:23Z", "head": "explore/2635-per-member-modules-ii", "head_sha": "223357135a", "base": "integration/livelits-modular-editors", "mergeable": null, "mergeable_state": "unknown", "updated_at": "2026-10-19T19:33:25Z", "commits": [{"sha": "18a657f23e", "message": "EXPLORATORY: per-member module analysis on Modules II, after Andrew's stdlib port", "author": "Matthew Hammer"}, {"sha": "206aed1715", "message": "Merge #2635 (1131a457e4) into #2699, for the corpus and typed-table fixes", "author": "Matthew Hammer"}, {"sha": "223357135a", "message": "A livelit definition stays a plain item, not a module of members", "author": "Matthew Hammer"}]}, "2597": {"title": "User-Defined Livelits, as in PLDI '21, and beyond.", "state": "open", "merged_at": null, "head": "integration/livelits-splicerefs-full", "head_sha": "8a03584ef6", "base": "integration/livelits-splicerefs", "mergeable": true, "mergeable_state": "clean", "updated_at": "2026-10-19T20:58:22Z"}, "2469": {"title": "Modular editors", "state": "open", "merged_at": null, "head": "modular-editors", "head_sha": "1290464a1a", "base": "dev", "mergeable": false, "mergeable_state": "dirty", "updated_at": "2026-10-20T04:06:54Z"}, "2687": {"title": "Standard library in Hazel source", "state": "open", "merged_at": null, "head": "stdlib", "head_sha": "aa9aeda1e9", "base": "modular-editors", "mergeable": true, "mergeable_state": "unstable", "updated_at": "2026-10-20T03:27:20Z"}}, "git_facts": {"heads": {"2635": "5961401df2", "2597": "8a03584ef6", "2469": "1290464a1a", "2687": "aa9aeda1e9", "dev": "962a7cb009"}, "fixes": {"1131a457e4": {"what": "1131a457e4 2026-10-19T11:58:14-06:00 Matthew Hammer A livelit use re-expands when the livelit it applies changes", "on_2635": true, "on_2597": false}, "27f100e37c": {"what": "27f100e37c 2026-10-19T11:38:15-06:00 Matthew Hammer The typed-table test's hidden error comes from a wrong label, not a stray bracket", "on_2635": true, "on_2597": false}, "223357135a": {"what": "223357135a 2026-10-19T12:06:29-06:00 Matthew Hammer A livelit definition stays a plain item, not a module of members", "on_2635": true, "on_2597": false}, "cf325d4f61": {"what": "cf325d4f61 2026-10-19T11:35:03-06:00 Matthew Hammer Merge the livelits branch (#2597) into #2635, keeping #2635's version of every conflict", "on_2635": true, "on_2597": false}, "90ed4505bf": {"what": "90ed4505bf 2026-10-19T13:24:07-06:00 Matthew Hammer Merge #2699 into #2635: per-member module analysis on Modules II", "on_2635": true, "on_2597": false}, "5961401df2": {"what": "5961401df2 2026-10-19T13:34:35-06:00 Matthew Hammer A livelit's picture can be shown full screen", "on_2635": true, "on_2597": false}}, "defstatics_on_2597": false, "table_test_input_on_2597": "origin/integration/livelits-splicerefs-full:test/Test_Editing.re:6720:    \"typed table: hidden row error draws no arms, flags the chrome\",", "2597_since_report18": ["8a03584ef6 2026-10-19T14:16:12-06:00 Γ outlines a type too large to show, so the Scenes slide no longer freezes", "54e5a66bf2 2026-10-19T14:14:32-06:00 A revealed livelit model selects whole tiles, and no longer blanks the editor"], "conflicts_2635_with_2597": ["test/Test_ContextInspector.re"], "2597_dev_base": "2f9f2f6424", "2597_behind_dev": 494, "2635_behind_dev": 15, "2635_since_report18": ["5961401df2 2026-10-19T13:34:35-06:00 Matthew Hammer A livelit's picture can be shown full screen", "90ed4505bf 2026-10-19T13:24:07-06:00 Matthew Hammer Merge #2699 into #2635: per-member module analysis on Modules II", "2dcde8ee09 2026-10-19T13:22:53-06:00 Matthew Hammer Γ outlines a type too large to show, so the Scenes slide no longer freezes", "1b7a03e8e5 2026-10-19T13:10:21-06:00 Matthew Hammer A revealed livelit model selects whole tiles, and no longer blanks the editor", "223357135a 2026-10-19T12:06:29-06:00 Matthew Hammer A livelit definition stays a plain item, not a module of members", "206aed1715 2026-10-19T12:06:29-06:00 Matthew Hammer Merge #2635 (1131a457e4) into #2699, for the corpus and typed-table fixes", "1131a457e4 2026-10-19T11:58:14-06:00 Matthew Hammer A livelit use re-expands when the livelit it applies changes", "27f100e37c 2026-10-19T11:38:15-06:00 Matthew Hammer The typed-table test's hidden error comes from a wrong label, not a stray bracket", "cf325d4f61 2026-10-19T11:35:03-06:00 Matthew Hammer Merge the livelits branch (#2597) into #2635, keeping #2635's version of every conflict", "18a657f23e 2026-10-19T11:17:10-06:00 Matthew Hammer EXPLORATORY: per-member module analysis on Modules II, after Andrew's stdlib port", "b44bb9c50f 2026-10-19T10:29:53-06:00 Matthew Hammer The full view shows an alias's expansion once, not under both sides of \"is equal to\"", "ae78fff926 2026-10-19T10:24:43-06:00 Matthew Hammer The bar's toggle sits beside the type; the full view expands aliases", "f8ae6f2b9c 2026-10-15T07:27:22-06:00 Matthew Hammer The newest undo and redo entries stay whole", "d41c7a0298 2026-10-15T07:26:51-06:00 Matthew Hammer Undo snapshots drop their derived caches, and the stack is always capped", "7f62da773a 2026-10-15T07:26:09-06:00 Matthew Hammer The segmented parser counts what a run took along the run, not the text", "0322b09ca2 2026-10-15T07:26:09-06:00 Matthew Hammer Tests start in 6 s, not 28: Unproject finds its slides without Str", "a8426b1893 2026-10-15T07:26:05-06:00 Matthew Hammer Printing with refractors is linear: the autosave no longer takes a second", "c4e411f9c2 2026-10-14T06:11:49-06:00 Matthew Hammer The big slides' Unproject cases run in the full tests only", "8798d64213 2026-10-14T06:11:49-06:00 Matthew Hammer Programs over 25 KB get the recovering-parser checks in the weekly run only", "5d576cc479 2026-10-14T06:11:49-06:00 Matthew Hammer Statics.mk keeps 16 programs and MakeTerm's memos 8, as in #2469", "684a75cb2f 2026-10-13T08:33:26-06:00 Matthew Hammer A step with no effects only counts", "a4b856c543 2026-10-13T08:33:26-06:00 Matthew Hammer Binding a value that is already done calls its continuation directly", "30f6835b49 2026-10-13T07:15:22-06:00 Matthew Hammer Say which calls push a value through: an annotated parameter", "e6d1cc500f 2026-10-13T06:30:00-06:00 Matthew Hammer A value known to have a type is not walked again for it", "a15c6f0b65 2026-10-12T20:40:58-06:00 disconcision eval streaming: kill the post-load main-thread burn (~45s -> ~5s @1k)", "1fa1384445 2026-10-12T14:25:50-06:00 Matthew Hammer An ascription pushed through a value gives the value back when it already has the type", "44928f5fdd 2026-10-12T12:46:10-06:00 Matthew Hammer Drawing's coords: to_fixed itself, and a space after every point", "b5edde9da3 2026-10-12T12:10:11-06:00 Matthew Hammer Full Body's and the Witch's frames take in their pictures as they open", "86e3ea9a9f 2026-10-12T12:04:52-06:00 Matthew Hammer ^picture: a frame sets the view box, and the points are not walked", "e985a5a67e 2026-10-12T10:34:47-06:00 Matthew Hammer The full view shows a type alias's definition beside its name", "5a32af6ea0 2026-10-12T10:34:32-06:00 Matthew Hammer The cursor inspector can show a long type whole, on several lines", "fc9cadab07 2026-10-12T10:20:26-06:00 Matthew Hammer ^choice is as many lines as its buttons take", "abadface30 2026-10-12T08:34:37-06:00 Matthew Hammer Ascriptions: unroll a resolved type once, and check a constructor's by hash", "498cf299ea 2026-10-12T01:18:22-06:00 Matthew Hammer CallMemo: give up on a body whose lookups keep missing", "da295bf024 2026-10-12T00:58:34-06:00 Matthew Hammer Slides: turn the hand with two walks side by side, not one inside the other", "a1a148278e 2026-10-11T23:41:57-06:00 Matthew Hammer Statics: a recursive let's own names are not free in it", "74f8056646 2026-10-11T21:58:59-06:00 Matthew Hammer Worker: run evaluation slices back to back for up to 30 ms", "88ea510475 2026-10-11T21:12:20-06:00 Matthew Hammer Livelit Playground: a Scenes slide, four of Messed Up Dress Up's backgrounds", "8cb51431e2 2026-10-11T20:23:22-06:00 Matthew Hammer Livelit Playground: a Witch slide, from Messed Up Dress Up", "a67dd6855a 2026-10-11T20:23:22-06:00 Matthew Hammer Full Body: skin swatches, since ten skins overflow a ^choice", "e6b60bf1d5 2026-10-11T19:58:13-06:00 Matthew Hammer Full Body: a skin choice -- Messed Up Dress Up's swatches, the meaningful ones named", "6de0b53326 2026-10-11T15:30:50-06:00 Matthew Hammer Slides: Messed Up Dress Up's new hands, and a mouth that clears big eyes", "106d7b17ff 2026-10-11T14:40:03-06:00 Matthew Hammer Full Body: raised arms in front of the face, as the game now draws them", "f98d0cb457 2026-10-11T14:22:48-06:00 Matthew Hammer Test_IncrSlides: self-contained, so it builds on either livelits branch", "5c01d28338 2026-10-11T14:19:17-06:00 Matthew Hammer Full Body: the hands in front of the face", "eb725da87f 2026-10-11T14:19:17-06:00 Matthew Hammer Incremental evaluation never reuses an open function as a value", "b5c6f97c8e 2026-10-11T13:06:05-06:00 Matthew Hammer Playground: a slide per part of the figure, then Full Body", "1e8b35f41c 2026-10-11T12:38:24-06:00 Matthew Hammer ^choice: the current choice stays inverted under high contrast", "9f31024729 2026-10-11T12:38:24-06:00 Matthew Hammer Playground: each choice is one cell too, like the sliders", "66edc434a3 2026-10-11T12:38:24-06:00 Matthew Hammer A type-parameterized livelit can be used directly, in one cell", "59288a8e90 2026-10-11T11:53:42-06:00 Matthew Hammer Playground: each slider is one cell, its settings behind the eye", "fa65e94c91 2026-10-11T11:44:27-06:00 Matthew Hammer Playground: ^choice is wide enough for seven buttons", "927d71407b 2026-10-11T11:44:27-06:00 Matthew Hammer Livelit Playground: Mouth, as Messed Up Dress Up draws one", "c9dcc9d757 2026-10-11T11:44:27-06:00 Matthew Hammer Livelit Playground: Eyes, as Messed Up Dress Up draws them", "1dee9434c1 2026-10-11T11:31:11-06:00 Matthew Hammer Livelit Playground: Hands, Messed Up Dress Up's six, chosen with buttons", "974bb8d532 2026-10-11T11:22:41-06:00 Matthew Hammer Arms: the shirt's style, width and height, as Messed Up Dress Up has them", "c7040c0ed4 2026-10-11T11:22:41-06:00 Matthew Hammer Livelit Playground: Arms, with Messed Up Dress Up's three arm sliders", "1b1be471e8 2026-10-11T11:12:45-06:00 Matthew Hammer Shoes and Hair: a neck, as long as a slider says", "ef1f47aa83 2026-10-11T11:12:45-06:00 Matthew Hammer Shoes and Hair: each hairdo has a top, drawn on the head", "339a6c74be 2026-10-11T11:00:34-06:00 Matthew Hammer A probe in an open eye's pane draws its samples past the pane's edge", "5286ba3b10 2026-10-11T07:18:48-06:00 Matthew Hammer Reusing an evaluation copies cache entries without walking function bodies", "f2b519fa52 2026-10-10T22:15:31-06:00 Matthew Hammer Incomplete tiles are found per tile, remembered by the tile", "99bb432fdb 2026-10-10T21:49:08-06:00 Matthew Hammer A redraw no longer forces three layouts to measure the page", "526200d05a 2026-10-10T21:21:28-06:00 Matthew Hammer The eval worker's responses carry only what the page does not have", "67eb9d92d6 2026-10-10T19:58:54-06:00 Matthew Hammer A livelit's view reuses the calls that did not change", "d51eaacfa6 2026-10-10T18:23:49-06:00 Matthew Hammer The evaluator skips binds that only pass a value through", "9d2ff96dc7 2026-10-10T18:23:42-06:00 Matthew Hammer The evaluator's per-node stages are made once per run", "960b3a21eb 2026-10-10T17:39:43-06:00 Matthew Hammer The evaluator binds its constants once per run", "802d0eefd3 2026-10-10T17:38:57-06:00 Matthew Hammer Ids are minted and compared as the strings they are", "33126fdffe 2026-10-10T17:11:55-06:00 Matthew Hammer The pants editor draws the pants in the middle of its canvas", "8cd828706e 2026-10-10T16:29:01-06:00 Matthew Hammer The eval worker is sent only what it does not have yet", "a15af020ea 2026-10-10T15:00:47-06:00 Matthew Hammer Livelit views and probe values reuse what they drew: closed values and printed samples", "d92f446112 2026-10-10T13:45:50-06:00 Matthew Hammer A livelit release's worker messages reach the page in fewer actions", "aebd5e5fbb 2026-10-10T11:30:27-06:00 Matthew Hammer The hashed comparison remembers its answer per pair of subterms", "b3081fb321 2026-10-10T10:52:13-06:00 Matthew Hammer The eval worker recognizes an unchanged expression by its Merkle hash", "3a45608b6b 2026-10-10T10:19:09-06:00 Matthew Hammer Measuring the font no longer scrolls the editor to the caret", "0ef8a6a3c5 2026-10-10T09:29:05-06:00 Matthew Hammer Livelits: a view is evaluated again only when its definition or model changed", "6cf1eddd19 2026-10-10T07:15:46-06:00 Matthew Hammer Projector updates keep unchanged pieces as the same objects", "38fed2a61f 2026-10-09T19:34:59-06:00 Matthew Hammer Livelits: evaluate definitions and views without finishing them", "bf691d0505 2026-10-09T19:10:15-06:00 Matthew Hammer Types get a Merkle hash; the evaluator asks is_consistent once per pair", "39717e33ef 2026-10-09T18:24:23-06:00 Matthew Hammer Test: statics analyzes each expression within a budget, over the corpus", "99c04682b1 2026-10-09T16:08:42-06:00 Matthew Hammer Livelit Playground / Polygon Viewer: the picture, shown and not edited", "69f25f9d8c 2026-10-09T16:08:42-06:00 Matthew Hammer hazel analyze --count-passes: how many times statics checks each expression", "257d5f5859 2026-10-09T16:08:42-06:00 Matthew Hammer Livelit use: evaluate def.expand, not the whole definition", "b1d19a5968 2026-10-05T18:16:08-06:00 Matthew Hammer Eval worker in Firefox: start it at load, and do not time out a reply that is queued", "98d01e6790 2026-10-05T16:10:26-06:00 Matthew Hammer Statics: a livelit definition is analyzed once, against its signature", "e88992f223 2026-10-05T16:10:26-06:00 Matthew Hammer Statics: a module binding analyzes its definition once, not twice", "5ad1f530f5 2026-10-05T16:10:26-06:00 Matthew Hammer Livelit Playground / Shoes and Hair: every piece placed by its anchors", "9feb7ba451 2026-10-05T11:23:06-06:00 Matthew Hammer Livelit Playground / Shirt and Pants: two shapes set into one picture by anchors", "03228151f7 2026-10-05T10:54:38-06:00 Matthew Hammer Module livelits on this branch: count the body's new context entries", "ce113ed020 2026-10-05T10:44:31-06:00 Matthew Hammer Livelit Playground / Polygons: closed polygons and open paths, with anchors", "b54ef4e793 2026-10-05T10:44:31-06:00 Matthew Hammer Livelits as module members: module Lib = { let ^f = ... } in Lib.^f(model)", "c58c3c1f10 2026-10-05T09:30:52-06:00 Matthew Hammer A Livelit Playground deck: 1990s Face, Kids' Choice and Tree Care", "75d1a38db0 2026-10-03T20:05:46-06:00 Matthew Hammer A revealed livelit's head line: swap the livelit, change its args, or unproject", "553cf3c8bc 2026-10-03T17:06:59-06:00 Matthew Hammer docs/livelits.md: the read-only model and live params are built", "7f2103c6e0 2026-10-03T17:06:46-06:00 Matthew Hammer A revealed livelit model is read-only; its params edit live; GUI cells work", "980a1753f4 2026-10-03T16:08:11-06:00 Matthew Hammer Back out retyped-cell handling: a revealed model is read-only now", "9981c5f46d 2026-10-03T16:05:46-06:00 Matthew Hammer docs/livelits.md: revealing a use's syntax, per Cyrus", "9d961e4446 2026-10-03T14:35:25-06:00 Matthew Hammer A cell retyped in a livelit's open syntax shows in the GUI, not as a hole", "94644969d1 2026-10-03T12:57:56-06:00 Matthew Hammer The syntax toggle moves inside the livelit, and stays visible on hover", "28fc036116 2026-10-03T12:10:43-06:00 Matthew Hammer The toggle's tab no longer slides under the livelit's GUI", "db118a14a4 2026-10-03T11:50:28-06:00 Matthew Hammer A fourth look for the syntax toggle: the Nut, whose cap lifts off", "1123729edc 2026-10-03T11:41:57-06:00 Matthew Hammer A livelit commit no longer wraps the use in parens", "3d0e705d8e 2026-10-03T10:59:37-06:00 Matthew Hammer A third look for the syntax toggle: Chevron", "30c5c81d4d 2026-10-03T10:35:33-06:00 Matthew Hammer The toggle's look is a sum, chosen on the Colors slide with a ^choice livelit", "a1525114dc 2026-10-03T10:06:04-06:00 Matthew Hammer deck_regress: the deck tour reaches slides in a folder", "7c93006c01 2026-10-03T09:53:47-06:00 Matthew Hammer An open eye keeps the rest of its line on the line", "61c94a8170 2026-10-03T09:24:23-06:00 Matthew Hammer The Colors slide chooses how a livelit's syntax toggle looks: eye or triangle", "8bbe3b0270 2026-10-03T09:01:14-06:00 Matthew Hammer A right-click menu in a livelit's open pane was clipped", "1d11bda25d 2026-10-03T08:47:24-06:00 Matthew Hammer deck_regress: open a livelit's eye, retype a cell, check the new slider", "81a0094acd 2026-10-03T08:25:38-06:00 Matthew Hammer The caret can cross a livelit's cells in its open pane", "8d5d0806c6 2026-10-03T08:07:20-06:00 Matthew Hammer A livelit's cells, shown in its open pane, were measured as zero width", "55fcf8abbb 2026-10-03T07:36:12-06:00 Matthew Hammer A livelit's eye opens to a multi-line pane, and the eye is easier to see", "4a9d1c3f39 2026-10-02T11:50:24-06:00 Matthew Hammer Kids' Choice's face gets params, and commits with the eye open stick", "be99be67ee 2026-10-02T11:01:35-06:00 Matthew Hammer A livelit's open eye shows two panels: params (experimental) and model", "73e3e080a6 2026-10-02T10:37:22-06:00 Matthew Hammer The syntax toggle is an eye, hanging in the margin left of the GUI", "27c8462f0c 2026-10-01T19:28:36-06:00 Matthew Hammer A drag whose first step draws nothing new was thrown away", "4b6e8315fc 2026-10-01T19:15:27-06:00 Matthew Hammer Kids' Choice: a head color picker, and the brow and mouth light up", "e65401d06b 2026-10-01T19:15:27-06:00 Matthew Hammer A livelit drag was lost when its model held splices", "adebf74493 2026-10-01T19:15:27-06:00 Matthew Hammer Kids' Choice: teeth line the open mouth, no forehead line, hint off the sliders", "b90469184f 2026-10-01T18:28:31-06:00 Matthew Hammer Kids' Choice: the face grows only while it is sick", "20b60d9250 2026-10-01T18:28:31-06:00 Matthew Hammer Kids' Choice: an opening mouth, X eyes, two brows, and sickness"], "collected_at": "2026-10-20T04:24+00:00"}, "steps": [{"step": 1, "report18_said": "Bring Andrew's per-member analysis on Modules II into #2635, adapted to Modules II part 3.", "status": "done", "now_html": "Done through #2699, merged into #2635 on 2026-10-19 (its merge commit <a href=\"https://github.com/hazelgrove/hazel/commit/90ed4505bf\"><code>90ed4505bf<\/code><\/a>): Andrew Blinn's per-member module analysis on Modules II, fitted to #2635's Modules II part 3, and one fix of its own, a livelit definition analyzed whole, not as a module (<a href=\"https://github.com/hazelgrove/hazel/commit/223357135a\"><code>223357135a<\/code><\/a>). The 8 module cases pass."}, {"step": 2, "report18_said": "Give Editing.TableDecorations 1 an input whose error stays hidden under canonical completion, on #2597 too.", "status": "half", "now_html": "Done on #2635 (<a href=\"https://github.com/hazelgrove/hazel/commit/27f100e37c\"><code>27f100e37c<\/code><\/a>: the row gets a wrong label, an error in table syntax that the projector hides, whatever completion does). Not yet on #2597, which still has the old input: it passes there only because #2597's dev predates canonical completion, and it is now 494 commits behind dev."}, {"step": 3, "report18_said": "Find why macro-result.hz elaborates differently per item.", "status": "done", "now_html": "Found and fixed (<a href=\"https://github.com/hazelgrove/hazel/commit/1131a457e4\"><code>1131a457e4<\/code><\/a>): a real bug in incremental statics. A livelit use records the livelit it applies as <code>^inc<\/code> among the names it depends on, but DefStatics named the livelit's own entry plain <code>inc<\/code>, so a changed livelit marked no use stale, and after an edit the use kept its old expansion. DefStatics is #2469's, so #2597, which has no DefStatics, never had the bug."}, {"step": 4, "report18_said": "Follow Cyrus's plan for merging into dev: first the PRs that have been waiting, then Andrew's modular editing PRs (#2469, with #2687 in it), then the livelits and performance PRs.", "status": "open", "now_html": "For the meeting: <a href=\"../020/#merge\">item 6 of the agenda for 2026-10-21<\/a>, ^report(20), with <a href=\"../020/#gate\">item 7<\/a> (requiring the test jobs for merging into dev)."}, {"step": 5, "report18_said": "Merge the livelits branch into #2635 instead of cherry-picking, to clear the 25 conflicting files before its next CI run.", "status": "half", "now_html": "Done (<a href=\"https://github.com/hazelgrove/hazel/commit/cf325d4f61\"><code>cf325d4f61<\/code><\/a>: a merge keeping #2635's side, every one of #2597's commits since the merge base being there already): GitHub showed #2635 mergeable, and its CI ran green twice after. Since then #2597 took two more commits on 2026-10-19 (<a href=\"https://github.com/hazelgrove/hazel/commit/54e5a66bf2\"><code>54e5a66bf2<\/code><\/a>, <a href=\"https://github.com/hazelgrove/hazel/commit/8a03584ef6\"><code>8a03584ef6<\/code><\/a>), and #2635 conflicts with it again, now in 1 file (<code>test/Test_ContextInspector.re<\/code>)."}], "drivers": "023/drivers/collect023.py (collects), 023/drivers/gen023.py (this page)"}</script>
+<!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
+<!-- ref-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .ref-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
+  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
+    vertical-align: 1px; background: #6e7781; }
+  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
+  .rc-state.done { background: #8250df; }
+</style>
+<script>
+/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
+   ticket from the work dashboard's data (its area, its status, its first
+   line), carried by the dashboard's own pages and read live from the
+   published data anywhere else; a report from its own page, live (its
+   title, date and opening). Once per page load each. */
+(() => {
+  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
+  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
+  /* the dashboard itself carries its tickets (made with the page, changed
+     with it); any other page asks the published data */
+  const EMBED = null;
+  let data = EMBED ? Promise.resolve(EMBED) : null;
+  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
+  const pages = new Map();
+  const loadReport = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
+      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
+      let p = h1 && h1.nextElementSibling;
+      while (p && p.tagName !== "P") p = p.nextElementSibling;
+      const label = (doc.querySelector(".series") || {}).textContent || "";
+      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
+               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
+    }).catch(() => null));
+    return pages.get(url);
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
+  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
+  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
+  const ticketCard = (n, d) => {
+    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
+    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
+    const q = (d.queue || []).indexOf(n);
+    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
+      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
+      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
+    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
+      `<div class="rc-title">${esc(lead(t.text))}</div>` +
+      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
+      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
+  };
+  const reportCard = (n, r) => r
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
+      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
+    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
+    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = (a, ref) => {
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
+      card.hidden = false; place(a);
+      let html;
+      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
+      else html = reportCard(ref.n, await loadReport(a.href));
+      if (over !== a) return;
+      card.innerHTML = html; place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- ref-cards: end -->
+<!-- pr-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2374": {"author": "disconcision", "comments": 7, "created": "2026-07-03T03:08:41Z", "kind": "pull", "state": "merged", "title": "Canonical completion + Shard/Lexeme Provenance", "updated": "2026-09-22T17:34:14Z"}, "hazelgrove/hazel#2469": {"author": "disconcision", "comments": 17, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-20T04:06:54Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-19T20:58:22Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 3, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-19T22:24:33Z"}, "hazelgrove/hazel#2687": {"author": "disconcision", "comments": 1, "created": "2026-10-17T01:26:52Z", "kind": "pull", "state": "draft", "title": "Standard library in Hazel source", "updated": "2026-10-20T03:27:20Z"}, "hazelgrove/hazel#2699": {"author": "matthewhammer", "comments": 0, "created": "2026-10-19T17:30:43Z", "kind": "pull", "state": "merged", "title": "non-`dev` (`integration/livelits-modular-editors`): Exploratory: per-member module analysis on Modules II, after Andrew's stdlib port", "updated": "2026-10-19T19:33:25Z"}}, BUILT = "2026-10-19";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  const ask = key => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#");
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
+                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[2];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
+<!-- steps: begin -->
+<style>
+  button.mint { margin-left: 4px; font: inherit; font-size: 0.75em; padding: 0 6px; border: 1px solid var(--line, #ccc);
+    border-radius: 4px; background: transparent; color: var(--muted, #666); cursor: pointer; vertical-align: 1px; }
+  button.mint:hover { color: inherit; }
+  button.mint.done { color: var(--good, #15803d); border-color: var(--good, #15803d); }
+  a.step-link { color: var(--muted, #666); text-decoration: none; font-size: 0.85em; margin-left: 4px; }
+  a.step-link:hover { text-decoration: underline; }
+  li:target { background: color-mix(in srgb, var(--good, #15803d) 12%, transparent); border-radius: 6px; }
+</style>
+<script>
+/* Each "What next" step: a link to it, and a button copying a request to
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
+(() => {
+  const h = document.getElementById("next");
+  if (!h) return;
+  let list = h.nextElementSibling;
+  while (list && !/^(OL|UL)$/.test(list.tagName)) {
+    if (list.tagName === "H2") return;
+    list = list.nextElementSibling;
+  }
+  if (!list) return;
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/reports/" + report.padStart(3, "0") + "/";
+  [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
+    const n = i + 1;
+    if (!li.id) li.id = "step-" + n;
+    const b = li.querySelector("b, strong");
+    const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
+    const url = base + "#" + li.id;
+    const text = "Mint a ticket for this step: Hazel reports, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
+    const a = document.createElement("a");
+    a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "mint"; btn.textContent = "copy for a ticket";
+    btn.title = "Copies a request to mint a ticket for this step, to paste to Claude";
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) {
+        const t = document.createElement("textarea"); t.value = text; document.body.append(t);
+        t.select(); document.execCommand("copy"); t.remove();
+      }
+      btn.textContent = "copied"; btn.classList.add("done");
+      setTimeout(() => { btn.textContent = "copy for a ticket"; btn.classList.remove("done"); }, 1500);
+    });
+    li.append(" ", a, " ", btn);
+  });
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+})();
+</script>
+<!-- steps: end -->
+<!-- theme: begin -->
+<style>
+  .theme-toggle { position: fixed; top: 10px; right: 10px; z-index: 30; font: 13px system-ui, sans-serif; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--muted, GrayText);
+    cursor: pointer; opacity: 0.85; }
+  .theme-toggle:hover { opacity: 1; color: var(--ink, CanvasText); }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+/* The theme switch: Auto (the system's choice), Light, Dark; remembered for this site. */
+(() => {
+  const order = ["auto", "light", "dark"], label = { auto: "◐ auto", light: "☀ light", dark: "☾ dark" };
+  const get = () => { try { return localStorage.getItem("theme") || "auto"; } catch (_) { return "auto"; } };
+  const apply = m => m === "auto" ? document.documentElement.removeAttribute("data-theme")
+                                  : document.documentElement.setAttribute("data-theme", m);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "theme-toggle";
+  const show = () => { const m = get(); b.textContent = label[m] || label.auto;
+    b.title = "Theme: " + m + ". Click for " + order[(order.indexOf(m) + 1) % 3] + "; remembered on this site."; };
+  b.addEventListener("click", () => {
+    const m = order[(order.indexOf(get()) + 1) % 3];
+    try { m === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", m); } catch (_) {}
+    apply(m); show();
+  });
+  window.addEventListener("storage", e => { if (e.key === "theme") { apply(get()); show(); } });
+  show(); document.body.append(b);
+})();
+</script>
+<!-- theme: end -->
+</body>
+</html>

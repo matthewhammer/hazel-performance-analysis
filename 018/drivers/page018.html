@@ -83,6 +83,9 @@
 </ol>
 </div>
 
+<div class="headline" style="border-left-color: var(--good); margin-top: 14px">
+<p><b>Update, later on 2026-10-19: #2635 is green.</b> With #2699 merged, #2635 passed Fast checks and Full tests on 90ed4505bf and again on 5961401df2, its first green runs since 2026-10-01. What happened to each of the next steps below, and what is still open (#2597's table test, a new conflict in one file, the merge plan for dev), is in report 023.</p>
+</div>
 <div class="headline" style="border-left-color: var(--warn); margin-top: 14px">
 <p><b>Update, 2026-10-19 at 12:45 MDT: each of the three causes has a fix.</b> The third cause is found, and it was a real bug in incremental statics: a livelit use was not analyzed again when the livelit it applies changed (<code>1131a457e4</code>). The table test has an input whose error stays hidden under canonical completion (<code>27f100e37c</code>). And #2699, a draft into #2635, brings in Andrew's per-member analysis on Modules II, with one fix of its own (<code>223357135a</code>). On GitHub, #2635's Fast checks at <code>1131a457e4</code> now fail only the 8 module tests (5,552 tests run), and #2699's pass; #2699 merges into #2635 once its Full tests pass too. Details in <a href="#update">the update below</a>.</p>
 </div>

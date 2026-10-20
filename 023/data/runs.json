@@ -1,0 +1,244 @@
+{
+ "2635": {
+  "branch": "integration/livelits-modular-editors",
+  "runs": [
+   {
+    "run": 39324951858,
+    "head": "5961401df2",
+    "conclusion": "success",
+    "created": "2026-10-19T21:07:14Z",
+    "updated": "2026-10-19T22:23:50Z",
+    "fast": {
+     "job": 118308233382,
+     "status": "completed",
+     "conclusion": "success",
+     "started": "2026-10-19T21:07:18Z",
+     "completed": "2026-10-19T21:23:27Z",
+     "failures": 0,
+     "seconds": 724.356,
+     "tests": 5553
+    },
+    "full": {
+     "job": 118308231937,
+     "status": "completed",
+     "conclusion": "success",
+     "started": "2026-10-19T21:07:17Z",
+     "completed": "2026-10-19T22:23:50Z",
+     "failures": 0,
+     "seconds": 4424.127,
+     "tests": 6098
+    }
+   },
+   {
+    "run": 39311969979,
+    "head": "90ed4505bf",
+    "conclusion": "success",
+    "created": "2026-10-19T19:33:25Z",
+    "updated": "2026-10-19T21:06:22Z",
+    "fast": {
+     "job": 118264127482,
+     "status": "completed",
+     "conclusion": "success",
+     "started": "2026-10-19T19:34:34Z",
+     "completed": "2026-10-19T19:52:59Z",
+     "failures": 0,
+     "seconds": 878.348,
+     "tests": 5553
+    },
+    "full": {
+     "job": 118264127053,
+     "status": "completed",
+     "conclusion": "success",
+     "started": "2026-10-19T19:34:33Z",
+     "completed": "2026-10-19T21:06:21Z",
+     "failures": 0,
+     "seconds": 5308.318,
+     "tests": 6098
+    }
+   },
+   {
+    "run": 39298635936,
+    "head": "1131a457e4",
+    "conclusion": "cancelled",
+    "created": "2026-10-19T17:58:19Z",
+    "updated": "2026-10-19T19:34:31Z"
+   },
+   {
+    "run": 39295833004,
+    "head": "27f100e37c",
+    "conclusion": "cancelled",
+    "created": "2026-10-19T17:38:19Z",
+    "updated": "2026-10-19T17:59:02Z"
+   },
+   {
+    "run": 39295375280,
+    "head": "cf325d4f61",
+    "conclusion": "cancelled",
+    "created": "2026-10-19T17:35:10Z",
+    "updated": "2026-10-19T17:38:39Z"
+   },
+   {
+    "run": 39287564407,
+    "head": "b44bb9c50f",
+    "conclusion": "cancelled",
+    "created": "2026-10-19T16:41:42Z",
+    "updated": "2026-10-19T17:36:18Z"
+   }
+  ]
+ },
+ "2597": {
+  "branch": "integration/livelits-splicerefs-full",
+  "runs": [
+   {
+    "run": 39317906970,
+    "head": "8a03584ef6",
+    "conclusion": "success",
+    "created": "2026-10-19T20:16:16Z",
+    "updated": "2026-10-19T20:57:47Z"
+   }
+  ]
+ },
+ "2469": {
+  "branch": "modular-editors",
+  "runs": [
+   {
+    "run": 39363428814,
+    "head": "1290464a1a",
+    "conclusion": "success",
+    "created": "2026-10-20T03:16:33Z",
+    "updated": "2026-10-20T04:05:46Z"
+   },
+   {
+    "run": 39361322419,
+    "head": "b529477e37",
+    "conclusion": "cancelled",
+    "created": "2026-10-20T02:53:08Z",
+    "updated": "2026-10-20T03:16:49Z"
+   },
+   {
+    "run": 39352816178,
+    "head": "7377d1523c",
+    "conclusion": "success",
+    "created": "2026-10-20T01:19:50Z",
+    "updated": "2026-10-20T02:04:41Z"
+   },
+   {
+    "run": 39347229837,
+    "head": "b2a4366366",
+    "conclusion": "success",
+    "created": "2026-10-20T00:22:15Z",
+    "updated": "2026-10-20T00:56:40Z"
+   },
+   {
+    "run": 39337055925,
+    "head": "2deccc25bf",
+    "conclusion": "success",
+    "created": "2026-10-19T22:44:36Z",
+    "updated": "2026-10-19T23:21:58Z"
+   },
+   {
+    "run": 39334487924,
+    "head": "d693ce1376",
+    "conclusion": "cancelled",
+    "created": "2026-10-19T22:22:33Z",
+    "updated": "2026-10-19T22:44:53Z"
+   },
+   {
+    "run": 39313554158,
+    "head": "9f18e3a6db",
+    "conclusion": "success",
+    "created": "2026-10-19T19:44:58Z",
+    "updated": "2026-10-19T20:18:10Z"
+   },
+   {
+    "run": 39301757144,
+    "head": "411db92bd2",
+    "conclusion": "success",
+    "created": "2026-10-19T18:21:02Z",
+    "updated": "2026-10-19T19:00:37Z"
+   }
+  ]
+ },
+ "2687": {
+  "branch": "stdlib",
+  "runs": [
+   {
+    "run": 39364376323,
+    "head": "aa9aeda1e9",
+    "conclusion": "in_progress",
+    "created": "2026-10-20T03:27:21Z",
+    "updated": "2026-10-20T03:28:21Z"
+   },
+   {
+    "run": 39362442245,
+    "head": "c722554fa0",
+    "conclusion": "cancelled",
+    "created": "2026-10-20T03:05:26Z",
+    "updated": "2026-10-20T03:28:18Z"
+   },
+   {
+    "run": 39354437267,
+    "head": "939cd7f7c7",
+    "conclusion": "failure",
+    "created": "2026-10-20T01:37:09Z",
+    "updated": "2026-10-20T02:12:35Z"
+   },
+   {
+    "run": 39352257615,
+    "head": "176d2565d1",
+    "conclusion": "cancelled",
+    "created": "2026-10-20T01:13:47Z",
+    "updated": "2026-10-20T01:37:26Z"
+   },
+   {
+    "run": 39351138569,
+    "head": "52872db9dc",
+    "conclusion": "cancelled",
+    "created": "2026-10-20T01:02:03Z",
+    "updated": "2026-10-20T01:14:04Z"
+   },
+   {
+    "run": 39348603691,
+    "head": "e17a9a3257",
+    "conclusion": "cancelled",
+    "created": "2026-10-20T00:36:04Z",
+    "updated": "2026-10-20T01:02:21Z"
+   },
+   {
+    "run": 39344674060,
+    "head": "d87dcc4417",
+    "conclusion": "cancelled",
+    "created": "2026-10-19T23:56:55Z",
+    "updated": "2026-10-20T00:36:22Z"
+   },
+   {
+    "run": 39340509056,
+    "head": "04c75fd4fe",
+    "conclusion": "cancelled",
+    "created": "2026-10-19T23:16:13Z",
+    "updated": "2026-10-19T23:57:13Z"
+   },
+   {
+    "run": 39336422443,
+    "head": "fc0fdfc55f",
+    "conclusion": "cancelled",
+    "created": "2026-10-19T22:38:57Z",
+    "updated": "2026-10-19T23:16:31Z"
+   },
+   {
+    "run": 39314959380,
+    "head": "8c9d437863",
+    "conclusion": "success",
+    "created": "2026-10-19T19:55:11Z",
+    "updated": "2026-10-19T20:35:31Z"
+   },
+   {
+    "run": 39300537779,
+    "head": "de0c77b302",
+    "conclusion": "failure",
+    "created": "2026-10-19T18:12:08Z",
+    "updated": "2026-10-19T19:20:13Z"
+   }
+  ]
+ }
+}
