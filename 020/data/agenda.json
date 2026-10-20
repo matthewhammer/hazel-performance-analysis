@@ -3,7 +3,7 @@
  "kind": "agenda",
  "meeting": "2026-10-21",
  "started": "2026-10-19",
- "updated": "2026-10-20 10:53",
+ "updated": "2026-10-20 10:56",
  "page_title": "Agenda for October 21",
  "title": "Agenda: Matthew and Cyrus, Wednesday 2026-10-21",
  "sub": "The topics Matthew brings to his meeting with Cyrus on Wednesday 2026-10-21. Most are Cyrus's own questions from their meeting on Friday 2026-10-16. <b>A work in progress:</b> compiled over the two days before the meeting and updated as items move, so each item says where it stands, as of when, and what it needs from the meeting.",
@@ -151,11 +151,11 @@
    "title": "Hazel tiles for a game's logic: Messed Up Dress Up as a Scratch-like world",
    "asked": "Matthew, 2026-10-20",
    "ticket": 473,
-   "status": "ideation",
+   "status": "ideation, compared",
    "tone": "muted",
-   "as_of": "2026-10-20 10:53",
-   "body": "<p>An idea, partly Matthew's to shape. Livelits show Hazel can express a great deal, but not yet fast enough to be a game's engine or its drawing. The game's <i>logic</i> is another matter, especially simple event declarations: when this happens in the game, queue that action, perhaps at once. Hazel tiles inside Messed Up Dress Up, customizing its behavior over its world, people and objects, would make each drive the other: more play, and more research.</p><p>To prepare: a comparison with <a href=\"https://arxiv.org/abs/1703.05410\">Languages of Play: Towards Semantic Foundations for Game Interfaces</a> (2017; <a href=\"https://arxiv.org/html/1703.05410v1\">HTML</a>), which goes further, with types, proofs and deductive inference rules. In preparation.</p>",
-   "meeting": "Whether this is worth a direction, and what of Hazel it should show first."
+   "as_of": "2026-10-20 10:56",
+   "body": "<p>An idea, partly Matthew's to shape. Livelits show Hazel can express a great deal, but not yet fast enough to be a game's engine or its drawing. The game's <i>logic</i> is another matter, especially simple event declarations: when this happens in the game, queue that action, perhaps at once. Hazel tiles inside Messed Up Dress Up, customizing its behavior over its world, people and objects, would make each drive the other: more play, and more research. Such rules are small and run seldom next to the game's frames, so they fit Hazel's evaluator as it is.</p><p><b>Against <a href=\"https://arxiv.org/abs/1703.05410\">Languages of Play</a></b> (Martens and Hammer, 2017; <a href=\"https://arxiv.org/html/1703.05410v1\">HTML</a>). The paper treats each game's interface as a programming language of player intent: its syntax the intents the game recognizes, its operational semantics the mechanics as inference rules for a step from a state and an intent to a new state and a response, its type system a contextual interface in which only what makes sense in the current state can be said; play traces are straight-line programs, and player skills general ones, with branching on the game's response, parameters typed by the resources they need, repetition and parallel composition, which it offers as a scripting language for modding and co-creative play.</p><ul><li><b>Where they meet:</b> \"when this happens, queue that\" is the paper's skill as a program, made reactive: a rule fires on a game event rather than being issued by the player, and its body is the same shape as the paper's do-then-case-on-the-response.</li><li><b>Where the paper goes further,</b> and Hazel could follow: Dress Up's intents (walk, climb, sit, open, pull a lever, dress) as a typed syntax; the context (where the friend is, what is near) as the rules' type system, so a rule that can never apply is a type error rather than a silent no-op; the mechanics as inference rules, which Hazel can already hold as derivations, with the paper's \"never gets stuck\" as a property checked where the rules are written; play traces as structured values to query, as Hazel's probes already are.</li><li><b>What Hazel adds that the paper only anticipates</b> (it cites Hazelnut): rules that are meaningful while half-written, with holes; the game's own controls inside a rule, as livelits (a slider for a jump's height, a picker for a place); and proof beside program in one editor.</li><li><b>Steps, smallest first:</b> the events and intents as a Hazel sum type; rules as Hazel values the game reads into its queue; the context as types; traces the game logs as values Hazel can query; later, mechanics as inference rules.</li></ul>",
+   "meeting": "Whether this is worth a direction; which of the paper's layers to show first (typed intents and contextual types look nearest); and what is Matthew's to decide: which events and actions first, where the tiles sit in Dress Up, and who writes rules (M and N among them)."
   }
  ],
  "if_time": [
