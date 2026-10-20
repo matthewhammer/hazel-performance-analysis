@@ -19,6 +19,17 @@ esc = html.escape
 TONES = {"good", "warn", "accent", "accent2", "muted"}
 
 
+URL = "https://matthewhammer.org/hazel/reports/020/"
+
+
+def copy_text(n, it):
+    """What an item's "copy item" chip copies (^ticket(475)): enough to name the item exactly when pasted to Claude
+    with a request ("let's move this up", "let's work on this now"). The id, not only the number: numbers change as
+    items are reordered, ids do not."""
+    title = " ".join(html.unescape(re.sub(r"<[^>]+>", "", it["title"])).split())
+    return f'^report({A["report"]}), the agenda, item {n} ("{it["id"]}"): "{title}". {URL}#{it["id"]}'
+
+
 def item(n, it):
     assert it["tone"] in TONES, it["tone"]
     ticket = (f' · <code class="ref"><b>^ticket(</b>{it["ticket"]}<b>)</b></code>'
@@ -28,7 +39,7 @@ def item(n, it):
         prs = ("<details><summary>The " + str(len(it["prs"])) + " PRs</summary><ul class=\"prs\">"
                + "".join(f"<li>#{p}</li>" for p in sorted(it["prs"])) + "</ul></details>")
     return f"""<section class="item {it["tone"]}" id="{it["id"]}">
-<h3><span class="n">{n}.</span> {it["title"]} <span class="chip {it["tone"]}">{esc(it["status"])}</span></h3>
+<h3><span class="n">{n}.</span> {it["title"]} <span class="chip {it["tone"]}">{esc(it["status"])}</span> <a class="item-link" href="#{it["id"]}" title="A link to this item">#{n}</a> <button type="button" class="copy-item" data-copy="{esc(copy_text(n, it))}" title="Copies this item's name and link, to paste to Claude with a request about it">copy item</button></h3>
 <p class="meta">Asked by {esc(it["asked"])}{ticket} · as of {esc(it["as_of"])}</p>
 {it["body"]}
 {prs}
@@ -97,6 +108,13 @@ page = f"""<!doctype html>
   .ask {{ border-top: 1px dashed var(--line); padding-top: 8px; margin-bottom: 2px; }}
   details {{ margin: 6px 0 10px; }} summary {{ cursor: pointer; color: var(--muted); }}
   ul.prs {{ columns: 2 22em; margin: 6px 0; }}
+  h3 a.item-link {{ color: var(--muted, #666); text-decoration: none; font-size: 0.7em; font-weight: normal; margin-left: 4px; }}
+  h3 a.item-link:hover {{ text-decoration: underline; }}
+  h3 button.copy-item {{ font: inherit; font-size: 0.65em; font-weight: normal; padding: 0 6px; margin-left: 2px; border: 1px solid var(--line, #ccc);
+    border-radius: 4px; background: transparent; color: var(--muted, #666); cursor: pointer; vertical-align: 2px; }}
+  h3 button.copy-item:hover {{ color: inherit; }}
+  h3 button.copy-item.done {{ color: var(--good, #15803d); border-color: var(--good, #15803d); }}
+  section.item:target {{ outline: 2px solid color-mix(in srgb, var(--good, #15803d) 40%, transparent); border-radius: 6px; }}
 </style>
 </head>
 <body>
@@ -129,6 +147,17 @@ page = f"""<!doctype html>
 </ul>
 </main>
 <script type="application/json" id="report-data">{data_js}</script>
+<script>
+/* each item's "copy item" chip: its name and link, to paste to Claude */
+document.querySelectorAll("button.copy-item").forEach(btn => btn.addEventListener("click", async () => {{
+  const text = btn.dataset.copy;
+  try {{ await navigator.clipboard.writeText(text); }}
+  catch (_) {{ const t = document.createElement("textarea"); t.value = text; document.body.append(t); t.select(); document.execCommand("copy"); t.remove(); }}
+  btn.textContent = "copied"; btn.classList.add("done");
+  setTimeout(() => {{ btn.textContent = "copy item"; btn.classList.remove("done"); }}, 1500);
+}}));
+if (location.hash) {{ const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }}
+</script>
 </body>
 </html>
 """

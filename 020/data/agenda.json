@@ -3,7 +3,7 @@
  "kind": "agenda",
  "meeting": "2026-10-21",
  "started": "2026-10-19",
- "updated": "2026-10-20 10:15",
+ "updated": "2026-10-20 10:11",
  "page_title": "Agenda for October 21",
  "title": "Agenda: Matthew and Cyrus, Wednesday 2026-10-21",
  "sub": "The topics Matthew brings to his meeting with Cyrus on Wednesday 2026-10-21. Most are Cyrus's own questions from their meeting on Friday 2026-10-16. <b>A work in progress:</b> compiled over the two days before the meeting and updated as items move, so each item says where it stands, as of when, and what it needs from the meeting.",
@@ -120,7 +120,7 @@
    "ticket": 476,
    "status": "for discussion",
    "tone": "accent",
-   "as_of": "2026-10-20 10:15",
+   "as_of": "2026-10-20 10:07",
    "body": "<p>Continuing the undo discussion. ^report(14) measured a tab on #2597 while one slider on the Full Body slide was moved again and again: it kept about 92 MB more after every edit and did not level off, and what it kept was the undo history, holding whole versions of the editor's state (types and statics, hashes of values, terms, layout), one per edit. Its plots follow four builds over twelve edits: #2597 as built (+1,048 MB after edit 12), the history capped at two states (levels off near +290 MB), the compaction from #2469 ported (near +160 MB), and #2635, which has the compaction (+52 MB).</p>",
    "meeting": "What an undo should bring back, and so what each entry has to keep; and how far back, at what memory cost (the plots in ^report(14))."
   }
@@ -132,6 +132,7 @@
  ],
  "method": [
   "Started 2026-10-19 from the meeting's ticket on the work dashboard (<code class=\"ref\"><b>^ticket(</b>389<b>)</b></code>), which collects the topics as they come in; Matthew adds topics through Wednesday.",
-  "Each item gives who asked, its status and the time that status is from. PRs are hazelgrove/hazel's; commits are on the PR named beside them."
+  "Each item gives who asked, its status and the time that status is from. PRs are hazelgrove/hazel's; commits are on the PR named beside them.",
+  "<b>Each item has a <i>copy item</i> chip</b> (^ticket(475)): it copies the item's number, its id (which stays when items are reordered), its title and its link. Pasted to Claude with a request (move it up or down, work on it now, to be readier to discuss it), it names the item exactly; the agenda is changed and republished in that turn."
  ]
 }
