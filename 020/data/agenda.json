@@ -3,7 +3,7 @@
  "kind": "agenda",
  "meeting": "2026-10-21",
  "started": "2026-10-19",
- "updated": "2026-10-20 10:24",
+ "updated": "2026-10-20 10:28",
  "page_title": "Agenda for October 21",
  "title": "Agenda: Matthew and Cyrus, Wednesday 2026-10-21",
  "sub": "The topics Matthew brings to his meeting with Cyrus on Wednesday 2026-10-21. Most are Cyrus's own questions from their meeting on Friday 2026-10-16. <b>A work in progress:</b> compiled over the two days before the meeting and updated as items move, so each item says where it stands, as of when, and what it needs from the meeting.",
@@ -58,6 +58,17 @@
    "as_of": "2026-10-19 12:30",
    "body": "<p>#2698 (a draft, stacked on #2676, which does the same for the cursor inspector): a toggle on each entry in &Gamma; lays a long type, or an alias's definition, out under its name in at most 60 columns, and &Gamma; grows to 40% of the window while one is open. On the tutorial, the toggle appears on the 147 of 249 entries that are cut off. Later steps: unfold all, unfold the caret's variable by itself, and module members one per line.</p><p>A related bug (<code class=\"ref\"><b>^ticket(</b>396<b>)</b></code>): opening &Gamma; on #2635's Scenes slide freezes the browser. A lead: even on a 4-line program &Gamma; draws 6,802 tokens, because the context holds the prelude's types (<code>ColorScheme</code>, <code>ColorRoles</code>, &hellip;) and each is printed whole as tiles.</p>",
    "meeting": "Review #2676, then #2698? Which of the later steps matter?"
+  },
+  {
+   "id": "html",
+   "title": "Why expanding Html said it was not found",
+   "asked": "Cyrus, 2026-10-16",
+   "ticket": 469,
+   "status": "answered, fixed",
+   "tone": "good",
+   "as_of": "2026-10-20 10:28",
+   "body": "<p><b>Why:</b> <code>Html</code> is a module, not a type. The HTML type is its member <code>Html.T</code>, where the old global alias <code>HTML</code> lives now. The way to ask the full view what a type is, <code>type X = Html in ...</code>, names <code>Html</code> as a type, which it is not; the inspector said only \"Html not found\" (and \"HTML not found\" for the old name). <code>type X = Html.T in ...</code> was fine. <b>Reproduced</b> on GitHub: <code>type X = Html in 1</code> and <code>type X = HTML in 1</code> each mark the name as a free type variable. <b>Fixed</b> on #2597 (2cf1b59c37; #2635 next): the inspector now says \"Html is a module, not a type; its types: Html.T, Html.App\", and for an old alias \"HTML not found: it is Html.T now\"; the full view of <code>type X = Html.T in</code> also shows what <code>Html.T</code> is. Four tests.</p>",
+   "meeting": "Whether the message is enough, or a module's name should also work where a type is expected (meaning its T)."
   },
   {
    "id": "correctness",
