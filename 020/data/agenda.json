@@ -182,6 +182,6 @@
   "Started 2026-10-19 from the meeting's ticket on the work dashboard (<code class=\"ref\"><b>^ticket(</b>389<b>)</b></code>), which collects the topics as they come in; Matthew adds topics through Wednesday.",
   "Each item gives who asked, its status and the time that status is from. PRs are hazelgrove/hazel's; commits are on the PR named beside them.",
   "<b>Each item has a <i>copy item</i> chip</b> (^ticket(475)): it copies the item's number, its id (which stays when items are reordered), its title and its link. Pasted to Claude with a request (move it up or down, work on it now, to be readier to discuss it), it names the item exactly; the agenda is changed and republished in that turn.",
-  "<b>Fact-checked against GitHub</b> on the evening of 2026-10-20: each of the 162 claims GitHub can show (a PR's state, a run's result or length, a commit on a branch) checked by one reader and every stale or wrong one re-checked by a second trying to refute it; 18 corrected that night, 26 that GitHub cannot show (measurements, things seen in the app) left as they were."
+  "<b>Fact-checked against GitHub</b> on the evening of 2026-10-20: each of the 162 claims GitHub can show (a PR's state, a run's result or length, a commit on a branch) checked by one reader and every stale or wrong one re-checked by a second trying to refute it; 18 corrected that night, 16 that GitHub cannot show (measurements, things seen in the app) left as they were."
  ]
 }
