@@ -68,4 +68,4 @@ A report is drafted here and previewed locally. **Matthew reviews it and says wh
 4. Pull first (`git pull --rebase`): the dashboard publishes into that repository by itself, up to every ten minutes, so its master is usually ahead of the checkout (^ticket(181), 2026-10-16). Then push, wait for the Pages run, and check the live pages over HTTPS.
 5. Commit here too, saying what was published, and push. This repository is public, so what is pushed is published as well: push a draft only once Matthew has seen it.
 
-Ask before posting to GitHub, for example a finding on #2609. Post with `gh ... --body-file` and a quoted heredoc.
+Ask before posting to GitHub, for example a finding on #2609. Post with `gh ... --body-file` and a quoted heredoc. **Start anything an agent writes on GitHub with 🤖** (a comment, a review, a PR or issue description): Alexander Bandukwala's preference, passed on by Matthew on 2026-10-21. Use the character itself; GitHub does not render Slack's `:robot_face:`. A comment may link a published report here, `https://matthewhammer.org/hazel/reports/NNN/#section` (Matthew, 2026-10-21), never a local address.
