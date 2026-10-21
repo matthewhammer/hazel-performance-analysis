@@ -3,7 +3,7 @@
  "kind": "agenda",
  "meeting": "2026-10-21",
  "started": "2026-10-19",
- "updated": "2026-10-20 19:18",
+ "updated": "2026-10-20 20:37",
  "page_title": "Agenda for October 21",
  "title": "Agenda: Matthew and Cyrus, Wednesday 2026-10-21",
  "sub": "The topics Matthew brings to his meeting with Cyrus on Wednesday 2026-10-21. Most are Cyrus's own questions from their meeting on Friday 2026-10-16. <b>A work in progress:</b> compiled over the two days before the meeting and updated as items move, so each item says where it stands, as of when, and what it needs from the meeting.",
@@ -31,10 +31,10 @@
    "title": "Livelits' model views as read-only tiles, with the tiles' selection UX",
    "asked": "Cyrus, 2026-10-16",
    "ticket": 387,
-   "status": "queued",
+   "status": "both gaps fixed, seen in the app",
    "tone": "muted",
-   "as_of": "2026-10-19 12:30",
-   "body": "<p><a href=\"../019/\"><code class=\"ref\"><b>^report(</b>19<b>)</b></code></a>: a livelit's model, revealed with its eye, is the one view outside the editor that already has read-only tiles with a caret, Shift+Arrow selection, the inspector and the right-click menu. Two gaps, seen on #2635: a mouse drag over the model selects by character, not by tile (its ends do not snap to tiles, as they do in the editor); and while the revealed model has focus, the rest of the editor draws blank until the eye closes. A livelit's head and params lines are HTML inputs, by design.</p>",
+   "as_of": "2026-10-20 20:37",
+   "body": "<p><a href=\"../019/\"><code class=\"ref\"><b>^report(</b>19<b>)</b></code></a>: a livelit's model, revealed with its eye, is the one view outside the editor that already has read-only tiles with a caret, Shift+Arrow selection, the inspector and the right-click menu. Two gaps, seen on #2635: a mouse drag over the model selects by character, not by tile (its ends do not snap to tiles, as they do in the editor); and while the revealed model has focus, the rest of the editor draws blank until the eye closes. A livelit's head and params lines are HTML inputs, by design.</p><p><b>Both gaps fixed</b> (2026-10-20, on #2635 and #2597, <code class=\"ref\"><b>^ticket(</b>387<b>)</b></code>): a drag inside the model's splice had been hardwired to go by character; it now goes by tile, as in the editor, unless character-level mouse is on (a new test, Editing.Splice 16). And the code view's memo had lost its frame argument in a merge, so the model's sub-editor and the editor shared one cached drawing, and the editor drew the model's rows; the argument is back. <b>Seen in the app</b> on #2635's build: on Editable Parameters, with the baseline slider's model revealed, a drag across <code>pct=50</code> selects whole tiles, a drag inside <code>baseline</code> takes no stray letters (the inspector names the variable), and the editor stays drawn while the model has focus.</p>",
    "meeting": "Is the revealed model's read-only selection what Cyrus wants on every look-only view? <a href=\"../019/\"><code class=\"ref\"><b>^report(</b>19<b>)</b></code></a> suggests one shared read-only, selectable view for all 16 of them."
   },
   {
