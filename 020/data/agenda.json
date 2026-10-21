@@ -3,7 +3,7 @@
  "kind": "agenda",
  "meeting": "2026-10-21",
  "started": "2026-10-19",
- "updated": "2026-10-21 07:16",
+ "updated": "2026-10-21 07:18",
  "page_title": "Agenda for October 21",
  "title": "Agenda: Matthew and Cyrus, Wednesday 2026-10-21",
  "sub": "The topics Matthew brings to his meeting with Cyrus on Wednesday 2026-10-21. Most are Cyrus's own questions from their meeting on Friday 2026-10-16. <b>A work in progress:</b> compiled over the two days before the meeting and updated as items move, so each item says where it stands, as of when, and what it needs from the meeting.",
@@ -195,5 +195,30 @@
   "Each item gives who asked, its status and the time that status is from. PRs are hazelgrove/hazel's; commits are on the PR named beside them.",
   "<b>Each item has a <i>copy item</i> chip</b> (^ticket(475)): it copies the item's number, its id (which stays when items are reordered), its title and its link. Pasted to Claude with a request (move it up or down, work on it now, to be readier to discuss it), it names the item exactly; the agenda is changed and republished in that turn.",
   "<b>Fact-checked against GitHub</b> on the evening of 2026-10-20: each of the 162 claims GitHub can show (a PR's state, a run's result or length, a commit on a branch) checked by one reader and every stale or wrong one re-checked by a second trying to refute it; 18 corrected that night, 16 that GitHub cannot show (measurements, things seen in the app) left as they were."
- ]
+ ],
+ "outline": {
+  "title": "Outline for Cyrus",
+  "intro": "Matthew's outline for the meeting (drafted 2026-10-21 07:16), the items below in the order to raise them.",
+  "points": [
+   {
+    "text": "<b>Livelits &times; modular editors (#2635) is the priority, now that modular editors (#2469) is about to land.</b> #2635 is green on CI (Fast checks and Full tests). Andrew's overnight push put Modules II part 1 (#2493) inside #2469, so I'm merging today's #2469 into #2635: about a day's work. Most of the 80 conflicting files are the same Modules II code both branches carry under different commits; the real work is the statics, the editor's layout code and the eval worker, where we take Andrew's designs (per-member module analysis, per-definition worker requests) and keep the livelit and splice pieces. We adopt Alexander's newest-binding rule for capitalized names after a dot. (Items 1 and 9.)",
+    "sub": [
+     "<i>For you:</i> livelit signatures need abstract type members, which is Modules II part 3. Once #2469 is in dev, should #2635 carry parts 2 and 3 (#2494, #2495, in Alexander's current text), or wait for them to reach dev?",
+     "<i>And the path to dev:</i> retarget #2635 to dev once #2469 lands, and retire the older livelits PR (#2597)?"
+    ]
+   },
+   {
+    "text": "<b>Correctness of the performance PRs</b> (your Friday ask): a report argues, for each PR, why it computes the same types and values as before; drafted, published after one more read. The tests PR (#2700: incremental evaluation checked against evaluation from scratch, over the slide corpus) is ready for review: who reviews it, and which PRs get their own tests first? (Items 7 and 8.)"
+   },
+   {
+    "text": "<b>CI:</b> every PR here is green: both livelits PRs, the JS library (#2711), the performance PRs and the test PRs. Proposal: require the Fast checks job for merging into dev (6 to 7 minutes on a PR to dev). (Items 2 and 10.)"
+   },
+   {
+    "text": "<b>Look-only views as read-only tiles:</b> the revealed livelit model now selects whole tiles. One shared read-only, selectable view for every look-only surface, starting with the syntax explainer's examples? (Items 3 and 4.)"
+   },
+   {
+    "text": "<b>If there is time:</b> &Gamma;'s long types (#2698, on #2676) and which unfold mode is the default; each documentation slide timed on CI (on #2635 most open in about 3 s), keep the job on every PR?; Hazel as a JS library (#2711) with a Scripting panel in Dress Up: worth a direction? (Items 5, 12 and 13.)"
+   }
+  ]
+ }
 }

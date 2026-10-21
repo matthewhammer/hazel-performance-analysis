@@ -30,6 +30,12 @@ def copy_text(n, it):
     return f'^report({A["report"]}), the agenda, item {n} ("{it["id"]}"): "{title}". {URL}#{it["id"]}'
 
 
+def outline_section(o):
+    """(2026-10-21, Matthew: the outline for the meeting as a subsection of these notes) its points, each with sub-points"""
+    if not o: return ""
+    pts = "".join("  <li>" + p["text"] + ("<ul>" + "".join(f"<li>{q}</li>" for q in p.get("sub", [])) + "</ul>" if p.get("sub") else "") + "</li>" + chr(10) for p in o["points"])
+    return f'<h2 id="outline">{o["title"]}</h2>' + chr(10) + f'<p>{o["intro"]}</p>' + chr(10) + "<ul>" + chr(10) + pts + "</ul>" + chr(10) + chr(10)
+
 def item(n, it):
     assert it["tone"] in TONES, it["tone"]
     ticket = (f' · <code class="ref"><b>^ticket(</b>{it["ticket"]}<b>)</b></code>'
@@ -52,6 +58,7 @@ rows = "\n".join(
     f'<td><span class="chip {it["tone"]}">{esc(it["status"])}</span></td></tr>'
     for n, it in enumerate(A["items"], 1))
 items = "\n\n".join(item(n, it) for n, it in enumerate(A["items"], 1))
+outline_html = outline_section(A.get("outline"))
 data_js = json.dumps(A, ensure_ascii=False).replace("</", "<\\/")
 
 page = f"""<!doctype html>
@@ -129,7 +136,7 @@ page = f"""<!doctype html>
 {"".join(f"  <li>{s}</li>" + chr(10) for s in A["short"])}</ol>
 </div>
 
-<h2 id="items">The items</h2>
+{outline_html}<h2 id="items">The items</h2>
 <div class="scroll"><table>
   <tr><th></th><th>Item</th><th>Status</th></tr>
 {rows}
