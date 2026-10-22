@@ -84,7 +84,7 @@
 <main>
 <p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>19<b>)</b></code> · 2026-10-19</p>
 <h1>The Hazel UI draws syntax as tiles on 22 of 39 surfaces, but only 6 take a caret</h1>
-<p class="sub">Cyrus asked for two things on 2026-10-16: livelits' model views as read-only tiles, with the selection and right-click menu tiles have in the editor, and the explainer's examples as read-only tiles too. Both asks assume some views print syntax as text. Matthew asked for the whole picture: every place the Hazel UI shows a term, pattern, type or value, and how it draws it. For the meeting with Cyrus on 2026-10-21 (<code class="ref"><b>^ticket(</b>389<b>)</b></code>; this report is <code class="ref"><b>^ticket(</b>393<b>)</b></code>).</p>
+<p class="sub">Cyrus asked for two things on 2026-10-16: livelits' model views as read-only tiles, with the selection and right-click menu tiles have in the editor, and the explainer's examples as read-only tiles too. Both asks assume some views print syntax as text. Matthew asked for the whole picture: every place the Hazel UI shows a term, pattern, type or value, and how it draws it. For the meeting with Cyrus on 2026-10-21 (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-389"><code class="ref"><b>^ticket(</b>389<b>)</b></code></a>; this report is <a href="https://matthewhammer.org/hazel/dashboard/#ticket-393"><code class="ref"><b>^ticket(</b>393<b>)</b></code></a>).</p>
 
 <div class="headline">
 <p><b>Short answers.</b> As of 2026-10-19, on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits &times; modular editors) at <code>b44bb9c50f</code>; 16 of the 39 surfaces were checked in the running app and the rest traced in the code.</p>
@@ -160,7 +160,7 @@
 <p class="note">A surface is classed by what it does, not by its classes in the page. The Projectors card's header is a single element with the token class holding a printed string, so it looks like a tile but counts as text. The explainer's examples sit in an editor element that takes focus when clicked, but no caret appears and no menu opens, so they count as tiles to look at.</p>
 
 <h2 id="surfaces">Every surface, by kind</h2>
-<p>Each row names a surface as someone using Hazel meets it, then gives what syntax it shows, what a click does, the code that draws it (paths under <code>src/</code> on #2635 at <code>b44bb9c50f</code>), and whether it was checked in the running app or traced in the code.</p>
+<p>Each row names a surface as someone using Hazel meets it, then gives what syntax it shows, what a click does, the code that draws it (paths under <code>src/</code> on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> at <code>b44bb9c50f</code>), and whether it was checked in the running app or traced in the code.</p>
 <h3 id="edit" class="k edit">Tiles you edit: 3</h3>
 <p>Only the places where a person writes code.</p>
 <div class="scroll"><table>
@@ -175,7 +175,7 @@
 <tr><th>Surface</th><th>Shows</th><th>What a click does</th><th>Drawn by</th><th>Checked</th></tr>
 <tr id="s-model"><td><b>A livelit&#x27;s model, revealed with the eye</b><div class="note">Click a livelit&#x27;s eye: the model line under its head line.</div></td><td>exp (the model)</td><td>Caret, Shift+Arrow selection, the inspector reads it, right-click opens Hazel&#x27;s menu; typing is refused.</td><td>LivelitProj.re (splice_view in the reveal pane)<br>Perform.re (in_revealed_model refuses text edits)</td><td>in the app</td></tr>
 <tr id="s-stepper"><td><b>The stepper&#x27;s steps</b><div class="note">A value&#x27;s Show steps, or the stepper view.</div></td><td>exp</td><td>Caret; no right-click menu, and the inspector does not follow it.</td><td>StepperEditor.re:133 (CodeSelectable)</td><td>in the app</td></tr>
-<tr id="s-result"><td><b>The evaluation result</b><div class="note">Under each cell on dev. On #2635 a program&#x27;s value is drawn by the program-value drawer instead (below).</div></td><td>value</td><td>Caret, and the inspector follows it; no right-click menu.</td><td>EvalResult.re:785 (CodeSelectable)<br>CellEditor.re:335</td><td>in the app</td></tr>
+<tr id="s-result"><td><b>The evaluation result</b><div class="note">Under each cell on dev. On <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> a program&#x27;s value is drawn by the program-value drawer instead (below).</div></td><td>value</td><td>Caret, and the inspector follows it; no right-click menu.</td><td>EvalResult.re:785 (CodeSelectable)<br>CellEditor.re:335</td><td>in the app</td></tr>
 </table></div>
 <h3 id="static" class="k static">Tiles you can only look at: 16</h3>
 <p>The largest group of tiles. Each is a <code>Code.view</code> of a segment, built for the view and thrown away, so there is no zipper to put a caret in. &Gamma; is the costliest: it prints every type in the context whole, the prelude's included, so it draws 6,802 tiles for a four-line program.</p>
@@ -189,7 +189,7 @@
 <tr id="s-fenced"><td><b>Fenced hazel blocks in docs</b><div class="note">Explanations, tutorial prompts, task references.</div></td><td>exp</td><td>None (a locked cell editor, as for examples).</td><td>ExplainThis.re:243 (CellEditor, locked)</td><td>in the code</td></tr>
 <tr id="s-variants"><td><b>The explainer&#x27;s menu of form variants</b><div class="note">The specificity menu over the form.</div></td><td>exp, pat</td><td>Picks a variant; no caret.</td><td>ExplainThis.re:375 (CodeViewable)</td><td>in the code</td></tr>
 <tr id="s-probes"><td><b>Probe values, env and call args</b><div class="note">Inline probes in the code.</div></td><td>value</td><td>Probe actions (pin, step into, navigate); no caret, no tile menu.</td><td>ProbeProj.re:813, 872, 924, 1218 (flex_code, tiles)</td><td>in the app</td></tr>
-<tr id="s-progval"><td><b>The program&#x27;s value (#2635)</b><div class="note">At the end of the program, on #2635.</div></td><td>value</td><td>The drawer takes focus; no caret; right-click offers only Show steps.</td><td>ProbeProj.re:2102 (program-value)<br>ProbeProj.re:1081 (Show steps)</td><td>in the app</td></tr>
+<tr id="s-progval"><td><b>The program&#x27;s value (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>)</b><div class="note">At the end of the program, on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>.</div></td><td>value</td><td>The drawer takes focus; no caret; right-click offers only Show steps.</td><td>ProbeProj.re:2102 (program-value)<br>ProbeProj.re:1081 (Show steps)</td><td>in the app</td></tr>
 <tr id="s-stopped"><td><b>Stopped-evaluation and elaboration views</b><div class="note">When evaluation stops early, or is off.</div></td><td>value, exp</td><td>None.</td><td>EvalResult.re:872 (stopped)<br>EvalResult.re:1109 (elaboration)</td><td>in the code</td></tr>
 <tr id="s-refractors"><td><b>Refractors&#x27; splices</b><div class="note">Projector views beside the code.</div></td><td>exp</td><td>None.</td><td>RefractorView.re:276 (default_render_splice)<br>ProjectorView.re:614-627 (simple_code, Code.view)</td><td>in the code</td></tr>
 <tr id="s-cardbody"><td><b>The Projectors card&#x27;s splices</b><div class="note">Right sidebar, Projectors, under a docked projector&#x27;s header.</div></td><td>exp</td><td>None.</td><td>ProjectorView.re:1050 (default_render_splice)</td><td>in the code</td></tr>
@@ -225,21 +225,21 @@
 <ul><li><b>The debug sidebar, raw mode</b> (AST dumps): None. DebugSidebar.re:180-397, 599</li><li><b>The debug console (F3 to F9)</b> (exp, value): Browser console only. DebugConsole.re:17-92 ProbeText.re:70, 154</li></ul>
 
 <h2 id="asks">What this means for the open asks</h2>
-<p><b>Livelits' model views as read-only tiles (<code class="ref"><b>^ticket(</b>387<b>)</b></code>).</b> The model revealed with a livelit's eye already is what Cyrus asked for: read-only tiles with a caret, selection and the right-click menu. The two other views of a livelit's syntax are tiles as well. A refractor's splices and the Projectors card's splices both go through <code>default_render_splice</code>, which calls <code>Code.view</code>, so they are tiles to look at, without selection. Only the card's header (<code>^flag(true)</code>) is text. So the work is to give those two the revealed model's selection, not to turn text into tiles. (An earlier reading, the same morning, took <code>default_render_splice</code> for text; the code and the app both say tiles.) The head and params lines stay text inputs, by Matthew's call.</p><p><b>The explainer's examples (<code class="ref"><b>^ticket(</b>388<b>)</b></code>).</b> They are tiles: each example is a cell editor with <code>~locked=true</code>, drawn read-only, with its value under it. Clicking one gives it focus and nothing else, so it shows no caret, no selection and no menu. What is text in the explainer is the inline <code>code</code> in its prose (such as <code>true</code> and <code>false</code> in the boolean literal's explanation), and any fenced block that is not marked <code>hazel</code> or does not parse.</p>
+<p><b>Livelits' model views as read-only tiles (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-387"><code class="ref"><b>^ticket(</b>387<b>)</b></code></a>).</b> The model revealed with a livelit's eye already is what Cyrus asked for: read-only tiles with a caret, selection and the right-click menu. The two other views of a livelit's syntax are tiles as well. A refractor's splices and the Projectors card's splices both go through <code>default_render_splice</code>, which calls <code>Code.view</code>, so they are tiles to look at, without selection. Only the card's header (<code>^flag(true)</code>) is text. So the work is to give those two the revealed model's selection, not to turn text into tiles. (An earlier reading, the same morning, took <code>default_render_splice</code> for text; the code and the app both say tiles.) The head and params lines stay text inputs, by Matthew's call.</p><p><b>The explainer's examples (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-388"><code class="ref"><b>^ticket(</b>388<b>)</b></code></a>).</b> They are tiles: each example is a cell editor with <code>~locked=true</code>, drawn read-only, with its value under it. Clicking one gives it focus and nothing else, so it shows no caret, no selection and no menu. What is text in the explainer is the inline <code>code</code> in its prose (such as <code>true</code> and <code>false</code> in the boolean literal's explanation), and any fenced block that is not marked <code>hazel</code> or does not parse.</p>
 
 <h2 id="next">What next</h2>
 <ol>
-  <li>Give the refractors' and the Projectors card's splices the revealed model's read-only selection: caret, Shift+Arrow and the right-click menu (<code class="ref"><b>^ticket(</b>387<b>)</b></code>). Decide whether the card's header stays text.</li>
-  <li>Make the explainer's examples selectable read-only tiles, and draw its inline <code>code</code> as tiles where the snippet parses, as fenced hazel blocks already are (<code class="ref"><b>^ticket(</b>388<b>)</b></code>).</li>
+  <li>Give the refractors' and the Projectors card's splices the revealed model's read-only selection: caret, Shift+Arrow and the right-click menu (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-387"><code class="ref"><b>^ticket(</b>387<b>)</b></code></a>). Decide whether the card's header stays text.</li>
+  <li>Make the explainer's examples selectable read-only tiles, and draw its inline <code>code</code> as tiles where the snippet parses, as fenced hazel blocks already are (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-388"><code class="ref"><b>^ticket(</b>388<b>)</b></code></a>).</li>
   <li>Build one read-only, selectable tile view, from the revealed model's, and use it wherever selecting helps: the inspector's full view, &Gamma;, probe values and the program's value.</li>
   <li>Give the stepper and the evaluation result Hazel's right-click menu, and let the stepper's caret move the inspector, as the result's does.</li>
-  <li>Find out why &Gamma; costs what it does: 6,802 tiles for a four-line program, because every prelude type is printed whole (<code class="ref"><b>^ticket(</b>396<b>)</b></code>, where opening &Gamma; on the Scenes slide froze the browser).</li>
-  <li>Reproduce by hand a stale value seen once during this survey: on #2635, after switching from a Documentation slide to Scratch and pasting a program (by a scripted paste), the program's value showed the previous slide's value, marked stopped, until the page was reloaded.</li>
+  <li>Find out why &Gamma; costs what it does: 6,802 tiles for a four-line program, because every prelude type is printed whole (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-396"><code class="ref"><b>^ticket(</b>396<b>)</b></code></a>, where opening &Gamma; on the Scenes slide froze the browser).</li>
+  <li>Reproduce by hand a stale value seen once during this survey: on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, after switching from a Documentation slide to Scratch and pasting a program (by a scripted paste), the program's value showed the previous slide's value, marked stopped, until the page was reloaded.</li>
 </ol>
 
 <h2 id="method">How this was put together</h2>
 <ul>
-  <li><b>The build:</b> <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (<code>integration/livelits-modular-editors</code>) at <code>b44bb9c50f</code>, built with the dev profile and served locally. Dev's evaluation result was checked on <a href="https://github.com/hazelgrove/hazel/pull/2698">#2698</a> at <code>4c9cc34d3b</code> (dev with &Gamma;'s long types), since #2635 draws a program's value differently.</li>
+  <li><b>The build:</b> <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (<code>integration/livelits-modular-editors</code>) at <code>b44bb9c50f</code>, built with the dev profile and served locally. Dev's evaluation result was checked on <a href="https://github.com/hazelgrove/hazel/pull/2698">#2698</a> at <code>4c9cc34d3b</code> (dev with &Gamma;'s long types), since <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> draws a program's value differently.</li>
   <li><b>In the app (16 surfaces):</b> in the Claude desktop app's browser pane, on Documentation &rsaquo; Livelits &rsaquo; Overview, Documentation &rsaquo; Probes, and small programs in Scratch. For each surface: how many token elements it draws, whether a click puts a caret in it or moves the inspector, and whether a right-click opens Hazel's context menu. The control was the editor, where right-click opens the menu (Select term, Cut, Copy, Paste, Add probe).</li>
   <li><b>In the code:</b> a read-only sweep of <code>src/web</code> and <code>src/haz3lcore/projectors</code> for every view that draws syntax: the <code>Code.view</code> family, <code>CodeEditable</code>, <code>CodeSelectable</code>, and every printer (<code>Printer.of_segment</code>, <code>Segment.to_string</code>, <code>Typ.pretty_print</code>, <code>text_code</code>), with each call traced to the surface a person sees. Printing that is never shown (copying to the clipboard, measuring widths, comparisons, the agent's model context) is left out.</li>
   <li><b>Not covered:</b> the exercise modes and the coding agent were traced in the code only, and hover cards were not surveyed. Each row of the table says how it was checked.</li>
@@ -254,9 +254,95 @@
   code.ref b { font-weight: 800; }
 </style>
 <!-- refs: end -->
+
+<!-- steps: begin -->
+<style>
+  button.mint { margin-left: 4px; font: inherit; font-size: 0.75em; padding: 0 6px; border: 1px solid var(--line, #ccc);
+    border-radius: 4px; background: transparent; color: var(--muted, #666); cursor: pointer; vertical-align: 1px; }
+  button.mint:hover { color: inherit; }
+  button.mint.done { color: var(--good, #15803d); border-color: var(--good, #15803d); }
+  a.step-link { color: var(--muted, #666); text-decoration: none; font-size: 0.85em; margin-left: 4px; }
+  a.step-link:hover { text-decoration: underline; }
+  li:target { background: color-mix(in srgb, var(--good, #15803d) 12%, transparent); border-radius: 6px; }
+</style>
+<script>
+/* Each "What next" step: a link to it, and a button copying a request to
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
+(() => {
+  const h = document.getElementById("next");
+  if (!h) return;
+  let list = h.nextElementSibling;
+  while (list && !/^(OL|UL)$/.test(list.tagName)) {
+    if (list.tagName === "H2") return;
+    list = list.nextElementSibling;
+  }
+  if (!list) return;
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/reports/" + report.padStart(3, "0") + "/";
+  [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
+    const n = i + 1;
+    if (!li.id) li.id = "step-" + n;
+    const b = li.querySelector("b, strong");
+    const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
+    const url = base + "#" + li.id;
+    const text = "Mint a ticket for this step: Hazel reports, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
+    const a = document.createElement("a");
+    a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "mint"; btn.textContent = "copy for a ticket";
+    btn.title = "Copies a request to mint a ticket for this step, to paste to Claude";
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) {
+        const t = document.createElement("textarea"); t.value = text; document.body.append(t);
+        t.select(); document.execCommand("copy"); t.remove();
+      }
+      btn.textContent = "copied"; btn.classList.add("done");
+      setTimeout(() => { btn.textContent = "copy for a ticket"; btn.classList.remove("done"); }, 1500);
+    });
+    li.append(" ", a, " ", btn);
+  });
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+})();
+</script>
+<!-- steps: end -->
+<!-- theme: begin -->
+<style>
+  .theme-toggle { position: fixed; top: 10px; right: 10px; z-index: 30; font: 13px system-ui, sans-serif; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--muted, GrayText);
+    cursor: pointer; opacity: 0.85; }
+  .theme-toggle:hover { opacity: 1; color: var(--ink, CanvasText); }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+/* The theme switch: Auto (the system's choice), Light, Dark; remembered for this site. */
+(() => {
+  const order = ["auto", "light", "dark"], label = { auto: "◐ auto", light: "☀ light", dark: "☾ dark" };
+  const get = () => { try { return localStorage.getItem("theme") || "auto"; } catch (_) { return "auto"; } };
+  const apply = m => m === "auto" ? document.documentElement.removeAttribute("data-theme")
+                                  : document.documentElement.setAttribute("data-theme", m);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "theme-toggle";
+  const show = () => { const m = get(); b.textContent = label[m] || label.auto;
+    b.title = "Theme: " + m + ". Click for " + order[(order.indexOf(m) + 1) % 3] + "; remembered on this site."; };
+  b.addEventListener("click", () => {
+    const m = order[(order.indexOf(get()) + 1) % 3];
+    try { m === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", m); } catch (_) {}
+    apply(m); show();
+  });
+  window.addEventListener("storage", e => { if (e.key === "theme") { apply(get()); show(); } });
+  show(); document.body.append(b);
+})();
+</script>
+<!-- theme: end -->
 <!-- ref-cards: begin -->
 <style>
-  .ref-card { position: absolute; z-index: 40; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .ref-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
     padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
     color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
   .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
@@ -347,7 +433,8 @@
 <!-- ref-cards: end -->
 <!-- pr-cards: begin -->
 <style>
-  .pr-card { position: absolute; z-index: 40; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
     padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
     color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
   .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
@@ -355,29 +442,37 @@
   .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
   .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
   .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-base { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: 1px; }
+  .pr-base.dev { background: #dafbe1; color: #116329; } .pr-base.other { background: #fff1c2; color: #7a4b00; }
+  @media (prefers-color-scheme: dark) { .pr-base.dev { background: #12361f; color: #6fdd8b; } .pr-base.other { background: #3d2e00; color: #f2cc60; } }
   .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
 </style>
 <script>
 /* A card for each link to a GitHub PR or issue, on hover or focus: its
-   title, state, author, dates and comments, asked of GitHub live, once per
+   title, state, the branch a PR targets (dev or not: the distinction that
+   matters, ^ticket(478)), author, dates and comments, asked of GitHub live, once per
    number per page load; if GitHub does not answer, what it said when the
    page was built (tools/link_prs.py writes this block). */
 (() => {
-  const CACHED = {"hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 2, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-19T16:41:40Z"}, "hazelgrove/hazel#2698": {"author": "matthewhammer", "comments": 1, "created": "2026-10-19T16:07:08Z", "kind": "pull", "state": "draft", "title": "non-`dev` (`cursor-inspector-full-types`): Gamma can show a long type whole, on several lines", "updated": "2026-10-19T16:41:41Z"}}, BUILT = "2026-10-19";
-  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
+  const CACHED = {"hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 3, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-21T20:18:06Z", "base": "integration/livelits-splicerefs-full"}, "hazelgrove/hazel#2698": {"author": "matthewhammer", "comments": 1, "created": "2026-10-19T16:07:08Z", "kind": "pull", "state": "draft", "title": "non-`dev` (`cursor-inspector-full-types`): Gamma can show a long type whole, on several lines", "updated": "2026-10-19T17:24:01Z", "base": "cursor-inspector-full-types"}}, BUILT = "2026-10-22";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
   const asked = new Map();
-  const ask = key => {
+  /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
+  const ask = (key, kind) => {
     if (!asked.has(key)) {
-      const [repo, n] = key.split("#");
-      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
+      const [repo, n] = key.split("#"), pull = kind === "pull";
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/${pull ? "pulls" : "issues"}/${n}`)
         .then(r => r.ok ? r.json() : Promise.reject(r.status))
         .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
-                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
-                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
+                      comments: j.comments, kind: pull || j.pull_request ? "pull" : "issues", base: j.base && j.base.ref,
+                      state: j.merged_at || (j.pull_request && j.pull_request.merged_at) ? "merged" : j.draft ? "draft" : j.state }))
         .catch(() => null));
     }
     return asked.get(key);
   };
+  const baseChip = d => !d.base ? "" : d.base === "dev"
+    ? `<span class="pr-base dev" title="this PR merges into dev">into dev</span>`
+    : `<span class="pr-base other" title="this PR merges into ${esc(d.base)}, not dev">into ${esc(d.base)}, not dev</span>`;
   const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
   const ago = iso => {
     const s = (Date.now() - new Date(iso)) / 1000;
@@ -388,7 +483,7 @@
   const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const fill = (key, d, note) => {
     const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
-    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span>${baseChip(d)}</div>` +
       `<div class="pr-title">${esc(d.title)}</div>` +
       `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
       (note ? `<div class="pr-note">${note}</div>` : "");
@@ -405,14 +500,14 @@
   const show = a => {
     const m = RX.exec(a.href);
     if (!m) return;
-    const key = m[1] + "#" + m[2];
+    const key = m[1] + "#" + m[3];
     over = a; clearTimeout(timer);
     timer = setTimeout(async () => {
       if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
       const cached = CACHED[key];
       card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
       card.hidden = false; place(a);
-      const d = await ask(key);
+      const d = await ask(key, m[2]);
       if (over !== a) return;
       card.innerHTML = d ? fill(key, d, "")
         : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
@@ -431,89 +526,5 @@
 </script>
 <!-- pr-cards: end -->
 
-<!-- steps: begin -->
-<style>
-  button.mint { margin-left: 4px; font: inherit; font-size: 0.75em; padding: 0 6px; border: 1px solid var(--line, #ccc);
-    border-radius: 4px; background: transparent; color: var(--muted, #666); cursor: pointer; vertical-align: 1px; }
-  button.mint:hover { color: inherit; }
-  button.mint.done { color: var(--good, #15803d); border-color: var(--good, #15803d); }
-  a.step-link { color: var(--muted, #666); text-decoration: none; font-size: 0.85em; margin-left: 4px; }
-  a.step-link:hover { text-decoration: underline; }
-  li:target { background: color-mix(in srgb, var(--good, #15803d) 12%, transparent); border-radius: 6px; }
-</style>
-<script>
-/* Each "What next" step: a link to it, and a button copying a request to
-   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
-(() => {
-  const h = document.getElementById("next");
-  if (!h) return;
-  let list = h.nextElementSibling;
-  while (list && !/^(OL|UL)$/.test(list.tagName)) {
-    if (list.tagName === "H2") return;
-    list = list.nextElementSibling;
-  }
-  if (!list) return;
-  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
-  const label = (document.querySelector(".series") || document.body).textContent;
-  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
-  const report = m ? String(Number(m[1])) : "?";
-  const base = "http://matthewhammer.org/hazel/reports/" + report.padStart(3, "0") + "/";
-  [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
-    const n = i + 1;
-    if (!li.id) li.id = "step-" + n;
-    const b = li.querySelector("b, strong");
-    const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
-    const url = base + "#" + li.id;
-    const text = "Mint a ticket for this step: Hazel reports, ^report(" + report +
-      "), What next, step " + n + ': "' + title + '". ' + url;
-    const a = document.createElement("a");
-    a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
-    const btn = document.createElement("button");
-    btn.type = "button"; btn.className = "mint"; btn.textContent = "copy for a ticket";
-    btn.title = "Copies a request to mint a ticket for this step, to paste to Claude";
-    btn.addEventListener("click", async () => {
-      try { await navigator.clipboard.writeText(text); }
-      catch (_) {
-        const t = document.createElement("textarea"); t.value = text; document.body.append(t);
-        t.select(); document.execCommand("copy"); t.remove();
-      }
-      btn.textContent = "copied"; btn.classList.add("done");
-      setTimeout(() => { btn.textContent = "copy for a ticket"; btn.classList.remove("done"); }, 1500);
-    });
-    li.append(" ", a, " ", btn);
-  });
-  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
-})();
-</script>
-<!-- steps: end -->
-<!-- theme: begin -->
-<style>
-  .theme-toggle { position: fixed; top: 10px; right: 10px; z-index: 30; font: 13px system-ui, sans-serif; padding: 3px 10px;
-    border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--muted, GrayText);
-    cursor: pointer; opacity: 0.85; }
-  .theme-toggle:hover { opacity: 1; color: var(--ink, CanvasText); }
-  @media print { .theme-toggle { display: none; } }
-</style>
-<script>
-/* The theme switch: Auto (the system's choice), Light, Dark; remembered for this site. */
-(() => {
-  const order = ["auto", "light", "dark"], label = { auto: "◐ auto", light: "☀ light", dark: "☾ dark" };
-  const get = () => { try { return localStorage.getItem("theme") || "auto"; } catch (_) { return "auto"; } };
-  const apply = m => m === "auto" ? document.documentElement.removeAttribute("data-theme")
-                                  : document.documentElement.setAttribute("data-theme", m);
-  const b = document.createElement("button");
-  b.type = "button"; b.className = "theme-toggle";
-  const show = () => { const m = get(); b.textContent = label[m] || label.auto;
-    b.title = "Theme: " + m + ". Click for " + order[(order.indexOf(m) + 1) % 3] + "; remembered on this site."; };
-  b.addEventListener("click", () => {
-    const m = order[(order.indexOf(get()) + 1) % 3];
-    try { m === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", m); } catch (_) {}
-    apply(m); show();
-  });
-  window.addEventListener("storage", e => { if (e.key === "theme") { apply(get()); show(); } });
-  show(); document.body.append(b);
-})();
-</script>
-<!-- theme: end -->
 </body>
 </html>

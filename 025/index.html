@@ -129,7 +129,7 @@ h2:hover .copyanchor, h3:hover .copyanchor, .lh:hover .copyanchor, .copyanchor:f
 <body><main>
 <p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>25<b>)</b></code> · performance · started 2026-10-22, updated 2026-10-22 10:18 MDT · <span class="wip">work in progress</span> · about 11 minutes to read</p>
 <h1>What a Call into Hazel Costs</h1>
-<p class="sub">Matthew asked, on 2026-10-22, about <code class="ref"><b>^ticket(</b>531<b>)</b></code>, the experiment that moves Messed Up Dress Up's room rules into Hazel modules run through Hazel's JS library (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the library; the game's side is the draft <a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>): <q>why is Hazel so slow here for 16 x 16 map? do more analysis please, and draft a new report.</q> The World room's rule takes a step on the map; in the game's own node run it costs 40.0 ms p50 at 16x16, against 0.003 ms for the same rule in JS. This report takes that one call apart.</p>
+<p class="sub">Matthew asked, on 2026-10-22, about <a href="https://matthewhammer.org/hazel/dashboard/#ticket-531"><code class="ref"><b>^ticket(</b>531<b>)</b></code></a>, the experiment that moves Messed Up Dress Up's room rules into Hazel modules run through Hazel's JS library (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the library; the game's side is the draft <a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>): <q>why is Hazel so slow here for 16 x 16 map? do more analysis please, and draft a new report.</q> The World room's rule takes a step on the map; in the game's own node run it costs 40.0 ms p50 at 16x16, against 0.003 ms for the same rule in JS. This report takes that one call apart.</p>
 <p class="sub"><b>Which build.</b> Hazel's JS library, <code>hazel-lib.js</code>, from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> (branch <code>js-library-embed</code> at <code>0d66c36618</code>), which is <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> on <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a> on <code>dev</code> at <code>962a7cb009</code>. Of the 14 performance PRs on the dashboard it has one, <a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a>, the only one merged into <code>dev</code>; the other 13 are open. Matthew, after the first draft: <q>Let's make it clear what branch we are measuring ... how many have been applied? If they are not all applied, how much would they help?</q> So every time below is measured three ways, on GitHub's builds of three branches: <b>before</b>, that build; <b>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></b>, with <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> merged (it carries <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>); and <b>after</b>, with all 14 (<a href="#prs">Before and after the performance PRs</a>).</p>
 
 <div class="headline">
@@ -222,7 +222,7 @@ h2:hover .copyanchor, h3:hover .copyanchor, .lh:hover .copyanchor, .copyanchor:f
     <span class="tk-k">if</span> x.col == c &amp;&amp; x.row == r <span class="tk-k">then</span> <span class="tk-t">Some</span>(x)
     <span class="tk-k">else</span> <span class="hs hs-warn" title="the walk over the cells: linear in the map">findA(rest, c, r)</span>
   <span class="tk-k">end</span> <span class="tk-k">in</span>
-<span class="tk-k">let</span> shipped = mk(<span class="tk-k">fun</span> (cs, c, r, w) -> findA(cs, c, r)) <span class="tk-k">in</span></pre><div class="tiles" data-k="shipped"><div class="tiles-note">Hazel's tile editor, read only: the same code, with what it needs before it (the program's types and the helpers), from hazel.org's build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, ^ticket(538)): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel's tiles</button> <span class="tiles-phase"></span></div></div><div class="runbox" data-k="shipped"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: <select aria-label="the map's size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> <button type="button">▶ run, with Hazel's JS library</button></div><pre class="rb-out">Hazel's library (hazel.org's build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the tiles' build) loads on the first run.</pre></div><pre class="code js"><span class="tk-k">const</span> g = globalsOf(map, n, ac, ar);   <span class="tk-c">// </span><span class="hs hs-floor" title="the call boundary: the whole argument converted, re-stepped and checked against its type, every call">all <span class="tk-n">17</span> fields; cells: n × n records {col, row, kind, ways}</span>
+<span class="tk-k">let</span> shipped = mk(<span class="tk-k">fun</span> (cs, c, r, w) -> findA(cs, c, r)) <span class="tk-k">in</span></pre><div class="tiles" data-k="shipped"><div class="tiles-note">Hazel's tile editor, read only: the same code, with what it needs before it (the program's types and the helpers), from hazel.org's build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, <a href="https://matthewhammer.org/hazel/dashboard/#ticket-538"><code class="ref"><b>^ticket(</b>538<b>)</b></code></a>): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel's tiles</button> <span class="tiles-phase"></span></div></div><div class="runbox" data-k="shipped"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: <select aria-label="the map's size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> <button type="button">▶ run, with Hazel's JS library</button></div><pre class="rb-out">Hazel's library (hazel.org's build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the tiles' build) loads on the first run.</pre></div><pre class="code js"><span class="tk-k">const</span> g = globalsOf(map, n, ac, ar);   <span class="tk-c">// </span><span class="hs hs-floor" title="the call boundary: the whole argument converted, re-stepped and checked against its type, every call">all <span class="tk-n">17</span> fields; cells: n × n records {col, row, kind, ways}</span>
 <span class="tk-k">const</span> ev = { tag: <span class="tk-s">"Way"</span>, value: <span class="tk-s">"E"</span> };
 V.shipped(g, ev)</pre><p class="note">The driver's copy of the game's World rule: the game keeps <code>find</code> beside <code>on_event</code> and names <code>Common.dir</code> and <code>Common.opp</code> (its own text is folded below); here the lookup is passed to <code>mk</code>. The logic is the same, and the two times agree within noise above 8x8. Three costs stack: the boundary converts the whole map, the walk goes to the target, and the annotation on <code>findA</code> makes every step of the walk re-check the rest of the list.</p><details><summary>the game's own World rule (<code>dress-up/js/25-scripting.js</code> at <code>2ebda59ab4</code>, as the game compiles it)</summary><pre class="code"><span class="tk-c"># Places with no way out on a side, whatever their ways say: the waterfall's N, its cliff. #</span>
 <span class="tk-k">let</span> no_way = <span class="tk-k">fun</span> (kind, d) : (<span class="tk-t">String</span>, <span class="tk-t">String</span>) -> kind == <span class="tk-s">"waterfall"</span> &amp;&amp; d == <span class="tk-s">"N"</span>;
@@ -261,7 +261,7 @@ V.shipped(g, ev)</pre><p class="note">The driver's copy of the game's World rule
     <span class="tk-k">if</span> x.col == c &amp;&amp; x.row == r <span class="tk-k">then</span> <span class="tk-t">Some</span>(x)
     <span class="tk-k">else</span> <span class="hs hs-warn" title="the walk over the cells: linear in the map">findU(rest, c, r)</span>
   <span class="tk-k">end</span> <span class="tk-k">in</span>
-<span class="tk-k">let</span> noann = mk(<span class="tk-k">fun</span> (cs, c, r, w) -> findU(cs, c, r)) <span class="tk-k">in</span></pre><div class="tiles" data-k="noann"><div class="tiles-note">Hazel's tile editor, read only: the same code, with what it needs before it (the program's types and the helpers), from hazel.org's build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, ^ticket(538)): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel's tiles</button> <span class="tiles-phase"></span></div></div><div class="runbox" data-k="noann"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: <select aria-label="the map's size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> <button type="button">▶ run, with Hazel's JS library</button></div><pre class="rb-out">Hazel's library (hazel.org's build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the tiles' build) loads on the first run.</pre></div><pre class="code js"><span class="tk-k">const</span> g = globalsOf(map, n, ac, ar);   <span class="tk-c">// </span><span class="hs hs-floor" title="the call boundary: the whole argument converted, re-stepped and checked against its type, every call">all <span class="tk-n">17</span> fields; cells: n × n records {col, row, kind, ways}</span>
+<span class="tk-k">let</span> noann = mk(<span class="tk-k">fun</span> (cs, c, r, w) -> findU(cs, c, r)) <span class="tk-k">in</span></pre><div class="tiles" data-k="noann"><div class="tiles-note">Hazel's tile editor, read only: the same code, with what it needs before it (the program's types and the helpers), from hazel.org's build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, <a href="https://matthewhammer.org/hazel/dashboard/#ticket-538"><code class="ref"><b>^ticket(</b>538<b>)</b></code></a>): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel's tiles</button> <span class="tiles-phase"></span></div></div><div class="runbox" data-k="noann"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: <select aria-label="the map's size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> <button type="button">▶ run, with Hazel's JS library</button></div><pre class="rb-out">Hazel's library (hazel.org's build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the tiles' build) loads on the first run.</pre></div><pre class="code js"><span class="tk-k">const</span> g = globalsOf(map, n, ac, ar);   <span class="tk-c">// </span><span class="hs hs-floor" title="the call boundary: the whole argument converted, re-stepped and checked against its type, every call">all <span class="tk-n">17</span> fields; cells: n × n records {col, row, kind, ways}</span>
 <span class="tk-k">const</span> ev = { tag: <span class="tk-s">"Way"</span>, value: <span class="tk-s">"E"</span> };
 V.noann(g, ev)</pre><p class="note">The same rule without the annotation on its helper: the walk is linear again. What <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> gives the shipped rule without changing it.</p></div><div class="listing" id="code-index"><div class="lh"><span class="sw" style="background:var(--warn)"></span><b>index arithmetic</b><span class="ms">16x16: 15.7 ms before, 17.2 ms after</span><a class="anchor" href="#code-index" aria-label="a link to this listing">#</a><button type="button" class="copyanchor" data-id="code-index" title="copy this listing's address">copy link</button></div><pre class="code"><span class="tk-k">let</span> mk = <span class="tk-k">fun</span> look ->
   <span class="hs hs-floor" title="the call boundary: the whole argument converted, re-stepped and checked against its type, every call"><span class="tk-k">fun</span> (g, e) : (<span class="tk-t">Globals</span>, <span class="tk-t">Event</span>)</span> ->
@@ -282,7 +282,7 @@ V.noann(g, ev)</pre><p class="note">The same rule without the annotation on its 
     <span class="tk-k">if</span> i == <span class="tk-n">0</span> <span class="tk-k">then</span> <span class="tk-t">Some</span>(x)
     <span class="tk-k">else</span> <span class="hs hs-warn" title="the walk over the cells: linear in the map">nthU(rest, i - <span class="tk-n">1</span>)</span>
   <span class="tk-k">end</span> <span class="tk-k">in</span>
-<span class="tk-k">let</span> index = mk(<span class="tk-k">fun</span> (cs, c, r, w) -> nthU(cs, r * w + c)) <span class="tk-k">in</span></pre><div class="tiles" data-k="index"><div class="tiles-note">Hazel's tile editor, read only: the same code, with what it needs before it (the program's types and the helpers), from hazel.org's build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, ^ticket(538)): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel's tiles</button> <span class="tiles-phase"></span></div></div><div class="runbox" data-k="index"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: <select aria-label="the map's size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> <button type="button">▶ run, with Hazel's JS library</button></div><pre class="rb-out">Hazel's library (hazel.org's build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the tiles' build) loads on the first run.</pre></div><pre class="code js"><span class="tk-k">const</span> g = globalsOf(map, n, ac, ar);   <span class="tk-c">// </span><span class="hs hs-floor" title="the call boundary: the whole argument converted, re-stepped and checked against its type, every call">all <span class="tk-n">17</span> fields; cells: n × n records {col, row, kind, ways}</span>
+<span class="tk-k">let</span> index = mk(<span class="tk-k">fun</span> (cs, c, r, w) -> nthU(cs, r * w + c)) <span class="tk-k">in</span></pre><div class="tiles" data-k="index"><div class="tiles-note">Hazel's tile editor, read only: the same code, with what it needs before it (the program's types and the helpers), from hazel.org's build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, <a href="https://matthewhammer.org/hazel/dashboard/#ticket-538"><code class="ref"><b>^ticket(</b>538<b>)</b></code></a>): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel's tiles</button> <span class="tiles-phase"></span></div></div><div class="runbox" data-k="index"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: <select aria-label="the map's size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> <button type="button">▶ run, with Hazel's JS library</button></div><pre class="rb-out">Hazel's library (hazel.org's build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the tiles' build) loads on the first run.</pre></div><pre class="code js"><span class="tk-k">const</span> g = globalsOf(map, n, ac, ar);   <span class="tk-c">// </span><span class="hs hs-floor" title="the call boundary: the whole argument converted, re-stepped and checked against its type, every call">all <span class="tk-n">17</span> fields; cells: n × n records {col, row, kind, ways}</span>
 <span class="tk-k">const</span> ev = { tag: <span class="tk-s">"Way"</span>, value: <span class="tk-s">"E"</span> };
 V.index(g, ev)</pre><p class="note">Goes straight to the target's position, <code>r * cols + c</code>, with no comparison per cell; still a walk down the list to get there.</p></div><div class="listing" id="code-held"><div class="lh"><span class="sw" style="background:var(--accent2)"></span><b>map held in a closure</b><span class="ms">16x16: 10.8 ms before, 10.7 ms after</span><a class="anchor" href="#code-held" aria-label="a link to this listing">#</a><button type="button" class="copyanchor" data-id="code-held" title="copy this listing's address">copy link</button></div><pre class="code"><span class="tk-k">let</span> held = <span class="tk-k">fun</span> <span class="hs hs-held" title="the map converted once, at setup, and held in a closure">(cells : [<span class="tk-t">Cell</span>])</span> ->
   <span class="tk-k">fun</span> (n, e) ->
@@ -295,8 +295,8 @@ V.index(g, ev)</pre><p class="note">Goes straight to the target's position, <cod
       <span class="tk-k">if</span> c &lt; <span class="tk-n">0</span> || r &lt; <span class="tk-n">0</span> || c >= n.cols || r >= n.rows <span class="tk-k">then</span> <span class="tk-t">Done</span>
       <span class="tk-k">else</span> decide(<span class="hs hs-warn" title="the walk over the cells: linear in the map">nthU(cells, r * n.cols + c)</span>, back, c, r)
     | _ => <span class="tk-t">Done</span>
-    <span class="tk-k">end</span> <span class="tk-k">in</span></pre><div class="tiles" data-k="held"><div class="tiles-note">Hazel's tile editor, read only: the same code, with what it needs before it (the program's types and the helpers), from hazel.org's build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, ^ticket(538)): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel's tiles</button> <span class="tiles-phase"></span></div></div><div class="runbox" data-k="held"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: <select aria-label="the map's size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> <button type="button">▶ run, with Hazel's JS library</button></div><pre class="rb-out">Hazel's library (hazel.org's build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the tiles' build) loads on the first run.</pre></div><pre class="code js"><span class="tk-k">const</span> hf = V.held(<span class="hs hs-held" title="the map converted once, at setup, and held in a closure">g.cells</span>);   <span class="tk-c">// once: the map converted into a Hazel closure</span>
-hf({ at_col: ac, at_row: ar, cols: n, rows: n }, ev)   <span class="tk-c">// each event: four numbers</span></pre><p class="note">The map crosses the boundary once, into a closure (24.8 ms at 16x16, once); each event passes four numbers. The walk remains, and the held list is still re-stepped when it is substituted into the call.</p></div><div class="listing" id="code-idA"><div class="lh"><span class="sw" style="background:var(--accent)"></span><b>identity rule (floor)</b><span class="ms">16x16: 8.54 ms before, 10.6 ms after</span><a class="anchor" href="#code-idA" aria-label="a link to this listing">#</a><button type="button" class="copyanchor" data-id="code-idA" title="copy this listing's address">copy link</button></div><pre class="code"><span class="tk-k">let</span> idA = <span class="hs hs-floor" title="the call boundary: the whole argument converted, re-stepped and checked against its type, every call"><span class="tk-k">fun</span> (g, e) : (<span class="tk-t">Globals</span>, <span class="tk-t">Event</span>)</span> -> <span class="tk-t">Done</span> <span class="tk-k">in</span></pre><div class="tiles" data-k="idA"><div class="tiles-note">Hazel's tile editor, read only: the same code, with what it needs before it (the program's types and the helpers), from hazel.org's build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, ^ticket(538)): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel's tiles</button> <span class="tiles-phase"></span></div></div><div class="runbox" data-k="idA"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: <select aria-label="the map's size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> <button type="button">▶ run, with Hazel's JS library</button></div><pre class="rb-out">Hazel's library (hazel.org's build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the tiles' build) loads on the first run.</pre></div><pre class="code js"><span class="tk-k">const</span> g = globalsOf(map, n, ac, ar);   <span class="tk-c">// </span><span class="hs hs-floor" title="the call boundary: the whole argument converted, re-stepped and checked against its type, every call">all <span class="tk-n">17</span> fields; cells: n × n records {col, row, kind, ways}</span>
+    <span class="tk-k">end</span> <span class="tk-k">in</span></pre><div class="tiles" data-k="held"><div class="tiles-note">Hazel's tile editor, read only: the same code, with what it needs before it (the program's types and the helpers), from hazel.org's build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, <a href="https://matthewhammer.org/hazel/dashboard/#ticket-538"><code class="ref"><b>^ticket(</b>538<b>)</b></code></a>): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel's tiles</button> <span class="tiles-phase"></span></div></div><div class="runbox" data-k="held"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: <select aria-label="the map's size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> <button type="button">▶ run, with Hazel's JS library</button></div><pre class="rb-out">Hazel's library (hazel.org's build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the tiles' build) loads on the first run.</pre></div><pre class="code js"><span class="tk-k">const</span> hf = V.held(<span class="hs hs-held" title="the map converted once, at setup, and held in a closure">g.cells</span>);   <span class="tk-c">// once: the map converted into a Hazel closure</span>
+hf({ at_col: ac, at_row: ar, cols: n, rows: n }, ev)   <span class="tk-c">// each event: four numbers</span></pre><p class="note">The map crosses the boundary once, into a closure (24.8 ms at 16x16, once); each event passes four numbers. The walk remains, and the held list is still re-stepped when it is substituted into the call.</p></div><div class="listing" id="code-idA"><div class="lh"><span class="sw" style="background:var(--accent)"></span><b>identity rule (floor)</b><span class="ms">16x16: 8.54 ms before, 10.6 ms after</span><a class="anchor" href="#code-idA" aria-label="a link to this listing">#</a><button type="button" class="copyanchor" data-id="code-idA" title="copy this listing's address">copy link</button></div><pre class="code"><span class="tk-k">let</span> idA = <span class="hs hs-floor" title="the call boundary: the whole argument converted, re-stepped and checked against its type, every call"><span class="tk-k">fun</span> (g, e) : (<span class="tk-t">Globals</span>, <span class="tk-t">Event</span>)</span> -> <span class="tk-t">Done</span> <span class="tk-k">in</span></pre><div class="tiles" data-k="idA"><div class="tiles-note">Hazel's tile editor, read only: the same code, with what it needs before it (the program's types and the helpers), from hazel.org's build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, <a href="https://matthewhammer.org/hazel/dashboard/#ticket-538"><code class="ref"><b>^ticket(</b>538<b>)</b></code></a>): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel's tiles</button> <span class="tiles-phase"></span></div></div><div class="runbox" data-k="idA"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: <select aria-label="the map's size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> <button type="button">▶ run, with Hazel's JS library</button></div><pre class="rb-out">Hazel's library (hazel.org's build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the tiles' build) loads on the first run.</pre></div><pre class="code js"><span class="tk-k">const</span> g = globalsOf(map, n, ac, ar);   <span class="tk-c">// </span><span class="hs hs-floor" title="the call boundary: the whole argument converted, re-stepped and checked against its type, every call">all <span class="tk-n">17</span> fields; cells: n × n records {col, row, kind, ways}</span>
 <span class="tk-k">const</span> ev = { tag: <span class="tk-s">"Way"</span>, value: <span class="tk-s">"E"</span> };
 V.idA(g, ev)</pre><p class="note">Ignores its argument: what is left is the boundary alone, converting the whole map and checking it against <code>(Globals, Event)</code>. Every rule that is passed the map pays at least this.</p></div><div class="listing" id="code-near"><div class="lh"><span class="sw" style="background:var(--good)"></span><b>neighbours only</b><span class="ms">16x16: 0.889 ms before, 0.832 ms after</span><a class="anchor" href="#code-near" aria-label="a link to this listing">#</a><button type="button" class="copyanchor" data-id="code-near" title="copy this listing's address">copy link</button></div><pre class="code"><span class="tk-k">let</span> near = <span class="tk-k">fun</span> (n, e) ->
   <span class="tk-k">case</span> e
@@ -308,7 +308,7 @@ V.idA(g, ev)</pre><p class="note">Ignores its argument: what is left is the boun
     <span class="tk-k">if</span> c &lt; <span class="tk-n">0</span> || r &lt; <span class="tk-n">0</span> || c >= n.cols || r >= n.rows <span class="tk-k">then</span> <span class="tk-t">Done</span>
     <span class="tk-k">else</span> decide(findU(<span class="hs hs-good" title="only the neighbours: at most nine cells, whatever the map's size">n.near</span>, c, r), back, c, r)
   | _ => <span class="tk-t">Done</span>
-  <span class="tk-k">end</span> <span class="tk-k">in</span></pre><div class="tiles" data-k="near"><div class="tiles-note">Hazel's tile editor, read only: the same code, with what it needs before it (the program's types and the helpers), from hazel.org's build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, ^ticket(538)): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel's tiles</button> <span class="tiles-phase"></span></div></div><div class="runbox" data-k="near"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: <select aria-label="the map's size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> <button type="button">▶ run, with Hazel's JS library</button></div><pre class="rb-out">Hazel's library (hazel.org's build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the tiles' build) loads on the first run.</pre></div><pre class="code js"><span class="tk-k">const</span> nb = { at_col: ac, at_row: ar, cols: n, rows: n,
+  <span class="tk-k">end</span> <span class="tk-k">in</span></pre><div class="tiles" data-k="near"><div class="tiles-note">Hazel's tile editor, read only: the same code, with what it needs before it (the program's types and the helpers), from hazel.org's build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, <a href="https://matthewhammer.org/hazel/dashboard/#ticket-538"><code class="ref"><b>^ticket(</b>538<b>)</b></code></a>): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel's tiles</button> <span class="tiles-phase"></span></div></div><div class="runbox" data-k="near"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: <select aria-label="the map's size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> <button type="button">▶ run, with Hazel's JS library</button></div><pre class="rb-out">Hazel's library (hazel.org's build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the tiles' build) loads on the first run.</pre></div><pre class="code js"><span class="tk-k">const</span> nb = { at_col: ac, at_row: ar, cols: n, rows: n,
   <span class="hs hs-good" title="only the neighbours: at most nine cells, whatever the map's size">near: g.cells.filter(x => Math.abs(x.col - ac) &lt;= <span class="tk-n">1</span> &amp;&amp; Math.abs(x.row - ar) &lt;= <span class="tk-n">1</span>)</span> };   <span class="tk-c">// at most 9 cells</span>
 V.near(nb, ev)</pre><p class="note">The same decision, given only the squares around the player: JS picks the at most nine neighbours before the call, so the argument, the walk and the check are all small, and the cost does not grow with the map.</p></div>
 
@@ -338,7 +338,7 @@ V.near(nb, ev)</pre><p class="note">The same decision, given only the squares ar
 <p class="note">Both trial branches pass Hazel's whole test suite on GitHub (Fast checks and Full tests): <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> on the measured build, and all 14 PRs merged together.</p>
 
 <h3 id="floor">Why <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> raises the floor, and a fix<a class="anchor" href="#floor" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="floor" title="copy this section's address">copy link</button></h3>
-<p>Matthew, on the floor's rise: <q>find why <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> raises the floor by about a quarter, and whether it can skip recording values it will never see again</q> (<code class="ref"><b>^ticket(</b>535<b>)</b></code>).</p>
+<p>Matthew, on the floor's rise: <q>find why <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> raises the floor by about a quarter, and whether it can skip recording values it will never see again</q> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-535"><code class="ref"><b>^ticket(</b>535<b>)</b></code></a>).</p>
 <p><b>Why.</b> <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> asks its memo (<code>has_type</code>, a WeakMap) at every part of every value an ascription is pushed through, and after a walk that gives a part back unchanged it records that part, and every tail of a list. Each ask and each record also looks up the type's hash (<a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>'s cache, another WeakMap). Counted by wrapping WeakMap's <code>get</code> and <code>set</code> around GitHub's build, without rebuilding (<code>drivers/floor2681.mjs</code>), one 16x16 call of the identity rule does 4,137 memo lookups, all misses, 2,580 writes (the tails of the cells' list and of every cell's <code>ways</code>, every record and every field) and 6,734 type-hash lookups. The argument is converted afresh on every call, so nothing recorded is asked about again. The shipped rule's whole gain is 137 hits, one per step of <code>find</code>.</p>
 <p>The writes alone are not the cost. With only them switched off, the identity call was no faster (9.63 and 9.88 ms in two rounds, against 9.69 ms with them), while the shipped rule, now missing every time, took 194 ms: slower than before <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> (141 ms), since every check still asks the memo and the type hash. Nor is it the collector: GC time per identity call was 2.45, 2.54 and 2.39 ms in the three builds below. The cost is the asking, at every part.</p>
 <p><b>A fix.</b> The memo cannot tell which values it will see again, but the pattern it exists for has a fixed shape: a recursive function whose annotated parameter receives the tail of a list it was given, as the argument itself or as a part of an argument tuple, like <code>find(rest, c, r)</code> against <code>([Cell], Int, Int)</code>. So the trial branch <code>trial/r25-2681-depth</code> (<code>5b79ba5f95</code>) asks and tells the memo only at a pushed value and its parts, depth 0 and 1 (<code>Ascriptions.memo_depth</code>); a record's label and a list's tail count as the same depth as the record or the list. Deeper parts are walked as before <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>.</p>
@@ -428,15 +428,15 @@ V.near(nb, ev)</pre><p class="note">The same decision, given only the squares ar
 <h2 id="library">Hazel's JS library, as this report uses it<a class="anchor" href="#library" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="library" title="copy this section's address">copy link</button></h2>
 <p>Matthew: <q>Let's use it to help me really review our JS library for Hazel, and how well it integrates when required or wanted.</q> This report leans on the library (<a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a>, and <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> for the frame) in four ways. Here is each, what worked, and what was rough. The rough parts are tickets now.</p>
 <div class="scroll"><table><tr><th>use</th><th>how</th><th>what worked</th><th>what was rough</th><th>ticket</th></tr>
-<tr><td>timing every rule (node)</td><td><code>Hazel.run(text)</code> on <code>hazel-lib.js</code>, then the function it gives back called from JS (<code>drivers/r25.mjs</code>)</td><td>One script, no build: GitHub's Deploy build of any branch is a library to time (the four trial builds here). A Hazel function comes back as a JS function; records, lists, strings and constructors convert both ways.</td><td>Every call converts its argument to syntax with fresh ids and re-steps it (the floor, 31 &micro;s a cell). No way to keep a Hazel value across calls except a closure (<a href="#code-held">held</a>). No step count, so per-step costs are inferred from times.</td><td><code class="ref"><b>^ticket(</b>539<b>)</b></code></td></tr>
-<tr><td>the game's rules</td><td><code>Hazel.runProgram({preamble, modules, tail})</code>, a function per room (<code>25-scripting.js</code>)</td><td>Named modules with their own errors; the game plays the same with 🧩 on (^ticket(531)'s checks).</td><td>Compiling the rules costs 0.8 s before the PRs (0.4 s after, <a href="#prs">above</a>), first event or load. Handlers pay the boundary on all of <code>Globals</code>.</td><td><code class="ref"><b>^ticket(</b>540<b>)</b></code></td></tr>
-<tr><td>the tiles under each listing</td><td>the embed frame, <code>index.html#embed</code>, protocol 1: <code>set</code> a program, get <code>ready</code>, <code>size</code>, <code>status</code></td><td>The protocol is small and did what it says: ready, then the program drawn with statics and Hazel's marks, its height and its verdict back.</td><td>The cell is a static view: no caret, no selection, so the tile shapes never show (Matthew: <q>They don't show up during selection</q>). A whole Hazel app per frame. It draws, sizes and reports only while it can render: a hidden or background page gets height 0 and no status. It takes programs only from origins compiled into it (matthewhammer.org, localhost).</td><td><code class="ref"><b>^ticket(</b>538<b>)</b></code></td></tr>
-<tr><td>the run boxes</td><td><code>hazel-lib.js</code> as a plain script from hazel.org, <code>Hazel.run</code> on the first click</td><td>A page runs a listing in the reader's browser in a few lines: the value back, in Hazel's notation, and its time (neighbours only, 8x8: <code>GoSquare(4, 4, "W", Done)</code>, about 3 ms after a 0.1 s compile).</td><td>2.8 MB to load; the build to load is a branch's folder on hazel.org, which moves when the branch is pushed; nothing in the library says which version or protocol it is.</td><td><code class="ref"><b>^ticket(</b>537<b>)</b></code></td></tr>
+<tr><td>timing every rule (node)</td><td><code>Hazel.run(text)</code> on <code>hazel-lib.js</code>, then the function it gives back called from JS (<code>drivers/r25.mjs</code>)</td><td>One script, no build: GitHub's Deploy build of any branch is a library to time (the four trial builds here). A Hazel function comes back as a JS function; records, lists, strings and constructors convert both ways.</td><td>Every call converts its argument to syntax with fresh ids and re-steps it (the floor, 31 &micro;s a cell). No way to keep a Hazel value across calls except a closure (<a href="#code-held">held</a>). No step count, so per-step costs are inferred from times.</td><td><a href="https://matthewhammer.org/hazel/dashboard/#ticket-539"><code class="ref"><b>^ticket(</b>539<b>)</b></code></a></td></tr>
+<tr><td>the game's rules</td><td><code>Hazel.runProgram({preamble, modules, tail})</code>, a function per room (<code>25-scripting.js</code>)</td><td>Named modules with their own errors; the game plays the same with 🧩 on (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-531"><code class="ref"><b>^ticket(</b>531<b>)</b></code></a>'s checks).</td><td>Compiling the rules costs 0.8 s before the PRs (0.4 s after, <a href="#prs">above</a>), first event or load. Handlers pay the boundary on all of <code>Globals</code>.</td><td><a href="https://matthewhammer.org/hazel/dashboard/#ticket-540"><code class="ref"><b>^ticket(</b>540<b>)</b></code></a></td></tr>
+<tr><td>the tiles under each listing</td><td>the embed frame, <code>index.html#embed</code>, protocol 1: <code>set</code> a program, get <code>ready</code>, <code>size</code>, <code>status</code></td><td>The protocol is small and did what it says: ready, then the program drawn with statics and Hazel's marks, its height and its verdict back.</td><td>The cell is a static view: no caret, no selection, so the tile shapes never show (Matthew: <q>They don't show up during selection</q>). A whole Hazel app per frame. It draws, sizes and reports only while it can render: a hidden or background page gets height 0 and no status. It takes programs only from origins compiled into it (matthewhammer.org, localhost).</td><td><a href="https://matthewhammer.org/hazel/dashboard/#ticket-538"><code class="ref"><b>^ticket(</b>538<b>)</b></code></a></td></tr>
+<tr><td>the run boxes</td><td><code>hazel-lib.js</code> as a plain script from hazel.org, <code>Hazel.run</code> on the first click</td><td>A page runs a listing in the reader's browser in a few lines: the value back, in Hazel's notation, and its time (neighbours only, 8x8: <code>GoSquare(4, 4, "W", Done)</code>, about 3 ms after a 0.1 s compile).</td><td>2.8 MB to load; the build to load is a branch's folder on hazel.org, which moves when the branch is pushed; nothing in the library says which version or protocol it is.</td><td><a href="https://matthewhammer.org/hazel/dashboard/#ticket-537"><code class="ref"><b>^ticket(</b>537<b>)</b></code></a></td></tr>
 </table></div>
 <p><b>What the library could add, in order of what this report needed most:</b></p>
 <ol>
-<li><b>A selectable read-only view</b>: the embed's cell with a caret and selection but no edits, so the tiles show. Hazel has one already (<code>CodeSelectable</code>, used for results); a branch wiring it into the embed is being built (<code>embed-selectable</code>, ^ticket(538)).</li>
-<li><b>Calls that do not convert what they were given before</b>: final values from <code>of_js</code>, or a handle to a value already in Hazel, so a rule called per event pays for what changed, not for the world (^ticket(539)).</li>
+<li><b>A selectable read-only view</b>: the embed's cell with a caret and selection but no edits, so the tiles show. Hazel has one already (<code>CodeSelectable</code>, used for results); a branch wiring it into the embed is being built (<code>embed-selectable</code>, <a href="https://matthewhammer.org/hazel/dashboard/#ticket-538"><code class="ref"><b>^ticket(</b>538<b>)</b></code></a>).</li>
+<li><b>Calls that do not convert what they were given before</b>: final values from <code>of_js</code>, or a handle to a value already in Hazel, so a rule called per event pays for what changed, not for the world (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-539"><code class="ref"><b>^ticket(</b>539<b>)</b></code></a>).</li>
 <li><b>A view mounted in the page, not a frame</b> (<code>Hazel.mountEditor</code>, <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a>'s planned next feature): one app for every listing on a page, drawn where the page is, off screen or not.</li>
 <li><b>Counts as well as times</b>: evaluation steps and conversions per call, so a report can say what a call did, not only how long it took.</li>
 <li><b>A version a page can ask for</b>: the library's build and the embed's protocol, from the library itself, and a stable URL per release, so a page does not follow a branch.</li>
@@ -444,7 +444,7 @@ V.near(nb, ev)</pre><p class="note">The same decision, given only the squares ar
 
 <h2 id="next">What next<a class="anchor" href="#next" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="next" title="copy this section's address">copy link</button></h2>
 <ol>
-<li><b>Asymptotic analysis of every event handler</b> in the game's Hazel rules (<a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>, <code class="ref"><b>^ticket(</b>531<b>)</b></code>), against a world (the game's JSON world data) of size N. Matthew: <q>Each one should be O(1) or at the worst, O(log N), for a world (json data file) of size N.</q> For each room's <code>on_event</code> and each event it takes: its cost in N, counting the call boundary (today every call converts and checks all of <code>Globals</code>, so even a handler that does nothing is O(N)), and a version meeting the bound. Known so far: World's <code>Way</code> is O(N) in the cells (the <code>find</code> walk; quadratic with its annotation before <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>) and O(1) given only the neighbours (<a href="#code-near">neighbours only</a>); the Square's levers are O(doors), quadratic through the annotated <code>find</code> and <code>doors</code>; the Castle's <code>FallPit</code> and <code>WayOut</code> are O(rooms) through <code>index_of</code> and <code>nth</code>. The boundary itself is the first thing to take out of N: pass each handler only what it reads, or hold the world in Hazel once and pass only what changes, as <a href="#code-held">held</a> does, with lookups that are not walks.</li>
+<li><b>Asymptotic analysis of every event handler</b> in the game's Hazel rules (<a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>, <a href="https://matthewhammer.org/hazel/dashboard/#ticket-531"><code class="ref"><b>^ticket(</b>531<b>)</b></code></a>), against a world (the game's JSON world data) of size N. Matthew: <q>Each one should be O(1) or at the worst, O(log N), for a world (json data file) of size N.</q> For each room's <code>on_event</code> and each event it takes: its cost in N, counting the call boundary (today every call converts and checks all of <code>Globals</code>, so even a handler that does nothing is O(N)), and a version meeting the bound. Known so far: World's <code>Way</code> is O(N) in the cells (the <code>find</code> walk; quadratic with its annotation before <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>) and O(1) given only the neighbours (<a href="#code-near">neighbours only</a>); the Square's levers are O(doors), quadratic through the annotated <code>find</code> and <code>doors</code>; the Castle's <code>FallPit</code> and <code>WayOut</code> are O(rooms) through <code>index_of</code> and <code>nth</code>. The boundary itself is the first thing to take out of N: pass each handler only what it reads, or hold the world in Hazel once and pass only what changes, as <a href="#code-held">held</a> does, with lookups that are not walks.</li>
 <li>Change the World and Square rules on <a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>: no annotations on recursive helpers, and neighbours only in World's <code>Globals</code>; re-time the game's moves at 16x16.</li>
 <li>Land <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a> and <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> in <code>dev</code>, then rebase <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a> and <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> on it: the game gets the linear rule without changing its rules. (Measured here on <code>trial/r25-2681</code>.)</li>
 <li>The depth-1 limit is proposed on <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> (<a href="https://github.com/hazelgrove/hazel/pull/2681#issuecomment-6344616722">the proposal</a>, with these numbers); if taken, its two commits go onto <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>'s branch.</li>
@@ -468,7 +468,7 @@ V.near(nb, ev)</pre><p class="note">The same decision, given only the squares ar
 <p>Matthew asked for this report to be set beside three lines of work: the semantics of game interfaces, the adventure-game engines Messed Up Dress Up draws on, and Scratch and its kin. Each frames the same question this report measures: what an event handler is given, and how its cost grows with the world.</p>
 
 <h3 id="rel-lop">Languages of Play (2017)<a class="anchor" href="#rel-lop" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="rel-lop" title="copy this section's address">copy link</button></h3>
-<p>In <a href="https://arxiv.org/abs/1703.05410">Languages of Play: Towards Semantic Foundations for Game Interfaces</a> (Chris Martens and Matthew A. Hammer, 2017), a game's interface is a programming language of player intent. Its syntax is the intents the game recognizes. Its operational semantics is the mechanics, as rules for a step from a state and an intent to a new state and a response. Its type system is a contextual interface, in which only what makes sense in the current state can be said. <a href="https://matthewhammer.org/hazel/reports/020/">^report(20)</a> sets the paper beside Messed Up Dress Up at length, and <a href="https://matthewhammer.org/hazel/dress-up/">the game's page</a> cites it.</p>
+<p>In <a href="https://arxiv.org/abs/1703.05410">Languages of Play: Towards Semantic Foundations for Game Interfaces</a> (Chris Martens and Matthew A. Hammer, 2017), a game's interface is a programming language of player intent. Its syntax is the intents the game recognizes. Its operational semantics is the mechanics, as rules for a step from a state and an intent to a new state and a response. Its type system is a contextual interface, in which only what makes sense in the current state can be said. <a href="https://matthewhammer.org/hazel/reports/020/"><code class="ref"><b>^report(</b>20<b>)</b></code></a> sets the paper beside Messed Up Dress Up at length, and <a href="https://matthewhammer.org/hazel/dress-up/">the game's page</a> cites it.</p>
 <p>The World rule measured here is one such step: <code>on_event : (Globals, Event) -&gt; Cmd</code> takes a state and an intent (<code>Way("E")</code>) to a response (<code>GoSquare(4, 3, "W", Done)</code>). The paper's contextual interface has a cost reading that this report adds. A step that is given only its context (<a href="#code-near">neighbours only</a>: the squares a move can reach) is both well-scoped in the paper's sense and O(1) in the world. A step given the whole world, as the library's boundary gives it today, is O(N) before it does anything. The asymptotic next step (O(1) or O(log N) per handler) amounts to asking that each rule's input be its context, not the world.</p>
 
 <h3 id="rel-engines">Adventure-game engines, 1984 to the early 1990s<a class="anchor" href="#rel-engines" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="rel-engines" title="copy this section's address">copy link</button></h3>
@@ -614,192 +614,6 @@ const RUNBOX = (() => {
   code.ref b { font-weight: 800; }
 </style>
 <!-- refs: end -->
-<!-- ref-cards: begin -->
-<style>
-  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
-  .ref-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
-    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
-    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
-  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
-  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
-  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
-  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
-  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
-    vertical-align: 1px; background: #6e7781; }
-  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
-  .rc-state.done { background: #8250df; }
-</style>
-<script>
-/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
-   ticket from the work dashboard's data (its area, its status, its first
-   line), carried by the dashboard's own pages and read live from the
-   published data anywhere else; a report from its own page, live (its
-   title, date and opening). Once per page load each. */
-(() => {
-  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
-  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
-  /* the dashboard itself carries its tickets (made with the page, changed
-     with it); any other page asks the published data */
-  const EMBED = null;
-  let data = EMBED ? Promise.resolve(EMBED) : null;
-  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
-  const pages = new Map();
-  const loadReport = url => {
-    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
-      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
-      let p = h1 && h1.nextElementSibling;
-      while (p && p.tagName !== "P") p = p.nextElementSibling;
-      const label = (doc.querySelector(".series") || {}).textContent || "";
-      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
-               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
-    }).catch(() => null));
-    return pages.get(url);
-  };
-  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
-  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
-  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
-  const ticketCard = (n, d) => {
-    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
-    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
-    const q = (d.queue || []).indexOf(n);
-    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
-      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
-      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
-    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
-      `<div class="rc-title">${esc(lead(t.text))}</div>` +
-      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
-      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
-  };
-  const reportCard = (n, r) => r
-    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
-      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
-    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
-  let card = null, over = null, timer = null;
-  const place = a => {
-    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
-    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
-    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
-  };
-  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
-  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
-  const show = (a, ref) => {
-    over = a; clearTimeout(timer);
-    timer = setTimeout(async () => {
-      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
-      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
-      card.hidden = false; place(a);
-      let html;
-      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
-      else html = reportCard(ref.n, await loadReport(a.href));
-      if (over !== a) return;
-      card.innerHTML = html; place(a);
-    }, 250);
-  };
-  const linkOf = t => t && t.closest && t.closest("a[href]");
-  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
-  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
-  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
-  document.addEventListener("focusout", hide);
-  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
-  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
-})();
-</script>
-<!-- ref-cards: end -->
-<!-- pr-cards: begin -->
-<style>
-  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
-  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
-    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
-    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
-  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
-  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
-  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
-  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
-  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
-  .pr-base { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: 1px; }
-  .pr-base.dev { background: #dafbe1; color: #116329; } .pr-base.other { background: #fff1c2; color: #7a4b00; }
-  @media (prefers-color-scheme: dark) { .pr-base.dev { background: #12361f; color: #6fdd8b; } .pr-base.other { background: #3d2e00; color: #f2cc60; } }
-  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
-</style>
-<script>
-/* A card for each link to a GitHub PR or issue, on hover or focus: its
-   title, state, the branch a PR targets (dev or not: the distinction that
-   matters, ^ticket(478)), author, dates and comments, asked of GitHub live, once per
-   number per page load; if GitHub does not answer, what it said when the
-   page was built (tools/link_prs.py writes this block). */
-(() => {
-  const CACHED = {"hazelgrove/hazel#2490": {"author": "matthewhammer", "comments": 5, "created": "2026-09-04T01:01:04Z", "kind": "pull", "state": "draft", "title": "SPIKE: compile the Hazel evaluator with wasm_of_ocaml and benchmark it", "updated": "2026-09-22T22:35:02Z", "base": "dev"}, "hazelgrove/hazel#2603": {"author": "matthewhammer", "comments": 1, "created": "2026-09-26T21:10:09Z", "kind": "pull", "state": "open", "title": "Statics: a let is analyzed once unless it refers to itself, plus three smaller speedups", "updated": "2026-09-26T21:30:11Z", "base": "dev"}, "hazelgrove/hazel#2606": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T01:00:47Z", "kind": "pull", "state": "open", "title": "Keep the incremental cache in the eval worker", "updated": "2026-09-30T19:18:48Z", "base": "dev"}, "hazelgrove/hazel#2608": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T12:03:57Z", "kind": "pull", "state": "open", "title": "Leave the source's whitespace and comments out of elaborations", "updated": "2026-10-21T19:43:30Z", "base": "dev"}, "hazelgrove/hazel#2610": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T15:18:03Z", "kind": "pull", "state": "open", "title": "Parse the load fallback with the segmented parser, projectors kept", "updated": "2026-10-20T20:30:28Z", "base": "dev"}, "hazelgrove/hazel#2614": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T22:58:00Z", "kind": "pull", "state": "open", "title": "Load text about 2.5× faster: whole tokens, one re-grout", "updated": "2026-09-29T18:40:33Z", "base": "dev"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 3, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-21T20:18:06Z", "base": "integration/livelits-splicerefs-full"}, "hazelgrove/hazel#2651": {"author": "matthewhammer", "comments": 3, "created": "2026-10-05T22:34:31Z", "kind": "pull", "state": "open", "title": "Statics: a module binding analyzes its definition once, not twice", "updated": "2026-10-21T19:27:13Z", "base": "dev"}, "hazelgrove/hazel#2652": {"author": "matthewhammer", "comments": 1, "created": "2026-10-06T00:19:52Z", "kind": "pull", "state": "open", "title": "Eval worker in Firefox: start it at load, and do not time out a reply that is queued", "updated": "2026-10-06T00:46:51Z", "base": "dev"}, "hazelgrove/hazel#2661": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T01:18:55Z", "kind": "pull", "state": "open", "title": "Types get a Merkle hash; the evaluator asks is_consistent once per pair", "updated": "2026-10-20T20:31:49Z", "base": "dev"}, "hazelgrove/hazel#2671": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T13:59:41Z", "kind": "pull", "state": "open", "title": "MapPiece keeps unchanged pieces as the same objects", "updated": "2026-10-10T14:25:32Z", "base": "dev"}, "hazelgrove/hazel#2672": {"author": "matthewhammer", "comments": 0, "created": "2026-10-10T16:32:57Z", "kind": "pull", "state": "open", "title": "Measuring the font no longer scrolls the editor to the caret", "updated": "2026-10-10T16:32:57Z", "base": "dev"}, "hazelgrove/hazel#2673": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T17:19:02Z", "kind": "pull", "state": "open", "title": "Incremental evaluation recognizes an unchanged expression by its Merkle hash", "updated": "2026-10-20T20:32:20Z", "base": "dev"}, "hazelgrove/hazel#2675": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T13:05:13Z", "kind": "pull", "state": "open", "title": "Incremental evaluation reuses expressions around a recursive let", "updated": "2026-10-19T21:05:38Z", "base": "dev"}, "hazelgrove/hazel#2678": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T17:06:58Z", "kind": "pull", "state": "open", "title": "CI fails when an evaluation does more work than its budget", "updated": "2026-10-21T04:17:20Z", "base": "dev"}, "hazelgrove/hazel#2679": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T20:45:04Z", "kind": "pull", "state": "merged", "title": "An ascription pushed through a value gives the value back when it already has the type", "updated": "2026-10-19T19:48:48Z", "base": "dev"}, "hazelgrove/hazel#2681": {"author": "matthewhammer", "comments": 3, "created": "2026-10-13T13:04:35Z", "kind": "pull", "state": "open", "title": "A value known to have a type is not walked again for it", "updated": "2026-10-22T15:31:32Z", "base": "dev"}, "hazelgrove/hazel#2689": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:20Z", "kind": "pull", "state": "draft", "title": "Test: statics analyzes each expression within a budget", "updated": "2026-10-17T03:28:12Z", "base": "dev"}, "hazelgrove/hazel#2690": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:23Z", "kind": "pull", "state": "draft", "title": "Test: a re-run beside a library with recursive members stays within its step budget", "updated": "2026-10-21T04:16:34Z", "base": "dev"}, "hazelgrove/hazel#2691": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:25Z", "kind": "pull", "state": "draft", "title": "Test: what the eval worker sends and gets back stays within a byte budget", "updated": "2026-10-17T03:29:32Z", "base": "dev"}, "hazelgrove/hazel#2711": {"author": "matthewhammer", "comments": 0, "created": "2026-10-20T17:35:02Z", "kind": "pull", "state": "draft", "title": "Hazel as a JS library: analyze and run programs from any page", "updated": "2026-10-21T03:54:48Z", "base": "dev"}, "hazelgrove/hazel#2719": {"author": "matthewhammer", "comments": 1, "created": "2026-10-21T21:38:03Z", "kind": "pull", "state": "draft", "title": "Hazel in another page's frame, and a program of named modules (stacked on #2711)", "updated": "2026-10-21T22:03:19Z", "base": "js-library"}, "matthewhammer/kids-choice-games#2": {"author": "matthewhammer", "comments": 0, "created": "2026-10-22T04:23:36Z", "kind": "pull", "state": "draft", "title": "🧩 Experiment: the rooms' rules in Hazel, against plain JS (ticket 531)", "updated": "2026-10-22T08:10:33Z", "base": "scripting-panel"}}, BUILT = "2026-10-22";
-  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
-  const asked = new Map();
-  /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
-  const ask = (key, kind) => {
-    if (!asked.has(key)) {
-      const [repo, n] = key.split("#"), pull = kind === "pull";
-      asked.set(key, fetch(`https://api.github.com/repos/${repo}/${pull ? "pulls" : "issues"}/${n}`)
-        .then(r => r.ok ? r.json() : Promise.reject(r.status))
-        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
-                      comments: j.comments, kind: pull || j.pull_request ? "pull" : "issues", base: j.base && j.base.ref,
-                      state: j.merged_at || (j.pull_request && j.pull_request.merged_at) ? "merged" : j.draft ? "draft" : j.state }))
-        .catch(() => null));
-    }
-    return asked.get(key);
-  };
-  const baseChip = d => !d.base ? "" : d.base === "dev"
-    ? `<span class="pr-base dev" title="this PR merges into dev">into dev</span>`
-    : `<span class="pr-base other" title="this PR merges into ${esc(d.base)}, not dev">into ${esc(d.base)}, not dev</span>`;
-  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-  const ago = iso => {
-    const s = (Date.now() - new Date(iso)) / 1000;
-    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
-      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
-    return "just now";
-  };
-  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const fill = (key, d, note) => {
-    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
-    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span>${baseChip(d)}</div>` +
-      `<div class="pr-title">${esc(d.title)}</div>` +
-      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
-      (note ? `<div class="pr-note">${note}</div>` : "");
-  };
-  let card = null, over = null, timer = null;
-  const place = a => {
-    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
-    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
-    const below = r.bottom + 6 + h < innerHeight;
-    card.style.left = (left + scrollX) + "px";
-    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
-  };
-  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
-  const show = a => {
-    const m = RX.exec(a.href);
-    if (!m) return;
-    const key = m[1] + "#" + m[3];
-    over = a; clearTimeout(timer);
-    timer = setTimeout(async () => {
-      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
-      const cached = CACHED[key];
-      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
-      card.hidden = false; place(a);
-      const d = await ask(key, m[2]);
-      if (over !== a) return;
-      card.innerHTML = d ? fill(key, d, "")
-        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
-        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
-      place(a);
-    }, 250);
-  };
-  const linkOf = t => t && t.closest && t.closest("a[href]");
-  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
-  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
-  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
-  document.addEventListener("focusout", hide);
-  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
-  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
-})();
-</script>
-<!-- pr-cards: end -->
 
 <!-- steps: begin -->
 <style>
@@ -1817,4 +1631,191 @@ const RUNBOX = (() => {
   }));
 })();
 </script>
+<!-- pr-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-base { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: 1px; }
+  .pr-base.dev { background: #dafbe1; color: #116329; } .pr-base.other { background: #fff1c2; color: #7a4b00; }
+  @media (prefers-color-scheme: dark) { .pr-base.dev { background: #12361f; color: #6fdd8b; } .pr-base.other { background: #3d2e00; color: #f2cc60; } }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, the branch a PR targets (dev or not: the distinction that
+   matters, ^ticket(478)), author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2490": {"author": "matthewhammer", "comments": 5, "created": "2026-09-04T01:01:04Z", "kind": "pull", "state": "draft", "title": "SPIKE: compile the Hazel evaluator with wasm_of_ocaml and benchmark it", "updated": "2026-09-22T22:35:02Z", "base": "dev"}, "hazelgrove/hazel#2603": {"author": "matthewhammer", "comments": 1, "created": "2026-09-26T21:10:09Z", "kind": "pull", "state": "open", "title": "Statics: a let is analyzed once unless it refers to itself, plus three smaller speedups", "updated": "2026-09-26T21:30:11Z", "base": "dev"}, "hazelgrove/hazel#2606": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T01:00:47Z", "kind": "pull", "state": "open", "title": "Keep the incremental cache in the eval worker", "updated": "2026-09-30T19:18:48Z", "base": "dev"}, "hazelgrove/hazel#2608": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T12:03:57Z", "kind": "pull", "state": "open", "title": "Leave the source's whitespace and comments out of elaborations", "updated": "2026-10-21T19:43:30Z", "base": "dev"}, "hazelgrove/hazel#2610": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T15:18:03Z", "kind": "pull", "state": "open", "title": "Parse the load fallback with the segmented parser, projectors kept", "updated": "2026-10-20T20:30:28Z", "base": "dev"}, "hazelgrove/hazel#2614": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T22:58:00Z", "kind": "pull", "state": "open", "title": "Load text about 2.5× faster: whole tokens, one re-grout", "updated": "2026-09-29T18:40:33Z", "base": "dev"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 3, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-21T20:18:06Z", "base": "integration/livelits-splicerefs-full"}, "hazelgrove/hazel#2651": {"author": "matthewhammer", "comments": 3, "created": "2026-10-05T22:34:31Z", "kind": "pull", "state": "open", "title": "Statics: a module binding analyzes its definition once, not twice", "updated": "2026-10-21T19:27:13Z", "base": "dev"}, "hazelgrove/hazel#2652": {"author": "matthewhammer", "comments": 1, "created": "2026-10-06T00:19:52Z", "kind": "pull", "state": "open", "title": "Eval worker in Firefox: start it at load, and do not time out a reply that is queued", "updated": "2026-10-06T00:46:51Z", "base": "dev"}, "hazelgrove/hazel#2661": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T01:18:55Z", "kind": "pull", "state": "open", "title": "Types get a Merkle hash; the evaluator asks is_consistent once per pair", "updated": "2026-10-20T20:31:49Z", "base": "dev"}, "hazelgrove/hazel#2671": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T13:59:41Z", "kind": "pull", "state": "open", "title": "MapPiece keeps unchanged pieces as the same objects", "updated": "2026-10-10T14:25:32Z", "base": "dev"}, "hazelgrove/hazel#2672": {"author": "matthewhammer", "comments": 0, "created": "2026-10-10T16:32:57Z", "kind": "pull", "state": "open", "title": "Measuring the font no longer scrolls the editor to the caret", "updated": "2026-10-10T16:32:57Z", "base": "dev"}, "hazelgrove/hazel#2673": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T17:19:02Z", "kind": "pull", "state": "open", "title": "Incremental evaluation recognizes an unchanged expression by its Merkle hash", "updated": "2026-10-20T20:32:20Z", "base": "dev"}, "hazelgrove/hazel#2675": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T13:05:13Z", "kind": "pull", "state": "open", "title": "Incremental evaluation reuses expressions around a recursive let", "updated": "2026-10-19T21:05:38Z", "base": "dev"}, "hazelgrove/hazel#2678": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T17:06:58Z", "kind": "pull", "state": "open", "title": "CI fails when an evaluation does more work than its budget", "updated": "2026-10-21T04:17:20Z", "base": "dev"}, "hazelgrove/hazel#2679": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T20:45:04Z", "kind": "pull", "state": "merged", "title": "An ascription pushed through a value gives the value back when it already has the type", "updated": "2026-10-19T19:48:48Z", "base": "dev"}, "hazelgrove/hazel#2681": {"author": "matthewhammer", "comments": 3, "created": "2026-10-13T13:04:35Z", "kind": "pull", "state": "open", "title": "A value known to have a type is not walked again for it", "updated": "2026-10-22T15:31:32Z", "base": "dev"}, "hazelgrove/hazel#2689": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:20Z", "kind": "pull", "state": "draft", "title": "Test: statics analyzes each expression within a budget", "updated": "2026-10-17T03:28:12Z", "base": "dev"}, "hazelgrove/hazel#2690": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:23Z", "kind": "pull", "state": "draft", "title": "Test: a re-run beside a library with recursive members stays within its step budget", "updated": "2026-10-21T04:16:34Z", "base": "dev"}, "hazelgrove/hazel#2691": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:25Z", "kind": "pull", "state": "draft", "title": "Test: what the eval worker sends and gets back stays within a byte budget", "updated": "2026-10-17T03:29:32Z", "base": "dev"}, "hazelgrove/hazel#2711": {"author": "matthewhammer", "comments": 0, "created": "2026-10-20T17:35:02Z", "kind": "pull", "state": "draft", "title": "Hazel as a JS library: analyze and run programs from any page", "updated": "2026-10-21T03:54:48Z", "base": "dev"}, "hazelgrove/hazel#2719": {"author": "matthewhammer", "comments": 1, "created": "2026-10-21T21:38:03Z", "kind": "pull", "state": "draft", "title": "Hazel in another page's frame, and a program of named modules (stacked on #2711)", "updated": "2026-10-21T22:03:19Z", "base": "js-library"}, "matthewhammer/kids-choice-games#2": {"author": "matthewhammer", "comments": 0, "created": "2026-10-22T04:23:36Z", "kind": "pull", "state": "draft", "title": "🧩 Experiment: the rooms' rules in Hazel, against plain JS (ticket 531)", "updated": "2026-10-22T08:10:33Z", "base": "scripting-panel"}}, BUILT = "2026-10-22";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
+  const ask = (key, kind) => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#"), pull = kind === "pull";
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/${pull ? "pulls" : "issues"}/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: pull || j.pull_request ? "pull" : "issues", base: j.base && j.base.ref,
+                      state: j.merged_at || (j.pull_request && j.pull_request.merged_at) ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const baseChip = d => !d.base ? "" : d.base === "dev"
+    ? `<span class="pr-base dev" title="this PR merges into dev">into dev</span>`
+    : `<span class="pr-base other" title="this PR merges into ${esc(d.base)}, not dev">into ${esc(d.base)}, not dev</span>`;
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span>${baseChip(d)}</div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[3];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key, m[2]);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+<!-- ref-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .ref-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
+  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
+    vertical-align: 1px; background: #6e7781; }
+  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
+  .rc-state.done { background: #8250df; }
+</style>
+<script>
+/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
+   ticket from the work dashboard's data (its area, its status, its first
+   line), carried by the dashboard's own pages and read live from the
+   published data anywhere else; a report from its own page, live (its
+   title, date and opening). Once per page load each. */
+(() => {
+  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
+  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
+  /* the dashboard itself carries its tickets (made with the page, changed
+     with it); any other page asks the published data */
+  const EMBED = null;
+  let data = EMBED ? Promise.resolve(EMBED) : null;
+  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
+  const pages = new Map();
+  const loadReport = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
+      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
+      let p = h1 && h1.nextElementSibling;
+      while (p && p.tagName !== "P") p = p.nextElementSibling;
+      const label = (doc.querySelector(".series") || {}).textContent || "";
+      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
+               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
+    }).catch(() => null));
+    return pages.get(url);
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
+  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
+  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
+  const ticketCard = (n, d) => {
+    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
+    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
+    const q = (d.queue || []).indexOf(n);
+    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
+      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
+      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
+    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
+      `<div class="rc-title">${esc(lead(t.text))}</div>` +
+      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
+      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
+  };
+  const reportCard = (n, r) => r
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
+      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
+    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
+    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = (a, ref) => {
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
+      card.hidden = false; place(a);
+      let html;
+      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
+      else html = reportCard(ref.n, await loadReport(a.href));
+      if (over !== a) return;
+      card.innerHTML = html; place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- ref-cards: end -->
+
 </body></html>

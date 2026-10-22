@@ -50,7 +50,7 @@
       <div>
       <div class="num"><a href="029/"><code class="ref"><b>^report(</b>29<b>)</b></code></a> · 2026-10-22 · <span class="wip">work in progress</span></div>
       <div class="title"><a href="029/">Where the Gap Comes From</a></div>
-      <p class="blurb">Hazel and Fumola on the same eight small programs, timed, step-counted and profiled (<code class="ref"><b>^ticket(</b>545<b>)</b></code>): wasm costs Fumola 1.2 to 1.5 times; Hazel takes half Fumola's steps but each costs about 15 times as much; a function Hazel's JS library returns re-evaluates what it holds at every call, and a list loop re-types its list, quadratic.</p>
+      <p class="blurb">Hazel and Fumola on the same eight small programs, timed, step-counted and profiled (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-545"><code class="ref"><b>^ticket(</b>545<b>)</b></code></a>): wasm costs Fumola 1.2 to 1.5 times; Hazel takes half Fumola's steps but each costs about 15 times as much; a function Hazel's JS library returns re-evaluates what it holds at every call, and a list loop re-types its list, quadratic.</p>
       </div>
     </li>
     <li>
@@ -58,7 +58,7 @@
       <div>
       <div class="num"><a href="028/"><code class="ref"><b>^report(</b>28<b>)</b></code></a> · 2026-10-22 · <span class="wip">work in progress</span></div>
       <div class="title"><a href="028/">Hazel and Fumola, Side by Side</a></div>
-      <p class="blurb">Each construct Dress Up's rules use, in Hazel and in Fumola, the traps found translating them (Fumola's inverted text !=, no text patterns, Nat and Int apart), how each takes a value from JS, and one rule both ways (<code class="ref"><b>^ticket(</b>543<b>)</b></code>).</p>
+      <p class="blurb">Each construct Dress Up's rules use, in Hazel and in Fumola, the traps found translating them (Fumola's inverted text !=, no text patterns, Nat and Int apart), how each takes a value from JS, and one rule both ways (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-543"><code class="ref"><b>^ticket(</b>543<b>)</b></code></a>).</p>
       </div>
     </li>
     <li>
@@ -66,7 +66,7 @@
       <div>
       <div class="num"><a href="027/"><code class="ref"><b>^report(</b>27<b>)</b></code></a> · 2026-10-22 · <span class="wip">work in progress</span></div>
       <div class="title"><a href="027/">The World Rule in Hazel and in Fumola</a></div>
-      <p class="blurb">Dress Up's World rule in Hazel at its best (all 14 PRs, the depth-1 memo, the argument binding) and in Fumola (wasm), 3x3 to 64x64 (<code class="ref"><b>^ticket(</b>542<b>)</b></code>): Fumola with the world held in a HashMap answers in about 0.5 ms and 450 steps at every size; passed or walked, both grow with the map, Fumola 2.4 to 10 times faster.</p>
+      <p class="blurb">Dress Up's World rule in Hazel at its best (all 14 PRs, the depth-1 memo, the argument binding) and in Fumola (wasm), 3x3 to 64x64 (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-542"><code class="ref"><b>^ticket(</b>542<b>)</b></code></a>): Fumola with the world held in a HashMap answers in about 0.5 ms and 450 steps at every size; passed or walked, both grow with the map, Fumola 2.4 to 10 times faster.</p>
       </div>
     </li>
     <li>
@@ -74,7 +74,7 @@
       <div>
       <div class="num"><a href="026/"><code class="ref"><b>^report(</b>26<b>)</b></code></a> · 2026-10-22 · <span class="wip">work in progress</span></div>
       <div class="title"><a href="026/">Does #2681 Need #2661?</a></div>
-      <p class="blurb">Alexander asked whether #2681 needs #2661 and suggested retargeting its base. It does: its memo is keyed by #2661's type hash. Merged with #2661's branch and retargeted, #2681 shows reviewers only its own commit (<code class="ref"><b>^ticket(</b>541<b>)</b></code>).</p>
+      <p class="blurb">Alexander asked whether <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> needs <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a> and suggested retargeting its base. It does: its memo is keyed by <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>'s type hash. Merged with <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>'s branch and retargeted, <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> shows reviewers only its own commit (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-541"><code class="ref"><b>^ticket(</b>541<b>)</b></code></a>).</p>
       </div>
     </li>
     <li>
@@ -82,7 +82,7 @@
       <div>
       <div class="num"><a href="025/"><code class="ref"><b>^report(</b>25<b>)</b></code></a> · 2026-10-22 · <span class="wip">work in progress</span></div>
       <div class="title"><a href="025/">What a Call into Hazel Costs</a></div>
-      <p class="blurb">Why a call into Hazel is slow for Dress Up's 16x16 World map (<code class="ref"><b>^ticket(</b>531<b>)</b></code>): one rule call taken apart, its cost quadratic in the map through an annotated helper, linear without it, and nearly flat when only the neighbouring squares are passed. Measured before and after the 14 open performance PRs: #2681 alone makes the annotated rule linear (144 to 20.6 ms), and together they halve the compile.</p>
+      <p class="blurb">Why a call into Hazel is slow for Dress Up's 16x16 World map (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-531"><code class="ref"><b>^ticket(</b>531<b>)</b></code></a>): one rule call taken apart, its cost quadratic in the map through an annotated helper, linear without it, and nearly flat when only the neighbouring squares are passed. Measured before and after the 14 open performance PRs: <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> alone makes the annotated rule linear (144 to 20.6 ms), and together they halve the compile.</p>
       </div>
     </li>
     <li>
@@ -97,8 +97,8 @@
       <a class="thumb" href="023/"><img class="light" src="023/img/thumb-light.svg" alt="#2635's CI runs as tick marks: 97 red and grey from 1 October to report 18, none green; six since, two green and four cancelled by a newer push."><img class="dark" src="023/img/thumb-dark.svg" alt="#2635's CI runs as tick marks: 97 red and grey from 1 October to report 18, none green; six since, two green and four cancelled by a newer push."></a>
       <div>
       <div class="num"><a href="023/"><code class="ref"><b>^report(</b>23<b>)</b></code></a> · 2026-10-19</div>
-      <div class="title"><a href="023/">#2635 is green: report 18's next steps, followed up</a></div>
-      <p class="blurb">What happened after <a href="018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>: <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors) passed CI twice on 2026-10-19, its first green runs since it was made, with all three causes fixed, one of them a real bug in incremental statics. Of report 18's five next steps two are done, two partly, and one, the plan for merging into dev, is for the meeting with Cyrus (<a href="020/"><code class="ref"><b>^report(</b>20<b>)</b></code></a>).</p>
+      <div class="title"><a href="023/">#2635 is green: <code class="ref"><b>^report(</b>18<b>)</b></code>'s next steps, followed up</a></div>
+      <p class="blurb">What happened after <a href="018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>: <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors) passed CI twice on 2026-10-19, its first green runs since it was made, with all three causes fixed, one of them a real bug in incremental statics. Of <a href="018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>'s five next steps two are done, two partly, and one, the plan for merging into dev, is for the meeting with Cyrus (<a href="020/"><code class="ref"><b>^report(</b>20<b>)</b></code></a>).</p>
       </div>
     </li>
     <li>
@@ -315,6 +315,100 @@
   code.ref b { font-weight: 800; }
 </style>
 <!-- refs: end -->
+<!-- pr-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-base { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: 1px; }
+  .pr-base.dev { background: #dafbe1; color: #116329; } .pr-base.other { background: #fff1c2; color: #7a4b00; }
+  @media (prefers-color-scheme: dark) { .pr-base.dev { background: #12361f; color: #6fdd8b; } .pr-base.other { background: #3d2e00; color: #f2cc60; } }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, the branch a PR targets (dev or not: the distinction that
+   matters, ^ticket(478)), author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 17, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-21T10:40:31Z", "base": "dev"}, "hazelgrove/hazel#2490": {"author": "matthewhammer", "comments": 5, "created": "2026-09-04T01:01:04Z", "kind": "pull", "state": "draft", "title": "SPIKE: compile the Hazel evaluator with wasm_of_ocaml and benchmark it", "updated": "2026-09-22T22:35:02Z", "base": "dev"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-20T19:29:04Z", "base": "integration/livelits-splicerefs"}, "hazelgrove/hazel#2608": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T12:03:57Z", "kind": "pull", "state": "open", "title": "Leave the source's whitespace and comments out of elaborations", "updated": "2026-10-21T19:43:30Z", "base": "dev"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 3, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-21T20:18:06Z", "base": "integration/livelits-splicerefs-full"}, "hazelgrove/hazel#2651": {"author": "matthewhammer", "comments": 3, "created": "2026-10-05T22:34:31Z", "kind": "pull", "state": "open", "title": "Statics: a module binding analyzes its definition once, not twice", "updated": "2026-10-21T19:27:13Z", "base": "dev"}, "hazelgrove/hazel#2661": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T01:18:55Z", "kind": "pull", "state": "open", "title": "Types get a Merkle hash; the evaluator asks is_consistent once per pair", "updated": "2026-10-20T20:31:49Z", "base": "dev"}, "hazelgrove/hazel#2681": {"author": "matthewhammer", "comments": 3, "created": "2026-10-13T13:04:35Z", "kind": "pull", "state": "open", "title": "A value known to have a type is not walked again for it", "updated": "2026-10-22T15:31:32Z", "base": "dev"}, "hazelgrove/hazel#2687": {"author": "disconcision", "comments": 1, "created": "2026-10-17T01:26:52Z", "kind": "pull", "state": "draft", "title": "Standard library in Hazel source", "updated": "2026-10-21T12:29:45Z", "base": "modular-editors"}, "hazelgrove/hazel#2717": {"author": "matthewhammer", "comments": 1, "created": "2026-10-21T20:31:11Z", "kind": "pull", "state": "draft", "title": "Statics: a module binding is a non-recursive let", "updated": "2026-10-21T20:49:37Z", "base": "dev"}}, BUILT = "2026-10-22";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
+  const ask = (key, kind) => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#"), pull = kind === "pull";
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/${pull ? "pulls" : "issues"}/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: pull || j.pull_request ? "pull" : "issues", base: j.base && j.base.ref,
+                      state: j.merged_at || (j.pull_request && j.pull_request.merged_at) ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const baseChip = d => !d.base ? "" : d.base === "dev"
+    ? `<span class="pr-base dev" title="this PR merges into dev">into dev</span>`
+    : `<span class="pr-base other" title="this PR merges into ${esc(d.base)}, not dev">into ${esc(d.base)}, not dev</span>`;
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span>${baseChip(d)}</div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[3];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key, m[2]);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
 <!-- ref-cards: begin -->
 <style>
   /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
@@ -407,92 +501,6 @@
 })();
 </script>
 <!-- ref-cards: end -->
-<!-- pr-cards: begin -->
-<style>
-  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
-  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
-    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
-    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
-  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
-  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
-  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
-  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
-  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
-  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
-</style>
-<script>
-/* A card for each link to a GitHub PR or issue, on hover or focus: its
-   title, state, author, dates and comments, asked of GitHub live, once per
-   number per page load; if GitHub does not answer, what it said when the
-   page was built (tools/link_prs.py writes this block). */
-(() => {
-  const CACHED = {"hazelgrove/hazel#2469": {"author": "disconcision", "comments": 17, "created": "2026-08-27T04:14:59Z", "kind": "pull", "state": "open", "title": "Modular editors", "updated": "2026-10-20T04:06:54Z"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-19T20:58:22Z"}, "hazelgrove/hazel#2608": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T12:03:57Z", "kind": "pull", "state": "open", "title": "Leave the source's whitespace and comments out of elaborations", "updated": "2026-09-30T00:37:35Z"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 3, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-19T22:24:33Z"}, "hazelgrove/hazel#2687": {"author": "disconcision", "comments": 1, "created": "2026-10-17T01:26:52Z", "kind": "pull", "state": "draft", "title": "Standard library in Hazel source", "updated": "2026-10-20T06:16:07Z"}}, BUILT = "2026-10-20";
-  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(?:pull|issues)\/(\d+)$/;
-  const asked = new Map();
-  const ask = key => {
-    if (!asked.has(key)) {
-      const [repo, n] = key.split("#");
-      asked.set(key, fetch(`https://api.github.com/repos/${repo}/issues/${n}`)
-        .then(r => r.ok ? r.json() : Promise.reject(r.status))
-        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
-                      comments: j.comments, kind: j.pull_request ? "pull" : "issues",
-                      state: j.pull_request && j.pull_request.merged_at ? "merged" : j.draft ? "draft" : j.state }))
-        .catch(() => null));
-    }
-    return asked.get(key);
-  };
-  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-  const ago = iso => {
-    const s = (Date.now() - new Date(iso)) / 1000;
-    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
-      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
-    return "just now";
-  };
-  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const fill = (key, d, note) => {
-    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
-    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span></div>` +
-      `<div class="pr-title">${esc(d.title)}</div>` +
-      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
-      (note ? `<div class="pr-note">${note}</div>` : "");
-  };
-  let card = null, over = null, timer = null;
-  const place = a => {
-    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
-    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
-    const below = r.bottom + 6 + h < innerHeight;
-    card.style.left = (left + scrollX) + "px";
-    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
-  };
-  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
-  const show = a => {
-    const m = RX.exec(a.href);
-    if (!m) return;
-    const key = m[1] + "#" + m[2];
-    over = a; clearTimeout(timer);
-    timer = setTimeout(async () => {
-      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
-      const cached = CACHED[key];
-      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
-      card.hidden = false; place(a);
-      const d = await ask(key);
-      if (over !== a) return;
-      card.innerHTML = d ? fill(key, d, "")
-        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
-        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
-      place(a);
-    }, 250);
-  };
-  const linkOf = t => t && t.closest && t.closest("a[href]");
-  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
-  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
-  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
-  document.addEventListener("focusout", hide);
-  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
-  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
-})();
-</script>
-<!-- pr-cards: end -->
 
 </body>
 </html>

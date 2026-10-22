@@ -88,6 +88,8 @@ def run(path):
         m = re.match(r"<(/?)([a-zA-Z][\w-]*)", p)
         if m and not p.startswith("<!--"):
             name = m.group(2).lower()
+            if name == "body":
+                depth["head"] = 0       # a page that never closes <head> (019's) ends it here
             if name in SKIP and not p.endswith("/>"):
                 depth[name] += -1 if m.group(1) else 1
             out.append(p)

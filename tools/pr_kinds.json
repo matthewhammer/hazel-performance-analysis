@@ -1,4 +1,5 @@
 {
+ "Adapton/fumola#128": "pull",
  "hazelgrove/hazel#1591": "pull",
  "hazelgrove/hazel#2161": "pull",
  "hazelgrove/hazel#2374": "pull",
@@ -9,6 +10,7 @@
  "hazelgrove/hazel#2490": "pull",
  "hazelgrove/hazel#2493": "pull",
  "hazelgrove/hazel#2494": "pull",
+ "hazelgrove/hazel#2495": "pull",
  "hazelgrove/hazel#2525": "pull",
  "hazelgrove/hazel#2576": "pull",
  "hazelgrove/hazel#2579": "pull",
@@ -41,5 +43,9 @@
  "hazelgrove/hazel#2697": "pull",
  "hazelgrove/hazel#2698": "pull",
  "hazelgrove/hazel#2699": "pull",
- "hazelgrove/hazel#2700": "pull"
+ "hazelgrove/hazel#2700": "pull",
+ "hazelgrove/hazel#2711": "pull",
+ "hazelgrove/hazel#2719": "pull",
+ "matthewhammer/kids-choice-games#2": "pull",
+ "matthewhammer/kids-choice-games#4": "pull"
 }
