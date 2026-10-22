@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" role="img" aria-label="Time per call against the map's size: the passed and list-walking versions climb, the neighbours-only lines stay low, and Fumola's HashMap stays flat at the bottom.">
+<g fill="none" stroke-width="4" stroke-linecap="round">
+<path d="M20 112 L220 22" stroke="#b91c1c"/><path d="M20 116 L220 40" stroke="#b91c1c" stroke-dasharray="7 5"/>
+<path d="M20 120 L220 68" stroke="#0e7490" stroke-dasharray="7 5"/>
+<path d="M20 122 L220 120" stroke="#15803d"/>
+<path d="M20 132 L220 132" stroke="#6d28d9" stroke-dasharray="7 5"/>
+</g>
+<text x="22" y="20" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#1f2937">Hazel vs Fumola</text>
+</svg>

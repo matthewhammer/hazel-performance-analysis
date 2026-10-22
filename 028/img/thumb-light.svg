@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" role="img" aria-label="Two columns of code, Hazel and Fumola, side by side.">
+<g font-family="ui-monospace,monospace" font-size="11">
+<text x="14" y="26" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#6d28d9">Hazel</text>
+<text x="128" y="26" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#0e7490">Fumola</text>
+<text x="14" y="52" fill="#1f2937">case e</text><text x="128" y="52" fill="#1f2937">switch (e) {</text>
+<text x="14" y="70" fill="#1f2937">| Way(d) =&gt;</text><text x="128" y="70" fill="#1f2937">case (#Way(d))</text>
+<text x="14" y="88" fill="#1f2937">Some(x)</text><text x="128" y="88" fill="#1f2937">?x</text>
+<text x="14" y="106" fill="#1f2937">a ++ b</text><text x="128" y="106" fill="#1f2937">a # b</text>
+<text x="14" y="124" fill="#1f2937">(col = 1, ...)</text><text x="128" y="124" fill="#1f2937">{ col = 1; ... }</text>
+</g>
+<line x1="120" y1="36" x2="120" y2="132" stroke="#6b7280" stroke-width="1.5"/>
+</svg>
