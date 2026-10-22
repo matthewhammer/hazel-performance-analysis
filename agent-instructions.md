@@ -22,7 +22,7 @@ The series is **not our working record.** That is `hazel-work-notes` (public, bu
 
 | What | Where |
 |---|---|
-| This repository | https://github.com/matthewhammer/hazel-performance-analysis (public), checked out at `~/hazel-perf-report`. |
+| This repository | https://github.com/matthewhammer/hazel-reports (public; renamed 2026-10-21 from hazel-performance-analysis, and GitHub forwards the old name), checked out at `~/hazel-perf-report`. |
 | The reports | `NNN/index.html`, with images in `NNN/img/`. `^report(1)` is the root `index.html` (it began as a single report). |
 | The series index | `series/index.html`, a card per report. `series/NNN` are links to the reports. |
 | Patches tried and not kept | `patches/`, named for what they do. |
