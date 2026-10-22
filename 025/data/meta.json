@@ -1,0 +1,15 @@
+{
+ "title": "What a Call into Hazel Costs",
+ "date": "2026-10-22",
+ "kind": "performance",
+ "status": "work in progress",
+ "question": "Matthew, 2026-10-22, on ^ticket(531) (Dress Up's room rules as Hazel modules): \"why is Hazel so slow here for 16 x 16 map? do more analysis please, and draft a new report.\"",
+ "builds": [
+  {"what": "hazel-lib.js, Hazel's JS library", "pr": "hazelgrove/hazel#2719", "branch": "js-library-embed", "commit": "0d66c36618ee709a60f91cf01fbf0b46121f2499", "note": "minified build for timings; dev build hazelLib.bc.js for named profiles"},
+  {"what": "Dress Up rules (25-scripting.js)", "pr": "matthewhammer/kids-choice-games#2", "branch": "hazel-logic-531", "commit": "2ebda59ab4e1be7769789cec7e324504972475d7"}
+ ],
+ "runtime": "node v22.23.2 on the Ubuntu laptop (Intel i7), one process at a time",
+ "measures": {"ms_p50": "median wall time of one call f(Globals, Event), performance.now, 20-60 reps after warm-up", "cells": "map squares, n x n", "target_index": "position of the target cell in the cells list"},
+ "files": ["data_sizes.json", "data_steps.json", "profiles.json", "earlier.json", "../drivers/r25.mjs", "../drivers/steps.mjs", "../drivers/profheld.mjs", "../drivers/prof.mjs", "../drivers/prof_noann.mjs", "../drivers/top.py"],
+ "caveats": "One p50 per figure from one run; the noise floor was not measured, so differences under about 10% are noise. The library exposes no step count; per-step costs are inferred from timings."
+}

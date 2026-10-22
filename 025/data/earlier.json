@@ -1,0 +1,5 @@
+{
+ "phase2_node_p50_p95_ms": {"note": "^ticket(531) phase-2 build, node, 300 reps, the game's own moves", "World 3x3": [2.03, 2.98], "World 8x8": [8.53, 10.2], "World 16x16": [40.0, 47.0], "World JS": 0.003, "FallPit": 1.47, "WayOut": 2.11, "lever 2 doors": 1.5, "lever 8 doors": 5.1, "lever 40 doors": 85},
+ "target_position_ms_p50": {"note": "minified, node, all four ways set; target at index 1 vs last", "8x8": {"first": 5.8, "last": 23, "last_noann": 8.9}, "16x16": {"first": 18, "last": 244, "last_noann": 33}, "16x16 Nope": 13.8, "no cells": 0.44},
+ "browser_phase1": {"note": "phase-1 comparison on GitHub runners, 8 jobs, Chrome", "hazel_adds_per_event_ms": [0.4, 3.2], "red_lever_EPYC_7763_ms": {"js": 9.4, "hazel": 12.1}, "load_ms": {"hazel": 525, "js": 270}, "first_compile_ms": [340, 520], "heap_MB": {"hazel": 67, "js": 51}}
+}

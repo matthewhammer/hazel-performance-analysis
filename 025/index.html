@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<!-- theme: head begin -->
+<script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<!-- theme: head end -->
+<!-- nav: begin --><meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script><!-- nav: end -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What a Call into Hazel Costs</title>
+<meta name="description" content="Why one Dress Up room rule, run as a Hazel function from JS, takes 40-150 ms on a 16x16 map: the call converts the whole map to syntax and re-evaluates it, the parameter type re-checks it, and an annotated recursive helper re-checks the rest of the list at every step.">
+<style>  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8; --accent2: #0e7490; --cx: #d6d1c6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1020px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 26px 0 6px; }
+  p, li { max-width: 76ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  .headline > p { margin: 6px 0; }
+  ol.ans { padding-left: 1.4em; margin: 8px 0; }
+  ol.ans > li { max-width: none; margin: 14px 0; }
+  ol.ans > li > .row { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: center; }
+  ol.ans > li p { margin: 0; }
+  figure.mini { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  figure.mini figcaption { font-size: 0.8em; margin-top: 4px; }
+  @media (max-width: 760px) { ol.ans > li > .row { grid-template-columns: minmax(0, 1fr); } figure.mini { max-width: 340px; } }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  a.cl { text-decoration: none; } a.cl:hover code { text-decoration: underline; }
+  sup.at { font-size: 0.68em; color: var(--muted); margin-left: 2px; font-weight: 600; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure.fig { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 18px 0; }
+  .figscroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 80ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre.code { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto;
+             font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 6px 0 4px; }
+  pre.code .rm { color: var(--bad); } pre.code .ad { color: var(--good); } pre.code .cm { color: var(--muted); }
+  .codepair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .codepair { grid-template-columns: minmax(0, 1fr); } }
+  .codepair h4 { margin: 6px 0 0; font-size: 0.95em; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .callout { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent2); border-radius: 6px; padding: 8px 14px; margin: 14px 0; }
+  .callout.warn { border-left-color: var(--warn); }
+  section.q { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 6px 16px 10px; margin: 20px 0; }
+  section.q h3 { margin: 10px 0 6px; line-height: 1.4; }
+  section.q h3 .qn { color: var(--accent); margin-right: 6px; }
+  .tags { margin: 2px 0 8px; }
+  .tag { display: inline-block; font-size: 0.78em; font-weight: 600; padding: 1px 9px; border-radius: 999px; margin: 0 6px 4px 0; border: 1px solid; }
+  .tag.ans { color: var(--good); border-color: var(--good); background: color-mix(in srgb, var(--good) 10%, transparent); }
+  .tag.now { color: var(--accent2); border-color: var(--accent2); background: color-mix(in srgb, var(--accent2) 10%, transparent); }
+  .tag.cyrus { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .tag.block { color: var(--warn); border-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+  .tag.open { color: var(--muted); border-color: var(--line); }
+  .answer { background: color-mix(in srgb, var(--good) 9%, var(--paper)); border: 1px solid color-mix(in srgb, var(--good) 45%, var(--line)); border-radius: 6px; padding: 8px 12px; margin: 8px 0; max-width: 80ch; }
+  .after { max-width: 80ch; }
+  ul.ev { padding-left: 1.2em; } ul.ev li { margin: 5px 0; max-width: 84ch; }
+  ul.ev .refs { color: var(--muted); font-size: 0.92em; }
+  ol.opts li { margin: 6px 0; max-width: 82ch; }
+  .optnote { display: inline-block; font-size: 0.8em; font-weight: 600; color: var(--accent); margin-left: 4px; }
+  .optnote.out { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  button.copylink { margin-left: 8px; font: 600 12px system-ui, sans-serif; padding: 1px 8px; border: 1px solid var(--line);
+    border-radius: 999px; background: var(--bg); color: var(--muted); cursor: pointer; vertical-align: 2px; }
+  button.copylink:hover { color: var(--ink); border-color: var(--muted); }
+  button.copylink.done { color: var(--good); border-color: var(--good); }
+  input.copyfield { display: block; width: 100%; max-width: 640px; margin: 4px 0; font: 13px ui-monospace, monospace;
+    background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }
+  .cyrus { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 4px 16px; }
+  .cyrus li { margin: 8px 0; }
+  details.ev summary { cursor: pointer; color: var(--link); }
+  .wip { color: var(--warn); font-weight: 600; }
+</style></head>
+<body><main>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>25<b>)</b></code> · performance · 2026-10-22 · <span class="wip">work in progress</span> · about 9 minutes to read</p>
+<h1>What a Call into Hazel Costs</h1>
+<p class="sub">Matthew asked, on 2026-10-22, about <code class="ref"><b>^ticket(</b>531<b>)</b></code>, the experiment that moves Messed Up Dress Up's room rules into Hazel modules run through Hazel's JS library (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the library; the game's side is the draft <a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>): <q>why is Hazel so slow here for 16 x 16 map? do more analysis please, and draft a new report.</q> The World room's rule takes a step on the map; in the game's own node run it costs 40.0 ms p50 at 16x16, against 0.003 ms for the same rule in JS. This report takes that one call apart.</p>
+
+<div class="headline">
+<p><b>Short answers.</b> All times are node, the minified library at <code>0d66c36618</code>, p50 of one call with the target cell mid-map, unless said otherwise.</p>
+<ol class="ans">
+<li><div class="row"><p><b>Most of the time is a type annotation in the rule: 153 ms becomes 22.6 ms when it goes.</b> The rule's recursive helper is written <code>fun (cs, c, r) : ([Cell], Int, Int) -&gt;</code>. Hazel checks that ascription at run time on every call, by walking the value, so each step of the walk re-checks the rest of the list: one linear walk becomes a quadratic one. At 24x24 it is 735 ms against 45.5 ms.</p><figure class="mini"><svg viewBox="0 0 640 96" role="img" aria-label="The shipped 16x16 call, 153 ms: 9.5 ms conversion, 13.1 ms walk, 130.3 ms re-checking from find's annotation." style="width:100%;height:auto;font:12px system-ui,sans-serif"><rect x="10.0" y="10" width="38.5" height="30" style="fill:var(--accent)"/><text x="10.0" y="62" style="fill:var(--accent);font-weight:600">9.5 ms</text><text x="10.0" y="78" style="fill:var(--muted)">conversion + parameter ascription</text><rect x="48.5" y="10" width="53.1" height="30" style="fill:var(--warn)"/><text x="216.7" y="62" style="fill:var(--warn);font-weight:600">13.1 ms</text><text x="216.7" y="78" style="fill:var(--muted)">the find walk itself</text><rect x="101.6" y="10" width="528.4" height="30" style="fill:var(--bad)"/><text x="423.3" y="62" style="fill:var(--bad);font-weight:600">130.3 ms</text><text x="423.3" y="78" style="fill:var(--muted)">find's annotation re-checking the list</text></svg><figcaption>The shipped 16x16 call, split by measuring the variants.</figcaption></figure></div></li>
+<li><div class="row"><p><b>Every call pays a floor that grows with the map: about 9.5 ms at 16x16, 31 &micro;s per cell.</b> Hazel's call boundary turns the whole JS argument into unevaluated Hazel syntax, gives every node a fresh id, and then evaluates it back into the value it already was, node by node; the <code>(Globals, Event)</code> parameter type walks it again. A rule that does nothing still pays this.</p><figure class="mini"><svg viewBox="0 0 640 96" role="img" aria-label="The 13.8 ms floor of a 16x16 call that does nothing: 56% re-stepping the literal, 16% ascription, 10% of_js, 18% GC and the rest." style="width:100%;height:auto;font:12px system-ui,sans-serif"><rect x="10.0" y="10" width="347.2" height="30" style="fill:var(--accent)"/><text x="14.0" y="62" style="fill:var(--ink);font-weight:600">56%</text><text x="14.0" y="78" style="fill:var(--muted)">re-stepping the literal</text><rect x="357.2" y="10" width="99.2" height="30" style="fill:var(--accent2)"/><text x="361.2" y="62" style="fill:var(--ink);font-weight:600">16%</text><text x="361.2" y="78" style="fill:var(--muted)">parameter ascription</text><rect x="456.4" y="10" width="62.0" height="30" style="fill:var(--warn)"/><text x="460.4" y="62" style="fill:var(--ink);font-weight:600">10%</text><text x="460.4" y="78" style="fill:var(--muted)">of_js</text><rect x="518.4" y="10" width="111.6" height="30" style="fill:var(--cx)"/><text x="522.4" y="62" style="fill:var(--ink);font-weight:600">18%</text><text x="522.4" y="78" style="fill:var(--muted)">GC, rest</text></svg><figcaption>The floor of a 16x16 call that does nothing (13.8 ms), by profile share.</figcaption></figure></div></li>
+<li><div class="row"><p><b>Underneath, each evaluation step costs about 3 &micro;s, so even the plain walk is 25-80 &micro;s per cell.</b> A countdown over plain Ints costs 3.55 ms for 128 steps. The time is spread over the evaluator's per-step pipeline, jsoo's generic calls, fresh ids and GC; there is no single hot spot.</p></div></li>
+<li><div class="row"><p><b>Passing only the neighbouring cells makes the call flat: 0.96 ms at 16x16, 0.86 ms at 3x3.</b> That is the one change, available today without touching Hazel, that removes the dependence on map size: 160x faster than the shipped rule at 16x16, with the same answer.</p></div></li>
+</ol>
+</div>
+
+<figure class="fig" id="fig-sizes"><svg viewBox="0 0 640 330" role="img" aria-label="Time per call against map size, log scales: the shipped rule climbs from 1.4 ms at 3x3 to 735 ms at 24x24; without the annotation 45.5 ms; neighbours only stays near 1 ms." style="width:100%;height:auto;font:12px system-ui,sans-serif"><line x1="60" x2="470" y1="249.0" y2="249.0" style="stroke:var(--line)"/><text x="54" y="253.0" text-anchor="end" style="fill:var(--muted)">1 ms</text><line x1="60" x2="470" y1="170.7" y2="170.7" style="stroke:var(--line)"/><text x="54" y="174.7" text-anchor="end" style="fill:var(--muted)">10 ms</text><line x1="60" x2="470" y1="92.3" y2="92.3" style="stroke:var(--line)"/><text x="54" y="96.3" text-anchor="end" style="fill:var(--muted)">100 ms</text><line x1="60" x2="470" y1="14.0" y2="14.0" style="stroke:var(--line)"/><text x="54" y="18.0" text-anchor="end" style="fill:var(--muted)">1000 ms</text><text x="70.8" y="306" text-anchor="middle" style="fill:var(--muted)">3x3</text><text x="123.6" y="306" text-anchor="middle" style="fill:var(--muted)">4x4</text><text x="197.9" y="306" text-anchor="middle" style="fill:var(--muted)">6x6</text><text x="250.7" y="306" text-anchor="middle" style="fill:var(--muted)">8x8</text><text x="325.0" y="306" text-anchor="middle" style="fill:var(--muted)">12x12</text><text x="377.8" y="306" text-anchor="middle" style="fill:var(--muted)">16x16</text><text x="452.1" y="306" text-anchor="middle" style="fill:var(--muted)">24x24</text><text x="265.0" y="324" text-anchor="middle" style="fill:var(--muted)">map size (cells, log scale)</text><polyline points="70.8,238.1 123.6,214.9 197.9,187.4 250.7,157.6 325.0,113.5 377.8,77.9 452.1,24.5" fill="none" style="stroke:var(--bad)" stroke-width="2.2"/><circle cx="70.8" cy="238.1" r="3" style="fill:var(--bad)"/><circle cx="123.6" cy="214.9" r="3" style="fill:var(--bad)"/><circle cx="197.9" cy="187.4" r="3" style="fill:var(--bad)"/><circle cx="250.7" cy="157.6" r="3" style="fill:var(--bad)"/><circle cx="325.0" cy="113.5" r="3" style="fill:var(--bad)"/><circle cx="377.8" cy="77.9" r="3" style="fill:var(--bad)"/><circle cx="452.1" cy="24.5" r="3" style="fill:var(--bad)"/><text x="460.1" y="28.5" style="fill:var(--bad)">735 ms shipped rule</text><polyline points="70.8,241.7 123.6,229.0 197.9,210.7 250.7,196.2 325.0,168.2 377.8,143.0 452.1,119.1" fill="none" style="stroke:var(--warn)" stroke-width="2.2"/><circle cx="70.8" cy="241.7" r="3" style="fill:var(--warn)"/><circle cx="123.6" cy="229.0" r="3" style="fill:var(--warn)"/><circle cx="197.9" cy="210.7" r="3" style="fill:var(--warn)"/><circle cx="250.7" cy="196.2" r="3" style="fill:var(--warn)"/><circle cx="325.0" cy="168.2" r="3" style="fill:var(--warn)"/><circle cx="377.8" cy="143.0" r="3" style="fill:var(--warn)"/><circle cx="452.1" cy="119.1" r="3" style="fill:var(--warn)"/><text x="460.1" y="123.1" style="fill:var(--warn)">45.5 ms find unannotated</text><polyline points="70.8,259.6 123.6,245.1 197.9,221.9 250.7,210.6 325.0,182.7 377.8,163.4 452.1,111.6" fill="none" style="stroke:var(--accent2)" stroke-width="2.2"/><circle cx="70.8" cy="259.6" r="3" style="fill:var(--accent2)"/><circle cx="123.6" cy="245.1" r="3" style="fill:var(--accent2)"/><circle cx="197.9" cy="221.9" r="3" style="fill:var(--accent2)"/><circle cx="250.7" cy="210.6" r="3" style="fill:var(--accent2)"/><circle cx="325.0" cy="182.7" r="3" style="fill:var(--accent2)"/><circle cx="377.8" cy="163.4" r="3" style="fill:var(--accent2)"/><circle cx="452.1" cy="111.6" r="3" style="fill:var(--accent2)"/><text x="460.1" y="115.6" style="fill:var(--accent2)">56.7 ms map held in a closure</text><polyline points="70.8,270.6 123.6,271.5 197.9,245.2 250.7,219.3 325.0,190.0 377.8,172.3 452.1,144.3" fill="none" style="stroke:var(--accent)" stroke-width="2.2"/><circle cx="70.8" cy="270.6" r="3" style="fill:var(--accent)"/><circle cx="123.6" cy="271.5" r="3" style="fill:var(--accent)"/><circle cx="197.9" cy="245.2" r="3" style="fill:var(--accent)"/><circle cx="250.7" cy="219.3" r="3" style="fill:var(--accent)"/><circle cx="325.0" cy="190.0" r="3" style="fill:var(--accent)"/><circle cx="377.8" cy="172.3" r="3" style="fill:var(--accent)"/><circle cx="452.1" cy="144.3" r="3" style="fill:var(--accent)"/><text x="460.1" y="148.3" style="fill:var(--accent)">21.7 ms identity rule (conversion floor)</text><polyline points="70.8,254.0 123.6,249.2 197.9,251.8 250.7,253.0 325.0,252.9 377.8,250.4 452.1,226.7" fill="none" style="stroke:var(--good)" stroke-width="2.2"/><circle cx="70.8" cy="254.0" r="3" style="fill:var(--good)"/><circle cx="123.6" cy="249.2" r="3" style="fill:var(--good)"/><circle cx="197.9" cy="251.8" r="3" style="fill:var(--good)"/><circle cx="250.7" cy="253.0" r="3" style="fill:var(--good)"/><circle cx="325.0" cy="252.9" r="3" style="fill:var(--good)"/><circle cx="377.8" cy="250.4" r="3" style="fill:var(--good)"/><circle cx="452.1" cy="226.7" r="3" style="fill:var(--good)"/><text x="460.1" y="230.7" style="fill:var(--good)">1.93 ms neighbours only</text></svg><figcaption><b>Figure 1.</b> Time per call against map size, both scales logarithmic, for five versions of the World rule that return the same answer. The shipped rule's slope is 1.78 (quadratic-ish); the others are linear (slope 1.0), except neighbours-only, which is flat. Values from <code>data/data_sizes.json</code>.</figcaption></figure>
+
+<h2 id="call">What happens in one call</h2>
+<p>The game compiles each room's module once (<code>runProgram</code>) and keeps the JS function Hazel gives back for the room's <code>on_event</code>. On each event it calls that function with two arguments, <code>Globals</code> and <code>Event</code>. For the World room, <code>Globals</code> holds the player's position, the map size and <code>cells</code>, a list with one record per square: <code>{col, row, kind, ways}</code>. The game rebuilds it on every event (0.098 ms in JS at 16x16, negligible). Inside the library (<code>src/web/HazelLibCore.re</code>, <code>function_of</code>), each call then:</p>
+<ol>
+<li>runs <code>of_js</code> on each argument. This does not build Hazel values: arrays become <code>ListLit</code> syntax, objects a <code>Tuple</code> of <code>TupLabel</code>s, and every node gets a fresh id (<code>Exp.fresh</code>, which calls <code>Id.mk</code>, a UUID). 256 cells make about 4.6k nodes.</li>
+<li>builds <code>Ap(f, arg)</code> and evaluates it from scratch, with no statics and no reuse.</li>
+<li>the evaluator steps the argument back into a value, one node at a time, through the whole stepping pipeline (<code>Transition.re</code>'s <code>ListLit</code>, <code>Tuple</code> and <code>TupLabel</code> cases).</li>
+<li>matching the parameter pattern <code>(g : Globals, e : Event)</code> pushes the type ascription through the whole record (<code>Ascriptions.re</code>), allocating a fresh <code>Asc</code> node and id per element even where nothing changes.</li>
+<li>runs the rule, then converts the (small) result back with <code>to_js</code>.</li>
+</ol>
+<p>A 16x16 call with an event the rule ignores (<code>| _ =&gt; Done</code>) costs 13.8 ms; the same call with no cells costs 0.44 ms. That difference is steps 1, 3 and 4 alone, about 3 &micro;s per node. Its profile shares are in Figure 2; <code>Id.mk</code> is about 20% of all time, and the top self-time entry is <code>caml_subarray_to_jsbytes</code>, the byte copy in its UUID.</p>
+<figure class="fig" id="fig-floor"><svg viewBox="0 0 640 96" role="img" aria-label="The 13.8 ms floor of a 16x16 call that does nothing: 56% re-stepping the literal, 16% ascription, 10% of_js, 18% GC and the rest." style="width:100%;height:auto;font:12px system-ui,sans-serif"><rect x="10.0" y="10" width="347.2" height="30" style="fill:var(--accent)"/><text x="14.0" y="62" style="fill:var(--ink);font-weight:600">56%</text><text x="14.0" y="78" style="fill:var(--muted)">re-stepping the literal</text><rect x="357.2" y="10" width="99.2" height="30" style="fill:var(--accent2)"/><text x="361.2" y="62" style="fill:var(--ink);font-weight:600">16%</text><text x="361.2" y="78" style="fill:var(--muted)">parameter ascription</text><rect x="456.4" y="10" width="62.0" height="30" style="fill:var(--warn)"/><text x="460.4" y="62" style="fill:var(--ink);font-weight:600">10%</text><text x="460.4" y="78" style="fill:var(--muted)">of_js</text><rect x="518.4" y="10" width="111.6" height="30" style="fill:var(--cx)"/><text x="522.4" y="62" style="fill:var(--ink);font-weight:600">18%</text><text x="522.4" y="78" style="fill:var(--muted)">GC, rest</text></svg><figcaption><b>Figure 2.</b> Where the floor of a 16x16 call goes, from a 3 s profile of the dev build: re-stepping the converted literal, pushing the parameter ascription, <code>of_js</code>, and GC with the rest. Profiled times run long; the shares are what to read.</figcaption></figure>
+
+<h2 id="quadratic">Why the rule's walk is quadratic</h2>
+<p>The World rule finds the target square with a recursive helper:</p>
+<pre class="code">let find = fun (cs, c, r) : ([Cell], Int, Int) -&gt;
+  case cs | [] =&gt; ... | x :: rest =&gt; if x.col == c &amp;&amp; x.row == r then ... else find(rest, c, r) end</pre>
+<p>Hazel's evaluator treats a pattern with a type ascription as a run-time check: <code>PatternMatch.re</code> wraps the argument in <code>Asc(d, ty)</code> and <code>Ascriptions.transition_multiple</code> pushes it through the value, element by element and field by field. So <code>find(rest, c, r)</code> re-checks all of <code>rest</code>, at every step. A walk to index <i>i</i> in a list of length <i>L</i> costs about <i>i</i> &times; <i>L</i>. In a profile of a deep find, 58.6% of the time is in <code>transition_multiple</code> under <code>matches_inner</code>.</p>
+<p>That is also why the game's own figure, 40 ms, is lower than this report's 153 ms: the cost depends on where the target sits in the list. With all four ways set, a target at index 1 costs 18 ms at 16x16 and the last one 244 ms; removing only the annotation brings the last to 33 ms (8x8: 23 to 8.9 ms). The Square room's <code>find</code> and <code>doors</code> helpers are annotated the same way, which fits a lever with 40 doors taking about 85 ms.</p>
+<figure class="fig" id="fig-16"><svg viewBox="0 0 640 234" role="img" aria-label="16x16 call by variant: shipped 153 ms, unannotated 22.6, index 17.1, held 12.4, identity 9.5, neighbours 0.96, JS under 0.001." style="width:100%;height:auto;font:12.5px system-ui,sans-serif"><text x="222" y="20" text-anchor="end" style="fill:var(--ink)">shipped rule</text><rect x="230" y="4" width="330.0" height="24" rx="3" style="fill:var(--bad)"/><text x="566.0" y="20" style="fill:var(--ink)">153 ms</text><text x="222" y="52" text-anchor="end" style="fill:var(--ink)">find unannotated</text><rect x="230" y="36" width="48.7" height="24" rx="3" style="fill:var(--warn)"/><text x="284.7" y="52" style="fill:var(--ink)">22.6 ms</text><text x="222" y="84" text-anchor="end" style="fill:var(--ink)">index arithmetic, unannotated</text><rect x="230" y="68" width="36.9" height="24" rx="3" style="fill:var(--warn)"/><text x="272.9" y="84" style="fill:var(--ink)">17.1 ms</text><text x="222" y="116" text-anchor="end" style="fill:var(--ink)">map held in a closure</text><rect x="230" y="100" width="26.7" height="24" rx="3" style="fill:var(--accent2)"/><text x="262.7" y="116" style="fill:var(--ink)">12.4 ms</text><text x="222" y="148" text-anchor="end" style="fill:var(--ink)">identity rule (floor)</text><rect x="230" y="132" width="20.5" height="24" rx="3" style="fill:var(--accent)"/><text x="256.5" y="148" style="fill:var(--ink)">9.5 ms</text><text x="222" y="180" text-anchor="end" style="fill:var(--ink)">neighbours only</text><rect x="230" y="164" width="2.1" height="24" rx="3" style="fill:var(--good)"/><text x="238.1" y="180" style="fill:var(--ink)">0.96 ms</text><text x="222" y="212" text-anchor="end" style="fill:var(--ink)">plain JS rule</text><rect x="230" y="196" width="2.0" height="24" rx="3" style="fill:var(--muted)"/><text x="238.0" y="212" style="fill:var(--ink)">0.001 ms</text></svg><figcaption><b>Figure 3.</b> One 16x16 World call, by version of the rule; every version returns the same <code>GoSquare</code>. <i>Index arithmetic</i> takes one <code>nth</code> at <code>r*cols+c</code>; <i>held</i> converts the map once into a Hazel closure (62 ms at setup) and calls it per event; <i>identity</i> is a rule that ignores its argument, so it is the floor.</figcaption></figure>
+
+<h2 id="data">The numbers</h2>
+<h3 id="t-sizes">By map size (ms, p50)</h3>
+<div class="scroll"><table><tr><th>map (cells)</th><th>JS Globals</th><th>identity, no ascription</th><th>identity</th><th>game's World</th><th>shipped</th><th>unannotated</th><th>index</th><th>neighbours</th><th>held</th><th>held setup</th></tr><tr><td>3x3 (9)</td><td class=n>0.004</td><td class=n>0.68</td><td class=n>0.531</td><td class=n>2.92</td><td class=n>1.38</td><td class=n>1.24</td><td class=n>1.14</td><td class=n>0.865</td><td class=n>0.733</td><td class=n>2.64</td></tr><tr><td>4x4 (16)</td><td class=n>0.007</td><td class=n>0.524</td><td class=n>0.516</td><td class=n>3.45</td><td class=n>2.73</td><td class=n>1.8</td><td class=n>1.62</td><td class=n>0.996</td><td class=n>1.12</td><td class=n>3.02</td></tr><tr><td>6x6 (36)</td><td class=n>0.02</td><td class=n>0.997</td><td class=n>1.12</td><td class=n>7.02</td><td class=n>6.12</td><td class=n>3.09</td><td class=n>2.91</td><td class=n>0.922</td><td class=n>2.22</td><td class=n>4.9</td></tr><tr><td>8x8 (64)</td><td class=n>0.019</td><td class=n>2.01</td><td class=n>2.4</td><td class=n>15.2</td><td class=n>14.7</td><td class=n>4.73</td><td class=n>4.42</td><td class=n>0.891</td><td class=n>3.1</td><td class=n>6.86</td></tr><tr><td>12x12 (144)</td><td class=n>0.048</td><td class=n>4.31</td><td class=n>5.67</td><td class=n>56.1</td><td class=n>53.7</td><td class=n>10.8</td><td class=n>9.88</td><td class=n>0.892</td><td class=n>7.02</td><td class=n>14</td></tr><tr><td>16x16 (256)</td><td class=n>0.098</td><td class=n>8.06</td><td class=n>9.53</td><td class=n>157</td><td class=n>153</td><td class=n>22.6</td><td class=n>17.1</td><td class=n>0.96</td><td class=n>12.4</td><td class=n>61.8</td></tr><tr><td>24x24 (576)</td><td class=n>0.241</td><td class=n>18.5</td><td class=n>21.7</td><td class=n>806</td><td class=n>735</td><td class=n>45.5</td><td class=n>40.5</td><td class=n>1.93</td><td class=n>56.7</td><td class=n>113</td></tr></table></div>
+<p class="note"><i>game's World</i> is the rule as the game compiles it; <i>shipped</i> is the same text rebuilt in the driver (they agree within noise above 8x8). Growth exponents from 64 to 576 cells: shipped 1.78, unannotated 1.03, index 1.01, identity 1.00, held 1.32, neighbours 0.35.</p>
+<h3 id="t-steps">Per-step costs (ms, p50)</h3>
+<div class="scroll"><table><tr><th>program</th><th>ms</th></tr><tr><td>walk L=64 i=0</td><td class=n>1.141</td></tr><tr><td>walk L=64 i=32</td><td class=n>3.204</td></tr><tr><td>walk L=256 i=0</td><td class=n>1.823</td></tr><tr><td>walk L=256 i=32</td><td class=n>4.301</td></tr><tr><td>walk L=256 i=64</td><td class=n>6.567</td></tr><tr><td>walk L=256 i=128</td><td class=n>10.72</td></tr><tr><td>walk L=1024 i=0</td><td class=n>9.053</td></tr><tr><td>walk L=1024 i=32</td><td class=n>10.289</td></tr><tr><td>walk L=1024 i=64</td><td class=n>13.069</td></tr><tr><td>walk L=1024 i=128</td><td class=n>15.818</td></tr><tr><td>countdown i=0</td><td class=n>0.024</td></tr><tr><td>countdown i=32</td><td class=n>0.778</td></tr><tr><td>countdown i=64</td><td class=n>1.631</td></tr><tr><td>countdown i=128</td><td class=n>3.55</td></tr><tr><td>countdown i=256</td><td class=n>9.225</td></tr></table></div>
+<p class="note">A <i>walk</i> goes to index <i>i</i> of a list of length <i>L</i> held in a closure; at <i>i</i> = 0 it still costs O(<i>L</i>), since the held list is re-stepped when it is substituted into the call. The countdown uses no data at all.</p>
+<h3 id="t-game">The game's own measurements</h3>
+<div class="scroll"><table><tr><th>measure</th><th>value</th></tr>
+<tr><td>World 3x3, node p50 / p95</td><td class=n>2.03 / 2.98 ms</td></tr>
+<tr><td>World 8x8, node p50 / p95</td><td class=n>8.53 / 10.2 ms</td></tr>
+<tr><td>World 16x16, node p50 / p95</td><td class=n>40.0 / 47.0 ms</td></tr>
+<tr><td>World in plain JS</td><td class=n>0.003 ms</td></tr>
+<tr><td>FallPit, WayOut</td><td class=n>1.47, 2.11 ms</td></tr>
+<tr><td>lever with 2, 8, 40 doors</td><td class=n>1.5, 5.1, about 85 ms</td></tr>
+<tr><td>browser (Chrome, 8 runners): Hazel adds per event</td><td class=n>0.4-3.2 ms (red lever on EPYC 7763: 9.4 to 12.1 ms)</td></tr>
+<tr><td>browser: page load, Hazel vs JS</td><td class=n>about 525 vs 270 ms</td></tr>
+<tr><td>browser: first compile of the rules</td><td class=n>340-520 ms</td></tr>
+<tr><td>browser: heap, Hazel vs JS</td><td class=n>67 vs 51 MB</td></tr>
+</table></div>
+<p class="note">The browser rows are the phase-1 comparison on GitHub's runners, on the small rooms of the shipped game; they show that at the game's real sizes Hazel adds a few milliseconds per event, and that the large maps of this report are where it stops fitting a 16 ms frame.</p>
+
+<h2 id="fix">What would fix it</h2>
+<h3>In the game's rules, available today</h3>
+<ol>
+<li><b>Drop type annotations on recursive helpers</b> (World's <code>find</code>, Square's <code>find</code> and <code>doors</code>): 153 to 22.6 ms at 16x16; linear instead of quadratic.</li>
+<li><b>Pass only what the rule needs</b>: the neighbouring cells, not the map. Flat at about 0.9 ms at every size. All 17 <code>Globals</code> fields go to every room today, and each is converted and re-stepped per call.</li>
+</ol>
+<h3>In Hazel's library and evaluator</h3>
+<ol>
+<li><b>Do not re-step a converted value.</b> Have <code>of_js</code> produce something the evaluator treats as final (or bind the argument in the environment and apply to a variable). About half the floor.</li>
+<li><b>An ascription fast path.</b> Check that a value conforms to a type without allocating, or skip the run-time <code>Asc</code> when the argument's type already equals the parameter's, which is exactly the recursive <code>find(rest, ...)</code> case. This makes the annotated rule linear without changing it.</li>
+<li><b>A cheaper <code>Id.mk</code></b>, without <code>Uuidm.v4</code>'s byte copy under js_of_ocaml: about a fifth of all time.</li>
+<li><b>Cut the per-step pipeline when nothing uses it</b>: the state merge, reuse check and probe sampling run on every step even with no probes and no reuse (8.1%, 8.0% and 6.8% inclusive in the walk's profile).</li>
+</ol>
+<p>Fixes 1 and 2 of the library would bring the shipped rule near the unannotated one, and the floor to perhaps a third of today's; fix 4 is what would make a linear walk cheaper. None of them makes Hazel's walk cost what JS's does (under 1 &micro;s); a rule's design still decides whether the call depends on the map's size.</p>
+
+<h2 id="next">What next</h2>
+<ol>
+<li>Change the World and Square rules on <a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>: no annotations on recursive helpers, and neighbours only in World's <code>Globals</code>; re-time the game's moves at 16x16.</li>
+<li>Prototype the ascription fast path in <code>Ascriptions.re</code> and time the shipped rule against this report's numbers.</li>
+<li>Prototype <code>of_js</code> producing final values, and time the identity rule's floor.</li>
+<li>Measure the noise floor: repeat the 16x16 row five times.</li>
+</ol>
+
+<h2 id="method">How this was put together</h2>
+<p>Node v22.23.2 on the Ubuntu laptop (Intel i7), one process at a time. The library is hazel-lib.js from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> at <code>0d66c36618</code>: the minified build for every time, the dev build <code>hazelLib.bc.js</code> for named profiles (3 s each). The rules are the game's at <code>2ebda59ab4</code>. Each time is one p50 over 20-60 reps after warm-up; the noise floor was not measured, so treat differences under about 10% as noise. The target cell is mid-map, at (n/2-1, n/2), moving east; every variant's result was checked against the game's World handler. The library exposes no step count, so per-step costs are inferred from timings. The drivers are in <code>drivers/</code> (<code>r25.mjs</code> for the sizes, <code>steps.mjs</code>, <code>profheld.mjs</code>, and the earlier <code>prof.mjs</code> and <code>prof_noann.mjs</code>; they read the game and library from local checkouts); the data is in <a href="https://github.com/matthewhammer/hazel-reports/tree/main/025/data"><code>data/</code></a>, and the profiles, too big to keep, are summarized in <code>data/profiles.json</code>.</p>
+
+<!-- data-line: begin -->
+<h2 id="data">The data</h2>
+<ul>
+  <li><b>The numbers, for programs too:</b> every table in this report, and what its numbers measure, is also in this page as JSON, in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset. The same, with any raw files that survive, is in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/025/data"><code>025/data/</code></a>.</li>
+</ul>
+<!-- data-line: end -->
+
+</main><!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
+<!-- ref-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .ref-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
+  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
+    vertical-align: 1px; background: #6e7781; }
+  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
+  .rc-state.done { background: #8250df; }
+</style>
+<script>
+/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
+   ticket from the work dashboard's data (its area, its status, its first
+   line), carried by the dashboard's own pages and read live from the
+   published data anywhere else; a report from its own page, live (its
+   title, date and opening). Once per page load each. */
+(() => {
+  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
+  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
+  /* the dashboard itself carries its tickets (made with the page, changed
+     with it); any other page asks the published data */
+  const EMBED = null;
+  let data = EMBED ? Promise.resolve(EMBED) : null;
+  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
+  const pages = new Map();
+  const loadReport = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
+      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
+      let p = h1 && h1.nextElementSibling;
+      while (p && p.tagName !== "P") p = p.nextElementSibling;
+      const label = (doc.querySelector(".series") || {}).textContent || "";
+      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
+               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
+    }).catch(() => null));
+    return pages.get(url);
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
+  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
+  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
+  const ticketCard = (n, d) => {
+    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
+    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
+    const q = (d.queue || []).indexOf(n);
+    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
+      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
+      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
+    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
+      `<div class="rc-title">${esc(lead(t.text))}</div>` +
+      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
+      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
+  };
+  const reportCard = (n, r) => r
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
+      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
+    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
+    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = (a, ref) => {
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
+      card.hidden = false; place(a);
+      let html;
+      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
+      else html = reportCard(ref.n, await loadReport(a.href));
+      if (over !== a) return;
+      card.innerHTML = html; place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- ref-cards: end -->
+<!-- pr-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-base { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: 1px; }
+  .pr-base.dev { background: #dafbe1; color: #116329; } .pr-base.other { background: #fff1c2; color: #7a4b00; }
+  @media (prefers-color-scheme: dark) { .pr-base.dev { background: #12361f; color: #6fdd8b; } .pr-base.other { background: #3d2e00; color: #f2cc60; } }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, the branch a PR targets (dev or not: the distinction that
+   matters, ^ticket(478)), author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2719": {"author": "matthewhammer", "comments": 1, "created": "2026-10-21T21:38:03Z", "kind": "pull", "state": "draft", "title": "Hazel in another page's frame, and a program of named modules (stacked on #2711)", "updated": "2026-10-21T22:03:19Z", "base": "js-library"}, "matthewhammer/kids-choice-games#2": {"author": "matthewhammer", "comments": 0, "created": "2026-10-22T04:23:36Z", "kind": "pull", "state": "draft", "title": "🧩 Experiment: the rooms' rules in Hazel, against plain JS (ticket 531)", "updated": "2026-10-22T06:19:03Z", "base": "scripting-panel"}}, BUILT = "2026-10-22";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
+  const ask = (key, kind) => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#"), pull = kind === "pull";
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/${pull ? "pulls" : "issues"}/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: pull || j.pull_request ? "pull" : "issues", base: j.base && j.base.ref,
+                      state: j.merged_at || (j.pull_request && j.pull_request.merged_at) ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const baseChip = d => !d.base ? "" : d.base === "dev"
+    ? `<span class="pr-base dev" title="this PR merges into dev">into dev</span>`
+    : `<span class="pr-base other" title="this PR merges into ${esc(d.base)}, not dev">into ${esc(d.base)}, not dev</span>`;
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span>${baseChip(d)}</div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[3];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key, m[2]);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
+<!-- steps: begin -->
+<style>
+  button.mint { margin-left: 4px; font: inherit; font-size: 0.75em; padding: 0 6px; border: 1px solid var(--line, #ccc);
+    border-radius: 4px; background: transparent; color: var(--muted, #666); cursor: pointer; vertical-align: 1px; }
+  button.mint:hover { color: inherit; }
+  button.mint.done { color: var(--good, #15803d); border-color: var(--good, #15803d); }
+  a.step-link { color: var(--muted, #666); text-decoration: none; font-size: 0.85em; margin-left: 4px; }
+  a.step-link:hover { text-decoration: underline; }
+  li:target { background: color-mix(in srgb, var(--good, #15803d) 12%, transparent); border-radius: 6px; }
+</style>
+<script>
+/* Each "What next" step: a link to it, and a button copying a request to
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
+(() => {
+  const h = document.getElementById("next");
+  if (!h) return;
+  let list = h.nextElementSibling;
+  while (list && !/^(OL|UL)$/.test(list.tagName)) {
+    if (list.tagName === "H2") return;
+    list = list.nextElementSibling;
+  }
+  if (!list) return;
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/reports/" + report.padStart(3, "0") + "/";
+  [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
+    const n = i + 1;
+    if (!li.id) li.id = "step-" + n;
+    const b = li.querySelector("b, strong");
+    const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
+    const url = base + "#" + li.id;
+    const text = "Mint a ticket for this step: Hazel reports, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
+    const a = document.createElement("a");
+    a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "mint"; btn.textContent = "copy for a ticket";
+    btn.title = "Copies a request to mint a ticket for this step, to paste to Claude";
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) {
+        const t = document.createElement("textarea"); t.value = text; document.body.append(t);
+        t.select(); document.execCommand("copy"); t.remove();
+      }
+      btn.textContent = "copied"; btn.classList.add("done");
+      setTimeout(() => { btn.textContent = "copy for a ticket"; btn.classList.remove("done"); }, 1500);
+    });
+    li.append(" ", a, " ", btn);
+  });
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+})();
+</script>
+<!-- steps: end -->
+<!-- theme: begin -->
+<style>
+  .theme-toggle { position: fixed; top: 10px; right: 10px; z-index: 30; font: 13px system-ui, sans-serif; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--muted, GrayText);
+    cursor: pointer; opacity: 0.85; }
+  .theme-toggle:hover { opacity: 1; color: var(--ink, CanvasText); }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+/* The theme switch: Auto (the system's choice), Light, Dark; remembered for this site. */
+(() => {
+  const order = ["auto", "light", "dark"], label = { auto: "◐ auto", light: "☀ light", dark: "☾ dark" };
+  const get = () => { try { return localStorage.getItem("theme") || "auto"; } catch (_) { return "auto"; } };
+  const apply = m => m === "auto" ? document.documentElement.removeAttribute("data-theme")
+                                  : document.documentElement.setAttribute("data-theme", m);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "theme-toggle";
+  const show = () => { const m = get(); b.textContent = label[m] || label.auto;
+    b.title = "Theme: " + m + ". Click for " + order[(order.indexOf(m) + 1) % 3] + "; remembered on this site."; };
+  b.addEventListener("click", () => {
+    const m = order[(order.indexOf(get()) + 1) % 3];
+    try { m === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", m); } catch (_) {}
+    apply(m); show();
+  });
+  window.addEventListener("storage", e => { if (e.key === "theme") { apply(get()); show(); } });
+  show(); document.body.append(b);
+})();
+</script>
+<!-- theme: end -->
+<!-- report-data: begin -->
+<script type="application/json" id="report-data">
+{
+ "report": 25,
+ "title": "What a Call into Hazel Costs",
+ "date": "2026-10-22",
+ "kind": "performance",
+ "status": "work in progress",
+ "question": "Matthew, 2026-10-22, on ^ticket(531) (Dress Up's room rules as Hazel modules): \"why is Hazel so slow here for 16 x 16 map? do more analysis please, and draft a new report.\"",
+ "builds": [
+  {
+   "what": "hazel-lib.js, Hazel's JS library",
+   "pr": "hazelgrove/hazel#2719",
+   "branch": "js-library-embed",
+   "commit": "0d66c36618ee709a60f91cf01fbf0b46121f2499",
+   "note": "minified build for timings; dev build hazelLib.bc.js for named profiles"
+  },
+  {
+   "what": "Dress Up rules (25-scripting.js)",
+   "pr": "matthewhammer/kids-choice-games#2",
+   "branch": "hazel-logic-531",
+   "commit": "2ebda59ab4e1be7769789cec7e324504972475d7"
+  }
+ ],
+ "runtime": "node v22.23.2 on the Ubuntu laptop (Intel i7), one process at a time",
+ "measures": {
+  "ms_p50": "median wall time of one call f(Globals, Event), performance.now, 20-60 reps after warm-up",
+  "cells": "map squares, n x n",
+  "target_index": "position of the target cell in the cells list"
+ },
+ "files": [
+  "data/data_sizes.json",
+  "data/data_steps.json",
+  "data/earlier.json",
+  "data/meta.json",
+  "data/profiles.json",
+  "data/tables.json"
+ ],
+ "caveats": "One p50 per figure from one run; the noise floor was not measured, so differences under about 10% are noise. The library exposes no step count; per-step costs are inferred from timings.",
+ "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
+ "tables": [
+  {
+   "section": "By map size (ms, p50)",
+   "section_id": "t-sizes",
+   "columns": [
+    "map (cells)",
+    "JS Globals",
+    "identity, no ascription",
+    "identity",
+    "game's World",
+    "shipped",
+    "unannotated",
+    "index",
+    "neighbours",
+    "held",
+    "held setup"
+   ],
+   "rows": [
+    [
+     "3x3 (9)",
+     "0.004",
+     "0.68",
+     "0.531",
+     "2.92",
+     "1.38",
+     "1.24",
+     "1.14",
+     "0.865",
+     "0.733",
+     "2.64"
+    ],
+    [
+     "4x4 (16)",
+     "0.007",
+     "0.524",
+     "0.516",
+     "3.45",
+     "2.73",
+     "1.8",
+     "1.62",
+     "0.996",
+     "1.12",
+     "3.02"
+    ],
+    [
+     "6x6 (36)",
+     "0.02",
+     "0.997",
+     "1.12",
+     "7.02",
+     "6.12",
+     "3.09",
+     "2.91",
+     "0.922",
+     "2.22",
+     "4.9"
+    ],
+    [
+     "8x8 (64)",
+     "0.019",
+     "2.01",
+     "2.4",
+     "15.2",
+     "14.7",
+     "4.73",
+     "4.42",
+     "0.891",
+     "3.1",
+     "6.86"
+    ],
+    [
+     "12x12 (144)",
+     "0.048",
+     "4.31",
+     "5.67",
+     "56.1",
+     "53.7",
+     "10.8",
+     "9.88",
+     "0.892",
+     "7.02",
+     "14"
+    ],
+    [
+     "16x16 (256)",
+     "0.098",
+     "8.06",
+     "9.53",
+     "157",
+     "153",
+     "22.6",
+     "17.1",
+     "0.96",
+     "12.4",
+     "61.8"
+    ],
+    [
+     "24x24 (576)",
+     "0.241",
+     "18.5",
+     "21.7",
+     "806",
+     "735",
+     "45.5",
+     "40.5",
+     "1.93",
+     "56.7",
+     "113"
+    ]
+   ]
+  },
+  {
+   "section": "Per-step costs (ms, p50)",
+   "section_id": "t-steps",
+   "columns": [
+    "program",
+    "ms"
+   ],
+   "rows": [
+    [
+     "walk L=64 i=0",
+     "1.141"
+    ],
+    [
+     "walk L=64 i=32",
+     "3.204"
+    ],
+    [
+     "walk L=256 i=0",
+     "1.823"
+    ],
+    [
+     "walk L=256 i=32",
+     "4.301"
+    ],
+    [
+     "walk L=256 i=64",
+     "6.567"
+    ],
+    [
+     "walk L=256 i=128",
+     "10.72"
+    ],
+    [
+     "walk L=1024 i=0",
+     "9.053"
+    ],
+    [
+     "walk L=1024 i=32",
+     "10.289"
+    ],
+    [
+     "walk L=1024 i=64",
+     "13.069"
+    ],
+    [
+     "walk L=1024 i=128",
+     "15.818"
+    ],
+    [
+     "countdown i=0",
+     "0.024"
+    ],
+    [
+     "countdown i=32",
+     "0.778"
+    ],
+    [
+     "countdown i=64",
+     "1.631"
+    ],
+    [
+     "countdown i=128",
+     "3.55"
+    ],
+    [
+     "countdown i=256",
+     "9.225"
+    ]
+   ]
+  },
+  {
+   "section": "The game's own measurements",
+   "section_id": "t-game",
+   "columns": [
+    "measure",
+    "value"
+   ],
+   "rows": [
+    [
+     "World 3x3, node p50 / p95",
+     "2.03 / 2.98 ms"
+    ],
+    [
+     "World 8x8, node p50 / p95",
+     "8.53 / 10.2 ms"
+    ],
+    [
+     "World 16x16, node p50 / p95",
+     "40.0 / 47.0 ms"
+    ],
+    [
+     "World in plain JS",
+     "0.003 ms"
+    ],
+    [
+     "FallPit, WayOut",
+     "1.47, 2.11 ms"
+    ],
+    [
+     "lever with 2, 8, 40 doors",
+     "1.5, 5.1, about 85 ms"
+    ],
+    [
+     "browser (Chrome, 8 runners): Hazel adds per event",
+     "0.4-3.2 ms (red lever on EPYC 7763: 9.4 to 12.1 ms)"
+    ],
+    [
+     "browser: page load, Hazel vs JS",
+     "about 525 vs 270 ms"
+    ],
+    [
+     "browser: first compile of the rules",
+     "340-520 ms"
+    ],
+    [
+     "browser: heap, Hazel vs JS",
+     "67 vs 51 MB"
+    ]
+   ]
+  }
+ ],
+ "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/025/data"
+}
+</script>
+<!-- report-data: end -->
+</body></html>
