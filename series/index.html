@@ -50,7 +50,7 @@
       <div>
       <div class="num"><a href="025/"><code class="ref"><b>^report(</b>25<b>)</b></code></a> · 2026-10-22 · <span class="wip">work in progress</span></div>
       <div class="title"><a href="025/">What a Call into Hazel Costs</a></div>
-      <p class="blurb">Why a call into Hazel is slow for Dress Up's 16x16 World map (<code class="ref"><b>^ticket(</b>531<b>)</b></code>): one rule call taken apart, its cost quadratic in the map through an annotated helper, linear without it, and nearly flat when only the neighbouring squares are passed.</p>
+      <p class="blurb">Why a call into Hazel is slow for Dress Up's 16x16 World map (<code class="ref"><b>^ticket(</b>531<b>)</b></code>): one rule call taken apart, its cost quadratic in the map through an annotated helper, linear without it, and nearly flat when only the neighbouring squares are passed. Measured before and after the 14 open performance PRs: #2681 alone makes the annotated rule linear (144 to 20.6 ms), and together they halve the compile.</p>
       </div>
     </li>
     <li>
