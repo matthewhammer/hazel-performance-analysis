@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" role="img" aria-label="Three branches: dev, #2661 off it, and #2681 merged onto #2661, its own commit alone left above.">
+<g fill="none" stroke-width="5" stroke-linecap="round">
+<path d="M20 120 H220" stroke="#9ca3af"/>
+<path d="M50 120 C70 120 70 85 95 85 H220" stroke="#c4b5fd"/>
+<path d="M120 85 C140 85 140 45 165 45 H220" stroke="#f87171"/>
+</g>
+<g font-family="system-ui,sans-serif" font-size="15" font-weight="600">
+<text x="22" y="140" fill="#9ca3af">dev</text><text x="168" y="104" fill="#c4b5fd">#2661</text><text x="168" y="35" fill="#f87171">#2681</text>
+</g>
+<circle cx="200" cy="45" r="7" fill="#f87171"/>
+</svg>
