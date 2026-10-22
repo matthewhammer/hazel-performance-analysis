@@ -1,0 +1,46 @@
+[
+ {
+  "n": 8,
+  "cells": 64,
+  "handle_ms": 2.57,
+  "passedU": 7.995,
+  "passedA": 6.94,
+  "ignore": 0.382,
+  "passedU_h": 5.721,
+  "passedA_h": 5.844,
+  "ignore_h": 0.027
+ },
+ {
+  "n": 16,
+  "cells": 256,
+  "handle_ms": 2.53,
+  "passedU": 22.109,
+  "passedA": 24.083,
+  "ignore": 1.601,
+  "passedU_h": 18.459,
+  "passedA_h": 18.409,
+  "ignore_h": 0.042
+ },
+ {
+  "n": 32,
+  "cells": 1024,
+  "handle_ms": 11.27,
+  "passedU": 90.79,
+  "passedA": 92.338,
+  "ignore": 10.077,
+  "passedU_h": 69.446,
+  "passedA_h": 70.231,
+  "ignore_h": 0.025
+ },
+ {
+  "n": 64,
+  "cells": 4096,
+  "handle_ms": 47.33,
+  "passedU": 408.925,
+  "passedA": 408.041,
+  "ignore": 48.925,
+  "passedU_h": 311.265,
+  "passedA_h": 311.749,
+  "ignore_h": 0.025
+ }
+]

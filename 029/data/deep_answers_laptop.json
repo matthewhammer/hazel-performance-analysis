@@ -1,0 +1,5 @@
+{"build": "fumola_wasm 2ec634b5df, node 22, a fresh process per probe",
+ "list":    {"path": "translate/nested (structural JSON)", "ok": [200, 400], "crash": 700},
+ "arrays":  {"path": "translate/nested (structural JSON)", "ok": [200, 400, 700, 1000], "crash": 1500},
+ "printer": {"path": "format_one_line (a function value, its environment printed)", "ok": [200], "crash": 400},
+ "held":    {"path": "none (answer 0)", "ok": [200, 400, 700, 1000, 1500, 3000, 10000], "crash": null}}

@@ -162,16 +162,23 @@ def fx(name):
     if not os.path.exists(p): return None
     return [json.loads(l) for l in open(p) if l.strip()] if p.endswith(".jsonl") else json.load(open(p))
 def by(rows): return {(r["k"], r["n"]): r for r in rows} if rows else {}
-K0, K547, K548 = by(fx("kernels_stats.json")), by(fx("kernels_closures.json")), by(fx("kernels_asc.json"))
+def rounds_of(pat):
+    """kernel rows of every round matching pat (data/fixes/), ms the mean of the rounds' medians"""
+    acc = {}
+    for f in sorted(glob.glob(os.path.join(FX, pat))):
+        for r in json.load(open(f)): acc.setdefault((r["k"], r["n"]), []).append(r)
+    return {k: {**rs[0], "ms": sum(r["ms"] for r in rs) / len(rs), "rounds": len(rs)} for k, rs in acc.items()}
+# before and after measured in alternation (A, B, A, B), the before being the counter build in the same runs
+K548_0, K548 = rounds_of("k548_stats_*.json"), rounds_of("k548_asc_*.json")
+K547_0, K547 = rounds_of("k547_stats_*.json"), rounds_of("k547_closures_*.json")
 TR0, TR547 = fx("tree_stats.json"), fx("tree_closures.json")
 HD = fx("handles_handles.json")
 def fixrow(label, k, n, before, after):
     b, a = before.get((k, n)), after.get((k, n))
     if not (b and a): return ""
     return f"<tr><td>{label}</td><td><code>{k}</code></td><td class=n>{n:,}</td><td class=n>{fmt(b['ms'])}</td><td class=n>{fmt(a['ms'])}</td><td class=n><b>{x(b['ms'], a['ms']) if b['ms'] >= a['ms'] else '1/' + x(a['ms'], b['ms'])}</b></td></tr>"
-FIXROWS = "".join(fixrow("^ticket(547) closures", k, n, K0, K547) for k in ("h_ref", "h_walk", "h_id") for n in (100, 1000, 3000)) + \
-          "".join(fixrow("^ticket(548) ascriptions", k, n, K0, K548) for k in ("sumbuild", "mapinc") for n in (100, 1000, 3000)) + \
-          "".join(fixrow(lab, k, n, K0, K) for lab, K in (("^ticket(547) closures", K547), ("^ticket(548) ascriptions", K548)) for k in ("count",) for n in (5000,)) 
+FIXROWS = "".join(fixrow("^ticket(547) closures", k, n, K547_0, K547) for k in ("h_ref", "h_walk", "h_id", "count") for n in (100, 1000, 3000, 5000)) + \
+          "".join(fixrow("^ticket(548) ascriptions", k, n, K548_0, K548) for k in ("sumbuild", "mapinc", "count") for n in (100, 1000, 3000, 5000))
 def treerows():
     if not (TR0 and TR547): return ""
     b = {r["n"]: r for r in TR0}; a = {r["n"]: r for r in TR547}
@@ -179,13 +186,31 @@ def treerows():
 def handlerows():
     if not HD: return ""
     return "".join(f"<tr><td class=n>{r['n']}x{r['n']} ({r['cells']:,})</td><td class=n>{fmt(r['ignore'])}</td><td class=n>{fmt(r['ignore_h'])}</td><td class=n>{fmt(r['passedU'])}</td><td class=n>{fmt(r['passedU_h'])}</td><td class=n>{fmt(r['passedA'])}</td><td class=n>{fmt(r['passedA_h'])}</td><td class=n>{fmt(r['handle_ms'])}</td></tr>" for r in HD if 'passedU_h' in r)
+def jsonrows():
+    fs = sorted(glob.glob(os.path.join(R, "data", "json555", "world_json_*.json")))
+    if not fs: return ""
+    rs = [json.load(open(f)) for f in fs]
+    m = lambda i, k: sum(r[i][k] for r in rs) / len(rs)
+    return "".join(f"<tr><td class=n>{r0['n']}x{r0['n']} ({r0['cells']:,})</td><td class=n>{fmt(m(i, 'passed_text'))}</td><td class=n>{fmt(m(i, 'passed_json'))}</td><td class=n><b>{x(m(i, 'passed_text'), m(i, 'passed_json'))}</b></td><td class=n>{r0['passed_text_steps']:,}</td><td class=n>{r0['passed_json_steps']:,}</td><td class=n>{fmt(m(i, 'near_text'))}</td><td class=n>{fmt(m(i, 'near_json'))}</td></tr>" for i, r0 in enumerate(rs[0]))
 FIXES = ""
 if FIXROWS or treerows() or handlerows():
     FIXES = '<h2 id="fixes">First fixes, on trial branches</h2>\n<p>Three of the findings above, each fixed on a trial branch of the counter build (<code>trial/r25-stats</code>), built by GitHub, measured on the laptop as before against the counter build itself (so both sides carry the counter). Not PRs yet.</p>\n<ul>\n<li><code>trial/r25-closures</code> (<code class="ref"><b>^ticket(</b>547<b>)</b></code>): the library hands JS functions unfinished, as closures over their environments (<code>Evaluator.evaluate_unfinished</code>), in <code>run</code> and in every call.</li>\n<li><code>trial/r25-asc</code> (<code class="ref"><b>^ticket(</b>548<b>)</b></code>): a list push stops at a tail #2681\'s memo already knows; the memo stops remembering at one; and the evaluator\'s <code>Asc</code> rule no longer asks a throwaway stepwise push first.</li>\n<li><code>trial/r25-handles</code> (<code class="ref"><b>^ticket(</b>551<b>)</b></code>, on the closures branch): <code>Hazel.value(x)</code> converts once and returns a handle a call takes in x\'s place.</li>\n</ul>\n'
     if FIXROWS:
         FIXES += f'<div class="scroll"><table><tr><th>fix</th><th>program</th><th>n</th><th>ms before</th><th>ms after</th><th>faster</th></tr>{FIXROWS}</table></div>\n'
+    IN547 = fx("inside_closures.jsonl")
+    FIXES += f'''<ul>
+<li><b>^ticket(547), closures kept whole:</b> from JS, a call that refers to a held list now takes {IN547[0]["passes_per_call_from_js"] if IN547 else "?"} evaluator passes at every size measured (100, 1,000, 3,000), where it took n + 8: one reference to a list of 3,000 is {x(K547_0[("h_ref", 3000)]["ms"], K547[("h_ref", 3000)]["ms"]) if ("h_ref", 3000) in K547 else "?"} faster. A call from JS now costs fewer passes than the same call from inside Hazel ({IN547[0]["passes_per_call_inside_hazel"] if IN547 else "?"}, which includes the loop calling it). Walking the list (<code>h_walk</code>) still costs a pass per element, as it should.</li>
+<li><b>^ticket(548), list loops:</b> linear now. Building and summing 3,000 numbers, {x(K548_0[("sumbuild", 3000)]["ms"], K548[("sumbuild", 3000)]["ms"]) if ("sumbuild", 3000) in K548 else "?"} faster; three times the list costs three times as much.</li>
+<li><b>With 547, the World rule's world held as a tree is O(log N) a move:</b> about a millisecond at every size from 8x8 to 64x64 (the table below), the same as passing only the neighbours, and the goal <code class="ref"><b>^ticket(</b>540<b>)</b></code> set. Building the tree, once a world, is still slow (seconds at 64x64): it passes lists on as it builds, the re-typing 548 fixes; the two are on separate branches and not yet measured together.</li>
+<li><b>^ticket(551), handles:</b> the map crosses the boundary in 0.025 ms a call at any size, where converting it costs 49 ms at 64x64; a rule given the handle still walks the list it holds.</li>
+<li><b>Noise:</b> <code>count</code>, which no fix touches, moved by up to 1.2x either way between runs (another job shared the laptop's two cores during them): read differences under about 1.3x as noise. Pass counts are exact.</li>
+</ul>
+'''
     if treerows():
         FIXES += f'<h3 id="fix-world-held">The World rule, the world held</h3><p>^report(25)\'s held list (walked) and <code class="ref"><b>^ticket(</b>540<b>)</b></code>\'s balanced tree (looked up), each built once and held in a closure, ms a move, before and after <code class="ref"><b>^ticket(</b>547<b>)</b></code>:</p><div class="scroll"><table><tr><th>map (cells)</th><th>held list, before</th><th>held list, after</th><th>tree, before</th><th>tree, after</th><th>neighbours passed</th></tr>{treerows()}</table></div>\n'
+    if jsonrows():
+        FIXES += f'''<h3 id="fix-fumola-json">Fumola: values in as JSON</h3><p>Fumola's wasm build took only source text, so a passed map was written out and parsed, then stepped back into a value, every call. Adapton/fumola#148 adds <code>fumola_define_json</code> and <code>fumola_eval_top_with</code>: JSON read straight into Fumola values and bound by name (<code class="ref"><b>^ticket(</b>555<b>)</b></code>). The World rule with the map passed, wasm in node on one of GitHub's runners, three rounds, <code>JSON.stringify</code> counted in, ms a call:</p><div class="scroll"><table><tr><th>map (cells)</th><th>as text</th><th>as JSON</th><th>faster</th><th>steps, text</th><th>steps, JSON</th><th>neighbours, text</th><th>neighbours, JSON</th></tr>{jsonrows()}</table></div><p>What is left is the rule walking the list of cells; holding the world in a HashMap remains the way to a flat move (about 0.6 ms).</p>
+'''
     if handlerows():
         FIXES += f'<h3 id="fix-world-passed">The World rule, the world passed</h3><p>The map passed at every call, as JS (converted each time) and as a handle (converted once, <code>Hazel.value</code>), ms a call; <i>ignore</i> is a rule that does not look at it, so the boundary alone; <i>U</i> and <i>A</i> the unannotated and annotated finder:</p><div class="scroll"><table><tr><th>map (cells)</th><th>ignore, JS</th><th>ignore, handle</th><th>U, JS</th><th>U, handle</th><th>A, JS</th><th>A, handle</th><th>Hazel.value, once</th></tr>{handlerows()}</table></div>\n'
 PAGE = f"""<!doctype html>
@@ -284,7 +309,13 @@ pre.code {{ white-space: pre-wrap; font-size: 0.82em; }}
 
 <h2 id="fumola-step">What a Fumola step is</h2>
 <p>Fumola's machine (<code>crates/fumola_semantics/src/lib/vm_step.rs</code>) is a continuation machine: its state is the current continuation (an expression to evaluate or a value to return), a stack of frames, and an environment, a persistent hash map (<code>im_rc</code>) from names to values. Values are their own type, apart from syntax, so a list held in the environment is a pointer that is never looked into again. A step is one transition: push a frame, pop one, look a name up. Steps are many and small (twenty-seven an iteration of <code>count</code>) and cost about {us_fc:.2f} µs each in wasm. Fumola's incremental machinery (Adapton's graph) is paid only when a program uses it; Hazel's stages run for every term. <code>do big {{ ... }}</code> runs a region without writing its intermediate states down, about twice as fast again (Adapton/fumola#128, not used here).</p>
-<p>One thing found on the way: a Fumola answer that is a list over about 1,000 deep crashes the wasm instance (<q>memory access out of bounds</q>): turning the answer into JSON recurses, and wasm's stack runs out. Holding a list is fine; returning it is not. The kernels end their set-up text with <code>0</code> to stay clear.</p>
+<p>One thing found on the way: a deep Fumola answer crashes the wasm instance (<q>memory access out of bounds</q>), and the instance is unusable after (<code class="ref"><b>^ticket(</b>549<b>)</b></code>). Holding a deep value is fine; sending it out is not. It is not the printer, for a list: data answers go out through a structural translation (<code>translate</code> and <code>nested</code> in <code>crates/fumola_wasm/src/lib.rs</code>, calling each other once a nested value, into a <code>serde_json</code> tree), and that recursion runs out of wasm's stack. The printer (<code>format_one_line</code>, used for values with no structural translation, such as a function) recurses too, and runs out sooner. Measured, a fresh instance for each (<code>drivers/deep_answer.mjs</code>):</p>
+<div class="scroll"><table><tr><th>the answer</th><th>how it goes out</th><th>fine at</th><th>crashes at</th></tr>
+<tr><td>an option list, <code>build(n, null)</code></td><td>structural JSON</td><td class=n>400</td><td class=n>700</td></tr>
+<tr><td>arrays nested n deep, <code>[[[...]]]</code></td><td>structural JSON</td><td class=n>1,000</td><td class=n>1,500</td></tr>
+<tr><td>a function whose environment holds the list</td><td>the printer</td><td class=n>200</td><td class=n>400</td></tr>
+<tr><td>the list held, the answer <code>0</code></td><td>(nothing deep)</td><td class=n>10,000</td><td class=n>–</td></tr></table></div>
+<p>An option list is two nested values an element (the option and the pair), so the structural limit is the same for both shapes: somewhere between 800 and 1,500 nested values. The kernels end their set-up text with <code>0</code> to stay clear of both.</p>
 
 <h2 id="native">Wasm against native</h2>
 {NATIVE}
@@ -304,7 +335,7 @@ pre.code {{ white-space: pre-wrap; font-size: 0.82em; }}
 <li><b>Keep closures whole across the library</b> (<code class="ref"><b>^ticket(</b>547<b>)</b></code>): functions returned to JS as the evaluator left them, not finished, on a trial branch stacked with <code class="ref"><b>^ticket(</b>539<b>)</b></code>'s, and these programs measured again: <code>h_ref</code> should be flat. Then <code class="ref"><b>^ticket(</b>540<b>)</b></code>'s balanced tree for the World rule can pay off: a held world, O(log N) a move.</li>
 <li><b>Push types without copying</b> (<code class="ref"><b>^ticket(</b>548<b>)</b></code>): check before wrapping in <code>Ascriptions.re</code>, and measure <code>sumbuild</code> again: it should become linear.</li>
 <li><b>Cheaper ids under js</b>: an id that is a JS string from the start, or an integer, and what that does to the loop's 4%, the list loop's {100 * share("sumbuild_1000", "fresh ids"):.0f}%.</li>
-<li><b>Fumola's deep answers</b> (<code class="ref"><b>^ticket(</b>549<b>)</b></code>): turn answers into JSON without recursion (an issue for Adapton/fumola, not filed yet).</li>
+<li><b>Fumola's deep answers</b> (<code class="ref"><b>^ticket(</b>549<b>)</b></code>): send answers out without recursion, both the structural JSON and the printer, or stop at a depth with a clear error (an issue for Adapton/fumola, not filed yet).</li>
 <li>The per-pass cost of the stages when nothing is probed and nothing reused: a fast path for terms that are already values would skip all five.</li>
 </ol>
 

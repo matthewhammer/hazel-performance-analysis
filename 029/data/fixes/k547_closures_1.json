@@ -1,0 +1,200 @@
+[
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 100,
+  "ms": 7.6016,
+  "reps": 60,
+  "steps": 2820,
+  "by_kind": {
+   "no step": 504,
+   "FunAp": 101,
+   "FixUnwrap": 100,
+   "VarLookup": 302,
+   "evaluate": 1410,
+   "CompleteClosure": 101,
+   "": 302
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 1000,
+  "ms": 69.14,
+  "reps": 34,
+  "steps": 28020,
+  "by_kind": {
+   "no step": 5004,
+   "FunAp": 1001,
+   "FixUnwrap": 1000,
+   "VarLookup": 3002,
+   "evaluate": 14010,
+   "CompleteClosure": 1001,
+   "": 3002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 5000,
+  "ms": 410.9818,
+  "reps": 7,
+  "steps": 140020,
+  "by_kind": {
+   "no step": 25004,
+   "FunAp": 5001,
+   "FixUnwrap": 5000,
+   "VarLookup": 15002,
+   "evaluate": 70010,
+   "CompleteClosure": 5001,
+   "": 15002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_id",
+  "n": 100,
+  "ms": 0.0426,
+  "reps": 60,
+  "steps": 12,
+  "by_kind": {
+   "no step": 2,
+   "FunAp": 1,
+   "VarLookup": 2,
+   "evaluate": 6,
+   "CompleteClosure": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_id",
+  "n": 1000,
+  "ms": 0.0261,
+  "reps": 60,
+  "steps": 12,
+  "by_kind": {
+   "no step": 2,
+   "FunAp": 1,
+   "VarLookup": 2,
+   "evaluate": 6,
+   "CompleteClosure": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_id",
+  "n": 3000,
+  "ms": 0.0215,
+  "reps": 60,
+  "steps": 12,
+  "by_kind": {
+   "no step": 2,
+   "FunAp": 1,
+   "VarLookup": 2,
+   "evaluate": 6,
+   "CompleteClosure": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_ref",
+  "n": 100,
+  "ms": 0.0329,
+  "reps": 60,
+  "steps": 18,
+  "by_kind": {
+   "no step": 2,
+   "FunAp": 1,
+   "VarLookup": 3,
+   "evaluate": 9,
+   "CompleteClosure": 2,
+   "": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_ref",
+  "n": 1000,
+  "ms": 0.0336,
+  "reps": 60,
+  "steps": 18,
+  "by_kind": {
+   "no step": 2,
+   "FunAp": 1,
+   "VarLookup": 3,
+   "evaluate": 9,
+   "CompleteClosure": 2,
+   "": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_ref",
+  "n": 3000,
+  "ms": 0.0349,
+  "reps": 60,
+  "steps": 18,
+  "by_kind": {
+   "no step": 2,
+   "FunAp": 1,
+   "VarLookup": 3,
+   "evaluate": 9,
+   "CompleteClosure": 2,
+   "": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_walk",
+  "n": 100,
+  "ms": 6.1911,
+  "reps": 60,
+  "steps": 2426,
+  "by_kind": {
+   "CaseApply": 101,
+   "no step": 303,
+   "FunAp": 102,
+   "FixUnwrap": 100,
+   "VarLookup": 304,
+   "evaluate": 1213,
+   "CompleteClosure": 203,
+   "": 100
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_walk",
+  "n": 1000,
+  "ms": 79.6312,
+  "reps": 30,
+  "steps": 24026,
+  "by_kind": {
+   "CaseApply": 1001,
+   "no step": 3003,
+   "FunAp": 1002,
+   "FixUnwrap": 1000,
+   "VarLookup": 3004,
+   "evaluate": 12013,
+   "CompleteClosure": 2003,
+   "": 1000
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_walk",
+  "n": 3000,
+  "ms": 279.159,
+  "reps": 10,
+  "steps": 72026,
+  "by_kind": {
+   "CaseApply": 3001,
+   "no step": 9003,
+   "FunAp": 3002,
+   "FixUnwrap": 3000,
+   "VarLookup": 9004,
+   "evaluate": 36013,
+   "CompleteClosure": 6003,
+   "": 3000
+  }
+ }
+]

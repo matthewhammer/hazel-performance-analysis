@@ -1,0 +1,38 @@
+[
+ {
+  "n": 8,
+  "cells": 64,
+  "tree_setup": 180.01,
+  "held_setup": 1.05,
+  "tree": 1.722,
+  "held": 5.715,
+  "near": 1.544
+ },
+ {
+  "n": 16,
+  "cells": 256,
+  "tree_setup": 223.99,
+  "held_setup": 2.69,
+  "tree": 1.215,
+  "held": 15.967,
+  "near": 2.112
+ },
+ {
+  "n": 32,
+  "cells": 1024,
+  "tree_setup": 755.24,
+  "held_setup": 10.12,
+  "tree": 1.408,
+  "held": 61.738,
+  "near": 1.318
+ },
+ {
+  "n": 64,
+  "cells": 4096,
+  "tree_setup": 5002.89,
+  "held_setup": 43.85,
+  "tree": 1.185,
+  "held": 262.319,
+  "near": 1.431
+ }
+]

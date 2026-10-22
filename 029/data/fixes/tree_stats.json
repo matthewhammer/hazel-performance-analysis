@@ -2,37 +2,37 @@
  {
   "n": 8,
   "cells": 64,
-  "tree_setup": 221.85,
-  "held_setup": 15.4,
-  "tree": 5.214,
-  "held": 8.007,
-  "near": 2.065
+  "tree_setup": 192.86,
+  "held_setup": 13.81,
+  "tree": 4.681,
+  "held": 7.528,
+  "near": 2.209
  },
  {
   "n": 16,
   "cells": 256,
-  "tree_setup": 291.42,
-  "held_setup": 26.98,
-  "tree": 11.194,
-  "held": 25.289,
-  "near": 2.422
+  "tree_setup": 259.51,
+  "held_setup": 19.46,
+  "tree": 10.166,
+  "held": 22.047,
+  "near": 2.469
  },
  {
   "n": 32,
   "cells": 1024,
-  "tree_setup": 939.63,
-  "held_setup": 82.9,
-  "tree": 34.953,
-  "held": 91.936,
-  "near": 2.229
+  "tree_setup": 992,
+  "held_setup": 81.81,
+  "tree": 33.441,
+  "held": 89.436,
+  "near": 1.822
  },
  {
   "n": 64,
   "cells": 4096,
-  "tree_setup": 5833.74,
-  "held_setup": 310.2,
-  "tree": 135.012,
-  "held": 346.307,
-  "near": 1.591
+  "tree_setup": 5695,
+  "held_setup": 429.5,
+  "tree": 128.529,
+  "held": 332.19,
+  "near": 1.324
  }
 ]

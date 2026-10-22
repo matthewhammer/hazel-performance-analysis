@@ -1,0 +1,194 @@
+[
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 100,
+  "ms": 9.6066,
+  "reps": 60,
+  "steps": 2818,
+  "by_kind": {
+   "no step": 502,
+   "FunAp": 101,
+   "FixUnwrap": 100,
+   "VarLookup": 301,
+   "WrapClosure": 1,
+   "FixClosure": 1,
+   "evaluate": 1409,
+   "CompleteClosure": 101,
+   "": 302
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 1000,
+  "ms": 85.4081,
+  "reps": 28,
+  "steps": 28018,
+  "by_kind": {
+   "no step": 5002,
+   "FunAp": 1001,
+   "FixUnwrap": 1000,
+   "VarLookup": 3001,
+   "WrapClosure": 1,
+   "FixClosure": 1,
+   "evaluate": 14009,
+   "CompleteClosure": 1001,
+   "": 3002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 5000,
+  "ms": 481.3943,
+  "reps": 6,
+  "steps": 140018,
+  "by_kind": {
+   "no step": 25002,
+   "FunAp": 5001,
+   "FixUnwrap": 5000,
+   "VarLookup": 15001,
+   "WrapClosure": 1,
+   "FixClosure": 1,
+   "evaluate": 70009,
+   "CompleteClosure": 5001,
+   "": 15002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "sumbuild",
+  "n": 100,
+  "ms": 24.0861,
+  "reps": 60,
+  "steps": 6244,
+  "by_kind": {
+   "CaseApply": 101,
+   "no step": 804,
+   "FunAp": 203,
+   "Ascription": 100,
+   "FixUnwrap": 200,
+   "VarLookup": 903,
+   "ListCons": 100,
+   "WrapClosure": 3,
+   "FixClosure": 2,
+   "evaluate": 3122,
+   "CompleteClosure": 304,
+   "": 402
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "sumbuild",
+  "n": 1000,
+  "ms": 707.9473,
+  "reps": 5,
+  "steps": 62044,
+  "by_kind": {
+   "CaseApply": 1001,
+   "no step": 8004,
+   "FunAp": 2003,
+   "Ascription": 1000,
+   "FixUnwrap": 2000,
+   "VarLookup": 9003,
+   "ListCons": 1000,
+   "WrapClosure": 3,
+   "FixClosure": 2,
+   "evaluate": 31022,
+   "CompleteClosure": 3004,
+   "": 4002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "sumbuild",
+  "n": 3000,
+  "ms": 6203.41,
+  "reps": 5,
+  "steps": 186044,
+  "by_kind": {
+   "CaseApply": 3001,
+   "no step": 24004,
+   "FunAp": 6003,
+   "Ascription": 3000,
+   "FixUnwrap": 6000,
+   "VarLookup": 27003,
+   "ListCons": 3000,
+   "WrapClosure": 3,
+   "FixClosure": 2,
+   "evaluate": 93022,
+   "CompleteClosure": 9004,
+   "": 12002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "mapinc",
+  "n": 100,
+  "ms": 35.3112,
+  "reps": 60,
+  "steps": 10264,
+  "by_kind": {
+   "CaseApply": 202,
+   "no step": 1306,
+   "FunAp": 404,
+   "Ascription": 100,
+   "FixUnwrap": 300,
+   "VarLookup": 1503,
+   "ListCons": 200,
+   "WrapClosure": 5,
+   "RemoveParens": 1,
+   "FixClosure": 3,
+   "evaluate": 5132,
+   "CompleteClosure": 606,
+   "": 502
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "mapinc",
+  "n": 1000,
+  "ms": 894.1563,
+  "reps": 5,
+  "steps": 102064,
+  "by_kind": {
+   "CaseApply": 2002,
+   "no step": 13006,
+   "FunAp": 4004,
+   "Ascription": 1000,
+   "FixUnwrap": 3000,
+   "VarLookup": 15003,
+   "ListCons": 2000,
+   "WrapClosure": 5,
+   "RemoveParens": 1,
+   "FixClosure": 3,
+   "evaluate": 51032,
+   "CompleteClosure": 6006,
+   "": 5002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "mapinc",
+  "n": 3000,
+  "ms": 6104.7744,
+  "reps": 5,
+  "steps": 306064,
+  "by_kind": {
+   "CaseApply": 6002,
+   "no step": 39006,
+   "FunAp": 12004,
+   "Ascription": 3000,
+   "FixUnwrap": 9000,
+   "VarLookup": 45003,
+   "ListCons": 6000,
+   "WrapClosure": 5,
+   "RemoveParens": 1,
+   "FixClosure": 3,
+   "evaluate": 153032,
+   "CompleteClosure": 18006,
+   "": 15002
+  }
+ }
+]
