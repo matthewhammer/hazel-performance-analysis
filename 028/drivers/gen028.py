@@ -31,6 +31,7 @@ TRAPS = [
  ("No text patterns.", "<code>case \"E\"</code> never matches (patterns take Unit, Null and Nat literals only). Test text with <code>==</code> in an <code>if</code>."),
  ("Nat and Int apart.", "A Nat minus a larger Nat is an Int; Int + Nat is a type error; <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code> between them are missing (only <code>&lt;</code> mixes); <code>Int(4) == Nat(4)</code> is false, and they are different map keys. Keep coordinates Nat, and check an edge before stepping off it (the World rule's <code>step</code>)."),
  ("No escapes in text.", "A literal's quotes are stripped, nothing more: no <code>\\\"</code> or <code>\\\\</code> inside."),
+ ("No Float comparison.", "Fumola's <code>&lt;</code> has no Float case (found porting the Trap room, whose random wiring compares draws with 0.5). matthewhammer/kids-choice-games#4 passes the draws as Nats in millionths instead: exact at the threshold, but the rule's globals no longer match Hazel's shape."),
  ("A tuple payload, twice parenthesised.", "<code>#GoSquare((c, r, back, #Done))</code>: the outer pair is the application, the inner the tuple."),
 ]
 BOUNDARY = [

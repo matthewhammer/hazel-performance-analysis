@@ -128,7 +128,7 @@ pre.code {{ white-space: pre-wrap; font-size: 0.84em; }}
 
 <h2 id="next">What next</h2>
 <ol>
-<li>The other rooms: the Square's levers, the Castle's ways, the Trap and the Tree, in Fumola too, and the game playing with <code>?logic=fumola</code> (a PR against Dress Up, in progress).</li>
+<li>Look at the game playing under Fumola: every room's rules are now in Fumola in <a href="https://github.com/matthewhammer/kids-choice-games/pull/4">matthewhammer/kids-choice-games#4</a> (a draft on top of #2), with <code>?logic=fumola</code> (the world held in a HashMap, rebuilt when its cells change) and <code>?logic=fumola-list</code> (the map passed in). A node check compares its answers with the Hazel rules' on 20,653 cases, and GitHub's browser checks pass (run 39823022799, its only failures the same nine as its base's). One run on GitHub's computer, for the order of things only: a rule call, median, 2.9 ms in Hazel, 1.1 ms in Fumola with the map held and 1.4 ms with it passed in; Fumola defines its rules in 4 ms, where Hazel compiles in 514 ms. Fumola's modes are not in the speed probe yet.</li>
 <li>A map for Hazel's rules (above), and the World rule timed with it.</li>
 <li>Fumola's boundary without source text: a JSON value in as a Fumola value, so a passed map is not parsed every call.</li>
 <li>The same comparison in the game, in GitHub's browsers.</li>
