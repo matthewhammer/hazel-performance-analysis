@@ -1,0 +1,24 @@
+# from Common #
+let member = fun (s, xs) : (String, [String]) -> case xs | [] => false | x :: rest => x == s || member(s, rest) end;
+let dir = fun d : String -> if d == "N" then (0, 0 - 1) else if d == "NE" then (1, 0 - 1) else if d == "E" then (1, 0) else if d == "SE" then (1, 1) else if d == "S" then (0, 1) else if d == "SW" then (0 - 1, 1) else if d == "W" then (0 - 1, 0) else if d == "NW" then (0 - 1, 0 - 1) else (0, 0);
+let opp = fun d : String -> if d == "N" then "S" else if d == "NE" then "SW" else if d == "E" then "W" else if d == "SE" then "NW" else if d == "S" then "N" else if d == "SW" then "NE" else if d == "W" then "E" else if d == "NW" then "SE" else ""
+# the World room #
+# Places with no way out on a side, whatever their ways say: the waterfall's N, its cliff. #
+let no_way = fun (kind, d) : (String, String) -> kind == "waterfall" && d == "N";
+let find = fun (cs, c, r) : ([Cell], Int, Int) -> case cs | [] => None | x :: rest => if x.col == c && x.row == r then Some(x) else find(rest, c, r) end;
+# A way out walked through: into the square beside it, coming in from the side facing back, #
+# if that square is on the map and has a way back; else nowhere. #
+let on_event = fun (g, e) : (Globals, Event) ->
+  case e
+  | Way(d) =>
+    let (dx, dy) = Common.dir(d) in
+    let c = g.at_col + dx in
+    let r = g.at_row + dy in
+    let back = Common.opp(d) in
+    if c < 0 || r < 0 || c >= g.cols || r >= g.rows then Done
+    else (case find(g.cells, c, r)
+      | Some(x) => if Common.member(back, x.ways) && !no_way(x.kind, back) then GoSquare(c, r, back, Done) else Done
+      | None => Done
+      end)
+  | _ => Done
+  end

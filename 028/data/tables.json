@@ -1,0 +1,169 @@
+[
+ {
+  "section": "Construct by construct",
+  "section_id": "table",
+  "columns": [
+   "construct",
+   "Hazel",
+   "Fumola",
+   "notes"
+  ],
+  "rows": [
+   [
+    "A function",
+    "let f = fun (a, b) : (Int, Int) -> a + b in",
+    "func f(a, b) { a + b };",
+    "Annotations optional in both. Fumola: func f (x : Nat) : Nat { x }."
+   ],
+   [
+    "Calling it",
+    "f(1, 2)",
+    "f(1, 2)",
+    ""
+   ],
+   [
+    "A recursive helper",
+    "let find = fun (cs, c, r) -> ... find(rest, c, r) ... in",
+    "func find_at(cs, i, n, c, r) { ... find_at(cs, i + 1, n, c, r) ... };",
+    "Hazel walks a list by cons; Fumola's arrays by index (cs[i], cs.size())."
+   ],
+   [
+    "Let, and a sequence",
+    "let x = 3 in x + 1",
+    "let x = 3; x + 1",
+    "Fumola: ; between, and var y = 1; y := y + 1 for a mutable."
+   ],
+   [
+    "A tuple, taken apart",
+    "let (c, r) = p in c + r",
+    "let (c, r) = p; c + r",
+    ""
+   ],
+   [
+    "A record",
+    "(col = 1, row = 2)",
+    "{ col = 1; row = 2 }",
+    "Fields with = in both; Hazel separates with ,, Fumola with ;. Both: x.col."
+   ],
+   [
+    "A record type",
+    "type Cell = (col = Int, row = Int, kind = String, ways = [String]) in",
+    "(none needed)",
+    "Fumola infers; Hazel's rules declare them in the preamble."
+   ],
+   [
+    "A sum type",
+    "type Cmd = + Done + GoSquare(Int, Int, String, Cmd) in",
+    "(none needed)",
+    "Fumola's variants are open: #GoSquare needs no declaration."
+   ],
+   [
+    "A constructor, applied",
+    "GoSquare(c, r, back, Done)",
+    "#GoSquare((c, r, back, #Done))",
+    "Fumola: #, and a tuple payload takes its own parentheses: two pairs."
+   ],
+   [
+    "A case on a variant",
+    "case e | Way(d) => ... | _ => Done end",
+    "switch (e) { case (#Way(d)) { ... }; case _ { #Done } }",
+    "Fumola: ; between cases. A pattern #X does not match a value #X(payload)."
+   ],
+   [
+    "An option",
+    "Some(x) / None (declared constructors)",
+    "?x / null",
+    "Fumola: case (?x) { ... }; case null { ... }."
+   ],
+   [
+    "A list literal, and joining",
+    "[1, 2] @ [3]",
+    "[1, 2] # [3]",
+    "Fumola's are arrays: xs[i], xs.size(), for (x in xs.vals()) { ... }."
+   ],
+   [
+    "A list, taken apart",
+    "case xs | [] => ... | x :: rest => ... end",
+    "(by index, or a loop)",
+    "Fumola has no cons pattern on arrays."
+   ],
+   [
+    "If",
+    "if c then a else b",
+    "if (c) { a } else { b }",
+    ""
+   ],
+   [
+    "And, or, not",
+    "a && b, a || b, !a",
+    "a and b, a or b, not a",
+    ""
+   ],
+   [
+    "Text: equal, join",
+    "a == b, a ++ b",
+    "a == b, a # b",
+    "Fumola's != on text is inverted: see the traps."
+   ],
+   [
+    "Numbers",
+    "Int; 0 - 1 for minus one; Float ops <., +.",
+    "Nat and Int; 5 - 7 is -2 (an Int)",
+    "Fumola keeps Nat and Int apart: see the traps."
+   ],
+   [
+    "A map",
+    "(none: a list of pairs, walked)",
+    "HashMap.new(), HashMap.put(m, k, v) gives (m2, old), HashMap.get(m, k) gives ?v",
+    "Fumola's is persistent (a hash trie, im_rc): put returns a new map. Any value is a key, a tuple too."
+   ],
+   [
+    "A comment",
+    "# words #",
+    "// words, or /* words */",
+    "Hazel's closes with #: an unclosed one swallows code."
+   ]
+  ]
+ },
+ {
+  "section": "Across the JS boundary",
+  "section_id": "boundary",
+  "columns": [
+   "",
+   "Hazel (its JS library, #2711)",
+   "Fumola (its wasm build)"
+  ],
+  "rows": [
+   [
+    "What a page loads",
+    "hazel-lib.js (2.8 MB), window.Hazel",
+    "fumola_wasm.js and fumola_wasm_bg.wasm (6.3 MB), initSync or init"
+   ],
+   [
+    "A program",
+    "Hazel.run(text) gives {errors, value}",
+    "fumola_create() an instance; fumola_eval_top(id, text) gives a JSON string"
+   ],
+   [
+    "Keeping a function",
+    "the value back is a JS function",
+    "top-level bindings persist in the instance; call by name in a later text"
+   ],
+   [
+    "Arguments",
+    "JS values, converted (of_js): arrays to lists, objects to records, {tag, value} to constructors",
+    "source text only: the call written out, its arguments as literals"
+   ],
+   [
+    "The answer",
+    "a JS value (to_js): records to objects, constructors to {tag, value}",
+    "JSON: {tag, value}, with variants as {tag: \"Variant\", value: {name, value}}, numbers as strings"
+   ],
+   [
+    "Counting work",
+    "times only",
+    "every answer carries counts.step"
+   ]
+  ]
+ }
+]
