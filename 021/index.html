@@ -58,11 +58,13 @@
   svg.chart .box.bad { fill: color-mix(in srgb, var(--bad) 16%, var(--paper)); stroke: var(--bad); }
   svg.chart .box.muted { fill: var(--paper); stroke: var(--muted); stroke-dasharray: 4 3; }
   .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 8px 0 0; font-size: 0.9em; }
+  .wip { color: #b45309; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { .wip { color: #f2cc60; } }
 </style>
 </head>
 <body>
 <main>
-<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>21<b>)</b></code> · 2026-10-19</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>21<b>)</b></code> · 2026-10-19 · <span class="wip">work in progress</span></p>
 <h1>Of 19 performance PRs, 16 keep types and values the same; two change a result in a corner, and one is a spike</h1>
 <p class="sub">Cyrus asked whether the performance PRs compromise the correctness of typing or evaluation, and for more analysis and coverage of functional correctness. For each of the 19 PRs against #2609 (the performance tracking issue), this report says what it caches, skips or shares; why the result is the same as without it, or where it is not; what that rests on; and which tests back it and which are missing. For the meeting with Cyrus on 2026-10-21.</p>
 

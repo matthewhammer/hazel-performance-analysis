@@ -34,21 +34,55 @@
   .num { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.9em; }
   .title { font-size: 1.15em; font-weight: 700; }
   .blurb { color: var(--muted); margin: 6px 0 0; }
+  .wip { color: #b45309; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { .wip { color: #f2cc60; } }
 </style>
 </head>
 <body>
 <main>
   <h1>Hazel reports</h1>
   <p class="sub">Reports on the <a href="https://hazel.org">Hazel</a> work: most of them on making Hazel responsive enough for its livelits to feel like plain apps (what we measured, what we found, what we fixed), and others on what else comes up, such as a survey of the UI, why a branch failed CI, or a meeting's agenda. Matthew Hammer.</p>
-  <p class="sub dash">Where this work is tracked, day to day: <a id="dashboard-link" href="https://matthewhammer.org/hazel/dashboard/">the Hazel Work Dashboard</a>. The series' source: <a href="https://github.com/matthewhammer/hazel-performance-analysis">matthewhammer/hazel-performance-analysis</a> on GitHub.</p>
+  <p class="sub dash">Where this work is tracked, day to day: <a id="dashboard-link" href="https://matthewhammer.org/hazel/dashboard/">the Hazel Work Dashboard</a>. The series' source: <a href="https://github.com/matthewhammer/hazel-reports">matthewhammer/hazel-reports</a> on GitHub.</p>
   <script>if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) document.getElementById("dashboard-link").href = "http://localhost:8000/";</script>
   <ol class="issues" reversed>
+    <li>
+      <a class="thumb" href="025/"><img class="light" src="025/img/thumb-light.svg" alt="A Hazel rule's cost per call against the world map's size: quadratic with the annotated helper (153 ms at 16x16), linear without it (22.6 ms), flat when only the neighbouring squares are passed (about 0.9 ms)."><img class="dark" src="025/img/thumb-dark.svg" alt="A Hazel rule's cost per call against the world map's size: quadratic with the annotated helper (153 ms at 16x16), linear without it (22.6 ms), flat when only the neighbouring squares are passed (about 0.9 ms)."></a>
+      <div>
+      <div class="num"><a href="025/"><code class="ref"><b>^report(</b>25<b>)</b></code></a> · 2026-10-22 · <span class="wip">work in progress</span></div>
+      <div class="title"><a href="025/">What a Call into Hazel Costs</a></div>
+      <p class="blurb">Why a call into Hazel is slow for Dress Up's 16x16 World map (<code class="ref"><b>^ticket(</b>531<b>)</b></code>): one rule call taken apart, its cost quadratic in the map through an annotated helper, linear without it, and nearly flat when only the neighbouring squares are passed.</p>
+      </div>
+    </li>
+    <li>
+      <a class="thumb" href="024/"><img class="light" src="024/img/thumb-light.svg" alt="A module binding's definition: analyzed by the let and then again before #2651, by the let only after, its elaboration read back."><img class="dark" src="024/img/thumb-dark.svg" alt="A module binding's definition: analyzed by the let and then again before #2651, by the let only after, its elaboration read back."></a>
+      <div>
+      <div class="num"><a href="024/"><code class="ref"><b>^report(</b>24<b>)</b></code></a> · 2026-10-21</div>
+      <div class="title"><a href="024/">Hazel's Architecture Around #2651</a></div>
+      <p class="blurb">For Matthew and Alexander's review of <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a> (statics reads a module definition's elaboration back instead of analyzing the definition a second time): how Hazel is built around it, its subsystems, shared representations and protocols, the PR's change in those terms, what a reviewer checks, Alexander's answers to five questions, and the follow-up, <a href="https://github.com/hazelgrove/hazel/pull/2717">#2717</a>, a module binding as a non-recursive let.</p>
+      </div>
+    </li>
     <li>
       <a class="thumb" href="023/"><img class="light" src="023/img/thumb-light.svg" alt="#2635's CI runs as tick marks: 97 red and grey from 1 October to report 18, none green; six since, two green and four cancelled by a newer push."><img class="dark" src="023/img/thumb-dark.svg" alt="#2635's CI runs as tick marks: 97 red and grey from 1 October to report 18, none green; six since, two green and four cancelled by a newer push."></a>
       <div>
       <div class="num"><a href="023/"><code class="ref"><b>^report(</b>23<b>)</b></code></a> · 2026-10-19</div>
       <div class="title"><a href="023/">#2635 is green: report 18's next steps, followed up</a></div>
       <p class="blurb">What happened after <a href="018/"><code class="ref"><b>^report(</b>18<b>)</b></code></a>: <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> (livelits × modular editors) passed CI twice on 2026-10-19, its first green runs since it was made, with all three causes fixed, one of them a real bug in incremental statics. Of report 18's five next steps two are done, two partly, and one, the plan for merging into dev, is for the meeting with Cyrus (<a href="020/"><code class="ref"><b>^report(</b>20<b>)</b></code></a>).</p>
+      </div>
+    </li>
+    <li>
+      <a class="thumb" href="022/"><img class="light" src="022/img/thumb-light.svg" alt="Week in Hazel's 33 PR credits as squares: 29 name the right author, 4 do not."><img class="dark" src="022/img/thumb-dark.svg" alt="Week in Hazel's 33 PR credits as squares: 29 name the right author, 4 do not."></a>
+      <div>
+      <div class="num"><a href="022/"><code class="ref"><b>^report(</b>22<b>)</b></code></a> · 2026-10-19 · <span class="wip">work in progress</span></div>
+      <div class="title"><a href="022/">Week in Hazel names the right author for 29 of 33 credited PRs; its errors come from names and merges</a></div>
+      <p class="blurb">How Week in Hazel, Andrew Blinn's AI-written weekly digest, credits each team member's work: right for 29 of 33 credited PRs, wrong where two people share the name "Matt" or where a merge hides the author, with a list of corrections.</p>
+      </div>
+    </li>
+    <li>
+      <a class="thumb" href="021/"><img class="light" src="021/img/thumb-light.svg" alt="The 19 performance PRs in four columns by area, each a box coloured by its verdict: 16 keep results the same, two change one in a corner, one is a spike."><img class="dark" src="021/img/thumb-dark.svg" alt="The 19 performance PRs in four columns by area, each a box coloured by its verdict: 16 keep results the same, two change one in a corner, one is a spike."></a>
+      <div>
+      <div class="num"><a href="021/"><code class="ref"><b>^report(</b>21<b>)</b></code></a> · 2026-10-19 · <span class="wip">work in progress</span></div>
+      <div class="title"><a href="021/">Of 19 performance PRs, 16 keep types and values the same; two change a result in a corner, and one is a spike</a></div>
+      <p class="blurb">Whether the performance PRs keep Hazel's results the same: 16 of 19 keep types and values unchanged, two change a result in a corner case, and one, <a href="https://github.com/hazelgrove/hazel/pull/2490">#2490</a>, is a wasm spike not meant to merge.</p>
       </div>
     </li>
     <li>

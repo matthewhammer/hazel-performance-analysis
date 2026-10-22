@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-label="A Hazel rule's cost per call against the world map's size: quadratic with the annotated helper (153 ms at 16x16), linear without it (22.6 ms), flat when only the neighbouring squares are passed (about 0.9 ms).">
+<rect width="320" height="180" fill="#0d1117"/>
+<line x1="30" y1="160" x2="305" y2="160" stroke="#e6edf3" stroke-opacity=".4"/><line x1="30" y1="15" x2="30" y2="160" stroke="#e6edf3" stroke-opacity=".4"/>
+<polyline fill="none" stroke="#b91c1c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" points="30.0,140.7 67.4,127.8 120.0,112.5 157.4,95.8 210.0,71.3 247.4,51.4 300.0,21.6"/>
+<polyline fill="none" stroke="#6d28d9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" points="30.0,142.8 67.4,135.7 120.0,125.4 157.4,117.4 210.0,101.7 247.4,87.7 300.0,74.4"/>
+<polyline fill="none" stroke="#15803d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" points="30.0,152.8 67.4,144.7 120.0,148.4 157.4,149.1 210.0,149.1 247.4,147.6 300.0,134.4"/>
+<text x="36" y="28" font-family="sans-serif" font-size="15" fill="#e6edf3">ms per call vs map size</text>
+<text x="240" y="40" font-family="sans-serif" font-size="12" fill="#b91c1c">annotated</text>
+<text x="250" y="95" font-family="sans-serif" font-size="12" fill="#6d28d9">plain</text>
+<text x="236" y="150" font-family="sans-serif" font-size="12" fill="#15803d">neighbours</text>
+</svg>
