@@ -259,7 +259,7 @@ def listing(k, name, col, hz, js, note):
     return (f'<div class="listing" id="code-{k}"><div class="lh"><span class="sw" style="background:{col}"></span><b>{name}</b>'
             f'<span class="ms">16x16: {fmt(pre[256][k])} ms before, {fmt(post[256][k])} ms after</span></div>'
             f'<pre class="code">{code(hz)}</pre>'
-            f'<div class="tiles" data-k="{k}"><div class="tiles-note">Hazel\'s tile editor, read only: the same code, with what it needs before it (the program\'s types and the helpers), from hazel.org\'s build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>. <button type="button" class="tiles-go">▶ show Hazel\'s tiles</button> <span class="tiles-phase"></span></div></div>'
+            f'<div class="tiles" data-k="{k}"><div class="tiles-note">Hazel\'s tile editor, read only: the same code, with what it needs before it (the program\'s types and the helpers), from hazel.org\'s build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, ^ticket(538)): click in it, then select or use the arrows, and the tiles show. <button type="button" class="tiles-go">▶ show Hazel\'s tiles</button> <span class="tiles-phase"></span></div></div>'
             f'<div class="runbox" data-k="{k}"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: '
             f'<select aria-label="the map\'s size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> '
             f'<button type="button">▶ run, with Hazel\'s JS library</button></div><pre class="rb-out">Hazel\'s library (hazel.org\'s build of #2719, the tiles\' build) loads on the first run.</pre></div>'
@@ -501,7 +501,7 @@ PAGE = f"""<!doctype html>
 <p>That is also why the game's own figure, 40 ms, is lower than this report's {fmt(pre[256]["shipped"])} ms: the cost depends on where the target sits in the list. With all four ways set, a target at index 1 costs 18 ms at 16x16 and the last one 244 ms; removing only the annotation brings the last to 33 ms (8x8: 23 to 8.9 ms). The Square room's <code>find</code> and <code>doors</code> helpers are annotated the same way, which fits a lever with 40 doors taking about 85 ms.</p>
 {fig("fig-16", 3, FP3, f"One 16x16 World call, by version of the rule, in the three builds; every version returns the same <code>GoSquare</code>. <i>Index arithmetic</i> takes one <code>nth</code> at <code>r*cols+c</code>; <i>held</i> converts the map once into a Hazel closure ({fmt(pre[256]['held_setup'])} ms at setup) and calls it per event; <i>identity</i> is a rule that ignores its argument, so it is the floor. Only the shipped rule's bars move far, and only at <i>+ #2681</i>.")}
 
-<h2 id="data">The numbers</h2>
+<h2 id="numbers">The numbers</h2>
 <h3 id="t-prs">Before and after the PRs, by map size (ms, p50, the mean of two rounds)</h3>
 <div class="scroll"><table>{ba_head}{ba_rows}</table></div>
 <p class="note">Growth exponents from 64 to 576 cells, before / after: shipped {slope(B['base']['rows'], 'shipped'):.2f} / {slope(B['b']['rows'], 'shipped'):.2f}, unannotated {slope(B['base']['rows'], 'noann'):.2f} / {slope(B['b']['rows'], 'noann'):.2f}, identity {slope(B['base']['rows'], 'idA'):.2f} / {slope(B['b']['rows'], 'idA'):.2f}. Every round of every build is in <code>data/prs/</code>.</p>
@@ -640,7 +640,7 @@ PAGE = f"""<!doctype html>
    #2719), which takes a program from this page (matthewhammer.org and localhost are on its list) and shows it read only, posting back
    its height and what Hazel says of the program. Each frame is made only when its box comes near the screen. */
 (() => {{
-  const URL = "https://hazel.org/build/js-library-embed/index.html#embed", ORIGIN = "https://hazel.org";
+  const URL = "https://hazel.org/build/embed-selectable/index.html#embed", ORIGIN = "https://hazel.org";
   const T = JSON.parse(document.getElementById("tiles-data").textContent);
   const frames = [];
   addEventListener("message", e => {{
