@@ -194,6 +194,107 @@
   ]
  },
  {
+  "section": "Why #2681 raises the floor, and a fix",
+  "section_id": "floor",
+  "columns": [
+   "one 16x16 call",
+   "memo lookups",
+   "memo hits",
+   "memo writes",
+   "type-hash lookups"
+  ],
+  "rows": [
+   [
+    "identity rule, #2681",
+    "4,137",
+    "0",
+    "2,580",
+    "6,734"
+   ],
+   [
+    "identity rule, depth-limited",
+    "6",
+    "0",
+    "3",
+    "8"
+   ],
+   [
+    "shipped rule, #2681",
+    "4,548",
+    "137",
+    "2,717",
+    "7,693"
+   ],
+   [
+    "shipped rule, depth-limited",
+    "673",
+    "136",
+    "396",
+    "968"
+   ]
+  ]
+ },
+ {
+  "section": "Why #2681 raises the floor, and a fix",
+  "section_id": "floor",
+  "columns": [
+   "ms per call",
+   "this report's driver, 2 rounds",
+   "this report's driver, 2 rounds",
+   "this report's driver, 2 rounds",
+   "the floor driver, 3 rounds",
+   "the floor driver, 3 rounds",
+   "the floor driver, 3 rounds"
+  ],
+  "rows": [
+   [
+    "ms per call",
+    "before",
+    "#2681",
+    "depth-limited",
+    "before",
+    "#2681",
+    "depth-limited"
+   ],
+   [
+    "identity rule, 16x16",
+    "8.54",
+    "10.1",
+    "8.53",
+    "8.92",
+    "9.69",
+    "9.01"
+   ],
+   [
+    "identity rule, 24x24",
+    "19.3",
+    "25.4",
+    "19.1",
+    "18.7",
+    "19.9",
+    "19.7"
+   ],
+   [
+    "shipped rule, 16x16",
+    "144",
+    "20.6",
+    "18.9",
+    "141",
+    "17",
+    "18.2"
+   ],
+   [
+    "shipped rule, 24x24",
+    "678",
+    "42.8",
+    "42.2",
+    "637",
+    "38.9",
+    "41.1"
+   ]
+  ]
+ },
+ {
   "section": "Before and after the PRs, by map size (ms, p50, the mean of two rounds)",
   "section_id": "t-prs",
   "columns": [

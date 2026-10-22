@@ -1,0 +1,134 @@
+{
+ "mode": "count",
+ "lib": "/home/matthew/.cache/hazel-r25/libs/a/hazel-lib.js",
+ "16x16": {
+  "idA": [
+   {
+    "get": 6734,
+    "hit": 6733,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 4137,
+    "hit": 0,
+    "set": 2580,
+    "kinds": {
+     "block tag 12 len 3": 1041,
+     "list cell": 1280,
+     "block tag 10 len 2": 258,
+     "block tag 23 len 4": 1
+    }
+   }
+  ],
+  "noann": [
+   {
+    "get": 6734,
+    "hit": 6733,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 4137,
+    "hit": 0,
+    "set": 2580,
+    "kinds": {
+     "block tag 12 len 3": 1041,
+     "list cell": 1280,
+     "block tag 10 len 2": 258,
+     "block tag 23 len 4": 1
+    }
+   }
+  ],
+  "shipped": [
+   {
+    "get": 7693,
+    "hit": 7692,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 4548,
+    "hit": 137,
+    "set": 2717,
+    "kinds": {
+     "block tag 12 len 3": 1041,
+     "list cell": 1280,
+     "block tag 10 len 2": 395,
+     "block tag 23 len 4": 1
+    }
+   }
+  ]
+ },
+ "24x24": {
+  "idA": [
+   {
+    "get": 15054,
+    "hit": 15053,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 9257,
+    "hit": 0,
+    "set": 5780,
+    "kinds": {
+     "block tag 12 len 3": 2321,
+     "list cell": 2880,
+     "block tag 10 len 2": 578,
+     "block tag 23 len 4": 1
+    }
+   }
+  ],
+  "noann": [
+   {
+    "get": 15054,
+    "hit": 15053,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 9257,
+    "hit": 0,
+    "set": 5780,
+    "kinds": {
+     "block tag 12 len 3": 2321,
+     "list cell": 2880,
+     "block tag 10 len 2": 578,
+     "block tag 23 len 4": 1
+    }
+   }
+  ],
+  "shipped": [
+   {
+    "get": 17161,
+    "hit": 17160,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 10160,
+    "hit": 301,
+    "set": 6081,
+    "kinds": {
+     "block tag 12 len 3": 2321,
+     "list cell": 2880,
+     "block tag 10 len 2": 879,
+     "block tag 23 len 4": 1
+    }
+   }
+  ]
+ }
+}

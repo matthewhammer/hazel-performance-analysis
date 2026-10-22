@@ -1,0 +1,14 @@
+{
+ "mode": "noset",
+ "lib": "/home/matthew/.cache/hazel-r25/libs/a/hazel-lib.js",
+ "16x16": {
+  "idA": 9.879,
+  "noann": 18.366,
+  "shipped": 181.964
+ },
+ "24x24": {
+  "idA": 20.485,
+  "noann": 39.433,
+  "shipped": 863.386
+ }
+}

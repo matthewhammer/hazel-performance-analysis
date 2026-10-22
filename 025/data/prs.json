@@ -1,25 +1,184 @@
 {
  "note": "The builds compared in 'Before and after the performance PRs', and the 14 PRs. Every build is GitHub's Deploy build of hazel-lib.js (hazelgrove/build, <branch>/hazel-lib.js), timed by drivers/prs.sh.",
  "builds": [
-  {"key": "base", "label": "before", "long": "the measured build: 1 of the 14 PRs", "branch": "js-library-embed", "commit": "0d66c36618", "what": "#2719 on #2711 on dev at 962a7cb009, which has #2679"},
-  {"key": "a", "label": "+ #2681", "long": "+ #2681 and #2661: 3 of 14", "branch": "trial/r25-2681", "commit": "9e461fcc09", "what": "the measured build with #2681 merged (which carries #2661)"},
-  {"key": "b", "label": "after", "long": "all 14 PRs", "branch": "trial/r25-all-perf", "commit": "8756a15dfc", "what": "the measured build with all 13 open speed PRs merged; #2673's and #2671's test lists and #2610's parser call resolved as on #2635"}
+  {
+   "key": "base",
+   "label": "before",
+   "long": "the measured build: 1 of the 14 PRs",
+   "branch": "js-library-embed",
+   "commit": "0d66c36618",
+   "what": "#2719 on #2711 on dev at 962a7cb009, which has #2679"
+  },
+  {
+   "key": "a",
+   "label": "+ #2681",
+   "long": "+ #2681 and #2661: 3 of 14",
+   "branch": "trial/r25-2681",
+   "commit": "9e461fcc09",
+   "what": "the measured build with #2681 merged (which carries #2661)"
+  },
+  {
+   "key": "b",
+   "label": "after",
+   "long": "all 14 PRs",
+   "branch": "trial/r25-all-perf",
+   "commit": "8756a15dfc",
+   "what": "the measured build with all 13 open speed PRs merged; #2673's and #2671's test lists and #2610's parser call resolved as on #2635"
+  },
+  {
+   "key": "d",
+   "label": "depth-limited",
+   "long": "+ #2681, its memo limited to depth 1",
+   "branch": "trial/r25-2681-depth",
+   "commit": "5b79ba5f95",
+   "what": "trial/r25-2681 with has_type asked and told only at a pushed value and its parts (Ascriptions.memo_depth = 1), ^ticket(535)"
+  }
  ],
  "prs": [
-  {"pr": 2679, "what": "an ascription pushed through a value gives the value back when it already has the type", "state": "merged into dev", "in": ["base", "a", "b"], "reaches": "each call", "why": "pushing (Globals, Event) and find's ([Cell], Int, Int) through the argument"},
-  {"pr": 2681, "what": "a value known to have a type is not walked again for it", "state": "open", "in": ["a", "b"], "reaches": "each call", "why": "find(rest, ...) re-checks the rest of the list at every step: the quadratic part"},
-  {"pr": 2661, "what": "types get a Merkle hash; is_consistent once per pair of types", "state": "open", "in": ["a", "b"], "reaches": "each call", "why": "the type question each ascription push asks; #2681 keys its memo by this hash"},
-  {"pr": 2603, "what": "statics: a let analyzed once unless it refers to itself, plus three more", "state": "open", "in": ["b"], "reaches": "compile", "why": "Statics.mk on the program, once per runProgram"},
-  {"pr": 2651, "what": "statics: a module binding analyzes its definition once, not twice", "state": "open", "in": ["b"], "reaches": "compile", "why": "the game's rules are modules"},
-  {"pr": 2608, "what": "elaborations leave out the source's whitespace and comments", "state": "open", "in": ["b"], "reaches": "compile, and what a call evaluates", "why": "smaller elaborated terms"},
-  {"pr": 2675, "what": "incremental evaluation reuses expressions around a recursive let", "state": "open", "in": ["b"], "reaches": "nothing here", "why": "the library evaluates from scratch (Evaluator.evaluate), with no incremental reuse"},
-  {"pr": 2673, "what": "incremental evaluation recognizes an unchanged expression by its Merkle hash", "state": "open", "in": ["b"], "reaches": "nothing here", "why": "as #2675"},
-  {"pr": 2606, "what": "the eval worker keeps the incremental cache", "state": "open", "in": ["b"], "reaches": "nothing here", "why": "the library runs on the page's thread, with no worker"},
-  {"pr": 2652, "what": "Firefox's eval worker starts at load", "state": "open", "in": ["b"], "reaches": "nothing here", "why": "no worker"},
-  {"pr": 2614, "what": "the recovering parser about 2.5x faster", "state": "open", "in": ["b"], "reaches": "nothing here", "why": "the library parses with FastParse; the recovering parser runs only when that fails"},
-  {"pr": 2610, "what": "the load fallback parses with the segmented parser", "state": "open", "in": ["b"], "reaches": "nothing here", "why": "as #2614"},
-  {"pr": 2671, "what": "MapPiece keeps unchanged pieces as the same objects", "state": "open", "in": ["b"], "reaches": "nothing here", "why": "the editor's view"},
-  {"pr": 2672, "what": "measuring the font no longer scrolls the editor", "state": "open", "in": ["b"], "reaches": "nothing here", "why": "the editor's view"}
+  {
+   "pr": 2679,
+   "what": "an ascription pushed through a value gives the value back when it already has the type",
+   "state": "merged into dev",
+   "in": [
+    "base",
+    "a",
+    "b"
+   ],
+   "reaches": "each call",
+   "why": "pushing (Globals, Event) and find's ([Cell], Int, Int) through the argument"
+  },
+  {
+   "pr": 2681,
+   "what": "a value known to have a type is not walked again for it",
+   "state": "open",
+   "in": [
+    "a",
+    "b"
+   ],
+   "reaches": "each call",
+   "why": "find(rest, ...) re-checks the rest of the list at every step: the quadratic part"
+  },
+  {
+   "pr": 2661,
+   "what": "types get a Merkle hash; is_consistent once per pair of types",
+   "state": "open",
+   "in": [
+    "a",
+    "b"
+   ],
+   "reaches": "each call",
+   "why": "the type question each ascription push asks; #2681 keys its memo by this hash"
+  },
+  {
+   "pr": 2603,
+   "what": "statics: a let analyzed once unless it refers to itself, plus three more",
+   "state": "open",
+   "in": [
+    "b"
+   ],
+   "reaches": "compile",
+   "why": "Statics.mk on the program, once per runProgram"
+  },
+  {
+   "pr": 2651,
+   "what": "statics: a module binding analyzes its definition once, not twice",
+   "state": "open",
+   "in": [
+    "b"
+   ],
+   "reaches": "compile",
+   "why": "the game's rules are modules"
+  },
+  {
+   "pr": 2608,
+   "what": "elaborations leave out the source's whitespace and comments",
+   "state": "open",
+   "in": [
+    "b"
+   ],
+   "reaches": "compile, and what a call evaluates",
+   "why": "smaller elaborated terms"
+  },
+  {
+   "pr": 2675,
+   "what": "incremental evaluation reuses expressions around a recursive let",
+   "state": "open",
+   "in": [
+    "b"
+   ],
+   "reaches": "nothing here",
+   "why": "the library evaluates from scratch (Evaluator.evaluate), with no incremental reuse"
+  },
+  {
+   "pr": 2673,
+   "what": "incremental evaluation recognizes an unchanged expression by its Merkle hash",
+   "state": "open",
+   "in": [
+    "b"
+   ],
+   "reaches": "nothing here",
+   "why": "as #2675"
+  },
+  {
+   "pr": 2606,
+   "what": "the eval worker keeps the incremental cache",
+   "state": "open",
+   "in": [
+    "b"
+   ],
+   "reaches": "nothing here",
+   "why": "the library runs on the page's thread, with no worker"
+  },
+  {
+   "pr": 2652,
+   "what": "Firefox's eval worker starts at load",
+   "state": "open",
+   "in": [
+    "b"
+   ],
+   "reaches": "nothing here",
+   "why": "no worker"
+  },
+  {
+   "pr": 2614,
+   "what": "the recovering parser about 2.5x faster",
+   "state": "open",
+   "in": [
+    "b"
+   ],
+   "reaches": "nothing here",
+   "why": "the library parses with FastParse; the recovering parser runs only when that fails"
+  },
+  {
+   "pr": 2610,
+   "what": "the load fallback parses with the segmented parser",
+   "state": "open",
+   "in": [
+    "b"
+   ],
+   "reaches": "nothing here",
+   "why": "as #2614"
+  },
+  {
+   "pr": 2671,
+   "what": "MapPiece keeps unchanged pieces as the same objects",
+   "state": "open",
+   "in": [
+    "b"
+   ],
+   "reaches": "nothing here",
+   "why": "the editor's view"
+  },
+  {
+   "pr": 2672,
+   "what": "measuring the font no longer scrolls the editor",
+   "state": "open",
+   "in": [
+    "b"
+   ],
+   "reaches": "nothing here",
+   "why": "the editor's view"
+  }
  ],
  "not_counted": "Five more PRs on the dashboard's performance list are not speed changes and are left out of the 14: #2678, #2689, #2690 and #2691 add CI budgets and tests; #2490 is a spike that compiles the evaluator with wasm_of_ocaml, in a separate toolchain."
 }

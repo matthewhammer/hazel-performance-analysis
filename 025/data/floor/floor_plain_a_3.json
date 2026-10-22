@@ -1,0 +1,24 @@
+{
+ "mode": "plain",
+ "lib": "/home/matthew/.cache/hazel-r25/libs/a/hazel-lib.js",
+ "16x16": {
+  "idA": 9.662,
+  "noann": 18.621,
+  "shipped": 17.034,
+  "gc_ms_per_call": {
+   "idA": 2.494,
+   "noann": 4.668,
+   "shipped": 4.517
+  }
+ },
+ "24x24": {
+  "idA": 19.932,
+  "noann": 38.808,
+  "shipped": 38.986,
+  "gc_ms_per_call": {
+   "idA": 5.462,
+   "noann": 11.555,
+   "shipped": 11.417
+  }
+ }
+}

@@ -90,7 +90,7 @@
   .wip { color: var(--warn); font-weight: 600; }
 </style></head>
 <body><main>
-<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>25<b>)</b></code> · performance · started 2026-10-22, updated 2026-10-22 07:14 MDT · <span class="wip">work in progress</span> · about 11 minutes to read</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>25<b>)</b></code> · performance · started 2026-10-22, updated 2026-10-22 07:46 MDT · <span class="wip">work in progress</span> · about 11 minutes to read</p>
 <h1>What a Call into Hazel Costs</h1>
 <p class="sub">Matthew asked, on 2026-10-22, about <code class="ref"><b>^ticket(</b>531<b>)</b></code>, the experiment that moves Messed Up Dress Up's room rules into Hazel modules run through Hazel's JS library (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the library; the game's side is the draft <a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>): <q>why is Hazel so slow here for 16 x 16 map? do more analysis please, and draft a new report.</q> The World room's rule takes a step on the map; in the game's own node run it costs 40.0 ms p50 at 16x16, against 0.003 ms for the same rule in JS. This report takes that one call apart.</p>
 <p class="sub"><b>Which build.</b> Hazel's JS library, <code>hazel-lib.js</code>, from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> (branch <code>js-library-embed</code> at <code>0d66c36618</code>), which is <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> on <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a> on <code>dev</code> at <code>962a7cb009</code>. Of the 14 performance PRs on the dashboard it has one, <a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a>, the only one merged into <code>dev</code>; the other 13 are open. Matthew, after the first draft: <q>Let's make it clear what branch we are measuring ... how many have been applied? If they are not all applied, how much would they help?</q> So every time below is measured three ways, on GitHub's builds of three branches: <b>before</b>, that build; <b>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></b>, with <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> merged (it carries <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>); and <b>after</b>, with all 14 (<a href="#prs">Before and after the performance PRs</a>).</p>
@@ -99,7 +99,7 @@
 <p><b>Short answers.</b> All times are node on the Ubuntu laptop, p50 of one call with the target cell mid-map, the mean of two interleaved rounds; <i>before</i> is the measured build (1 of 14 PRs), <i>after</i> the same with all 14.</p>
 <ol class="ans">
 <li><div class="row"><p><b>Most of the time is a type annotation in the rule, and <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> removes it: 144 ms becomes 20.6 ms at 16x16, 7.0x faster, with the rule unchanged.</b> The rule's recursive helper is written <code>fun (cs, c, r) : ([Cell], Int, Int) -&gt;</code>. Before, Hazel checks that ascription at run time on every call, by walking the value, so each step of the walk re-checks the rest of the list: one linear walk becomes a quadratic one (678 ms at 24x24, against 40.8 ms without the annotation). <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> remembers which values are known to have a type, so the re-check is one lookup: 42.8 ms at 24x24, the same as the unannotated rule.</p><figure class="mini"><svg viewBox="0 0 380 148" role="img" aria-label="The shipped 16x16 call split into the conversion floor, the walk and the annotation re-check, before (144 ms) and after (19.1 ms) the 14 PRs." style="width:100%;height:auto;font:15px system-ui,sans-serif"><rect x="54" y="76" width="13" height="13" rx="2" style="fill:var(--accent)"/><text x="73" y="87" style="fill:var(--muted)">conversion + ascription</text><rect x="54" y="98" width="13" height="13" rx="2" style="fill:var(--warn)"/><text x="73" y="109" style="fill:var(--muted)">the walk</text><rect x="54" y="120" width="13" height="13" rx="2" style="fill:var(--bad)"/><text x="73" y="131" style="fill:var(--muted)">the annotation's re-check</text><text x="47" y="24" text-anchor="end" style="fill:var(--ink)">before</text><rect x="54.0" y="6" width="15.6" height="24" style="fill:var(--accent)"/><rect x="69.6" y="6" width="17.3" height="24" style="fill:var(--warn)"/><rect x="86.8" y="6" width="229.2" height="24" style="fill:var(--bad)"/><text x="322.0" y="24" style="fill:var(--ink);font-weight:600">144 ms</text><text x="47" y="58" text-anchor="end" style="fill:var(--ink)">after</text><rect x="54.0" y="40" width="19.3" height="24" style="fill:var(--accent)"/><rect x="73.3" y="40" width="16.1" height="24" style="fill:var(--warn)"/><rect x="89.4" y="40" width="0.0" height="24" style="fill:var(--bad)"/><text x="95.4" y="58" style="fill:var(--ink);font-weight:600">19.1 ms</text></svg><figcaption>The shipped 16x16 call, split by measuring the variants, before and after the 14 PRs.</figcaption></figure></div></li>
-<li><div class="row"><p><b>Every call pays a floor that grows with the map, and the PRs raise it by about a quarter: 8.54 ms at 16x16 before, 10.6 after (19.3 and 25.3 at 24x24).</b> Hazel's call boundary turns the whole JS argument into unevaluated Hazel syntax, gives every node a fresh id, and then evaluates it back into the value it already was, node by node; the <code>(Globals, Event)</code> parameter type walks it again. A rule that does nothing still pays this. No PR touches the library's conversion (<code>of_js</code>) or its fresh ids. And the argument is a new value on every call, so <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> has never seen it: its first push walks it as before and also records every part in the memo. The rise is already there with <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> alone (10.1 ms), and it repeats in both rounds.</p><figure class="mini"><svg viewBox="0 0 640 96" role="img" aria-label="The 13.8 ms floor of a 16x16 call that does nothing: 56% re-stepping the literal, 16% ascription, 10% of_js, 18% GC and the rest." style="width:100%;height:auto;font:12px system-ui,sans-serif"><rect x="10.0" y="10" width="347.2" height="30" style="fill:var(--accent)"/><text x="14.0" y="62" style="fill:var(--ink);font-weight:600">56%</text><text x="14.0" y="78" style="fill:var(--muted)">re-stepping the literal</text><rect x="357.2" y="10" width="99.2" height="30" style="fill:var(--accent2)"/><text x="361.2" y="62" style="fill:var(--ink);font-weight:600">16%</text><text x="361.2" y="78" style="fill:var(--muted)">parameter ascription</text><rect x="456.4" y="10" width="62.0" height="30" style="fill:var(--warn)"/><text x="460.4" y="62" style="fill:var(--ink);font-weight:600">10%</text><text x="460.4" y="78" style="fill:var(--muted)">of_js</text><rect x="518.4" y="10" width="111.6" height="30" style="fill:var(--cx)"/><text x="522.4" y="62" style="fill:var(--ink);font-weight:600">18%</text><text x="522.4" y="78" style="fill:var(--muted)">GC, rest</text></svg><figcaption>The floor of a 16x16 call that does nothing (13.8 ms in the profiled dev build, before), by profile share.</figcaption></figure></div></li>
+<li><div class="row"><p><b>Every call pays a floor that grows with the map, and the PRs raise it by about a quarter: 8.54 ms at 16x16 before, 10.6 after (19.3 and 25.3 at 24x24).</b> Hazel's call boundary turns the whole JS argument into unevaluated Hazel syntax, gives every node a fresh id, and then evaluates it back into the value it already was, node by node; the <code>(Globals, Event)</code> parameter type walks it again. A rule that does nothing still pays this. No PR touches the library's conversion (<code>of_js</code>) or its fresh ids. And the argument is a new value on every call, so <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> has never seen it: its first push walks it as before and also records every part in the memo. The rise is already there with <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> alone (10.1 ms), and it repeats in both rounds. It comes from asking <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>'s memo at every part of the argument; limited to the argument and its parts, the memo leaves the floor where it was (8.53 ms) and the shipped rule its gain (<a href="#floor">Why #2681 raises the floor</a>).</p><figure class="mini"><svg viewBox="0 0 640 96" role="img" aria-label="The 13.8 ms floor of a 16x16 call that does nothing: 56% re-stepping the literal, 16% ascription, 10% of_js, 18% GC and the rest." style="width:100%;height:auto;font:12px system-ui,sans-serif"><rect x="10.0" y="10" width="347.2" height="30" style="fill:var(--accent)"/><text x="14.0" y="62" style="fill:var(--ink);font-weight:600">56%</text><text x="14.0" y="78" style="fill:var(--muted)">re-stepping the literal</text><rect x="357.2" y="10" width="99.2" height="30" style="fill:var(--accent2)"/><text x="361.2" y="62" style="fill:var(--ink);font-weight:600">16%</text><text x="361.2" y="78" style="fill:var(--muted)">parameter ascription</text><rect x="456.4" y="10" width="62.0" height="30" style="fill:var(--warn)"/><text x="460.4" y="62" style="fill:var(--ink);font-weight:600">10%</text><text x="460.4" y="78" style="fill:var(--muted)">of_js</text><rect x="518.4" y="10" width="111.6" height="30" style="fill:var(--cx)"/><text x="522.4" y="62" style="fill:var(--ink);font-weight:600">18%</text><text x="522.4" y="78" style="fill:var(--muted)">GC, rest</text></svg><figcaption>The floor of a 16x16 call that does nothing (13.8 ms in the profiled dev build, before), by profile share.</figcaption></figure></div></li>
 <li><div class="row"><p><b>Underneath, each evaluation step costs about 3 &micro;s, so even the plain walk is 25-80 &micro;s per cell.</b> A countdown over plain Ints costs 3.836 ms for 128 steps before, 3.162 after (one round each: 18% less, not far past this laptop's noise). The time is spread over the evaluator's per-step pipeline, jsoo's generic calls, fresh ids and GC; there is no single hot spot, and none of the 14 PRs aims at it.</p></div></li>
 <li><div class="row"><p><b>Passing only the neighbouring cells makes the call flat: 0.889 ms at 16x16, 0.782 ms at 3x3.</b> That is the one change, available today without touching Hazel, that removes the dependence on map size: 162x faster than the shipped rule at 16x16 before the PRs, and still 23x after them, with the same answer.</p></div></li>
 <li><div class="row"><p><b>The 14 PRs together halve the compile: the game's rules compile in 402 ms after, against 797 ms before.</b> That is once per program, at load. Per call, everything they change is <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>'s: the bars of <a href="#fig-16">Figure 3</a> for <i>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></i> and <i>after</i> agree within noise. Eight of the 14 cannot reach a library call at all; they speed up the editor, its worker and its recovering parser (the <a href="#prs">table</a>).</p></div></li>
@@ -116,7 +116,7 @@
 </ul>
 <p>They merge cleanly but for three small conflicts (two test lists, and <a href="https://github.com/hazelgrove/hazel/pull/2610">#2610</a> and <a href="https://github.com/hazelgrove/hazel/pull/2614">#2614</a> both fixing the recovering parser), and both trial branches build. What each PR can reach in a library call follows from what the library runs: <code>FastParse</code>, then <code>Statics.mk</code> once per program, then <code>Evaluator.evaluate</code> from scratch on every call, on the page's own thread (<code>src/web/HazelLibCore.re</code>).</p>
 <div class="scroll"><table><tr><th>PR</th><th>what it does</th><th>state</th><th>in the measured build</th><th>reaches</th><th>why</th></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a></td><td class=n>an ascription pushed through a value gives the value back when it already has the type</td><td class=n>merged into dev</td><td class=n>yes</td><td class=n>each call</td><td class=n>pushing (Globals, Event) and find's ([Cell], Int, Int) through the argument</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></td><td class=n>a value known to have a type is not walked again for it</td><td class=n>open</td><td class=n>no</td><td class=n>each call</td><td class=n>find(rest, ...) re-checks the rest of the list at every step: the quadratic part</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a></td><td class=n>types get a Merkle hash; is_consistent once per pair of types</td><td class=n>open</td><td class=n>no</td><td class=n>each call</td><td class=n>the type question each ascription push asks; <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> keys its memo by this hash</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2603">#2603</a></td><td class=n>statics: a let analyzed once unless it refers to itself, plus three more</td><td class=n>open</td><td class=n>no</td><td class=n>compile</td><td class=n>Statics.mk on the program, once per runProgram</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a></td><td class=n>statics: a module binding analyzes its definition once, not twice</td><td class=n>open</td><td class=n>no</td><td class=n>compile</td><td class=n>the game's rules are modules</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a></td><td class=n>elaborations leave out the source's whitespace and comments</td><td class=n>open</td><td class=n>no</td><td class=n>compile, and what a call evaluates</td><td class=n>smaller elaborated terms</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2675">#2675</a></td><td class=n>incremental evaluation reuses expressions around a recursive let</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>the library evaluates from scratch (Evaluator.evaluate), with no incremental reuse</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2673">#2673</a></td><td class=n>incremental evaluation recognizes an unchanged expression by its Merkle hash</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>as <a href="https://github.com/hazelgrove/hazel/pull/2675">#2675</a></td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2606">#2606</a></td><td class=n>the eval worker keeps the incremental cache</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>the library runs on the page's thread, with no worker</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2652">#2652</a></td><td class=n>Firefox's eval worker starts at load</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>no worker</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2614">#2614</a></td><td class=n>the recovering parser about 2.5x faster</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>the library parses with FastParse; the recovering parser runs only when that fails</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2610">#2610</a></td><td class=n>the load fallback parses with the segmented parser</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>as <a href="https://github.com/hazelgrove/hazel/pull/2614">#2614</a></td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2671">#2671</a></td><td class=n>MapPiece keeps unchanged pieces as the same objects</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>the editor's view</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2672">#2672</a></td><td class=n>measuring the font no longer scrolls the editor</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>the editor's view</td></tr></table></div>
-<p>Measured, at 16x16 (the mean of two rounds; the rounds' spread is under 20% for nine in ten of the times from 6x6 up, so read smaller differences as noise):</p>
+<p>Measured, at 16x16 (the mean of two rounds; the rounds' spread is under 18% for nine in ten of the times from 6x6 up, so read smaller differences as noise):</p>
 <div class="scroll"><table><tr><th>16x16, ms</th><th>before</th><th>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></th><th>after</th></tr>
 <tr><td>shipped rule</td><td class=n>144</td><td class=n>20.6</td><td class=n>19.1</td></tr>
 <tr><td>find unannotated</td><td class=n>18</td><td class=n>19.5</td><td class=n>19.4</td></tr>
@@ -131,6 +131,17 @@
 </ul>
 <div class="scroll"><table><tr><th>build</th><th>compile the game's rules, ms (each round)</th><th>compile and run this report's program, ms (each round)</th></tr><tr><td>before: the measured build: 1 of the 14 PRs</td><td class=n>797 (807, 788)</td><td class=n>344 (338, 350)</td></tr><tr><td>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>: + <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> and <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>: 3 of 14</td><td class=n>810 (804, 816)</td><td class=n>367 (347, 386)</td></tr><tr><td>after: all 14 PRs</td><td class=n>402 (390, 414)</td><td class=n>276 (270, 282)</td></tr></table></div>
 <p class="note">Each compile is the first call in a fresh node process, so it includes the JIT's warm-up; there is one per round. The drop comes with the PRs that reach the compile (<a href="https://github.com/hazelgrove/hazel/pull/2603">#2603</a>, <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a>, <a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a>); which of them carries it was not measured apart.</p>
+<p class="note">Both trial branches pass Hazel's whole test suite on GitHub (Fast checks and Full tests): <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> on the measured build, and all 14 PRs merged together.</p>
+
+<h3 id="floor">Why <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> raises the floor, and a fix</h3>
+<p>Matthew, on the floor's rise: <q>find why <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> raises the floor by about a quarter, and whether it can skip recording values it will never see again</q> (<code class="ref"><b>^ticket(</b>535<b>)</b></code>).</p>
+<p><b>Why.</b> <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> asks its memo (<code>has_type</code>, a WeakMap) at every part of every value an ascription is pushed through, and after a walk that gives a part back unchanged it records that part, and every tail of a list. Each ask and each record also looks up the type's hash (<a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>'s cache, another WeakMap). Counted by wrapping WeakMap's <code>get</code> and <code>set</code> around GitHub's build, without rebuilding (<code>drivers/floor2681.mjs</code>), one 16x16 call of the identity rule does 4,137 memo lookups, all misses, 2,580 writes (the tails of the cells' list and of every cell's <code>ways</code>, every record and every field) and 6,734 type-hash lookups. The argument is converted afresh on every call, so nothing recorded is asked about again. The shipped rule's whole gain is 137 hits, one per step of <code>find</code>.</p>
+<p>The writes alone are not the cost. With only them switched off, the identity call was no faster (9.63 and 9.88 ms in two rounds, against 9.69 ms with them), while the shipped rule, now missing every time, took 194 ms: slower than before <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> (141 ms), since every check still asks the memo and the type hash. Nor is it the collector: GC time per identity call was 2.45, 2.54 and 2.39 ms in the three builds below. The cost is the asking, at every part.</p>
+<p><b>A fix.</b> The memo cannot tell which values it will see again, but the pattern it exists for has a fixed shape: a recursive function whose annotated parameter receives the tail of a list it was given, as the argument itself or as a part of an argument tuple, like <code>find(rest, c, r)</code> against <code>([Cell], Int, Int)</code>. So the trial branch <code>trial/r25-2681-depth</code> (<code>5b79ba5f95</code>) asks and tells the memo only at a pushed value and its parts, depth 0 and 1 (<code>Ascriptions.memo_depth</code>); a record's label and a list's tail count as the same depth as the record or the list. Deeper parts are walked as before <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>.</p>
+<div class="scroll"><table><tr><th>one 16x16 call</th><th>memo lookups</th><th>memo hits</th><th>memo writes</th><th>type-hash lookups</th></tr><tr><td>identity rule, <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></td><td class=n>4,137</td><td class=n>0</td><td class=n>2,580</td><td class=n>6,734</td></tr><tr><td>identity rule, depth-limited</td><td class=n>6</td><td class=n>0</td><td class=n>3</td><td class=n>8</td></tr><tr><td>shipped rule, <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></td><td class=n>4,548</td><td class=n>137</td><td class=n>2,717</td><td class=n>7,693</td></tr><tr><td>shipped rule, depth-limited</td><td class=n>673</td><td class=n>136</td><td class=n>396</td><td class=n>968</td></tr></table></div>
+<div class="scroll"><table><tr><th rowspan=2>ms per call</th><th colspan=3>this report's driver, 2 rounds</th><th colspan=3>the floor driver, 3 rounds</th></tr><tr><th>before</th><th><a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></th><th>depth-limited</th><th>before</th><th><a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></th><th>depth-limited</th></tr><tr><td>identity rule, 16x16</td><td class=n>8.54</td><td class=n>10.1</td><td class=n>8.53</td><td class=n>8.92</td><td class=n>9.69</td><td class=n>9.01</td></tr><tr><td>identity rule, 24x24</td><td class=n>19.3</td><td class=n>25.4</td><td class=n>19.1</td><td class=n>18.7</td><td class=n>19.9</td><td class=n>19.7</td></tr><tr><td>shipped rule, 16x16</td><td class=n>144</td><td class=n>20.6</td><td class=n>18.9</td><td class=n>141</td><td class=n>17</td><td class=n>18.2</td></tr><tr><td>shipped rule, 24x24</td><td class=n>678</td><td class=n>42.8</td><td class=n>42.2</td><td class=n>637</td><td class=n>38.9</td><td class=n>41.1</td></tr></table></div>
+<p>So yes: limited this way, <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> stops recording what these calls never see again. The floor is back where it was before <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> (8.53 ms at 16x16 against 8.54), and the shipped rule keeps its gain (18.9 ms against 20.6 with the whole memo, and 144 before). The two drivers disagree on how big the rise was (18% in this report's, which runs many variants and sizes in one process, 9% in the floor driver's three variants); the limit removes it in both at 16x16. At 24x24 the floor driver's mean is 19.7 ms against 18.7 before, but one of its three rounds ran long (18.9 / 21.5 / 18.6 ms), and this report's driver puts it at 19.1 against 19.3.</p>
+<p class="note">What the limit gives up: a value recognized deeper inside a later push, as when shapes already checked one by one are checked again as a list. <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>'s own browser measurement (<a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>'s woods picture, 563.5 to 497.5 ms per figure move) may lean on that, so it should be re-measured with the limit before <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> takes it. On GitHub the trial branch passes Fast checks; the full tests were still running at this writing.</p>
 
 <h2 id="call">What happens in one call</h2>
 <p>The game compiles each room's module once (<code>runProgram</code>) and keeps the JS function Hazel gives back for the room's <code>on_event</code>. On each event it calls that function with two arguments, <code>Globals</code> and <code>Event</code>. For the World room, <code>Globals</code> holds the player's position, the map size and <code>cells</code>, a list with one record per square: <code>{col, row, kind, ways}</code>. The game rebuilds it on every event (0.098 ms in JS at 16x16, negligible). Inside the library (<code>src/web/HazelLibCore.re</code>, <code>function_of</code>), each call then:</p>
@@ -199,13 +210,14 @@
 <ol>
 <li>Change the World and Square rules on <a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>: no annotations on recursive helpers, and neighbours only in World's <code>Globals</code>; re-time the game's moves at 16x16.</li>
 <li>Land <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a> and <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> in <code>dev</code>, then rebase <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a> and <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> on it: the game gets the linear rule without changing its rules. (Measured here on <code>trial/r25-2681</code>.)</li>
-<li>Prototype <code>of_js</code> producing final values, and time the identity rule's floor; it would also remove the first-push cost <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> adds.</li>
-<li>Pin the noise floor: two rounds give a spread under 20% for nine in ten of the times; five would say more.</li>
+<li>Re-measure <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>'s woods picture on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a> with its memo limited to depth 1 (<code>trial/r25-2681-depth</code>), and if it keeps that gain, propose the limit on <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>.</li>
+<li>Prototype <code>of_js</code> producing final values, and time the identity rule's floor.</li>
+<li>Pin the noise floor: two rounds give a spread under 18% for nine in ten of the times; five would say more.</li>
 <li>Measure the compile's halving PR by PR (<a href="https://github.com/hazelgrove/hazel/pull/2603">#2603</a>, <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a>, <a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a>).</li>
 </ol>
 
 <h2 id="method">How this was put together</h2>
-<p>Node v22.23.2 on the Ubuntu laptop (Intel i7), one process at a time. The library is hazel-lib.js from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> at <code>0d66c36618</code>: the minified build for every time, the dev build <code>hazelLib.bc.js</code> for named profiles (3 s each). The rules are the game's at <code>2ebda59ab4</code>. Each time is one p50 over 20-60 reps after warm-up; for that first run the noise floor was not measured, so treat differences under about 10% as noise (the reruns below give it: under 20% for nine in ten times). The target cell is mid-map, at (n/2-1, n/2), moving east; every variant's result was checked against the game's World handler. The library exposes no step count, so per-step costs are inferred from timings. The drivers are in <code>drivers/</code> (<code>r25.mjs</code> for the sizes, <code>steps.mjs</code>, <code>profheld.mjs</code>, and the earlier <code>prof.mjs</code> and <code>prof_noann.mjs</code>; they read the game and library from local checkouts); the data is in <a href="https://github.com/matthewhammer/hazel-reports/tree/main/025/data"><code>data/</code></a>, and the profiles, too big to keep, are summarized in <code>data/profiles.json</code>.</p>
+<p>Node v22.23.2 on the Ubuntu laptop (Intel i7), one process at a time. The library is hazel-lib.js from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> at <code>0d66c36618</code>: the minified build for every time, the dev build <code>hazelLib.bc.js</code> for named profiles (3 s each). The rules are the game's at <code>2ebda59ab4</code>. Each time is one p50 over 20-60 reps after warm-up; for that first run the noise floor was not measured, so treat differences under about 10% as noise (the reruns below give it: under 18% for nine in ten times). The target cell is mid-map, at (n/2-1, n/2), moving east; every variant's result was checked against the game's World handler. The library exposes no step count, so per-step costs are inferred from timings. The drivers are in <code>drivers/</code> (<code>r25.mjs</code> for the sizes, <code>steps.mjs</code>, <code>profheld.mjs</code>, and the earlier <code>prof.mjs</code> and <code>prof_noann.mjs</code>; they read the game and library from local checkouts); the data is in <a href="https://github.com/matthewhammer/hazel-reports/tree/main/025/data"><code>data/</code></a>, and the profiles, too big to keep, are summarized in <code>data/profiles.json</code>.</p>
 <p>Before and after the PRs: <code>drivers/prs.sh</code> runs <code>r25.mjs</code> on GitHub's Deploy builds of three branches (hazelgrove/build, <code>&lt;branch&gt;/hazel-lib.js</code>): <code>js-library-embed</code> at <code>0d66c36618</code>, <code>trial/r25-2681</code> at <code>9e461fcc09</code> and <code>trial/r25-all-perf</code> at <code>8756a15dfc</code>, in two rounds with the builds interleaved (before, + <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>, after; then again), one node process at a time, pinned to two threads and niced, as this laptop needs. Every time above is the mean of the two rounds; each round is in <code>data/prs/</code>, with each build's compile times. The builds and the 14 PRs are in <code>data/prs.json</code>. The per-step costs are one round per build (<code>steps.mjs</code>). The figures and the first table use these reruns; <i>the first run</i> is the first draft's, kept as it was.</p>
 
 <!-- data-line: begin -->
@@ -526,6 +538,7 @@
   "data/data_sizes.json",
   "data/data_steps.json",
   "data/earlier.json",
+  "data/floor",
   "data/meta.json",
   "data/profiles.json",
   "data/prs",
@@ -726,6 +739,107 @@
      "after: all 14 PRs",
      "402 (390, 414)",
      "276 (270, 282)"
+    ]
+   ]
+  },
+  {
+   "section": "Why #2681 raises the floor, and a fix",
+   "section_id": "floor",
+   "columns": [
+    "one 16x16 call",
+    "memo lookups",
+    "memo hits",
+    "memo writes",
+    "type-hash lookups"
+   ],
+   "rows": [
+    [
+     "identity rule, #2681",
+     "4,137",
+     "0",
+     "2,580",
+     "6,734"
+    ],
+    [
+     "identity rule, depth-limited",
+     "6",
+     "0",
+     "3",
+     "8"
+    ],
+    [
+     "shipped rule, #2681",
+     "4,548",
+     "137",
+     "2,717",
+     "7,693"
+    ],
+    [
+     "shipped rule, depth-limited",
+     "673",
+     "136",
+     "396",
+     "968"
+    ]
+   ]
+  },
+  {
+   "section": "Why #2681 raises the floor, and a fix",
+   "section_id": "floor",
+   "columns": [
+    "ms per call",
+    "this report's driver, 2 rounds",
+    "this report's driver, 2 rounds",
+    "this report's driver, 2 rounds",
+    "the floor driver, 3 rounds",
+    "the floor driver, 3 rounds",
+    "the floor driver, 3 rounds"
+   ],
+   "rows": [
+    [
+     "ms per call",
+     "before",
+     "#2681",
+     "depth-limited",
+     "before",
+     "#2681",
+     "depth-limited"
+    ],
+    [
+     "identity rule, 16x16",
+     "8.54",
+     "10.1",
+     "8.53",
+     "8.92",
+     "9.69",
+     "9.01"
+    ],
+    [
+     "identity rule, 24x24",
+     "19.3",
+     "25.4",
+     "19.1",
+     "18.7",
+     "19.9",
+     "19.7"
+    ],
+    [
+     "shipped rule, 16x16",
+     "144",
+     "20.6",
+     "18.9",
+     "141",
+     "17",
+     "18.2"
+    ],
+    [
+     "shipped rule, 24x24",
+     "678",
+     "42.8",
+     "42.2",
+     "637",
+     "38.9",
+     "41.1"
     ]
    ]
   },

@@ -1,0 +1,205 @@
+[
+ {
+  "n": 3,
+  "cells": 9,
+  "target_index": 4,
+  "js_globals": 0.004,
+  "idU": 0.772,
+  "idA": 0.435,
+  "game_World": 2.717,
+  "shipped": 1.501,
+  "noann": 1.061,
+  "index": 1.025,
+  "near": 0.754,
+  "held_setup": 3.16,
+  "held": 0.71,
+  "held_ok": true,
+  "near_ok": true,
+  "result": {
+   "tag": "GoSquare",
+   "value": [
+    1,
+    1,
+    "W",
+    {
+     "tag": "Done"
+    }
+   ]
+  },
+  "js_rule": 0
+ },
+ {
+  "n": 4,
+  "cells": 16,
+  "target_index": 10,
+  "js_globals": 0.01,
+  "idU": 0.411,
+  "idA": 0.499,
+  "game_World": 2.509,
+  "shipped": 2.323,
+  "noann": 1.474,
+  "index": 1.869,
+  "near": 0.87,
+  "held_setup": 2.74,
+  "held": 0.97,
+  "held_ok": true,
+  "near_ok": true,
+  "result": {
+   "tag": "GoSquare",
+   "value": [
+    2,
+    2,
+    "W",
+    {
+     "tag": "Done"
+    }
+   ]
+  },
+  "js_rule": 0.001
+ },
+ {
+  "n": 6,
+  "cells": 36,
+  "target_index": 21,
+  "js_globals": 0.028,
+  "idU": 0.785,
+  "idA": 1.004,
+  "game_World": 3.646,
+  "shipped": 3.449,
+  "noann": 3.174,
+  "index": 2.932,
+  "near": 0.848,
+  "held_setup": 5.64,
+  "held": 2.223,
+  "held_ok": true,
+  "near_ok": true,
+  "result": {
+   "tag": "GoSquare",
+   "value": [
+    3,
+    3,
+    "W",
+    {
+     "tag": "Done"
+    }
+   ]
+  },
+  "js_rule": 0.001
+ },
+ {
+  "n": 8,
+  "cells": 64,
+  "target_index": 36,
+  "js_globals": 0.049,
+  "idU": 2.202,
+  "idA": 2.342,
+  "game_World": 5.924,
+  "shipped": 4.989,
+  "noann": 4.551,
+  "index": 4.294,
+  "near": 0.844,
+  "held_setup": 7.48,
+  "held": 3.077,
+  "held_ok": true,
+  "near_ok": true,
+  "result": {
+   "tag": "GoSquare",
+   "value": [
+    4,
+    4,
+    "W",
+    {
+     "tag": "Done"
+    }
+   ]
+  },
+  "js_rule": 0.001
+ },
+ {
+  "n": 12,
+  "cells": 144,
+  "target_index": 78,
+  "js_globals": 0.046,
+  "idU": 3.868,
+  "idA": 4.656,
+  "game_World": 11.321,
+  "shipped": 10.861,
+  "noann": 9.693,
+  "index": 8.903,
+  "near": 0.865,
+  "held_setup": 14.93,
+  "held": 6.144,
+  "held_ok": true,
+  "near_ok": true,
+  "result": {
+   "tag": "GoSquare",
+   "value": [
+    6,
+    6,
+    "W",
+    {
+     "tag": "Done"
+    }
+   ]
+  },
+  "js_rule": 0.001
+ },
+ {
+  "n": 16,
+  "cells": 256,
+  "target_index": 136,
+  "js_globals": 0.085,
+  "idU": 6.994,
+  "idA": 8.551,
+  "game_World": 19.135,
+  "shipped": 18.937,
+  "noann": 16.88,
+  "index": 15.69,
+  "near": 0.843,
+  "held_setup": 25.12,
+  "held": 10.731,
+  "held_ok": true,
+  "near_ok": true,
+  "result": {
+   "tag": "GoSquare",
+   "value": [
+    8,
+    8,
+    "W",
+    {
+     "tag": "Done"
+    }
+   ]
+  },
+  "js_rule": 0.001
+ },
+ {
+  "n": 24,
+  "cells": 576,
+  "target_index": 300,
+  "js_globals": 0.205,
+  "idU": 15.992,
+  "idA": 18.883,
+  "game_World": 44.078,
+  "shipped": 41.672,
+  "noann": 38.22,
+  "index": 35.792,
+  "near": 0.89,
+  "held_setup": 53.8,
+  "held": 24.189,
+  "held_ok": true,
+  "near_ok": true,
+  "result": {
+   "tag": "GoSquare",
+   "value": [
+    12,
+    12,
+    "W",
+    {
+     "tag": "Done"
+    }
+   ]
+  },
+  "js_rule": 0.001
+ }
+]
