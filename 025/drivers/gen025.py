@@ -259,7 +259,7 @@ def listing(k, name, col, hz, js, note):
     return (f'<div class="listing" id="code-{k}"><div class="lh"><span class="sw" style="background:{col}"></span><b>{name}</b>'
             f'<span class="ms">16x16: {fmt(pre[256][k])} ms before, {fmt(post[256][k])} ms after</span></div>'
             f'<pre class="code">{code(hz)}</pre>'
-            f'<div class="tiles" data-k="{k}"><div class="tiles-note">Hazel\'s tile editor, read only: the same code, with what it needs before it (the program\'s types and the helpers), from hazel.org\'s build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> (a selectable version, ^ticket(538), comes next). <button type="button" class="tiles-go">▶ show Hazel\'s tiles</button> <span class="tiles-phase"></span></div></div>'
+            f'<div class="tiles" data-k="{k}"><div class="tiles-note">Hazel\'s tile editor, read only: the same code, with what it needs before it (the program\'s types and the helpers), from hazel.org\'s build of <code>embed-selectable</code> (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> with a selectable cell, ^ticket(538)): click in it, then drag, shift-click or use the arrows, and the tile shapes show. <button type="button" class="tiles-go">▶ show Hazel\'s tiles</button> <span class="tiles-phase"></span></div></div>'
             f'<div class="runbox" data-k="{k}"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: '
             f'<select aria-label="the map\'s size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> '
             f'<button type="button">▶ run, with Hazel\'s JS library</button></div><pre class="rb-out">Hazel\'s library (hazel.org\'s build of #2719, the tiles\' build) loads on the first run.</pre></div>'
@@ -640,7 +640,7 @@ PAGE = f"""<!doctype html>
    #2719), which takes a program from this page (matthewhammer.org and localhost are on its list) and shows it read only, posting back
    its height and what Hazel says of the program. Each frame is made only when its box comes near the screen. */
 (() => {{
-  const URL = "https://hazel.org/build/js-library-embed/index.html#embed", ORIGIN = "https://hazel.org";
+  const URL = "https://hazel.org/build/embed-selectable/index.html#embed", ORIGIN = "https://hazel.org";
   const T = JSON.parse(document.getElementById("tiles-data").textContent);
   const frames = [];
   addEventListener("message", e => {{
