@@ -1,6 +1,418 @@
 [
  {
-  "section": "By map size (ms, p50)",
+  "section": "Before and after the performance PRs",
+  "section_id": "prs",
+  "columns": [
+   "PR",
+   "what it does",
+   "state",
+   "in the measured build",
+   "reaches",
+   "why"
+  ],
+  "rows": [
+   [
+    "#2679",
+    "an ascription pushed through a value gives the value back when it already has the type",
+    "merged into dev",
+    "yes",
+    "each call",
+    "pushing (Globals, Event) and find's ([Cell], Int, Int) through the argument"
+   ],
+   [
+    "#2681",
+    "a value known to have a type is not walked again for it",
+    "open",
+    "no",
+    "each call",
+    "find(rest, ...) re-checks the rest of the list at every step: the quadratic part"
+   ],
+   [
+    "#2661",
+    "types get a Merkle hash; is_consistent once per pair of types",
+    "open",
+    "no",
+    "each call",
+    "the type question each ascription push asks; #2681 keys its memo by this hash"
+   ],
+   [
+    "#2603",
+    "statics: a let analyzed once unless it refers to itself, plus three more",
+    "open",
+    "no",
+    "compile",
+    "Statics.mk on the program, once per runProgram"
+   ],
+   [
+    "#2651",
+    "statics: a module binding analyzes its definition once, not twice",
+    "open",
+    "no",
+    "compile",
+    "the game's rules are modules"
+   ],
+   [
+    "#2608",
+    "elaborations leave out the source's whitespace and comments",
+    "open",
+    "no",
+    "compile, and what a call evaluates",
+    "smaller elaborated terms"
+   ],
+   [
+    "#2675",
+    "incremental evaluation reuses expressions around a recursive let",
+    "open",
+    "no",
+    "nothing here",
+    "the library evaluates from scratch (Evaluator.evaluate), with no incremental reuse"
+   ],
+   [
+    "#2673",
+    "incremental evaluation recognizes an unchanged expression by its Merkle hash",
+    "open",
+    "no",
+    "nothing here",
+    "as #2675"
+   ],
+   [
+    "#2606",
+    "the eval worker keeps the incremental cache",
+    "open",
+    "no",
+    "nothing here",
+    "the library runs on the page's thread, with no worker"
+   ],
+   [
+    "#2652",
+    "Firefox's eval worker starts at load",
+    "open",
+    "no",
+    "nothing here",
+    "no worker"
+   ],
+   [
+    "#2614",
+    "the recovering parser about 2.5x faster",
+    "open",
+    "no",
+    "nothing here",
+    "the library parses with FastParse; the recovering parser runs only when that fails"
+   ],
+   [
+    "#2610",
+    "the load fallback parses with the segmented parser",
+    "open",
+    "no",
+    "nothing here",
+    "as #2614"
+   ],
+   [
+    "#2671",
+    "MapPiece keeps unchanged pieces as the same objects",
+    "open",
+    "no",
+    "nothing here",
+    "the editor's view"
+   ],
+   [
+    "#2672",
+    "measuring the font no longer scrolls the editor",
+    "open",
+    "no",
+    "nothing here",
+    "the editor's view"
+   ]
+  ]
+ },
+ {
+  "section": "Before and after the performance PRs",
+  "section_id": "prs",
+  "columns": [
+   "16x16, ms",
+   "before",
+   "+ #2681",
+   "after"
+  ],
+  "rows": [
+   [
+    "shipped rule",
+    "144",
+    "20.6",
+    "19.1"
+   ],
+   [
+    "find unannotated",
+    "18",
+    "19.5",
+    "19.4"
+   ],
+   [
+    "identity rule (the floor)",
+    "8.54",
+    "10.1",
+    "10.6"
+   ],
+   [
+    "neighbours only",
+    "0.889",
+    "0.926",
+    "0.832"
+   ],
+   [
+    "shipped rule at 24x24",
+    "678",
+    "42.8",
+    "45.9"
+   ]
+  ]
+ },
+ {
+  "section": "Before and after the performance PRs",
+  "section_id": "prs",
+  "columns": [
+   "build",
+   "compile the game's rules, ms (each round)",
+   "compile and run this report's program, ms (each round)"
+  ],
+  "rows": [
+   [
+    "before: the measured build: 1 of the 14 PRs",
+    "797 (807, 788)",
+    "344 (338, 350)"
+   ],
+   [
+    "+ #2681: + #2681 and #2661: 3 of 14",
+    "810 (804, 816)",
+    "367 (347, 386)"
+   ],
+   [
+    "after: all 14 PRs",
+    "402 (390, 414)",
+    "276 (270, 282)"
+   ]
+  ]
+ },
+ {
+  "section": "Before and after the PRs, by map size (ms, p50, the mean of two rounds)",
+  "section_id": "t-prs",
+  "columns": [
+   "map (cells)",
+   "shipped",
+   "shipped",
+   "shipped",
+   "unannotated",
+   "unannotated",
+   "identity",
+   "identity",
+   "held",
+   "held",
+   "neighbours",
+   "neighbours"
+  ],
+  "rows": [
+   [
+    "map (cells)",
+    "before",
+    "+ #2681",
+    "after",
+    "before",
+    "after",
+    "before",
+    "after",
+    "before",
+    "after",
+    "before",
+    "after"
+   ],
+   [
+    "3x3 (9)",
+    "1.62",
+    "1.53",
+    "1.32",
+    "1.06",
+    "1.09",
+    "0.675",
+    "0.769",
+    "0.721",
+    "0.722",
+    "0.782",
+    "0.803"
+   ],
+   [
+    "4x4 (16)",
+    "2.78",
+    "2.33",
+    "1.93",
+    "1.54",
+    "1.68",
+    "0.565",
+    "0.569",
+    "1",
+    "1.02",
+    "0.881",
+    "0.886"
+   ],
+   [
+    "6x6 (36)",
+    "6.42",
+    "3.56",
+    "3.11",
+    "3.43",
+    "3.13",
+    "0.999",
+    "1.18",
+    "2.31",
+    "1.88",
+    "0.955",
+    "0.863"
+   ],
+   [
+    "8x8 (64)",
+    "16.3",
+    "5.33",
+    "5.56",
+    "5.01",
+    "5.11",
+    "2.42",
+    "2.6",
+    "3.06",
+    "2.88",
+    "0.908",
+    "0.863"
+   ],
+   [
+    "12x12 (144)",
+    "50.3",
+    "12",
+    "10.9",
+    "9.96",
+    "10.6",
+    "4.71",
+    "5.75",
+    "6.34",
+    "5.96",
+    "1.12",
+    "0.856"
+   ],
+   [
+    "16x16 (256)",
+    "144",
+    "20.6",
+    "19.1",
+    "18",
+    "19.4",
+    "8.54",
+    "10.6",
+    "10.8",
+    "10.7",
+    "0.889",
+    "0.832"
+   ],
+   [
+    "24x24 (576)",
+    "678",
+    "42.8",
+    "45.9",
+    "40.8",
+    "42.6",
+    "19.3",
+    "25.3",
+    "26.2",
+    "26.1",
+    "1.21",
+    "0.931"
+   ]
+  ]
+ },
+ {
+  "section": "Per-step costs, before and after (ms, p50)",
+  "section_id": "t-steps-prs",
+  "columns": [
+   "program",
+   "before",
+   "after"
+  ],
+  "rows": [
+   [
+    "walk L=64 i=0",
+    "1.451",
+    "1.704"
+   ],
+   [
+    "walk L=64 i=32",
+    "2.512",
+    "3.262"
+   ],
+   [
+    "walk L=256 i=0",
+    "1.443",
+    "1.478"
+   ],
+   [
+    "walk L=256 i=32",
+    "2.767",
+    "2.97"
+   ],
+   [
+    "walk L=256 i=64",
+    "4.409",
+    "4.757"
+   ],
+   [
+    "walk L=256 i=128",
+    "6.55",
+    "7.05"
+   ],
+   [
+    "walk L=1024 i=0",
+    "7.319",
+    "6.74"
+   ],
+   [
+    "walk L=1024 i=32",
+    "8.77",
+    "7.95"
+   ],
+   [
+    "walk L=1024 i=64",
+    "11.646",
+    "9.294"
+   ],
+   [
+    "walk L=1024 i=128",
+    "14.712",
+    "12.51"
+   ],
+   [
+    "countdown i=0",
+    "0.037",
+    "0.023"
+   ],
+   [
+    "countdown i=32",
+    "0.766",
+    "0.69"
+   ],
+   [
+    "countdown i=64",
+    "1.873",
+    "1.505"
+   ],
+   [
+    "countdown i=128",
+    "3.836",
+    "3.162"
+   ],
+   [
+    "countdown i=256",
+    "8.121",
+    "7.355"
+   ]
+  ]
+ },
+ {
+  "section": "The first run, before only (ms, p50)",
   "section_id": "t-sizes",
   "columns": [
    "map (cells)",

@@ -38,10 +38,17 @@ let held = fun (cells : [Cell]) -> fun (n, e) -> case e
  idU = fun (g, e) -> Done,
  near = near, held = held)`;
 const prog = [S.SCRIPT_PREAMBLE, BODY].join("\n");
+const tRun = performance.now();
 const r = H.run(prog); if (r.errors && r.errors.length) { console.error(r.errors); process.exit(1); }
+const run_ms = +(performance.now() - tRun).toFixed(1);
 const V = r.value;
 // real World rule via game compile
+const tCompile = performance.now();
 const W = vm.runInContext("scriptCompile()", page).handlers.World;
+const compile_ms = +(performance.now() - tCompile).toFixed(1);
+// both are first calls in a fresh process: one sample each, so read them across runs
+fs.writeFileSync(`compile_${process.argv[4]||"run"}.json`, JSON.stringify({ run_ms, compile_ms }));
+console.log(JSON.stringify({ run_ms, compile_ms }));
 const q=(a,p)=>a.slice().sort((x,y)=>x-y)[Math.floor(p*a.length)];
 const T=(f,R)=>{for(let i=0;i<3;i++)f(); const t=[];const t00=performance.now();for(let i=0;i<R;i++){const t0=performance.now();f();t.push(performance.now()-t0); if(performance.now()-t00>2500&&i>=8)break;} return +q(t,.5).toFixed(3);};
 // map like W.cells: {"c,r": {kind, ways}}

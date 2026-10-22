@@ -2,7 +2,7 @@
 """Writes 025/index.html, ^report(25): what a call into Hazel costs.
   python3 025/drivers/gen025.py   (then build.sh runs the series tools)
 Figures are inline SVG drawn from 025/data/*.json."""
-import json, os, math, re
+import json, os, math, re, glob
 HERE = os.path.dirname(os.path.abspath(__file__))
 R = os.path.dirname(HERE)
 D = lambda f: json.load(open(os.path.join(R, "data", f)))
@@ -10,6 +10,36 @@ sizes = D("data_sizes.json"); steps = D("data_steps.json"); early = D("earlier.j
 OUT = os.path.join(R, "index.html")
 by = {r["cells"]: r for r in sizes}
 r256 = by[256]
+
+# ---------- before and after the performance PRs (drivers/prs.sh: three builds, rounds interleaved)
+PRS = D("prs.json")   # the builds and the 14 PRs, by hand
+steps_pre, steps_post = D("prs/steps_base.json"), D("prs/steps_b.json")   # one round each
+KEYS = ["js_globals", "idU", "idA", "game_World", "shipped", "noann", "index", "near", "held", "held_setup"]
+def load_build(b):
+    rounds = [json.load(open(f)) for f in sorted(glob.glob(os.path.join(R, "data", "prs", f"data_{b}_*.json")))]
+    comp = [json.load(open(f)) for f in sorted(glob.glob(os.path.join(R, "data", "prs", f"compile_{b}_*.json")))]
+    rows = []
+    for i, r0 in enumerate(rounds[0]):
+        row = {"n": r0["n"], "cells": r0["cells"]}
+        for k in KEYS:
+            vs = [rr[i][k] for rr in rounds]
+            row[k] = sum(vs) / len(vs)
+            row[k + "_spread"] = (max(vs) - min(vs)) / row[k] if row[k] else 0   # rounds' spread, as a share
+        rows.append(row)
+    cm = {k: sum(c[k] for c in comp) / len(comp) for k in ("run_ms", "compile_ms")}
+    cm.update({k + "_all": [c[k] for c in comp] for k in ("run_ms", "compile_ms")})
+    return {"rows": rows, "by": {r["cells"]: r for r in rows}, "compile": cm, "rounds": len(rounds)}
+B = {b["key"]: load_build(b["key"]) for b in PRS["builds"]}
+BN = {b["key"]: b for b in PRS["builds"]}
+pre, mid, post = B["base"]["by"], B["a"]["by"], B["b"]["by"]
+# the rounds' spread, every build, variant and size from 6x6 up: the noise floor these runs can claim
+spreads = sorted(r[k + "_spread"] for bb in B.values() for r in bb["rows"] if r["cells"] >= 36 for k in KEYS if k != "js_globals")
+noise_p90 = spreads[int(0.9 * (len(spreads) - 1))]
+fmt = lambda v: f"{v:.3g}" if v < 100 else f"{v:.0f}"
+# growth exponent from 64 to 576 cells: 1 is linear, 2 quadratic
+slope = lambda rows, k: math.log({r["cells"]: r for r in rows}[576][k] / {r["cells"]: r for r in rows}[64][k]) / math.log(576 / 64)
+from datetime import datetime
+UPDATED = datetime.now().astimezone().strftime("%H:%M")
 
 def esc(s): return s.replace("&", "&amp;").replace("<", "&lt;")
 
@@ -37,6 +67,90 @@ def fig_lines(w=640, h=330):
             o.append(f'<circle cx="{X(r["cells"]):.1f}" cy="{Y(r[k]):.1f}" r="3" style="fill:{col}"/>')
         last = sizes[-1]
         o.append(f'<text x="{X(last["cells"])+8:.1f}" y="{Y(last[k])+4:.1f}" style="fill:{col}">{last[k]:.3g} ms {name}</text>')
+    o.append('</svg>')
+    return "".join(o)
+
+# ---------- figure 1, before and after: the same lines, dashed for the measured build, solid with all 14 PRs
+SERIES = [("shipped", "shipped rule", "var(--bad)"), ("noann", "find unannotated", "var(--warn)"),
+          ("held", "map held in a closure", "var(--accent2)"), ("idA", "identity rule (floor)", "var(--accent)"),
+          ("near", "neighbours only", "var(--good)")]
+def spread_labels(items, gap=13):
+    """items: [y, ...] in drawing order -> ys pushed apart by at least gap, in the same order."""
+    order = sorted(range(len(items)), key=lambda i: items[i]); ys = list(items)
+    for a, b in zip(order, order[1:]):
+        if ys[b] - ys[a] < gap: ys[b] = ys[a] + gap
+    return ys
+def fig_lines_prs(w=660, h=360):
+    rows0, rows1 = B["base"]["rows"], B["b"]["rows"]
+    L, Rr, T, Bm = 60, 220, 14, 40
+    x0, x1 = math.log10(8), math.log10(700); y0, y1 = math.log10(0.3), math.log10(1000)
+    X = lambda v: L + (math.log10(v) - x0) / (x1 - x0) * (w - L - Rr)
+    Y = lambda v: h - Bm - (math.log10(max(v, 0.3)) - y0) / (y1 - y0) * (h - T - Bm)
+    o = [f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="Time per call against map size, log scales, before (dashed) and after (solid) the 14 performance PRs. The shipped rule at 24x24: {fmt(rows0[-1]["shipped"])} ms before, {fmt(rows1[-1]["shipped"])} ms after." style="width:100%;height:auto;font:12px system-ui,sans-serif">']
+    for v in [1, 10, 100, 1000]:
+        o.append(f'<line x1="{L}" x2="{w-Rr}" y1="{Y(v):.1f}" y2="{Y(v):.1f}" style="stroke:var(--line)"/><text x="{L-6}" y="{Y(v)+4:.1f}" text-anchor="end" style="fill:var(--muted)">{v} ms</text>')
+    for r in rows0:
+        o.append(f'<text x="{X(r["cells"]):.1f}" y="{h-Bm+16}" text-anchor="middle" style="fill:var(--muted)">{r["n"]}x{r["n"]}</text>')
+    o.append(f'<text x="{(L+w-Rr)/2}" y="{h-6}" text-anchor="middle" style="fill:var(--muted)">map size (cells, log scale)</text>')
+    o.append(f'<line x1="{L+8}" x2="{L+34}" y1="{T+6}" y2="{T+6}" style="stroke:var(--muted)" stroke-width="2" stroke-dasharray="5 4"/><text x="{L+40}" y="{T+10}" style="fill:var(--muted)">before: {BN["base"]["long"]}</text>'
+             f'<line x1="{L+8}" x2="{L+34}" y1="{T+22}" y2="{T+22}" style="stroke:var(--muted)" stroke-width="2.4"/><text x="{L+40}" y="{T+26}" style="fill:var(--muted)">after: {BN["b"]["long"]}</text>')
+    for k, name, col in SERIES:
+        for rows, dash, op in ((rows0, ' stroke-dasharray="5 4"', ".55"), (rows1, "", "1")):
+            pts = " ".join(f"{X(r['cells']):.1f},{Y(r[k]):.1f}" for r in rows)
+            o.append(f'<polyline points="{pts}" fill="none" style="stroke:{col};opacity:{op}" stroke-width="2.2"{dash}/>')
+            for r in rows:
+                o.append(f'<circle cx="{X(r["cells"]):.1f}" cy="{Y(r[k]):.1f}" r="{2.6 if dash else 3}" style="fill:{"var(--bg)" if dash else col};stroke:{col};opacity:{op}"/>')
+    ys = spread_labels([Y(rows1[-1][k]) + 4 for k, _, _ in SERIES])
+    for (k, name, col), y in zip(SERIES, ys):
+        a, b = rows1[-1][k], rows0[-1][k]
+        o.append(f'<text x="{X(rows1[-1]["cells"])+8:.1f}" y="{y:.1f}" style="fill:{col}">{fmt(a)} ms {name} <tspan style="fill:var(--muted)">(was {fmt(b)})</tspan></text>')
+    o.append('</svg>')
+    return "".join(o)
+
+# ---------- figure 3, before and after: one 16x16 call per variant, three builds
+def fig_bars_prs(variants, cells=256, w=660):
+    bh, gap, ggap, L = 15, 3, 14, 200
+    builds = [("base", ".38"), ("a", ".68"), ("b", "1")]
+    h = 30 + len(variants) * (3 * (bh + gap) + ggap)
+    mx = max(B[b]["by"][cells][k] for k, _, _ in variants for b, _ in builds)
+    o = [f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="One 16x16 call by version of the rule, in three builds: before, with #2681 and #2661, and with all 14 PRs. Shipped rule: {fmt(pre[cells]["shipped"])}, {fmt(mid[cells]["shipped"])} and {fmt(post[cells]["shipped"])} ms." style="width:100%;height:auto;font:12px system-ui,sans-serif">']
+    x = 10
+    for (b, op), lab in zip(builds, ["before (1 of 14 PRs)", "+ #2681 and #2661 (3 of 14)", "after (all 14)"]):
+        o.append(f'<rect x="{x}" y="4" width="12" height="12" rx="2" style="fill:var(--ink);opacity:{op}"/><text x="{x+17}" y="14" style="fill:var(--muted)">{lab}</text>')
+        x += 17 + 6.8 * len(lab) + 22
+    y = 30
+    for k, name, col in variants:
+        o.append(f'<text x="{L-8}" y="{y + 1.5*(bh+gap) + 4:.1f}" text-anchor="end" style="fill:var(--ink)">{esc(name)}</text>')
+        for b, op in builds:
+            v = B[b]["by"][cells][k]; bw = max(2, (w - L - 70) * v / mx)
+            o.append(f'<rect x="{L}" y="{y}" width="{bw:.1f}" height="{bh}" rx="2" style="fill:{col};opacity:{op}"/><text x="{L+bw+5:.1f}" y="{y+bh-3}" style="fill:var(--ink)">{fmt(v)} ms</text>')
+            y += bh + gap
+        y += ggap
+    o.append('</svg>')
+    return "".join(o)
+
+# ---------- the shipped 16x16 call, split, before and after
+def fig_stack_prs(w=380):
+    """Drawn for the narrow column beside a short answer: few words, big type."""
+    rows = [("before", pre[256]), ("after", post[256])]
+    L = 54; W = w - L - 64
+    names = [("conversion + ascription", "var(--accent)"), ("the walk", "var(--warn)"), ("the annotation's re-check", "var(--bad)")]
+    h = 8 + 34 * len(rows) + 22 * len(names) + 6
+    tot0 = rows[0][1]["shipped"]
+    o = [f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="The shipped 16x16 call split into the conversion floor, the walk and the annotation re-check, before ({fmt(pre[256]["shipped"])} ms) and after ({fmt(post[256]["shipped"])} ms) the 14 PRs." style="width:100%;height:auto;font:15px system-ui,sans-serif">']
+    for i, (lab, col) in enumerate(names):
+        ly = 8 + 34 * len(rows) + 22 * i
+        o.append(f'<rect x="{L}" y="{ly}" width="13" height="13" rx="2" style="fill:{col}"/><text x="{L + 19}" y="{ly + 11}" style="fill:var(--muted)">{lab}</text>')
+    for j, (lab, r) in enumerate(rows):
+        y = 6 + 34 * j
+        parts = [r["idA"], max(0, r["noann"] - r["idA"]), max(0, r["shipped"] - r["noann"])]
+        o.append(f'<text x="{L-7}" y="{y+18}" text-anchor="end" style="fill:var(--ink)">{lab}</text>')
+        x = L
+        for v, (_, col) in zip(parts, names):
+            bw = W * v / tot0
+            o.append(f'<rect x="{x:.1f}" y="{y}" width="{bw:.1f}" height="24" style="fill:{col}"/>')
+            x += bw
+        o.append(f'<text x="{x+6:.1f}" y="{y+18}" style="fill:var(--ink);font-weight:600">{fmt(r["shipped"])} ms</text>')
     o.append('</svg>')
     return "".join(o)
 
@@ -85,6 +199,20 @@ def fig(fid, n, svg, cap):
 def mini(svg, cap):
     return f'<figure class="mini">{svg}<figcaption>{cap}</figcaption></figure>'
 
+def tr(cells): return "<tr>" + "".join(f"<td class=n>{c}</td>" if i else f"<td>{c}</td>" for i, c in enumerate(cells)) + "</tr>"
+cm = {b: B[b]["compile"] for b in B}
+pc = lambda a, b: f"{round(100 * (1 - b / a))}%"   # how much less b is than a
+x_ = lambda a, b: f"{a / b:.1f}x"
+VARIANTS = [("shipped", "shipped rule", "var(--bad)"), ("noann", "find unannotated", "var(--warn)"), ("index", "index arithmetic", "var(--warn)"),
+            ("held", "map held in a closure", "var(--accent2)"), ("idA", "identity rule (floor)", "var(--accent)"), ("near", "neighbours only", "var(--good)")]
+FP1 = fig_lines_prs(); FP3 = fig_bars_prs(VARIANTS); FPS = fig_stack_prs()
+def pr_link(n): return f'<a href="https://github.com/hazelgrove/hazel/pull/{n}">#{n}</a>'
+pr_rows = "".join(tr([pr_link(p["pr"]), p["what"], p["state"], "yes" if "base" in p["in"] else "no", p["reaches"], p["why"]]) for p in PRS["prs"])
+ba_cols = [("shipped", "shipped"), ("noann", "unannotated"), ("idA", "identity"), ("held", "held"), ("near", "neighbours")]
+ba_rows = "".join(tr([f'{r["n"]}x{r["n"]} ({r["cells"]})'] + [x for k, _ in ba_cols for x in ([fmt(pre[r["cells"]][k]), fmt(mid[r["cells"]][k]), fmt(post[r["cells"]][k])] if k == "shipped" else [fmt(pre[r["cells"]][k]), fmt(post[r["cells"]][k])])]) for r in B["base"]["rows"])
+ba_head = "<tr><th rowspan=2>map (cells)</th>" + "".join(f'<th colspan={3 if k == "shipped" else 2}>{n}</th>' for k, n in ba_cols) + "</tr><tr>" + "".join("<th>before</th><th>+ #2681</th><th>after</th>" if k == "shipped" else "<th>before</th><th>after</th>" for k, _ in ba_cols) + "</tr>"
+comp_rows = "".join(tr([BN[b]["label"] + ": " + BN[b]["long"], f'{cm[b]["compile_ms"]:.0f} ({", ".join(f"{v:.0f}" for v in cm[b]["compile_ms_all"])})', f'{cm[b]["run_ms"]:.0f} ({", ".join(f"{v:.0f}" for v in cm[b]["run_ms_all"])})']) for b in ("base", "a", "b"))
+
 bars16 = [("shipped rule", round(r256["shipped"]), "var(--bad)"), ("find unannotated", round(r256["noann"], 1), "var(--warn)"),
           ("index arithmetic, unannotated", round(r256["index"], 1), "var(--warn)"), ("map held in a closure", round(r256["held"], 1), "var(--accent2)"),
           ("identity rule (floor)", round(r256["idA"], 1), "var(--accent)"), ("neighbours only", round(r256["near"], 2), "var(--good)"),
@@ -92,7 +220,6 @@ bars16 = [("shipped rule", round(r256["shipped"]), "var(--bad)"), ("find unannot
 F1 = fig_lines(); F2 = fig_bars(bars16, aria="16x16 call by variant: shipped 153 ms, unannotated 22.6, index 17.1, held 12.4, identity 9.5, neighbours 0.96, JS under 0.001.")
 F3 = fig_stack(); F4 = fig_floor()
 
-def tr(cells): return "<tr>" + "".join(f"<td class=n>{c}</td>" if i else f"<td>{c}</td>" for i, c in enumerate(cells)) + "</tr>"
 cols = ["cells", "js_globals", "idU", "idA", "game_World", "shipped", "noann", "index", "near", "held", "held_setup"]
 size_rows = "".join(tr([f'{r["n"]}x{r["n"]} ({r["cells"]})'] + [f'{r[k]:.3g}' for k in cols[1:]]) for r in sizes)
 step_rows = "".join(tr([k, v]) for k, v in steps.items())
@@ -103,24 +230,50 @@ PAGE = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>What a Call into Hazel Costs</title>
-<meta name="description" content="Why one Dress Up room rule, run as a Hazel function from JS, takes 40-150 ms on a 16x16 map: the call converts the whole map to syntax and re-evaluates it, the parameter type re-checks it, and an annotated recursive helper re-checks the rest of the list at every step.">
+<meta name="description" content="Why one Dress Up room rule, run as a Hazel function from JS, takes 40-150 ms on a 16x16 map, and what the open performance PRs do to it: #2681 makes the annotated rule linear ({fmt(pre[256]['shipped'])} to {fmt(mid[256]['shipped'])} ms), and the 14 PRs together halve the compile.">
 <style>{STYLE}</style></head>
 <body><main>
-<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>25<b>)</b></code> · performance · 2026-10-22 · <span class="wip">work in progress</span> · about 9 minutes to read</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>25<b>)</b></code> · performance · started 2026-10-22, updated 2026-10-22 {UPDATED} MDT · <span class="wip">work in progress</span> · about 11 minutes to read</p>
 <h1>What a Call into Hazel Costs</h1>
 <p class="sub">Matthew asked, on 2026-10-22, about <code class="ref"><b>^ticket(</b>531<b>)</b></code>, the experiment that moves Messed Up Dress Up's room rules into Hazel modules run through Hazel's JS library (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the library; the game's side is the draft matthewhammer/kids-choice-games#2): <q>why is Hazel so slow here for 16 x 16 map? do more analysis please, and draft a new report.</q> The World room's rule takes a step on the map; in the game's own node run it costs 40.0 ms p50 at 16x16, against 0.003 ms for the same rule in JS. This report takes that one call apart.</p>
+<p class="sub"><b>Which build.</b> Hazel's JS library, <code>hazel-lib.js</code>, from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> (branch <code>js-library-embed</code> at <code>0d66c36618</code>), which is #2719 on <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a> on <code>dev</code> at <code>962a7cb009</code>. Of the 14 performance PRs on the dashboard it has one, <a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a>, the only one merged into <code>dev</code>; the other 13 are open. Matthew, after the first draft: <q>Let's make it clear what branch we are measuring ... how many have been applied? If they are not all applied, how much would they help?</q> So every time below is measured three ways, on GitHub's builds of three branches: <b>before</b>, that build; <b>+ #2681</b>, with <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> merged (it carries <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>); and <b>after</b>, with all 14 (<a href="#prs">Before and after the performance PRs</a>).</p>
 
 <div class="headline">
-<p><b>Short answers.</b> All times are node, the minified library at <code>0d66c36618</code>, p50 of one call with the target cell mid-map, unless said otherwise.</p>
+<p><b>Short answers.</b> All times are node on the Ubuntu laptop, p50 of one call with the target cell mid-map, the mean of two interleaved rounds; <i>before</i> is the measured build (1 of 14 PRs), <i>after</i> the same with all 14.</p>
 <ol class="ans">
-<li><div class="row"><p><b>Most of the time is a type annotation in the rule: {r256["shipped"]:.0f} ms becomes {r256["noann"]:.1f} ms when it goes.</b> The rule's recursive helper is written <code>fun (cs, c, r) : ([Cell], Int, Int) -&gt;</code>. Hazel checks that ascription at run time on every call, by walking the value, so each step of the walk re-checks the rest of the list: one linear walk becomes a quadratic one. At 24x24 it is {by[576]["shipped"]:.0f} ms against {by[576]["noann"]:.1f} ms.</p>{mini(fig_stack(420, 96) if False else F3, "The shipped 16x16 call, split by measuring the variants.")}</div></li>
-<li><div class="row"><p><b>Every call pays a floor that grows with the map: about {r256["idA"]:.1f} ms at 16x16, 31 &micro;s per cell.</b> Hazel's call boundary turns the whole JS argument into unevaluated Hazel syntax, gives every node a fresh id, and then evaluates it back into the value it already was, node by node; the <code>(Globals, Event)</code> parameter type walks it again. A rule that does nothing still pays this.</p>{mini(F4, "The floor of a 16x16 call that does nothing (13.8 ms), by profile share.")}</div></li>
-<li><div class="row"><p><b>Underneath, each evaluation step costs about 3 &micro;s, so even the plain walk is 25-80 &micro;s per cell.</b> A countdown over plain Ints costs {steps["countdown i=128"]} ms for 128 steps. The time is spread over the evaluator's per-step pipeline, jsoo's generic calls, fresh ids and GC; there is no single hot spot.</p></div></li>
-<li><div class="row"><p><b>Passing only the neighbouring cells makes the call flat: {r256["near"]:.2f} ms at 16x16, {by[9]["near"]:.2f} ms at 3x3.</b> That is the one change, available today without touching Hazel, that removes the dependence on map size: 160x faster than the shipped rule at 16x16, with the same answer.</p></div></li>
+<li><div class="row"><p><b>Most of the time is a type annotation in the rule, and #2681 removes it: {fmt(pre[256]["shipped"])} ms becomes {fmt(mid[256]["shipped"])} ms at 16x16, {x_(pre[256]["shipped"], mid[256]["shipped"])} faster, with the rule unchanged.</b> The rule's recursive helper is written <code>fun (cs, c, r) : ([Cell], Int, Int) -&gt;</code>. Before, Hazel checks that ascription at run time on every call, by walking the value, so each step of the walk re-checks the rest of the list: one linear walk becomes a quadratic one ({fmt(pre[576]["shipped"])} ms at 24x24, against {fmt(pre[576]["noann"])} ms without the annotation). #2681 remembers which values are known to have a type, so the re-check is one lookup: {fmt(mid[576]["shipped"])} ms at 24x24, the same as the unannotated rule.</p>{mini(FPS, "The shipped 16x16 call, split by measuring the variants, before and after the 14 PRs.")}</div></li>
+<li><div class="row"><p><b>Every call pays a floor that grows with the map, and the PRs raise it by about a quarter: {fmt(pre[256]["idA"])} ms at 16x16 before, {fmt(post[256]["idA"])} after ({fmt(pre[576]["idA"])} and {fmt(post[576]["idA"])} at 24x24).</b> Hazel's call boundary turns the whole JS argument into unevaluated Hazel syntax, gives every node a fresh id, and then evaluates it back into the value it already was, node by node; the <code>(Globals, Event)</code> parameter type walks it again. A rule that does nothing still pays this. No PR touches the library's conversion (<code>of_js</code>) or its fresh ids. And the argument is a new value on every call, so #2681 has never seen it: its first push walks it as before and also records every part in the memo. The rise is already there with #2681 alone ({fmt(mid[256]["idA"])} ms), and it repeats in both rounds.</p>{mini(F4, "The floor of a 16x16 call that does nothing (13.8 ms in the profiled dev build, before), by profile share.")}</div></li>
+<li><div class="row"><p><b>Underneath, each evaluation step costs about 3 &micro;s, so even the plain walk is 25-80 &micro;s per cell.</b> A countdown over plain Ints costs {steps_pre["countdown i=128"]} ms for 128 steps before, {steps_post["countdown i=128"]} after (one round each: {pc(steps_pre["countdown i=128"], steps_post["countdown i=128"])} less, not far past this laptop's noise). The time is spread over the evaluator's per-step pipeline, jsoo's generic calls, fresh ids and GC; there is no single hot spot, and none of the 14 PRs aims at it.</p></div></li>
+<li><div class="row"><p><b>Passing only the neighbouring cells makes the call flat: {fmt(pre[256]["near"])} ms at 16x16, {fmt(pre[9]["near"])} ms at 3x3.</b> That is the one change, available today without touching Hazel, that removes the dependence on map size: {pre[256]["shipped"] / pre[256]["near"]:.0f}x faster than the shipped rule at 16x16 before the PRs, and still {post[256]["shipped"] / post[256]["near"]:.0f}x after them, with the same answer.</p></div></li>
+<li><div class="row"><p><b>The 14 PRs together halve the compile: the game's rules compile in {cm["b"]["compile_ms"]:.0f} ms after, against {cm["base"]["compile_ms"]:.0f} ms before.</b> That is once per program, at load. Per call, everything they change is #2681's: the bars of <a href="#fig-16">Figure 3</a> for <i>+ #2681</i> and <i>after</i> agree within noise. Eight of the 14 cannot reach a library call at all; they speed up the editor, its worker and its recovering parser (the <a href="#prs">table</a>).</p></div></li>
 </ol>
 </div>
 
-{fig("fig-sizes", 1, F1, "Time per call against map size, both scales logarithmic, for five versions of the World rule that return the same answer. The shipped rule's slope is 1.78 (quadratic-ish); the others are linear (slope 1.0), except neighbours-only, which is flat. Values from <code>data/data_sizes.json</code>.")}
+{fig("fig-sizes", 1, FP1, f"Time per call against map size, both scales logarithmic, for five versions of the World rule that return the same answer: dashed, the measured build (1 of the 14 PRs); solid, the same with all 14. Before, the shipped rule's slope is {slope(B['base']['rows'], 'shipped'):.2f} (quadratic-ish) and the others are linear, except neighbours-only, which is flat; after, the shipped rule is linear too ({slope(B['b']['rows'], 'shipped'):.2f}) and lies on the unannotated one. The identity floor moves up. Values from <code>data/prs/</code>, the mean of two rounds.")}
+
+<h2 id="prs">Before and after the performance PRs</h2>
+<p>The dashboard lists 19 PRs against Hazel's performance. Five are not speed changes: {PRS["not_counted"].split(": ", 1)[1]} That leaves 14. Only <a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a> is merged into <code>dev</code>, so the measured build has 1 of the 14. To see what the other 13 would do, two trial branches were pushed to hazelgrove/hazel and built by GitHub's Deploy workflow, the same build as the measured one:</p>
+<ul>
+<li><b>+ #2681</b>: <code>{BN["a"]["branch"]}</code> at <code>{BN["a"]["commit"]}</code>, {BN["a"]["what"]}. 3 of 14.</li>
+<li><b>after</b>: <code>{BN["b"]["branch"]}</code> at <code>{BN["b"]["commit"]}</code>, {BN["b"]["what"]}. 14 of 14.</li>
+</ul>
+<p>They merge cleanly but for three small conflicts (two test lists, and <a href="https://github.com/hazelgrove/hazel/pull/2610">#2610</a> and <a href="https://github.com/hazelgrove/hazel/pull/2614">#2614</a> both fixing the recovering parser), and both trial branches build. What each PR can reach in a library call follows from what the library runs: <code>FastParse</code>, then <code>Statics.mk</code> once per program, then <code>Evaluator.evaluate</code> from scratch on every call, on the page's own thread (<code>src/web/HazelLibCore.re</code>).</p>
+<div class="scroll"><table><tr><th>PR</th><th>what it does</th><th>state</th><th>in the measured build</th><th>reaches</th><th>why</th></tr>{pr_rows}</table></div>
+<p>Measured, at 16x16 (the mean of two rounds; the rounds' spread is under {noise_p90*100:.0f}% for nine in ten of the times from 6x6 up, so read smaller differences as noise):</p>
+<div class="scroll"><table><tr><th>16x16, ms</th><th>before</th><th>+ #2681</th><th>after</th></tr>
+{tr(["shipped rule", fmt(pre[256]["shipped"]), fmt(mid[256]["shipped"]), fmt(post[256]["shipped"])])}
+{tr(["find unannotated", fmt(pre[256]["noann"]), fmt(mid[256]["noann"]), fmt(post[256]["noann"])])}
+{tr(["identity rule (the floor)", fmt(pre[256]["idA"]), fmt(mid[256]["idA"]), fmt(post[256]["idA"])])}
+{tr(["neighbours only", fmt(pre[256]["near"]), fmt(mid[256]["near"]), fmt(post[256]["near"])])}
+{tr(["shipped rule at 24x24", fmt(pre[576]["shipped"]), fmt(mid[576]["shipped"]), fmt(post[576]["shipped"])])}
+</table></div>
+<ul>
+<li><b>#2681 is the one that matters per call.</b> It makes the annotated rule linear: {x_(pre[256]["shipped"], mid[256]["shipped"])} faster at 16x16 and {x_(pre[576]["shipped"], mid[576]["shipped"])} at 24x24, where the quadratic part was largest. The game's own World handler moves the same way ({fmt(pre[256]["game_World"])} to {fmt(post[256]["game_World"])} ms at 16x16).</li>
+<li><b>It costs the floor about a quarter</b> ({fmt(pre[256]["idA"])} to {fmt(mid[256]["idA"])} ms at 16x16): every call's argument is a fresh value, so its first push records it without ever reusing it. The unannotated rules carry the same rise. A memo of values from earlier calls cannot help here, since <code>of_js</code> never gives the same object twice; what would is not re-stepping the converted value at all (<a href="#fix">fix 1 below</a>).</li>
+<li><b>The other 11 change nothing per call</b>, within noise. Three reach the compile, and with them it halves; eight cannot reach the library at all.</li>
+</ul>
+<div class="scroll"><table><tr><th>build</th><th>compile the game's rules, ms (each round)</th><th>compile and run this report's program, ms (each round)</th></tr>{comp_rows}</table></div>
+<p class="note">Each compile is the first call in a fresh node process, so it includes the JIT's warm-up; there is one per round. The drop comes with the PRs that reach the compile (<a href="https://github.com/hazelgrove/hazel/pull/2603">#2603</a>, <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a>, <a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a>); which of them carries it was not measured apart.</p>
 
 <h2 id="call">What happens in one call</h2>
 <p>The game compiles each room's module once (<code>runProgram</code>) and keeps the JS function Hazel gives back for the room's <code>on_event</code>. On each event it calls that function with two arguments, <code>Globals</code> and <code>Event</code>. For the World room, <code>Globals</code> holds the player's position, the map size and <code>cells</code>, a list with one record per square: <code>{{col, row, kind, ways}}</code>. The game rebuilds it on every event (0.098 ms in JS at 16x16, negligible). Inside the library (<code>src/web/HazelLibCore.re</code>, <code>function_of</code>), each call then:</p>
@@ -139,11 +292,17 @@ PAGE = f"""<!doctype html>
 <pre class="code">let find = fun (cs, c, r) : ([Cell], Int, Int) -&gt;
   case cs | [] =&gt; ... | x :: rest =&gt; if x.col == c &amp;&amp; x.row == r then ... else find(rest, c, r) end</pre>
 <p>Hazel's evaluator treats a pattern with a type ascription as a run-time check: <code>PatternMatch.re</code> wraps the argument in <code>Asc(d, ty)</code> and <code>Ascriptions.transition_multiple</code> pushes it through the value, element by element and field by field. So <code>find(rest, c, r)</code> re-checks all of <code>rest</code>, at every step. A walk to index <i>i</i> in a list of length <i>L</i> costs about <i>i</i> &times; <i>L</i>. In a profile of a deep find, 58.6% of the time is in <code>transition_multiple</code> under <code>matches_inner</code>.</p>
-<p>That is also why the game's own figure, 40 ms, is lower than this report's 153 ms: the cost depends on where the target sits in the list. With all four ways set, a target at index 1 costs 18 ms at 16x16 and the last one 244 ms; removing only the annotation brings the last to 33 ms (8x8: 23 to 8.9 ms). The Square room's <code>find</code> and <code>doors</code> helpers are annotated the same way, which fits a lever with 40 doors taking about 85 ms.</p>
-{fig("fig-16", 3, F2, "One 16x16 World call, by version of the rule; every version returns the same <code>GoSquare</code>. <i>Index arithmetic</i> takes one <code>nth</code> at <code>r*cols+c</code>; <i>held</i> converts the map once into a Hazel closure (62 ms at setup) and calls it per event; <i>identity</i> is a rule that ignores its argument, so it is the floor.")}
+<p>That is also why the game's own figure, 40 ms, is lower than this report's {fmt(pre[256]["shipped"])} ms: the cost depends on where the target sits in the list. With all four ways set, a target at index 1 costs 18 ms at 16x16 and the last one 244 ms; removing only the annotation brings the last to 33 ms (8x8: 23 to 8.9 ms). The Square room's <code>find</code> and <code>doors</code> helpers are annotated the same way, which fits a lever with 40 doors taking about 85 ms.</p>
+{fig("fig-16", 3, FP3, f"One 16x16 World call, by version of the rule, in the three builds; every version returns the same <code>GoSquare</code>. <i>Index arithmetic</i> takes one <code>nth</code> at <code>r*cols+c</code>; <i>held</i> converts the map once into a Hazel closure ({fmt(pre[256]['held_setup'])} ms at setup) and calls it per event; <i>identity</i> is a rule that ignores its argument, so it is the floor. Only the shipped rule's bars move far, and only at <i>+ #2681</i>.")}
 
 <h2 id="data">The numbers</h2>
-<h3 id="t-sizes">By map size (ms, p50)</h3>
+<h3 id="t-prs">Before and after the PRs, by map size (ms, p50, the mean of two rounds)</h3>
+<div class="scroll"><table>{ba_head}{ba_rows}</table></div>
+<p class="note">Growth exponents from 64 to 576 cells, before / after: shipped {slope(B['base']['rows'], 'shipped'):.2f} / {slope(B['b']['rows'], 'shipped'):.2f}, unannotated {slope(B['base']['rows'], 'noann'):.2f} / {slope(B['b']['rows'], 'noann'):.2f}, identity {slope(B['base']['rows'], 'idA'):.2f} / {slope(B['b']['rows'], 'idA'):.2f}. Every round of every build is in <code>data/prs/</code>.</p>
+<h3 id="t-steps-prs">Per-step costs, before and after (ms, p50)</h3>
+<div class="scroll"><table><tr><th>program</th><th>before</th><th>after</th></tr>{"".join(tr([k, steps_pre[k], steps_post[k]]) for k in steps_pre)}</table></div>
+<h3 id="t-sizes">The first run, before only (ms, p50)</h3>
+<p class="note">The first draft's numbers, one run of the measured build, kept for the record; the reruns above agree with it within the rounds' noise.</p>
 <div class="scroll"><table><tr><th>map (cells)</th><th>JS Globals</th><th>identity, no ascription</th><th>identity</th><th>game's World</th><th>shipped</th><th>unannotated</th><th>index</th><th>neighbours</th><th>held</th><th>held setup</th></tr>{size_rows}</table></div>
 <p class="note"><i>game's World</i> is the rule as the game compiles it; <i>shipped</i> is the same text rebuilt in the driver (they agree within noise above 8x8). Growth exponents from 64 to 576 cells: shipped 1.78, unannotated 1.03, index 1.01, identity 1.00, held 1.32, neighbours 0.35.</p>
 <h3 id="t-steps">Per-step costs (ms, p50)</h3>
@@ -167,28 +326,30 @@ PAGE = f"""<!doctype html>
 <h2 id="fix">What would fix it</h2>
 <h3>In the game's rules, available today</h3>
 <ol>
-<li><b>Drop type annotations on recursive helpers</b> (World's <code>find</code>, Square's <code>find</code> and <code>doors</code>): 153 to 22.6 ms at 16x16; linear instead of quadratic.</li>
+<li><b>Drop type annotations on recursive helpers</b> (World's <code>find</code>, Square's <code>find</code> and <code>doors</code>): {fmt(pre[256]["shipped"])} to {fmt(pre[256]["noann"])} ms at 16x16 on the measured build; linear instead of quadratic. Not needed once #2681 is in, which gives the same without touching the rules.</li>
 <li><b>Pass only what the rule needs</b>: the neighbouring cells, not the map. Flat at about 0.9 ms at every size. All 17 <code>Globals</code> fields go to every room today, and each is converted and re-stepped per call.</li>
 </ol>
 <h3>In Hazel's library and evaluator</h3>
 <ol>
 <li><b>Do not re-step a converted value.</b> Have <code>of_js</code> produce something the evaluator treats as final (or bind the argument in the environment and apply to a variable). About half the floor.</li>
-<li><b>An ascription fast path.</b> Check that a value conforms to a type without allocating, or skip the run-time <code>Asc</code> when the argument's type already equals the parameter's, which is exactly the recursive <code>find(rest, ...)</code> case. This makes the annotated rule linear without changing it.</li>
+<li><b>An ascription fast path: this is <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>, measured above.</b> It remembers which values are known to have a type, so the recursive <code>find(rest, ...)</code> re-check is one lookup: the annotated rule becomes linear without changing it ({fmt(pre[256]["shipped"])} to {fmt(mid[256]["shipped"])} ms at 16x16). It is open, on top of <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>. What it does not do is cheapen a value's first push, which it now makes about a quarter dearer by recording it; checking a fresh value without allocating would.</li>
 <li><b>A cheaper <code>Id.mk</code></b>, without <code>Uuidm.v4</code>'s byte copy under js_of_ocaml: about a fifth of all time.</li>
 <li><b>Cut the per-step pipeline when nothing uses it</b>: the state merge, reuse check and probe sampling run on every step even with no probes and no reuse (8.1%, 8.0% and 6.8% inclusive in the walk's profile).</li>
 </ol>
-<p>Fixes 1 and 2 of the library would bring the shipped rule near the unannotated one, and the floor to perhaps a third of today's; fix 4 is what would make a linear walk cheaper. None of them makes Hazel's walk cost what JS's does (under 1 &micro;s); a rule's design still decides whether the call depends on the map's size.</p>
+<p>Fix 2 already brings the shipped rule onto the unannotated one, on its branch. Fix 1 would take the floor to perhaps a third of today's, and with it the first-push cost #2681 adds; fix 4 is what would make a linear walk cheaper. None of them makes Hazel's walk cost what JS's does (under 1 &micro;s); a rule's design still decides whether the call depends on the map's size.</p>
 
 <h2 id="next">What next</h2>
 <ol>
 <li>Change the World and Square rules on matthewhammer/kids-choice-games#2: no annotations on recursive helpers, and neighbours only in World's <code>Globals</code>; re-time the game's moves at 16x16.</li>
-<li>Prototype the ascription fast path in <code>Ascriptions.re</code> and time the shipped rule against this report's numbers.</li>
-<li>Prototype <code>of_js</code> producing final values, and time the identity rule's floor.</li>
-<li>Measure the noise floor: repeat the 16x16 row five times.</li>
+<li>Land <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a> and <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> in <code>dev</code>, then rebase <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a> and <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> on it: the game gets the linear rule without changing its rules. (Measured here on <code>{BN["a"]["branch"]}</code>.)</li>
+<li>Prototype <code>of_js</code> producing final values, and time the identity rule's floor; it would also remove the first-push cost #2681 adds.</li>
+<li>Pin the noise floor: two rounds give a spread under {noise_p90*100:.0f}% for nine in ten of the times; five would say more.</li>
+<li>Measure the compile's halving PR by PR (<a href="https://github.com/hazelgrove/hazel/pull/2603">#2603</a>, <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a>, <a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a>).</li>
 </ol>
 
 <h2 id="method">How this was put together</h2>
-<p>Node v22.23.2 on the Ubuntu laptop (Intel i7), one process at a time. The library is hazel-lib.js from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> at <code>0d66c36618</code>: the minified build for every time, the dev build <code>hazelLib.bc.js</code> for named profiles (3 s each). The rules are the game's at <code>2ebda59ab4</code>. Each time is one p50 over 20-60 reps after warm-up; the noise floor was not measured, so treat differences under about 10% as noise. The target cell is mid-map, at (n/2-1, n/2), moving east; every variant's result was checked against the game's World handler. The library exposes no step count, so per-step costs are inferred from timings. The drivers are in <code>drivers/</code> (<code>r25.mjs</code> for the sizes, <code>steps.mjs</code>, <code>profheld.mjs</code>, and the earlier <code>prof.mjs</code> and <code>prof_noann.mjs</code>; they read the game and library from local checkouts); the data is in <a href="https://github.com/matthewhammer/hazel-reports/tree/main/025/data"><code>data/</code></a>, and the profiles, too big to keep, are summarized in <code>data/profiles.json</code>.</p>
+<p>Node v22.23.2 on the Ubuntu laptop (Intel i7), one process at a time. The library is hazel-lib.js from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> at <code>0d66c36618</code>: the minified build for every time, the dev build <code>hazelLib.bc.js</code> for named profiles (3 s each). The rules are the game's at <code>2ebda59ab4</code>. Each time is one p50 over 20-60 reps after warm-up; for that first run the noise floor was not measured, so treat differences under about 10% as noise (the reruns below give it: under {noise_p90*100:.0f}% for nine in ten times). The target cell is mid-map, at (n/2-1, n/2), moving east; every variant's result was checked against the game's World handler. The library exposes no step count, so per-step costs are inferred from timings. The drivers are in <code>drivers/</code> (<code>r25.mjs</code> for the sizes, <code>steps.mjs</code>, <code>profheld.mjs</code>, and the earlier <code>prof.mjs</code> and <code>prof_noann.mjs</code>; they read the game and library from local checkouts); the data is in <a href="https://github.com/matthewhammer/hazel-reports/tree/main/025/data"><code>data/</code></a>, and the profiles, too big to keep, are summarized in <code>data/profiles.json</code>.</p>
+<p>Before and after the PRs: <code>drivers/prs.sh</code> runs <code>r25.mjs</code> on GitHub's Deploy builds of three branches (hazelgrove/build, <code>&lt;branch&gt;/hazel-lib.js</code>): <code>js-library-embed</code> at <code>0d66c36618</code>, <code>{BN["a"]["branch"]}</code> at <code>{BN["a"]["commit"]}</code> and <code>{BN["b"]["branch"]}</code> at <code>{BN["b"]["commit"]}</code>, in two rounds with the builds interleaved (before, + #2681, after; then again), one node process at a time, pinned to two threads and niced, as this laptop needs. Every time above is the mean of the two rounds; each round is in <code>data/prs/</code>, with each build's compile times. The builds and the 14 PRs are in <code>data/prs.json</code>. The per-step costs are one round per build (<code>steps.mjs</code>). The figures and the first table use these reruns; <i>the first run</i> is the first draft's, kept as it was.</p>
 </main></body></html>
 """
 open(OUT, "w").write(PAGE)

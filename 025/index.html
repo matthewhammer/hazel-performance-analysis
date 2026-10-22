@@ -6,7 +6,7 @@
 <!-- nav: begin --><meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script><!-- nav: end -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>What a Call into Hazel Costs</title>
-<meta name="description" content="Why one Dress Up room rule, run as a Hazel function from JS, takes 40-150 ms on a 16x16 map: the call converts the whole map to syntax and re-evaluates it, the parameter type re-checks it, and an annotated recursive helper re-checks the rest of the list at every step.">
+<meta name="description" content="Why one Dress Up room rule, run as a Hazel function from JS, takes 40-150 ms on a 16x16 map, and what the open performance PRs do to it: #2681 makes the annotated rule linear (144 to 20.6 ms), and the 14 PRs together halve the compile.">
 <style>  :root {
     --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
     --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8; --accent2: #0e7490; --cx: #d6d1c6;
@@ -90,21 +90,47 @@
   .wip { color: var(--warn); font-weight: 600; }
 </style></head>
 <body><main>
-<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>25<b>)</b></code> · performance · 2026-10-22 · <span class="wip">work in progress</span> · about 9 minutes to read</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>25<b>)</b></code> · performance · started 2026-10-22, updated 2026-10-22 07:14 MDT · <span class="wip">work in progress</span> · about 11 minutes to read</p>
 <h1>What a Call into Hazel Costs</h1>
 <p class="sub">Matthew asked, on 2026-10-22, about <code class="ref"><b>^ticket(</b>531<b>)</b></code>, the experiment that moves Messed Up Dress Up's room rules into Hazel modules run through Hazel's JS library (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the library; the game's side is the draft <a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>): <q>why is Hazel so slow here for 16 x 16 map? do more analysis please, and draft a new report.</q> The World room's rule takes a step on the map; in the game's own node run it costs 40.0 ms p50 at 16x16, against 0.003 ms for the same rule in JS. This report takes that one call apart.</p>
+<p class="sub"><b>Which build.</b> Hazel's JS library, <code>hazel-lib.js</code>, from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> (branch <code>js-library-embed</code> at <code>0d66c36618</code>), which is <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> on <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a> on <code>dev</code> at <code>962a7cb009</code>. Of the 14 performance PRs on the dashboard it has one, <a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a>, the only one merged into <code>dev</code>; the other 13 are open. Matthew, after the first draft: <q>Let's make it clear what branch we are measuring ... how many have been applied? If they are not all applied, how much would they help?</q> So every time below is measured three ways, on GitHub's builds of three branches: <b>before</b>, that build; <b>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></b>, with <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> merged (it carries <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>); and <b>after</b>, with all 14 (<a href="#prs">Before and after the performance PRs</a>).</p>
 
 <div class="headline">
-<p><b>Short answers.</b> All times are node, the minified library at <code>0d66c36618</code>, p50 of one call with the target cell mid-map, unless said otherwise.</p>
+<p><b>Short answers.</b> All times are node on the Ubuntu laptop, p50 of one call with the target cell mid-map, the mean of two interleaved rounds; <i>before</i> is the measured build (1 of 14 PRs), <i>after</i> the same with all 14.</p>
 <ol class="ans">
-<li><div class="row"><p><b>Most of the time is a type annotation in the rule: 153 ms becomes 22.6 ms when it goes.</b> The rule's recursive helper is written <code>fun (cs, c, r) : ([Cell], Int, Int) -&gt;</code>. Hazel checks that ascription at run time on every call, by walking the value, so each step of the walk re-checks the rest of the list: one linear walk becomes a quadratic one. At 24x24 it is 735 ms against 45.5 ms.</p><figure class="mini"><svg viewBox="0 0 640 96" role="img" aria-label="The shipped 16x16 call, 153 ms: 9.5 ms conversion, 13.1 ms walk, 130.3 ms re-checking from find's annotation." style="width:100%;height:auto;font:12px system-ui,sans-serif"><rect x="10.0" y="10" width="38.5" height="30" style="fill:var(--accent)"/><text x="10.0" y="62" style="fill:var(--accent);font-weight:600">9.5 ms</text><text x="10.0" y="78" style="fill:var(--muted)">conversion + parameter ascription</text><rect x="48.5" y="10" width="53.1" height="30" style="fill:var(--warn)"/><text x="216.7" y="62" style="fill:var(--warn);font-weight:600">13.1 ms</text><text x="216.7" y="78" style="fill:var(--muted)">the find walk itself</text><rect x="101.6" y="10" width="528.4" height="30" style="fill:var(--bad)"/><text x="423.3" y="62" style="fill:var(--bad);font-weight:600">130.3 ms</text><text x="423.3" y="78" style="fill:var(--muted)">find's annotation re-checking the list</text></svg><figcaption>The shipped 16x16 call, split by measuring the variants.</figcaption></figure></div></li>
-<li><div class="row"><p><b>Every call pays a floor that grows with the map: about 9.5 ms at 16x16, 31 &micro;s per cell.</b> Hazel's call boundary turns the whole JS argument into unevaluated Hazel syntax, gives every node a fresh id, and then evaluates it back into the value it already was, node by node; the <code>(Globals, Event)</code> parameter type walks it again. A rule that does nothing still pays this.</p><figure class="mini"><svg viewBox="0 0 640 96" role="img" aria-label="The 13.8 ms floor of a 16x16 call that does nothing: 56% re-stepping the literal, 16% ascription, 10% of_js, 18% GC and the rest." style="width:100%;height:auto;font:12px system-ui,sans-serif"><rect x="10.0" y="10" width="347.2" height="30" style="fill:var(--accent)"/><text x="14.0" y="62" style="fill:var(--ink);font-weight:600">56%</text><text x="14.0" y="78" style="fill:var(--muted)">re-stepping the literal</text><rect x="357.2" y="10" width="99.2" height="30" style="fill:var(--accent2)"/><text x="361.2" y="62" style="fill:var(--ink);font-weight:600">16%</text><text x="361.2" y="78" style="fill:var(--muted)">parameter ascription</text><rect x="456.4" y="10" width="62.0" height="30" style="fill:var(--warn)"/><text x="460.4" y="62" style="fill:var(--ink);font-weight:600">10%</text><text x="460.4" y="78" style="fill:var(--muted)">of_js</text><rect x="518.4" y="10" width="111.6" height="30" style="fill:var(--cx)"/><text x="522.4" y="62" style="fill:var(--ink);font-weight:600">18%</text><text x="522.4" y="78" style="fill:var(--muted)">GC, rest</text></svg><figcaption>The floor of a 16x16 call that does nothing (13.8 ms), by profile share.</figcaption></figure></div></li>
-<li><div class="row"><p><b>Underneath, each evaluation step costs about 3 &micro;s, so even the plain walk is 25-80 &micro;s per cell.</b> A countdown over plain Ints costs 3.55 ms for 128 steps. The time is spread over the evaluator's per-step pipeline, jsoo's generic calls, fresh ids and GC; there is no single hot spot.</p></div></li>
-<li><div class="row"><p><b>Passing only the neighbouring cells makes the call flat: 0.96 ms at 16x16, 0.86 ms at 3x3.</b> That is the one change, available today without touching Hazel, that removes the dependence on map size: 160x faster than the shipped rule at 16x16, with the same answer.</p></div></li>
+<li><div class="row"><p><b>Most of the time is a type annotation in the rule, and <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> removes it: 144 ms becomes 20.6 ms at 16x16, 7.0x faster, with the rule unchanged.</b> The rule's recursive helper is written <code>fun (cs, c, r) : ([Cell], Int, Int) -&gt;</code>. Before, Hazel checks that ascription at run time on every call, by walking the value, so each step of the walk re-checks the rest of the list: one linear walk becomes a quadratic one (678 ms at 24x24, against 40.8 ms without the annotation). <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> remembers which values are known to have a type, so the re-check is one lookup: 42.8 ms at 24x24, the same as the unannotated rule.</p><figure class="mini"><svg viewBox="0 0 380 148" role="img" aria-label="The shipped 16x16 call split into the conversion floor, the walk and the annotation re-check, before (144 ms) and after (19.1 ms) the 14 PRs." style="width:100%;height:auto;font:15px system-ui,sans-serif"><rect x="54" y="76" width="13" height="13" rx="2" style="fill:var(--accent)"/><text x="73" y="87" style="fill:var(--muted)">conversion + ascription</text><rect x="54" y="98" width="13" height="13" rx="2" style="fill:var(--warn)"/><text x="73" y="109" style="fill:var(--muted)">the walk</text><rect x="54" y="120" width="13" height="13" rx="2" style="fill:var(--bad)"/><text x="73" y="131" style="fill:var(--muted)">the annotation's re-check</text><text x="47" y="24" text-anchor="end" style="fill:var(--ink)">before</text><rect x="54.0" y="6" width="15.6" height="24" style="fill:var(--accent)"/><rect x="69.6" y="6" width="17.3" height="24" style="fill:var(--warn)"/><rect x="86.8" y="6" width="229.2" height="24" style="fill:var(--bad)"/><text x="322.0" y="24" style="fill:var(--ink);font-weight:600">144 ms</text><text x="47" y="58" text-anchor="end" style="fill:var(--ink)">after</text><rect x="54.0" y="40" width="19.3" height="24" style="fill:var(--accent)"/><rect x="73.3" y="40" width="16.1" height="24" style="fill:var(--warn)"/><rect x="89.4" y="40" width="0.0" height="24" style="fill:var(--bad)"/><text x="95.4" y="58" style="fill:var(--ink);font-weight:600">19.1 ms</text></svg><figcaption>The shipped 16x16 call, split by measuring the variants, before and after the 14 PRs.</figcaption></figure></div></li>
+<li><div class="row"><p><b>Every call pays a floor that grows with the map, and the PRs raise it by about a quarter: 8.54 ms at 16x16 before, 10.6 after (19.3 and 25.3 at 24x24).</b> Hazel's call boundary turns the whole JS argument into unevaluated Hazel syntax, gives every node a fresh id, and then evaluates it back into the value it already was, node by node; the <code>(Globals, Event)</code> parameter type walks it again. A rule that does nothing still pays this. No PR touches the library's conversion (<code>of_js</code>) or its fresh ids. And the argument is a new value on every call, so <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> has never seen it: its first push walks it as before and also records every part in the memo. The rise is already there with <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> alone (10.1 ms), and it repeats in both rounds.</p><figure class="mini"><svg viewBox="0 0 640 96" role="img" aria-label="The 13.8 ms floor of a 16x16 call that does nothing: 56% re-stepping the literal, 16% ascription, 10% of_js, 18% GC and the rest." style="width:100%;height:auto;font:12px system-ui,sans-serif"><rect x="10.0" y="10" width="347.2" height="30" style="fill:var(--accent)"/><text x="14.0" y="62" style="fill:var(--ink);font-weight:600">56%</text><text x="14.0" y="78" style="fill:var(--muted)">re-stepping the literal</text><rect x="357.2" y="10" width="99.2" height="30" style="fill:var(--accent2)"/><text x="361.2" y="62" style="fill:var(--ink);font-weight:600">16%</text><text x="361.2" y="78" style="fill:var(--muted)">parameter ascription</text><rect x="456.4" y="10" width="62.0" height="30" style="fill:var(--warn)"/><text x="460.4" y="62" style="fill:var(--ink);font-weight:600">10%</text><text x="460.4" y="78" style="fill:var(--muted)">of_js</text><rect x="518.4" y="10" width="111.6" height="30" style="fill:var(--cx)"/><text x="522.4" y="62" style="fill:var(--ink);font-weight:600">18%</text><text x="522.4" y="78" style="fill:var(--muted)">GC, rest</text></svg><figcaption>The floor of a 16x16 call that does nothing (13.8 ms in the profiled dev build, before), by profile share.</figcaption></figure></div></li>
+<li><div class="row"><p><b>Underneath, each evaluation step costs about 3 &micro;s, so even the plain walk is 25-80 &micro;s per cell.</b> A countdown over plain Ints costs 3.836 ms for 128 steps before, 3.162 after (one round each: 18% less, not far past this laptop's noise). The time is spread over the evaluator's per-step pipeline, jsoo's generic calls, fresh ids and GC; there is no single hot spot, and none of the 14 PRs aims at it.</p></div></li>
+<li><div class="row"><p><b>Passing only the neighbouring cells makes the call flat: 0.889 ms at 16x16, 0.782 ms at 3x3.</b> That is the one change, available today without touching Hazel, that removes the dependence on map size: 162x faster than the shipped rule at 16x16 before the PRs, and still 23x after them, with the same answer.</p></div></li>
+<li><div class="row"><p><b>The 14 PRs together halve the compile: the game's rules compile in 402 ms after, against 797 ms before.</b> That is once per program, at load. Per call, everything they change is <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>'s: the bars of <a href="#fig-16">Figure 3</a> for <i>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></i> and <i>after</i> agree within noise. Eight of the 14 cannot reach a library call at all; they speed up the editor, its worker and its recovering parser (the <a href="#prs">table</a>).</p></div></li>
 </ol>
 </div>
 
-<figure class="fig" id="fig-sizes"><svg viewBox="0 0 640 330" role="img" aria-label="Time per call against map size, log scales: the shipped rule climbs from 1.4 ms at 3x3 to 735 ms at 24x24; without the annotation 45.5 ms; neighbours only stays near 1 ms." style="width:100%;height:auto;font:12px system-ui,sans-serif"><line x1="60" x2="470" y1="249.0" y2="249.0" style="stroke:var(--line)"/><text x="54" y="253.0" text-anchor="end" style="fill:var(--muted)">1 ms</text><line x1="60" x2="470" y1="170.7" y2="170.7" style="stroke:var(--line)"/><text x="54" y="174.7" text-anchor="end" style="fill:var(--muted)">10 ms</text><line x1="60" x2="470" y1="92.3" y2="92.3" style="stroke:var(--line)"/><text x="54" y="96.3" text-anchor="end" style="fill:var(--muted)">100 ms</text><line x1="60" x2="470" y1="14.0" y2="14.0" style="stroke:var(--line)"/><text x="54" y="18.0" text-anchor="end" style="fill:var(--muted)">1000 ms</text><text x="70.8" y="306" text-anchor="middle" style="fill:var(--muted)">3x3</text><text x="123.6" y="306" text-anchor="middle" style="fill:var(--muted)">4x4</text><text x="197.9" y="306" text-anchor="middle" style="fill:var(--muted)">6x6</text><text x="250.7" y="306" text-anchor="middle" style="fill:var(--muted)">8x8</text><text x="325.0" y="306" text-anchor="middle" style="fill:var(--muted)">12x12</text><text x="377.8" y="306" text-anchor="middle" style="fill:var(--muted)">16x16</text><text x="452.1" y="306" text-anchor="middle" style="fill:var(--muted)">24x24</text><text x="265.0" y="324" text-anchor="middle" style="fill:var(--muted)">map size (cells, log scale)</text><polyline points="70.8,238.1 123.6,214.9 197.9,187.4 250.7,157.6 325.0,113.5 377.8,77.9 452.1,24.5" fill="none" style="stroke:var(--bad)" stroke-width="2.2"/><circle cx="70.8" cy="238.1" r="3" style="fill:var(--bad)"/><circle cx="123.6" cy="214.9" r="3" style="fill:var(--bad)"/><circle cx="197.9" cy="187.4" r="3" style="fill:var(--bad)"/><circle cx="250.7" cy="157.6" r="3" style="fill:var(--bad)"/><circle cx="325.0" cy="113.5" r="3" style="fill:var(--bad)"/><circle cx="377.8" cy="77.9" r="3" style="fill:var(--bad)"/><circle cx="452.1" cy="24.5" r="3" style="fill:var(--bad)"/><text x="460.1" y="28.5" style="fill:var(--bad)">735 ms shipped rule</text><polyline points="70.8,241.7 123.6,229.0 197.9,210.7 250.7,196.2 325.0,168.2 377.8,143.0 452.1,119.1" fill="none" style="stroke:var(--warn)" stroke-width="2.2"/><circle cx="70.8" cy="241.7" r="3" style="fill:var(--warn)"/><circle cx="123.6" cy="229.0" r="3" style="fill:var(--warn)"/><circle cx="197.9" cy="210.7" r="3" style="fill:var(--warn)"/><circle cx="250.7" cy="196.2" r="3" style="fill:var(--warn)"/><circle cx="325.0" cy="168.2" r="3" style="fill:var(--warn)"/><circle cx="377.8" cy="143.0" r="3" style="fill:var(--warn)"/><circle cx="452.1" cy="119.1" r="3" style="fill:var(--warn)"/><text x="460.1" y="123.1" style="fill:var(--warn)">45.5 ms find unannotated</text><polyline points="70.8,259.6 123.6,245.1 197.9,221.9 250.7,210.6 325.0,182.7 377.8,163.4 452.1,111.6" fill="none" style="stroke:var(--accent2)" stroke-width="2.2"/><circle cx="70.8" cy="259.6" r="3" style="fill:var(--accent2)"/><circle cx="123.6" cy="245.1" r="3" style="fill:var(--accent2)"/><circle cx="197.9" cy="221.9" r="3" style="fill:var(--accent2)"/><circle cx="250.7" cy="210.6" r="3" style="fill:var(--accent2)"/><circle cx="325.0" cy="182.7" r="3" style="fill:var(--accent2)"/><circle cx="377.8" cy="163.4" r="3" style="fill:var(--accent2)"/><circle cx="452.1" cy="111.6" r="3" style="fill:var(--accent2)"/><text x="460.1" y="115.6" style="fill:var(--accent2)">56.7 ms map held in a closure</text><polyline points="70.8,270.6 123.6,271.5 197.9,245.2 250.7,219.3 325.0,190.0 377.8,172.3 452.1,144.3" fill="none" style="stroke:var(--accent)" stroke-width="2.2"/><circle cx="70.8" cy="270.6" r="3" style="fill:var(--accent)"/><circle cx="123.6" cy="271.5" r="3" style="fill:var(--accent)"/><circle cx="197.9" cy="245.2" r="3" style="fill:var(--accent)"/><circle cx="250.7" cy="219.3" r="3" style="fill:var(--accent)"/><circle cx="325.0" cy="190.0" r="3" style="fill:var(--accent)"/><circle cx="377.8" cy="172.3" r="3" style="fill:var(--accent)"/><circle cx="452.1" cy="144.3" r="3" style="fill:var(--accent)"/><text x="460.1" y="148.3" style="fill:var(--accent)">21.7 ms identity rule (conversion floor)</text><polyline points="70.8,254.0 123.6,249.2 197.9,251.8 250.7,253.0 325.0,252.9 377.8,250.4 452.1,226.7" fill="none" style="stroke:var(--good)" stroke-width="2.2"/><circle cx="70.8" cy="254.0" r="3" style="fill:var(--good)"/><circle cx="123.6" cy="249.2" r="3" style="fill:var(--good)"/><circle cx="197.9" cy="251.8" r="3" style="fill:var(--good)"/><circle cx="250.7" cy="253.0" r="3" style="fill:var(--good)"/><circle cx="325.0" cy="252.9" r="3" style="fill:var(--good)"/><circle cx="377.8" cy="250.4" r="3" style="fill:var(--good)"/><circle cx="452.1" cy="226.7" r="3" style="fill:var(--good)"/><text x="460.1" y="230.7" style="fill:var(--good)">1.93 ms neighbours only</text></svg><figcaption><b>Figure 1.</b> Time per call against map size, both scales logarithmic, for five versions of the World rule that return the same answer. The shipped rule's slope is 1.78 (quadratic-ish); the others are linear (slope 1.0), except neighbours-only, which is flat. Values from <code>data/data_sizes.json</code>.</figcaption></figure>
+<figure class="fig" id="fig-sizes"><svg viewBox="0 0 660 360" role="img" aria-label="Time per call against map size, log scales, before (dashed) and after (solid) the 14 performance PRs. The shipped rule at 24x24: 678 ms before, 45.9 ms after." style="width:100%;height:auto;font:12px system-ui,sans-serif"><line x1="60" x2="440" y1="274.6" y2="274.6" style="stroke:var(--line)"/><text x="54" y="278.6" text-anchor="end" style="fill:var(--muted)">1 ms</text><line x1="60" x2="440" y1="187.7" y2="187.7" style="stroke:var(--line)"/><text x="54" y="191.7" text-anchor="end" style="fill:var(--muted)">10 ms</text><line x1="60" x2="440" y1="100.9" y2="100.9" style="stroke:var(--line)"/><text x="54" y="104.9" text-anchor="end" style="fill:var(--muted)">100 ms</text><line x1="60" x2="440" y1="14.0" y2="14.0" style="stroke:var(--line)"/><text x="54" y="18.0" text-anchor="end" style="fill:var(--muted)">1000 ms</text><text x="70.0" y="336" text-anchor="middle" style="fill:var(--muted)">3x3</text><text x="118.9" y="336" text-anchor="middle" style="fill:var(--muted)">4x4</text><text x="187.8" y="336" text-anchor="middle" style="fill:var(--muted)">6x6</text><text x="236.7" y="336" text-anchor="middle" style="fill:var(--muted)">8x8</text><text x="305.6" y="336" text-anchor="middle" style="fill:var(--muted)">12x12</text><text x="354.5" y="336" text-anchor="middle" style="fill:var(--muted)">16x16</text><text x="423.4" y="336" text-anchor="middle" style="fill:var(--muted)">24x24</text><text x="250.0" y="354" text-anchor="middle" style="fill:var(--muted)">map size (cells, log scale)</text><line x1="68" x2="94" y1="20" y2="20" style="stroke:var(--muted)" stroke-width="2" stroke-dasharray="5 4"/><text x="100" y="24" style="fill:var(--muted)">before: the measured build: 1 of the 14 PRs</text><line x1="68" x2="94" y1="36" y2="36" style="stroke:var(--muted)" stroke-width="2.4"/><text x="100" y="40" style="fill:var(--muted)">after: all 14 PRs</text><polyline points="70.0,256.3 118.9,236.1 187.8,204.5 236.7,169.3 305.6,126.7 354.5,87.2 423.4,28.6" fill="none" style="stroke:var(--bad);opacity:.55" stroke-width="2.2" stroke-dasharray="5 4"/><circle cx="70.0" cy="256.3" r="2.6" style="fill:var(--bg);stroke:var(--bad);opacity:.55"/><circle cx="118.9" cy="236.1" r="2.6" style="fill:var(--bg);stroke:var(--bad);opacity:.55"/><circle cx="187.8" cy="204.5" r="2.6" style="fill:var(--bg);stroke:var(--bad);opacity:.55"/><circle cx="236.7" cy="169.3" r="2.6" style="fill:var(--bg);stroke:var(--bad);opacity:.55"/><circle cx="305.6" cy="126.7" r="2.6" style="fill:var(--bg);stroke:var(--bad);opacity:.55"/><circle cx="354.5" cy="87.2" r="2.6" style="fill:var(--bg);stroke:var(--bad);opacity:.55"/><circle cx="423.4" cy="28.6" r="2.6" style="fill:var(--bg);stroke:var(--bad);opacity:.55"/><polyline points="70.0,264.2 118.9,249.8 187.8,231.7 236.7,209.9 305.6,184.6 354.5,163.4 423.4,130.3" fill="none" style="stroke:var(--bad);opacity:1" stroke-width="2.2"/><circle cx="70.0" cy="264.2" r="3" style="fill:var(--bad);stroke:var(--bad);opacity:1"/><circle cx="118.9" cy="249.8" r="3" style="fill:var(--bad);stroke:var(--bad);opacity:1"/><circle cx="187.8" cy="231.7" r="3" style="fill:var(--bad);stroke:var(--bad);opacity:1"/><circle cx="236.7" cy="209.9" r="3" style="fill:var(--bad);stroke:var(--bad);opacity:1"/><circle cx="305.6" cy="184.6" r="3" style="fill:var(--bad);stroke:var(--bad);opacity:1"/><circle cx="354.5" cy="163.4" r="3" style="fill:var(--bad);stroke:var(--bad);opacity:1"/><circle cx="423.4" cy="130.3" r="3" style="fill:var(--bad);stroke:var(--bad);opacity:1"/><polyline points="70.0,272.4 118.9,258.3 187.8,228.1 236.7,213.8 305.6,187.9 354.5,165.5 423.4,134.6" fill="none" style="stroke:var(--warn);opacity:.55" stroke-width="2.2" stroke-dasharray="5 4"/><circle cx="70.0" cy="272.4" r="2.6" style="fill:var(--bg);stroke:var(--warn);opacity:.55"/><circle cx="118.9" cy="258.3" r="2.6" style="fill:var(--bg);stroke:var(--warn);opacity:.55"/><circle cx="187.8" cy="228.1" r="2.6" style="fill:var(--bg);stroke:var(--warn);opacity:.55"/><circle cx="236.7" cy="213.8" r="2.6" style="fill:var(--bg);stroke:var(--warn);opacity:.55"/><circle cx="305.6" cy="187.9" r="2.6" style="fill:var(--bg);stroke:var(--warn);opacity:.55"/><circle cx="354.5" cy="165.5" r="2.6" style="fill:var(--bg);stroke:var(--warn);opacity:.55"/><circle cx="423.4" cy="134.6" r="2.6" style="fill:var(--bg);stroke:var(--warn);opacity:.55"/><polyline points="70.0,271.3 118.9,255.1 187.8,231.5 236.7,213.1 305.6,185.4 354.5,162.6 423.4,133.1" fill="none" style="stroke:var(--warn);opacity:1" stroke-width="2.2"/><circle cx="70.0" cy="271.3" r="3" style="fill:var(--warn);stroke:var(--warn);opacity:1"/><circle cx="118.9" cy="255.1" r="3" style="fill:var(--warn);stroke:var(--warn);opacity:1"/><circle cx="187.8" cy="231.5" r="3" style="fill:var(--warn);stroke:var(--warn);opacity:1"/><circle cx="236.7" cy="213.1" r="3" style="fill:var(--warn);stroke:var(--warn);opacity:1"/><circle cx="305.6" cy="185.4" r="3" style="fill:var(--warn);stroke:var(--warn);opacity:1"/><circle cx="354.5" cy="162.6" r="3" style="fill:var(--warn);stroke:var(--warn);opacity:1"/><circle cx="423.4" cy="133.1" r="3" style="fill:var(--warn);stroke:var(--warn);opacity:1"/><polyline points="70.0,286.9 118.9,274.6 187.8,243.0 236.7,232.3 305.6,204.9 354.5,184.9 423.4,151.3" fill="none" style="stroke:var(--accent2);opacity:.55" stroke-width="2.2" stroke-dasharray="5 4"/><circle cx="70.0" cy="286.9" r="2.6" style="fill:var(--bg);stroke:var(--accent2);opacity:.55"/><circle cx="118.9" cy="274.6" r="2.6" style="fill:var(--bg);stroke:var(--accent2);opacity:.55"/><circle cx="187.8" cy="243.0" r="2.6" style="fill:var(--bg);stroke:var(--accent2);opacity:.55"/><circle cx="236.7" cy="232.3" r="2.6" style="fill:var(--bg);stroke:var(--accent2);opacity:.55"/><circle cx="305.6" cy="204.9" r="2.6" style="fill:var(--bg);stroke:var(--accent2);opacity:.55"/><circle cx="354.5" cy="184.9" r="2.6" style="fill:var(--bg);stroke:var(--accent2);opacity:.55"/><circle cx="423.4" cy="151.3" r="2.6" style="fill:var(--bg);stroke:var(--accent2);opacity:.55"/><polyline points="70.0,286.9 118.9,273.7 187.8,250.8 236.7,234.7 305.6,207.3 354.5,185.3 423.4,151.5" fill="none" style="stroke:var(--accent2);opacity:1" stroke-width="2.2"/><circle cx="70.0" cy="286.9" r="3" style="fill:var(--accent2);stroke:var(--accent2);opacity:1"/><circle cx="118.9" cy="273.7" r="3" style="fill:var(--accent2);stroke:var(--accent2);opacity:1"/><circle cx="187.8" cy="250.8" r="3" style="fill:var(--accent2);stroke:var(--accent2);opacity:1"/><circle cx="236.7" cy="234.7" r="3" style="fill:var(--accent2);stroke:var(--accent2);opacity:1"/><circle cx="305.6" cy="207.3" r="3" style="fill:var(--accent2);stroke:var(--accent2);opacity:1"/><circle cx="354.5" cy="185.3" r="3" style="fill:var(--accent2);stroke:var(--accent2);opacity:1"/><circle cx="423.4" cy="151.5" r="3" style="fill:var(--accent2);stroke:var(--accent2);opacity:1"/><polyline points="70.0,289.4 118.9,296.1 187.8,274.6 236.7,241.3 305.6,216.1 354.5,193.7 423.4,162.9" fill="none" style="stroke:var(--accent);opacity:.55" stroke-width="2.2" stroke-dasharray="5 4"/><circle cx="70.0" cy="289.4" r="2.6" style="fill:var(--bg);stroke:var(--accent);opacity:.55"/><circle cx="118.9" cy="296.1" r="2.6" style="fill:var(--bg);stroke:var(--accent);opacity:.55"/><circle cx="187.8" cy="274.6" r="2.6" style="fill:var(--bg);stroke:var(--accent);opacity:.55"/><circle cx="236.7" cy="241.3" r="2.6" style="fill:var(--bg);stroke:var(--accent);opacity:.55"/><circle cx="305.6" cy="216.1" r="2.6" style="fill:var(--bg);stroke:var(--accent);opacity:.55"/><circle cx="354.5" cy="193.7" r="2.6" style="fill:var(--bg);stroke:var(--accent);opacity:.55"/><circle cx="423.4" cy="162.9" r="2.6" style="fill:var(--bg);stroke:var(--accent);opacity:.55"/><polyline points="70.0,284.5 118.9,295.9 187.8,268.5 236.7,238.5 305.6,208.6 354.5,185.6 423.4,152.7" fill="none" style="stroke:var(--accent);opacity:1" stroke-width="2.2"/><circle cx="70.0" cy="284.5" r="3" style="fill:var(--accent);stroke:var(--accent);opacity:1"/><circle cx="118.9" cy="295.9" r="3" style="fill:var(--accent);stroke:var(--accent);opacity:1"/><circle cx="187.8" cy="268.5" r="3" style="fill:var(--accent);stroke:var(--accent);opacity:1"/><circle cx="236.7" cy="238.5" r="3" style="fill:var(--accent);stroke:var(--accent);opacity:1"/><circle cx="305.6" cy="208.6" r="3" style="fill:var(--accent);stroke:var(--accent);opacity:1"/><circle cx="354.5" cy="185.6" r="3" style="fill:var(--accent);stroke:var(--accent);opacity:1"/><circle cx="423.4" cy="152.7" r="3" style="fill:var(--accent);stroke:var(--accent);opacity:1"/><polyline points="70.0,283.9 118.9,279.3 187.8,276.3 236.7,278.2 305.6,270.3 354.5,279.0 423.4,267.5" fill="none" style="stroke:var(--good);opacity:.55" stroke-width="2.2" stroke-dasharray="5 4"/><circle cx="70.0" cy="283.9" r="2.6" style="fill:var(--bg);stroke:var(--good);opacity:.55"/><circle cx="118.9" cy="279.3" r="2.6" style="fill:var(--bg);stroke:var(--good);opacity:.55"/><circle cx="187.8" cy="276.3" r="2.6" style="fill:var(--bg);stroke:var(--good);opacity:.55"/><circle cx="236.7" cy="278.2" r="2.6" style="fill:var(--bg);stroke:var(--good);opacity:.55"/><circle cx="305.6" cy="270.3" r="2.6" style="fill:var(--bg);stroke:var(--good);opacity:.55"/><circle cx="354.5" cy="279.0" r="2.6" style="fill:var(--bg);stroke:var(--good);opacity:.55"/><circle cx="423.4" cy="267.5" r="2.6" style="fill:var(--bg);stroke:var(--good);opacity:.55"/><polyline points="70.0,282.9 118.9,279.1 187.8,280.1 236.7,280.1 305.6,280.4 354.5,281.5 423.4,277.3" fill="none" style="stroke:var(--good);opacity:1" stroke-width="2.2"/><circle cx="70.0" cy="282.9" r="3" style="fill:var(--good);stroke:var(--good);opacity:1"/><circle cx="118.9" cy="279.1" r="3" style="fill:var(--good);stroke:var(--good);opacity:1"/><circle cx="187.8" cy="280.1" r="3" style="fill:var(--good);stroke:var(--good);opacity:1"/><circle cx="236.7" cy="280.1" r="3" style="fill:var(--good);stroke:var(--good);opacity:1"/><circle cx="305.6" cy="280.4" r="3" style="fill:var(--good);stroke:var(--good);opacity:1"/><circle cx="354.5" cy="281.5" r="3" style="fill:var(--good);stroke:var(--good);opacity:1"/><circle cx="423.4" cy="277.3" r="3" style="fill:var(--good);stroke:var(--good);opacity:1"/><text x="431.4" y="134.3" style="fill:var(--bad)">45.9 ms shipped rule <tspan style="fill:var(--muted)">(was 678)</tspan></text><text x="431.4" y="147.3" style="fill:var(--warn)">42.6 ms find unannotated <tspan style="fill:var(--muted)">(was 40.8)</tspan></text><text x="431.4" y="160.3" style="fill:var(--accent2)">26.1 ms map held in a closure <tspan style="fill:var(--muted)">(was 26.2)</tspan></text><text x="431.4" y="173.3" style="fill:var(--accent)">25.3 ms identity rule (floor) <tspan style="fill:var(--muted)">(was 19.3)</tspan></text><text x="431.4" y="281.3" style="fill:var(--good)">0.931 ms neighbours only <tspan style="fill:var(--muted)">(was 1.21)</tspan></text></svg><figcaption><b>Figure 1.</b> Time per call against map size, both scales logarithmic, for five versions of the World rule that return the same answer: dashed, the measured build (1 of the 14 PRs); solid, the same with all 14. Before, the shipped rule's slope is 1.70 (quadratic-ish) and the others are linear, except neighbours-only, which is flat; after, the shipped rule is linear too (0.96) and lies on the unannotated one. The identity floor moves up. Values from <code>data/prs/</code>, the mean of two rounds.</figcaption></figure>
+
+<h2 id="prs">Before and after the performance PRs</h2>
+<p>The dashboard lists 19 PRs against Hazel's performance. Five are not speed changes: <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a>, <a href="https://github.com/hazelgrove/hazel/pull/2689">#2689</a>, <a href="https://github.com/hazelgrove/hazel/pull/2690">#2690</a> and <a href="https://github.com/hazelgrove/hazel/pull/2691">#2691</a> add CI budgets and tests; <a href="https://github.com/hazelgrove/hazel/pull/2490">#2490</a> is a spike that compiles the evaluator with wasm_of_ocaml, in a separate toolchain. That leaves 14. Only <a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a> is merged into <code>dev</code>, so the measured build has 1 of the 14. To see what the other 13 would do, two trial branches were pushed to hazelgrove/hazel and built by GitHub's Deploy workflow, the same build as the measured one:</p>
+<ul>
+<li><b>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></b>: <code>trial/r25-2681</code> at <code>9e461fcc09</code>, the measured build with <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> merged (which carries <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>). 3 of 14.</li>
+<li><b>after</b>: <code>trial/r25-all-perf</code> at <code>8756a15dfc</code>, the measured build with all 13 open speed PRs merged; <a href="https://github.com/hazelgrove/hazel/pull/2673">#2673</a>'s and <a href="https://github.com/hazelgrove/hazel/pull/2671">#2671</a>'s test lists and <a href="https://github.com/hazelgrove/hazel/pull/2610">#2610</a>'s parser call resolved as on <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>. 14 of 14.</li>
+</ul>
+<p>They merge cleanly but for three small conflicts (two test lists, and <a href="https://github.com/hazelgrove/hazel/pull/2610">#2610</a> and <a href="https://github.com/hazelgrove/hazel/pull/2614">#2614</a> both fixing the recovering parser), and both trial branches build. What each PR can reach in a library call follows from what the library runs: <code>FastParse</code>, then <code>Statics.mk</code> once per program, then <code>Evaluator.evaluate</code> from scratch on every call, on the page's own thread (<code>src/web/HazelLibCore.re</code>).</p>
+<div class="scroll"><table><tr><th>PR</th><th>what it does</th><th>state</th><th>in the measured build</th><th>reaches</th><th>why</th></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a></td><td class=n>an ascription pushed through a value gives the value back when it already has the type</td><td class=n>merged into dev</td><td class=n>yes</td><td class=n>each call</td><td class=n>pushing (Globals, Event) and find's ([Cell], Int, Int) through the argument</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></td><td class=n>a value known to have a type is not walked again for it</td><td class=n>open</td><td class=n>no</td><td class=n>each call</td><td class=n>find(rest, ...) re-checks the rest of the list at every step: the quadratic part</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a></td><td class=n>types get a Merkle hash; is_consistent once per pair of types</td><td class=n>open</td><td class=n>no</td><td class=n>each call</td><td class=n>the type question each ascription push asks; <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> keys its memo by this hash</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2603">#2603</a></td><td class=n>statics: a let analyzed once unless it refers to itself, plus three more</td><td class=n>open</td><td class=n>no</td><td class=n>compile</td><td class=n>Statics.mk on the program, once per runProgram</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a></td><td class=n>statics: a module binding analyzes its definition once, not twice</td><td class=n>open</td><td class=n>no</td><td class=n>compile</td><td class=n>the game's rules are modules</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a></td><td class=n>elaborations leave out the source's whitespace and comments</td><td class=n>open</td><td class=n>no</td><td class=n>compile, and what a call evaluates</td><td class=n>smaller elaborated terms</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2675">#2675</a></td><td class=n>incremental evaluation reuses expressions around a recursive let</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>the library evaluates from scratch (Evaluator.evaluate), with no incremental reuse</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2673">#2673</a></td><td class=n>incremental evaluation recognizes an unchanged expression by its Merkle hash</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>as <a href="https://github.com/hazelgrove/hazel/pull/2675">#2675</a></td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2606">#2606</a></td><td class=n>the eval worker keeps the incremental cache</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>the library runs on the page's thread, with no worker</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2652">#2652</a></td><td class=n>Firefox's eval worker starts at load</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>no worker</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2614">#2614</a></td><td class=n>the recovering parser about 2.5x faster</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>the library parses with FastParse; the recovering parser runs only when that fails</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2610">#2610</a></td><td class=n>the load fallback parses with the segmented parser</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>as <a href="https://github.com/hazelgrove/hazel/pull/2614">#2614</a></td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2671">#2671</a></td><td class=n>MapPiece keeps unchanged pieces as the same objects</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>the editor's view</td></tr><tr><td><a href="https://github.com/hazelgrove/hazel/pull/2672">#2672</a></td><td class=n>measuring the font no longer scrolls the editor</td><td class=n>open</td><td class=n>no</td><td class=n>nothing here</td><td class=n>the editor's view</td></tr></table></div>
+<p>Measured, at 16x16 (the mean of two rounds; the rounds' spread is under 20% for nine in ten of the times from 6x6 up, so read smaller differences as noise):</p>
+<div class="scroll"><table><tr><th>16x16, ms</th><th>before</th><th>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></th><th>after</th></tr>
+<tr><td>shipped rule</td><td class=n>144</td><td class=n>20.6</td><td class=n>19.1</td></tr>
+<tr><td>find unannotated</td><td class=n>18</td><td class=n>19.5</td><td class=n>19.4</td></tr>
+<tr><td>identity rule (the floor)</td><td class=n>8.54</td><td class=n>10.1</td><td class=n>10.6</td></tr>
+<tr><td>neighbours only</td><td class=n>0.889</td><td class=n>0.926</td><td class=n>0.832</td></tr>
+<tr><td>shipped rule at 24x24</td><td class=n>678</td><td class=n>42.8</td><td class=n>45.9</td></tr>
+</table></div>
+<ul>
+<li><b><a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> is the one that matters per call.</b> It makes the annotated rule linear: 7.0x faster at 16x16 and 15.9x at 24x24, where the quadratic part was largest. The game's own World handler moves the same way (142 to 21.5 ms at 16x16).</li>
+<li><b>It costs the floor about a quarter</b> (8.54 to 10.1 ms at 16x16): every call's argument is a fresh value, so its first push records it without ever reusing it. The unannotated rules carry the same rise. A memo of values from earlier calls cannot help here, since <code>of_js</code> never gives the same object twice; what would is not re-stepping the converted value at all (<a href="#fix">fix 1 below</a>).</li>
+<li><b>The other 11 change nothing per call</b>, within noise. Three reach the compile, and with them it halves; eight cannot reach the library at all.</li>
+</ul>
+<div class="scroll"><table><tr><th>build</th><th>compile the game's rules, ms (each round)</th><th>compile and run this report's program, ms (each round)</th></tr><tr><td>before: the measured build: 1 of the 14 PRs</td><td class=n>797 (807, 788)</td><td class=n>344 (338, 350)</td></tr><tr><td>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>: + <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> and <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>: 3 of 14</td><td class=n>810 (804, 816)</td><td class=n>367 (347, 386)</td></tr><tr><td>after: all 14 PRs</td><td class=n>402 (390, 414)</td><td class=n>276 (270, 282)</td></tr></table></div>
+<p class="note">Each compile is the first call in a fresh node process, so it includes the JIT's warm-up; there is one per round. The drop comes with the PRs that reach the compile (<a href="https://github.com/hazelgrove/hazel/pull/2603">#2603</a>, <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a>, <a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a>); which of them carries it was not measured apart.</p>
 
 <h2 id="call">What happens in one call</h2>
 <p>The game compiles each room's module once (<code>runProgram</code>) and keeps the JS function Hazel gives back for the room's <code>on_event</code>. On each event it calls that function with two arguments, <code>Globals</code> and <code>Event</code>. For the World room, <code>Globals</code> holds the player's position, the map size and <code>cells</code>, a list with one record per square: <code>{col, row, kind, ways}</code>. The game rebuilds it on every event (0.098 ms in JS at 16x16, negligible). Inside the library (<code>src/web/HazelLibCore.re</code>, <code>function_of</code>), each call then:</p>
@@ -123,11 +149,17 @@
 <pre class="code">let find = fun (cs, c, r) : ([Cell], Int, Int) -&gt;
   case cs | [] =&gt; ... | x :: rest =&gt; if x.col == c &amp;&amp; x.row == r then ... else find(rest, c, r) end</pre>
 <p>Hazel's evaluator treats a pattern with a type ascription as a run-time check: <code>PatternMatch.re</code> wraps the argument in <code>Asc(d, ty)</code> and <code>Ascriptions.transition_multiple</code> pushes it through the value, element by element and field by field. So <code>find(rest, c, r)</code> re-checks all of <code>rest</code>, at every step. A walk to index <i>i</i> in a list of length <i>L</i> costs about <i>i</i> &times; <i>L</i>. In a profile of a deep find, 58.6% of the time is in <code>transition_multiple</code> under <code>matches_inner</code>.</p>
-<p>That is also why the game's own figure, 40 ms, is lower than this report's 153 ms: the cost depends on where the target sits in the list. With all four ways set, a target at index 1 costs 18 ms at 16x16 and the last one 244 ms; removing only the annotation brings the last to 33 ms (8x8: 23 to 8.9 ms). The Square room's <code>find</code> and <code>doors</code> helpers are annotated the same way, which fits a lever with 40 doors taking about 85 ms.</p>
-<figure class="fig" id="fig-16"><svg viewBox="0 0 640 234" role="img" aria-label="16x16 call by variant: shipped 153 ms, unannotated 22.6, index 17.1, held 12.4, identity 9.5, neighbours 0.96, JS under 0.001." style="width:100%;height:auto;font:12.5px system-ui,sans-serif"><text x="222" y="20" text-anchor="end" style="fill:var(--ink)">shipped rule</text><rect x="230" y="4" width="330.0" height="24" rx="3" style="fill:var(--bad)"/><text x="566.0" y="20" style="fill:var(--ink)">153 ms</text><text x="222" y="52" text-anchor="end" style="fill:var(--ink)">find unannotated</text><rect x="230" y="36" width="48.7" height="24" rx="3" style="fill:var(--warn)"/><text x="284.7" y="52" style="fill:var(--ink)">22.6 ms</text><text x="222" y="84" text-anchor="end" style="fill:var(--ink)">index arithmetic, unannotated</text><rect x="230" y="68" width="36.9" height="24" rx="3" style="fill:var(--warn)"/><text x="272.9" y="84" style="fill:var(--ink)">17.1 ms</text><text x="222" y="116" text-anchor="end" style="fill:var(--ink)">map held in a closure</text><rect x="230" y="100" width="26.7" height="24" rx="3" style="fill:var(--accent2)"/><text x="262.7" y="116" style="fill:var(--ink)">12.4 ms</text><text x="222" y="148" text-anchor="end" style="fill:var(--ink)">identity rule (floor)</text><rect x="230" y="132" width="20.5" height="24" rx="3" style="fill:var(--accent)"/><text x="256.5" y="148" style="fill:var(--ink)">9.5 ms</text><text x="222" y="180" text-anchor="end" style="fill:var(--ink)">neighbours only</text><rect x="230" y="164" width="2.1" height="24" rx="3" style="fill:var(--good)"/><text x="238.1" y="180" style="fill:var(--ink)">0.96 ms</text><text x="222" y="212" text-anchor="end" style="fill:var(--ink)">plain JS rule</text><rect x="230" y="196" width="2.0" height="24" rx="3" style="fill:var(--muted)"/><text x="238.0" y="212" style="fill:var(--ink)">0.001 ms</text></svg><figcaption><b>Figure 3.</b> One 16x16 World call, by version of the rule; every version returns the same <code>GoSquare</code>. <i>Index arithmetic</i> takes one <code>nth</code> at <code>r*cols+c</code>; <i>held</i> converts the map once into a Hazel closure (62 ms at setup) and calls it per event; <i>identity</i> is a rule that ignores its argument, so it is the floor.</figcaption></figure>
+<p>That is also why the game's own figure, 40 ms, is lower than this report's 144 ms: the cost depends on where the target sits in the list. With all four ways set, a target at index 1 costs 18 ms at 16x16 and the last one 244 ms; removing only the annotation brings the last to 33 ms (8x8: 23 to 8.9 ms). The Square room's <code>find</code> and <code>doors</code> helpers are annotated the same way, which fits a lever with 40 doors taking about 85 ms.</p>
+<figure class="fig" id="fig-16"><svg viewBox="0 0 660 438" role="img" aria-label="One 16x16 call by version of the rule, in three builds: before, with #2681 and #2661, and with all 14 PRs. Shipped rule: 144, 20.6 and 19.1 ms." style="width:100%;height:auto;font:12px system-ui,sans-serif"><rect x="10" y="4" width="12" height="12" rx="2" style="fill:var(--ink);opacity:.38"/><text x="27" y="14" style="fill:var(--muted)">before (1 of 14 PRs)</text><rect x="185.0" y="4" width="12" height="12" rx="2" style="fill:var(--ink);opacity:.68"/><text x="202.0" y="14" style="fill:var(--muted)">+ #2681 and #2661 (3 of 14)</text><rect x="407.6" y="4" width="12" height="12" rx="2" style="fill:var(--ink);opacity:1"/><text x="424.6" y="14" style="fill:var(--muted)">after (all 14)</text><text x="192" y="61.0" text-anchor="end" style="fill:var(--ink)">shipped rule</text><rect x="200" y="30" width="390.0" height="15" rx="2" style="fill:var(--bad);opacity:.38"/><text x="595.0" y="42" style="fill:var(--ink)">144 ms</text><rect x="200" y="48" width="56.0" height="15" rx="2" style="fill:var(--bad);opacity:.68"/><text x="261.0" y="60" style="fill:var(--ink)">20.6 ms</text><rect x="200" y="66" width="51.7" height="15" rx="2" style="fill:var(--bad);opacity:1"/><text x="256.7" y="78" style="fill:var(--ink)">19.1 ms</text><text x="192" y="129.0" text-anchor="end" style="fill:var(--ink)">find unannotated</text><rect x="200" y="98" width="48.9" height="15" rx="2" style="fill:var(--warn);opacity:.38"/><text x="253.9" y="110" style="fill:var(--ink)">18 ms</text><rect x="200" y="116" width="53.0" height="15" rx="2" style="fill:var(--warn);opacity:.68"/><text x="258.0" y="128" style="fill:var(--ink)">19.5 ms</text><rect x="200" y="134" width="52.7" height="15" rx="2" style="fill:var(--warn);opacity:1"/><text x="257.7" y="146" style="fill:var(--ink)">19.4 ms</text><text x="192" y="197.0" text-anchor="end" style="fill:var(--ink)">index arithmetic</text><rect x="200" y="166" width="42.5" height="15" rx="2" style="fill:var(--warn);opacity:.38"/><text x="247.5" y="178" style="fill:var(--ink)">15.7 ms</text><rect x="200" y="184" width="48.8" height="15" rx="2" style="fill:var(--warn);opacity:.68"/><text x="253.8" y="196" style="fill:var(--ink)">18 ms</text><rect x="200" y="202" width="46.8" height="15" rx="2" style="fill:var(--warn);opacity:1"/><text x="251.8" y="214" style="fill:var(--ink)">17.2 ms</text><text x="192" y="265.0" text-anchor="end" style="fill:var(--ink)">map held in a closure</text><rect x="200" y="234" width="29.2" height="15" rx="2" style="fill:var(--accent2);opacity:.38"/><text x="234.2" y="246" style="fill:var(--ink)">10.8 ms</text><rect x="200" y="252" width="32.5" height="15" rx="2" style="fill:var(--accent2);opacity:.68"/><text x="237.5" y="264" style="fill:var(--ink)">12 ms</text><rect x="200" y="270" width="29.0" height="15" rx="2" style="fill:var(--accent2);opacity:1"/><text x="234.0" y="282" style="fill:var(--ink)">10.7 ms</text><text x="192" y="333.0" text-anchor="end" style="fill:var(--ink)">identity rule (floor)</text><rect x="200" y="302" width="23.2" height="15" rx="2" style="fill:var(--accent);opacity:.38"/><text x="228.2" y="314" style="fill:var(--ink)">8.54 ms</text><rect x="200" y="320" width="27.3" height="15" rx="2" style="fill:var(--accent);opacity:.68"/><text x="232.3" y="332" style="fill:var(--ink)">10.1 ms</text><rect x="200" y="338" width="28.7" height="15" rx="2" style="fill:var(--accent);opacity:1"/><text x="233.7" y="350" style="fill:var(--ink)">10.6 ms</text><text x="192" y="401.0" text-anchor="end" style="fill:var(--ink)">neighbours only</text><rect x="200" y="370" width="2.4" height="15" rx="2" style="fill:var(--good);opacity:.38"/><text x="207.4" y="382" style="fill:var(--ink)">0.889 ms</text><rect x="200" y="388" width="2.5" height="15" rx="2" style="fill:var(--good);opacity:.68"/><text x="207.5" y="400" style="fill:var(--ink)">0.926 ms</text><rect x="200" y="406" width="2.3" height="15" rx="2" style="fill:var(--good);opacity:1"/><text x="207.3" y="418" style="fill:var(--ink)">0.832 ms</text></svg><figcaption><b>Figure 3.</b> One 16x16 World call, by version of the rule, in the three builds; every version returns the same <code>GoSquare</code>. <i>Index arithmetic</i> takes one <code>nth</code> at <code>r*cols+c</code>; <i>held</i> converts the map once into a Hazel closure (24.8 ms at setup) and calls it per event; <i>identity</i> is a rule that ignores its argument, so it is the floor. Only the shipped rule's bars move far, and only at <i>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></i>.</figcaption></figure>
 
 <h2 id="data">The numbers</h2>
-<h3 id="t-sizes">By map size (ms, p50)</h3>
+<h3 id="t-prs">Before and after the PRs, by map size (ms, p50, the mean of two rounds)</h3>
+<div class="scroll"><table><tr><th rowspan=2>map (cells)</th><th colspan=3>shipped</th><th colspan=2>unannotated</th><th colspan=2>identity</th><th colspan=2>held</th><th colspan=2>neighbours</th></tr><tr><th>before</th><th>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></th><th>after</th><th>before</th><th>after</th><th>before</th><th>after</th><th>before</th><th>after</th><th>before</th><th>after</th></tr><tr><td>3x3 (9)</td><td class=n>1.62</td><td class=n>1.53</td><td class=n>1.32</td><td class=n>1.06</td><td class=n>1.09</td><td class=n>0.675</td><td class=n>0.769</td><td class=n>0.721</td><td class=n>0.722</td><td class=n>0.782</td><td class=n>0.803</td></tr><tr><td>4x4 (16)</td><td class=n>2.78</td><td class=n>2.33</td><td class=n>1.93</td><td class=n>1.54</td><td class=n>1.68</td><td class=n>0.565</td><td class=n>0.569</td><td class=n>1</td><td class=n>1.02</td><td class=n>0.881</td><td class=n>0.886</td></tr><tr><td>6x6 (36)</td><td class=n>6.42</td><td class=n>3.56</td><td class=n>3.11</td><td class=n>3.43</td><td class=n>3.13</td><td class=n>0.999</td><td class=n>1.18</td><td class=n>2.31</td><td class=n>1.88</td><td class=n>0.955</td><td class=n>0.863</td></tr><tr><td>8x8 (64)</td><td class=n>16.3</td><td class=n>5.33</td><td class=n>5.56</td><td class=n>5.01</td><td class=n>5.11</td><td class=n>2.42</td><td class=n>2.6</td><td class=n>3.06</td><td class=n>2.88</td><td class=n>0.908</td><td class=n>0.863</td></tr><tr><td>12x12 (144)</td><td class=n>50.3</td><td class=n>12</td><td class=n>10.9</td><td class=n>9.96</td><td class=n>10.6</td><td class=n>4.71</td><td class=n>5.75</td><td class=n>6.34</td><td class=n>5.96</td><td class=n>1.12</td><td class=n>0.856</td></tr><tr><td>16x16 (256)</td><td class=n>144</td><td class=n>20.6</td><td class=n>19.1</td><td class=n>18</td><td class=n>19.4</td><td class=n>8.54</td><td class=n>10.6</td><td class=n>10.8</td><td class=n>10.7</td><td class=n>0.889</td><td class=n>0.832</td></tr><tr><td>24x24 (576)</td><td class=n>678</td><td class=n>42.8</td><td class=n>45.9</td><td class=n>40.8</td><td class=n>42.6</td><td class=n>19.3</td><td class=n>25.3</td><td class=n>26.2</td><td class=n>26.1</td><td class=n>1.21</td><td class=n>0.931</td></tr></table></div>
+<p class="note">Growth exponents from 64 to 576 cells, before / after: shipped 1.70 / 0.96, unannotated 0.96 / 0.97, identity 0.95 / 1.03. Every round of every build is in <code>data/prs/</code>.</p>
+<h3 id="t-steps-prs">Per-step costs, before and after (ms, p50)</h3>
+<div class="scroll"><table><tr><th>program</th><th>before</th><th>after</th></tr><tr><td>walk L=64 i=0</td><td class=n>1.451</td><td class=n>1.704</td></tr><tr><td>walk L=64 i=32</td><td class=n>2.512</td><td class=n>3.262</td></tr><tr><td>walk L=256 i=0</td><td class=n>1.443</td><td class=n>1.478</td></tr><tr><td>walk L=256 i=32</td><td class=n>2.767</td><td class=n>2.97</td></tr><tr><td>walk L=256 i=64</td><td class=n>4.409</td><td class=n>4.757</td></tr><tr><td>walk L=256 i=128</td><td class=n>6.55</td><td class=n>7.05</td></tr><tr><td>walk L=1024 i=0</td><td class=n>7.319</td><td class=n>6.74</td></tr><tr><td>walk L=1024 i=32</td><td class=n>8.77</td><td class=n>7.95</td></tr><tr><td>walk L=1024 i=64</td><td class=n>11.646</td><td class=n>9.294</td></tr><tr><td>walk L=1024 i=128</td><td class=n>14.712</td><td class=n>12.51</td></tr><tr><td>countdown i=0</td><td class=n>0.037</td><td class=n>0.023</td></tr><tr><td>countdown i=32</td><td class=n>0.766</td><td class=n>0.69</td></tr><tr><td>countdown i=64</td><td class=n>1.873</td><td class=n>1.505</td></tr><tr><td>countdown i=128</td><td class=n>3.836</td><td class=n>3.162</td></tr><tr><td>countdown i=256</td><td class=n>8.121</td><td class=n>7.355</td></tr></table></div>
+<h3 id="t-sizes">The first run, before only (ms, p50)</h3>
+<p class="note">The first draft's numbers, one run of the measured build, kept for the record; the reruns above agree with it within the rounds' noise.</p>
 <div class="scroll"><table><tr><th>map (cells)</th><th>JS Globals</th><th>identity, no ascription</th><th>identity</th><th>game's World</th><th>shipped</th><th>unannotated</th><th>index</th><th>neighbours</th><th>held</th><th>held setup</th></tr><tr><td>3x3 (9)</td><td class=n>0.004</td><td class=n>0.68</td><td class=n>0.531</td><td class=n>2.92</td><td class=n>1.38</td><td class=n>1.24</td><td class=n>1.14</td><td class=n>0.865</td><td class=n>0.733</td><td class=n>2.64</td></tr><tr><td>4x4 (16)</td><td class=n>0.007</td><td class=n>0.524</td><td class=n>0.516</td><td class=n>3.45</td><td class=n>2.73</td><td class=n>1.8</td><td class=n>1.62</td><td class=n>0.996</td><td class=n>1.12</td><td class=n>3.02</td></tr><tr><td>6x6 (36)</td><td class=n>0.02</td><td class=n>0.997</td><td class=n>1.12</td><td class=n>7.02</td><td class=n>6.12</td><td class=n>3.09</td><td class=n>2.91</td><td class=n>0.922</td><td class=n>2.22</td><td class=n>4.9</td></tr><tr><td>8x8 (64)</td><td class=n>0.019</td><td class=n>2.01</td><td class=n>2.4</td><td class=n>15.2</td><td class=n>14.7</td><td class=n>4.73</td><td class=n>4.42</td><td class=n>0.891</td><td class=n>3.1</td><td class=n>6.86</td></tr><tr><td>12x12 (144)</td><td class=n>0.048</td><td class=n>4.31</td><td class=n>5.67</td><td class=n>56.1</td><td class=n>53.7</td><td class=n>10.8</td><td class=n>9.88</td><td class=n>0.892</td><td class=n>7.02</td><td class=n>14</td></tr><tr><td>16x16 (256)</td><td class=n>0.098</td><td class=n>8.06</td><td class=n>9.53</td><td class=n>157</td><td class=n>153</td><td class=n>22.6</td><td class=n>17.1</td><td class=n>0.96</td><td class=n>12.4</td><td class=n>61.8</td></tr><tr><td>24x24 (576)</td><td class=n>0.241</td><td class=n>18.5</td><td class=n>21.7</td><td class=n>806</td><td class=n>735</td><td class=n>45.5</td><td class=n>40.5</td><td class=n>1.93</td><td class=n>56.7</td><td class=n>113</td></tr></table></div>
 <p class="note"><i>game's World</i> is the rule as the game compiles it; <i>shipped</i> is the same text rebuilt in the driver (they agree within noise above 8x8). Growth exponents from 64 to 576 cells: shipped 1.78, unannotated 1.03, index 1.01, identity 1.00, held 1.32, neighbours 0.35.</p>
 <h3 id="t-steps">Per-step costs (ms, p50)</h3>
@@ -151,28 +183,30 @@
 <h2 id="fix">What would fix it</h2>
 <h3>In the game's rules, available today</h3>
 <ol>
-<li><b>Drop type annotations on recursive helpers</b> (World's <code>find</code>, Square's <code>find</code> and <code>doors</code>): 153 to 22.6 ms at 16x16; linear instead of quadratic.</li>
+<li><b>Drop type annotations on recursive helpers</b> (World's <code>find</code>, Square's <code>find</code> and <code>doors</code>): 144 to 18 ms at 16x16 on the measured build; linear instead of quadratic. Not needed once <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> is in, which gives the same without touching the rules.</li>
 <li><b>Pass only what the rule needs</b>: the neighbouring cells, not the map. Flat at about 0.9 ms at every size. All 17 <code>Globals</code> fields go to every room today, and each is converted and re-stepped per call.</li>
 </ol>
 <h3>In Hazel's library and evaluator</h3>
 <ol>
 <li><b>Do not re-step a converted value.</b> Have <code>of_js</code> produce something the evaluator treats as final (or bind the argument in the environment and apply to a variable). About half the floor.</li>
-<li><b>An ascription fast path.</b> Check that a value conforms to a type without allocating, or skip the run-time <code>Asc</code> when the argument's type already equals the parameter's, which is exactly the recursive <code>find(rest, ...)</code> case. This makes the annotated rule linear without changing it.</li>
+<li><b>An ascription fast path: this is <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>, measured above.</b> It remembers which values are known to have a type, so the recursive <code>find(rest, ...)</code> re-check is one lookup: the annotated rule becomes linear without changing it (144 to 20.6 ms at 16x16). It is open, on top of <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>. What it does not do is cheapen a value's first push, which it now makes about a quarter dearer by recording it; checking a fresh value without allocating would.</li>
 <li><b>A cheaper <code>Id.mk</code></b>, without <code>Uuidm.v4</code>'s byte copy under js_of_ocaml: about a fifth of all time.</li>
 <li><b>Cut the per-step pipeline when nothing uses it</b>: the state merge, reuse check and probe sampling run on every step even with no probes and no reuse (8.1%, 8.0% and 6.8% inclusive in the walk's profile).</li>
 </ol>
-<p>Fixes 1 and 2 of the library would bring the shipped rule near the unannotated one, and the floor to perhaps a third of today's; fix 4 is what would make a linear walk cheaper. None of them makes Hazel's walk cost what JS's does (under 1 &micro;s); a rule's design still decides whether the call depends on the map's size.</p>
+<p>Fix 2 already brings the shipped rule onto the unannotated one, on its branch. Fix 1 would take the floor to perhaps a third of today's, and with it the first-push cost <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> adds; fix 4 is what would make a linear walk cheaper. None of them makes Hazel's walk cost what JS's does (under 1 &micro;s); a rule's design still decides whether the call depends on the map's size.</p>
 
 <h2 id="next">What next</h2>
 <ol>
 <li>Change the World and Square rules on <a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>: no annotations on recursive helpers, and neighbours only in World's <code>Globals</code>; re-time the game's moves at 16x16.</li>
-<li>Prototype the ascription fast path in <code>Ascriptions.re</code> and time the shipped rule against this report's numbers.</li>
-<li>Prototype <code>of_js</code> producing final values, and time the identity rule's floor.</li>
-<li>Measure the noise floor: repeat the 16x16 row five times.</li>
+<li>Land <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a> and <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> in <code>dev</code>, then rebase <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a> and <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> on it: the game gets the linear rule without changing its rules. (Measured here on <code>trial/r25-2681</code>.)</li>
+<li>Prototype <code>of_js</code> producing final values, and time the identity rule's floor; it would also remove the first-push cost <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> adds.</li>
+<li>Pin the noise floor: two rounds give a spread under 20% for nine in ten of the times; five would say more.</li>
+<li>Measure the compile's halving PR by PR (<a href="https://github.com/hazelgrove/hazel/pull/2603">#2603</a>, <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a>, <a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a>).</li>
 </ol>
 
 <h2 id="method">How this was put together</h2>
-<p>Node v22.23.2 on the Ubuntu laptop (Intel i7), one process at a time. The library is hazel-lib.js from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> at <code>0d66c36618</code>: the minified build for every time, the dev build <code>hazelLib.bc.js</code> for named profiles (3 s each). The rules are the game's at <code>2ebda59ab4</code>. Each time is one p50 over 20-60 reps after warm-up; the noise floor was not measured, so treat differences under about 10% as noise. The target cell is mid-map, at (n/2-1, n/2), moving east; every variant's result was checked against the game's World handler. The library exposes no step count, so per-step costs are inferred from timings. The drivers are in <code>drivers/</code> (<code>r25.mjs</code> for the sizes, <code>steps.mjs</code>, <code>profheld.mjs</code>, and the earlier <code>prof.mjs</code> and <code>prof_noann.mjs</code>; they read the game and library from local checkouts); the data is in <a href="https://github.com/matthewhammer/hazel-reports/tree/main/025/data"><code>data/</code></a>, and the profiles, too big to keep, are summarized in <code>data/profiles.json</code>.</p>
+<p>Node v22.23.2 on the Ubuntu laptop (Intel i7), one process at a time. The library is hazel-lib.js from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> at <code>0d66c36618</code>: the minified build for every time, the dev build <code>hazelLib.bc.js</code> for named profiles (3 s each). The rules are the game's at <code>2ebda59ab4</code>. Each time is one p50 over 20-60 reps after warm-up; for that first run the noise floor was not measured, so treat differences under about 10% as noise (the reruns below give it: under 20% for nine in ten times). The target cell is mid-map, at (n/2-1, n/2), moving east; every variant's result was checked against the game's World handler. The library exposes no step count, so per-step costs are inferred from timings. The drivers are in <code>drivers/</code> (<code>r25.mjs</code> for the sizes, <code>steps.mjs</code>, <code>profheld.mjs</code>, and the earlier <code>prof.mjs</code> and <code>prof_noann.mjs</code>; they read the game and library from local checkouts); the data is in <a href="https://github.com/matthewhammer/hazel-reports/tree/main/025/data"><code>data/</code></a>, and the profiles, too big to keep, are summarized in <code>data/profiles.json</code>.</p>
+<p>Before and after the PRs: <code>drivers/prs.sh</code> runs <code>r25.mjs</code> on GitHub's Deploy builds of three branches (hazelgrove/build, <code>&lt;branch&gt;/hazel-lib.js</code>): <code>js-library-embed</code> at <code>0d66c36618</code>, <code>trial/r25-2681</code> at <code>9e461fcc09</code> and <code>trial/r25-all-perf</code> at <code>8756a15dfc</code>, in two rounds with the builds interleaved (before, + <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>, after; then again), one node process at a time, pinned to two threads and niced, as this laptop needs. Every time above is the mean of the two rounds; each round is in <code>data/prs/</code>, with each build's compile times. The builds and the 14 PRs are in <code>data/prs.json</code>. The per-step costs are one round per build (<code>steps.mjs</code>). The figures and the first table use these reruns; <i>the first run</i> is the first draft's, kept as it was.</p>
 
 <!-- data-line: begin -->
 <h2 id="data">The data</h2>
@@ -302,7 +336,7 @@
    number per page load; if GitHub does not answer, what it said when the
    page was built (tools/link_prs.py writes this block). */
 (() => {
-  const CACHED = {"hazelgrove/hazel#2719": {"author": "matthewhammer", "comments": 1, "created": "2026-10-21T21:38:03Z", "kind": "pull", "state": "draft", "title": "Hazel in another page's frame, and a program of named modules (stacked on #2711)", "updated": "2026-10-21T22:03:19Z", "base": "js-library"}, "matthewhammer/kids-choice-games#2": {"author": "matthewhammer", "comments": 0, "created": "2026-10-22T04:23:36Z", "kind": "pull", "state": "draft", "title": "🧩 Experiment: the rooms' rules in Hazel, against plain JS (ticket 531)", "updated": "2026-10-22T06:19:03Z", "base": "scripting-panel"}}, BUILT = "2026-10-22";
+  const CACHED = {"hazelgrove/hazel#2490": {"author": "matthewhammer", "comments": 5, "created": "2026-09-04T01:01:04Z", "kind": "pull", "state": "draft", "title": "SPIKE: compile the Hazel evaluator with wasm_of_ocaml and benchmark it", "updated": "2026-09-22T22:35:02Z", "base": "dev"}, "hazelgrove/hazel#2603": {"author": "matthewhammer", "comments": 1, "created": "2026-09-26T21:10:09Z", "kind": "pull", "state": "open", "title": "Statics: a let is analyzed once unless it refers to itself, plus three smaller speedups", "updated": "2026-09-26T21:30:11Z", "base": "dev"}, "hazelgrove/hazel#2606": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T01:00:47Z", "kind": "pull", "state": "open", "title": "Keep the incremental cache in the eval worker", "updated": "2026-09-30T19:18:48Z", "base": "dev"}, "hazelgrove/hazel#2608": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T12:03:57Z", "kind": "pull", "state": "open", "title": "Leave the source's whitespace and comments out of elaborations", "updated": "2026-10-21T19:43:30Z", "base": "dev"}, "hazelgrove/hazel#2610": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T15:18:03Z", "kind": "pull", "state": "open", "title": "Parse the load fallback with the segmented parser, projectors kept", "updated": "2026-10-20T20:30:28Z", "base": "dev"}, "hazelgrove/hazel#2614": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T22:58:00Z", "kind": "pull", "state": "open", "title": "Load text about 2.5× faster: whole tokens, one re-grout", "updated": "2026-09-29T18:40:33Z", "base": "dev"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 3, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-21T20:18:06Z", "base": "integration/livelits-splicerefs-full"}, "hazelgrove/hazel#2651": {"author": "matthewhammer", "comments": 3, "created": "2026-10-05T22:34:31Z", "kind": "pull", "state": "open", "title": "Statics: a module binding analyzes its definition once, not twice", "updated": "2026-10-21T19:27:13Z", "base": "dev"}, "hazelgrove/hazel#2652": {"author": "matthewhammer", "comments": 1, "created": "2026-10-06T00:19:52Z", "kind": "pull", "state": "open", "title": "Eval worker in Firefox: start it at load, and do not time out a reply that is queued", "updated": "2026-10-06T00:46:51Z", "base": "dev"}, "hazelgrove/hazel#2661": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T01:18:55Z", "kind": "pull", "state": "open", "title": "Types get a Merkle hash; the evaluator asks is_consistent once per pair", "updated": "2026-10-20T20:31:49Z", "base": "dev"}, "hazelgrove/hazel#2671": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T13:59:41Z", "kind": "pull", "state": "open", "title": "MapPiece keeps unchanged pieces as the same objects", "updated": "2026-10-10T14:25:32Z", "base": "dev"}, "hazelgrove/hazel#2672": {"author": "matthewhammer", "comments": 0, "created": "2026-10-10T16:32:57Z", "kind": "pull", "state": "open", "title": "Measuring the font no longer scrolls the editor to the caret", "updated": "2026-10-10T16:32:57Z", "base": "dev"}, "hazelgrove/hazel#2673": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T17:19:02Z", "kind": "pull", "state": "open", "title": "Incremental evaluation recognizes an unchanged expression by its Merkle hash", "updated": "2026-10-20T20:32:20Z", "base": "dev"}, "hazelgrove/hazel#2675": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T13:05:13Z", "kind": "pull", "state": "open", "title": "Incremental evaluation reuses expressions around a recursive let", "updated": "2026-10-19T21:05:38Z", "base": "dev"}, "hazelgrove/hazel#2678": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T17:06:58Z", "kind": "pull", "state": "open", "title": "CI fails when an evaluation does more work than its budget", "updated": "2026-10-21T04:17:20Z", "base": "dev"}, "hazelgrove/hazel#2679": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T20:45:04Z", "kind": "pull", "state": "merged", "title": "An ascription pushed through a value gives the value back when it already has the type", "updated": "2026-10-19T19:48:48Z", "base": "dev"}, "hazelgrove/hazel#2681": {"author": "matthewhammer", "comments": 2, "created": "2026-10-13T13:04:35Z", "kind": "pull", "state": "open", "title": "A value known to have a type is not walked again for it", "updated": "2026-10-20T22:01:42Z", "base": "dev"}, "hazelgrove/hazel#2689": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:20Z", "kind": "pull", "state": "draft", "title": "Test: statics analyzes each expression within a budget", "updated": "2026-10-17T03:28:12Z", "base": "dev"}, "hazelgrove/hazel#2690": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:23Z", "kind": "pull", "state": "draft", "title": "Test: a re-run beside a library with recursive members stays within its step budget", "updated": "2026-10-21T04:16:34Z", "base": "dev"}, "hazelgrove/hazel#2691": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:25Z", "kind": "pull", "state": "draft", "title": "Test: what the eval worker sends and gets back stays within a byte budget", "updated": "2026-10-17T03:29:32Z", "base": "dev"}, "hazelgrove/hazel#2711": {"author": "matthewhammer", "comments": 0, "created": "2026-10-20T17:35:02Z", "kind": "pull", "state": "draft", "title": "Hazel as a JS library: analyze and run programs from any page", "updated": "2026-10-21T03:54:48Z", "base": "dev"}, "hazelgrove/hazel#2719": {"author": "matthewhammer", "comments": 1, "created": "2026-10-21T21:38:03Z", "kind": "pull", "state": "draft", "title": "Hazel in another page's frame, and a program of named modules (stacked on #2711)", "updated": "2026-10-21T22:03:19Z", "base": "js-library"}, "matthewhammer/kids-choice-games#2": {"author": "matthewhammer", "comments": 0, "created": "2026-10-22T04:23:36Z", "kind": "pull", "state": "draft", "title": "🧩 Experiment: the rooms' rules in Hazel, against plain JS (ticket 531)", "updated": "2026-10-22T08:10:33Z", "base": "scripting-panel"}}, BUILT = "2026-10-22";
   const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
   const asked = new Map();
   /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
@@ -494,13 +528,427 @@
   "data/earlier.json",
   "data/meta.json",
   "data/profiles.json",
+  "data/prs",
+  "data/prs.json",
   "data/tables.json"
  ],
  "caveats": "One p50 per figure from one run; the noise floor was not measured, so differences under about 10% are noise. The library exposes no step count; per-step costs are inferred from timings.",
  "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
  "tables": [
   {
-   "section": "By map size (ms, p50)",
+   "section": "Before and after the performance PRs",
+   "section_id": "prs",
+   "columns": [
+    "PR",
+    "what it does",
+    "state",
+    "in the measured build",
+    "reaches",
+    "why"
+   ],
+   "rows": [
+    [
+     "#2679",
+     "an ascription pushed through a value gives the value back when it already has the type",
+     "merged into dev",
+     "yes",
+     "each call",
+     "pushing (Globals, Event) and find's ([Cell], Int, Int) through the argument"
+    ],
+    [
+     "#2681",
+     "a value known to have a type is not walked again for it",
+     "open",
+     "no",
+     "each call",
+     "find(rest, ...) re-checks the rest of the list at every step: the quadratic part"
+    ],
+    [
+     "#2661",
+     "types get a Merkle hash; is_consistent once per pair of types",
+     "open",
+     "no",
+     "each call",
+     "the type question each ascription push asks; #2681 keys its memo by this hash"
+    ],
+    [
+     "#2603",
+     "statics: a let analyzed once unless it refers to itself, plus three more",
+     "open",
+     "no",
+     "compile",
+     "Statics.mk on the program, once per runProgram"
+    ],
+    [
+     "#2651",
+     "statics: a module binding analyzes its definition once, not twice",
+     "open",
+     "no",
+     "compile",
+     "the game's rules are modules"
+    ],
+    [
+     "#2608",
+     "elaborations leave out the source's whitespace and comments",
+     "open",
+     "no",
+     "compile, and what a call evaluates",
+     "smaller elaborated terms"
+    ],
+    [
+     "#2675",
+     "incremental evaluation reuses expressions around a recursive let",
+     "open",
+     "no",
+     "nothing here",
+     "the library evaluates from scratch (Evaluator.evaluate), with no incremental reuse"
+    ],
+    [
+     "#2673",
+     "incremental evaluation recognizes an unchanged expression by its Merkle hash",
+     "open",
+     "no",
+     "nothing here",
+     "as #2675"
+    ],
+    [
+     "#2606",
+     "the eval worker keeps the incremental cache",
+     "open",
+     "no",
+     "nothing here",
+     "the library runs on the page's thread, with no worker"
+    ],
+    [
+     "#2652",
+     "Firefox's eval worker starts at load",
+     "open",
+     "no",
+     "nothing here",
+     "no worker"
+    ],
+    [
+     "#2614",
+     "the recovering parser about 2.5x faster",
+     "open",
+     "no",
+     "nothing here",
+     "the library parses with FastParse; the recovering parser runs only when that fails"
+    ],
+    [
+     "#2610",
+     "the load fallback parses with the segmented parser",
+     "open",
+     "no",
+     "nothing here",
+     "as #2614"
+    ],
+    [
+     "#2671",
+     "MapPiece keeps unchanged pieces as the same objects",
+     "open",
+     "no",
+     "nothing here",
+     "the editor's view"
+    ],
+    [
+     "#2672",
+     "measuring the font no longer scrolls the editor",
+     "open",
+     "no",
+     "nothing here",
+     "the editor's view"
+    ]
+   ]
+  },
+  {
+   "section": "Before and after the performance PRs",
+   "section_id": "prs",
+   "columns": [
+    "16x16, ms",
+    "before",
+    "+ #2681",
+    "after"
+   ],
+   "rows": [
+    [
+     "shipped rule",
+     "144",
+     "20.6",
+     "19.1"
+    ],
+    [
+     "find unannotated",
+     "18",
+     "19.5",
+     "19.4"
+    ],
+    [
+     "identity rule (the floor)",
+     "8.54",
+     "10.1",
+     "10.6"
+    ],
+    [
+     "neighbours only",
+     "0.889",
+     "0.926",
+     "0.832"
+    ],
+    [
+     "shipped rule at 24x24",
+     "678",
+     "42.8",
+     "45.9"
+    ]
+   ]
+  },
+  {
+   "section": "Before and after the performance PRs",
+   "section_id": "prs",
+   "columns": [
+    "build",
+    "compile the game's rules, ms (each round)",
+    "compile and run this report's program, ms (each round)"
+   ],
+   "rows": [
+    [
+     "before: the measured build: 1 of the 14 PRs",
+     "797 (807, 788)",
+     "344 (338, 350)"
+    ],
+    [
+     "+ #2681: + #2681 and #2661: 3 of 14",
+     "810 (804, 816)",
+     "367 (347, 386)"
+    ],
+    [
+     "after: all 14 PRs",
+     "402 (390, 414)",
+     "276 (270, 282)"
+    ]
+   ]
+  },
+  {
+   "section": "Before and after the PRs, by map size (ms, p50, the mean of two rounds)",
+   "section_id": "t-prs",
+   "columns": [
+    "map (cells)",
+    "shipped",
+    "shipped",
+    "shipped",
+    "unannotated",
+    "unannotated",
+    "identity",
+    "identity",
+    "held",
+    "held",
+    "neighbours",
+    "neighbours"
+   ],
+   "rows": [
+    [
+     "map (cells)",
+     "before",
+     "+ #2681",
+     "after",
+     "before",
+     "after",
+     "before",
+     "after",
+     "before",
+     "after",
+     "before",
+     "after"
+    ],
+    [
+     "3x3 (9)",
+     "1.62",
+     "1.53",
+     "1.32",
+     "1.06",
+     "1.09",
+     "0.675",
+     "0.769",
+     "0.721",
+     "0.722",
+     "0.782",
+     "0.803"
+    ],
+    [
+     "4x4 (16)",
+     "2.78",
+     "2.33",
+     "1.93",
+     "1.54",
+     "1.68",
+     "0.565",
+     "0.569",
+     "1",
+     "1.02",
+     "0.881",
+     "0.886"
+    ],
+    [
+     "6x6 (36)",
+     "6.42",
+     "3.56",
+     "3.11",
+     "3.43",
+     "3.13",
+     "0.999",
+     "1.18",
+     "2.31",
+     "1.88",
+     "0.955",
+     "0.863"
+    ],
+    [
+     "8x8 (64)",
+     "16.3",
+     "5.33",
+     "5.56",
+     "5.01",
+     "5.11",
+     "2.42",
+     "2.6",
+     "3.06",
+     "2.88",
+     "0.908",
+     "0.863"
+    ],
+    [
+     "12x12 (144)",
+     "50.3",
+     "12",
+     "10.9",
+     "9.96",
+     "10.6",
+     "4.71",
+     "5.75",
+     "6.34",
+     "5.96",
+     "1.12",
+     "0.856"
+    ],
+    [
+     "16x16 (256)",
+     "144",
+     "20.6",
+     "19.1",
+     "18",
+     "19.4",
+     "8.54",
+     "10.6",
+     "10.8",
+     "10.7",
+     "0.889",
+     "0.832"
+    ],
+    [
+     "24x24 (576)",
+     "678",
+     "42.8",
+     "45.9",
+     "40.8",
+     "42.6",
+     "19.3",
+     "25.3",
+     "26.2",
+     "26.1",
+     "1.21",
+     "0.931"
+    ]
+   ]
+  },
+  {
+   "section": "Per-step costs, before and after (ms, p50)",
+   "section_id": "t-steps-prs",
+   "columns": [
+    "program",
+    "before",
+    "after"
+   ],
+   "rows": [
+    [
+     "walk L=64 i=0",
+     "1.451",
+     "1.704"
+    ],
+    [
+     "walk L=64 i=32",
+     "2.512",
+     "3.262"
+    ],
+    [
+     "walk L=256 i=0",
+     "1.443",
+     "1.478"
+    ],
+    [
+     "walk L=256 i=32",
+     "2.767",
+     "2.97"
+    ],
+    [
+     "walk L=256 i=64",
+     "4.409",
+     "4.757"
+    ],
+    [
+     "walk L=256 i=128",
+     "6.55",
+     "7.05"
+    ],
+    [
+     "walk L=1024 i=0",
+     "7.319",
+     "6.74"
+    ],
+    [
+     "walk L=1024 i=32",
+     "8.77",
+     "7.95"
+    ],
+    [
+     "walk L=1024 i=64",
+     "11.646",
+     "9.294"
+    ],
+    [
+     "walk L=1024 i=128",
+     "14.712",
+     "12.51"
+    ],
+    [
+     "countdown i=0",
+     "0.037",
+     "0.023"
+    ],
+    [
+     "countdown i=32",
+     "0.766",
+     "0.69"
+    ],
+    [
+     "countdown i=64",
+     "1.873",
+     "1.505"
+    ],
+    [
+     "countdown i=128",
+     "3.836",
+     "3.162"
+    ],
+    [
+     "countdown i=256",
+     "8.121",
+     "7.355"
+    ]
+   ]
+  },
+  {
+   "section": "The first run, before only (ms, p50)",
    "section_id": "t-sizes",
    "columns": [
     "map (cells)",

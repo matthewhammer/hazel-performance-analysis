@@ -1,0 +1,17 @@
+{
+ "walk L=64 i=0": 1.451,
+ "walk L=64 i=32": 2.512,
+ "walk L=256 i=0": 1.443,
+ "walk L=256 i=32": 2.767,
+ "walk L=256 i=64": 4.409,
+ "walk L=256 i=128": 6.55,
+ "walk L=1024 i=0": 7.319,
+ "walk L=1024 i=32": 8.77,
+ "walk L=1024 i=64": 11.646,
+ "walk L=1024 i=128": 14.712,
+ "countdown i=0": 0.037,
+ "countdown i=32": 0.766,
+ "countdown i=64": 1.873,
+ "countdown i=128": 3.836,
+ "countdown i=256": 8.121
+}
