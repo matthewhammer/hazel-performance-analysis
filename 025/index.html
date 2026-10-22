@@ -118,7 +118,7 @@ pre.code .tk-k { color: var(--accent); font-weight: 600; } pre.code .tk-t { colo
 pre.code .tk-s { color: var(--good); } pre.code .tk-n { color: var(--warn); } pre.code .tk-c { color: var(--muted); font-style: italic; }
 </style></head>
 <body><main>
-<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>25<b>)</b></code> · performance · started 2026-10-22, updated 2026-10-22 09:31 MDT · <span class="wip">work in progress</span> · about 11 minutes to read</p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>25<b>)</b></code> · performance · started 2026-10-22, updated 2026-10-22 09:33 MDT · <span class="wip">work in progress</span> · about 11 minutes to read</p>
 <h1>What a Call into Hazel Costs</h1>
 <p class="sub">Matthew asked, on 2026-10-22, about <code class="ref"><b>^ticket(</b>531<b>)</b></code>, the experiment that moves Messed Up Dress Up's room rules into Hazel modules run through Hazel's JS library (<a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>, the library; the game's side is the draft <a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>): <q>why is Hazel so slow here for 16 x 16 map? do more analysis please, and draft a new report.</q> The World room's rule takes a step on the map; in the game's own node run it costs 40.0 ms p50 at 16x16, against 0.003 ms for the same rule in JS. This report takes that one call apart.</p>
 <p class="sub"><b>Which build.</b> Hazel's JS library, <code>hazel-lib.js</code>, from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> (branch <code>js-library-embed</code> at <code>0d66c36618</code>), which is <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> on <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a> on <code>dev</code> at <code>962a7cb009</code>. Of the 14 performance PRs on the dashboard it has one, <a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a>, the only one merged into <code>dev</code>; the other 13 are open. Matthew, after the first draft: <q>Let's make it clear what branch we are measuring ... how many have been applied? If they are not all applied, how much would they help?</q> So every time below is measured three ways, on GitHub's builds of three branches: <b>before</b>, that build; <b>+ <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a></b>, with <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> merged (it carries <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>); and <b>after</b>, with all 14 (<a href="#prs">Before and after the performance PRs</a>).</p>
@@ -415,6 +415,23 @@ V.near(nb, ev)</pre><p class="note">The same decision, given only the squares ar
 <li><b>Cut the per-step pipeline when nothing uses it</b>: the state merge, reuse check and probe sampling run on every step even with no probes and no reuse (8.1%, 8.0% and 6.8% inclusive in the walk's profile).</li>
 </ol>
 <p>Fix 2 already brings the shipped rule onto the unannotated one, on its branch. Fix 1 would take the floor to perhaps a third of today's, and with it the first-push cost <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> adds; fix 4 is what would make a linear walk cheaper. None of them makes Hazel's walk cost what JS's does (under 1 &micro;s); a rule's design still decides whether the call depends on the map's size.</p>
+
+<h2 id="library">Hazel's JS library, as this report uses it</h2>
+<p>Matthew: <q>Let's use it to help me really review our JS library for Hazel, and how well it integrates when required or wanted.</q> This report leans on the library (<a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a>, and <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> for the frame) in four ways. Here is each, what worked, and what was rough. The rough parts are tickets now.</p>
+<div class="scroll"><table><tr><th>use</th><th>how</th><th>what worked</th><th>what was rough</th><th>ticket</th></tr>
+<tr><td>timing every rule (node)</td><td><code>Hazel.run(text)</code> on <code>hazel-lib.js</code>, then the function it gives back called from JS (<code>drivers/r25.mjs</code>)</td><td>One script, no build: GitHub's Deploy build of any branch is a library to time (the four trial builds here). A Hazel function comes back as a JS function; records, lists, strings and constructors convert both ways.</td><td>Every call converts its argument to syntax with fresh ids and re-steps it (the floor, 31 &micro;s a cell). No way to keep a Hazel value across calls except a closure (<a href="#code-held">held</a>). No step count, so per-step costs are inferred from times.</td><td><code class="ref"><b>^ticket(</b>539<b>)</b></code></td></tr>
+<tr><td>the game's rules</td><td><code>Hazel.runProgram({preamble, modules, tail})</code>, a function per room (<code>25-scripting.js</code>)</td><td>Named modules with their own errors; the game plays the same with 🧩 on (^ticket(531)'s checks).</td><td>Compiling the rules costs 0.8 s before the PRs (0.4 s after, <a href="#prs">above</a>), first event or load. Handlers pay the boundary on all of <code>Globals</code>.</td><td><code class="ref"><b>^ticket(</b>540<b>)</b></code></td></tr>
+<tr><td>the tiles under each listing</td><td>the embed frame, <code>index.html#embed</code>, protocol 1: <code>set</code> a program, get <code>ready</code>, <code>size</code>, <code>status</code></td><td>The protocol is small and did what it says: ready, then the program drawn with statics and Hazel's marks, its height and its verdict back.</td><td>The cell is a static view: no caret, no selection, so the tile shapes never show (Matthew: <q>They don't show up during selection</q>). A whole Hazel app per frame. It draws, sizes and reports only while it can render: a hidden or background page gets height 0 and no status. It takes programs only from origins compiled into it (matthewhammer.org, localhost).</td><td><code class="ref"><b>^ticket(</b>538<b>)</b></code></td></tr>
+<tr><td>the run boxes</td><td><code>hazel-lib.js</code> as a plain script from hazel.org, <code>Hazel.run</code> on the first click</td><td>A page runs a listing in the reader's browser in a few lines: the value back, in Hazel's notation, and its time (neighbours only, 8x8: <code>GoSquare(4, 4, "W", Done)</code>, about 3 ms after a 0.1 s compile).</td><td>2.8 MB to load; the build to load is a branch's folder on hazel.org, which moves when the branch is pushed; nothing in the library says which version or protocol it is.</td><td><code class="ref"><b>^ticket(</b>537<b>)</b></code></td></tr>
+</table></div>
+<p><b>What the library could add, in order of what this report needed most:</b></p>
+<ol>
+<li><b>A selectable read-only view</b>: the embed's cell with a caret and selection but no edits, so the tiles show. Hazel has one already (<code>CodeSelectable</code>, used for results); a branch wiring it into the embed is being built (<code>embed-selectable</code>, ^ticket(538)).</li>
+<li><b>Calls that do not convert what they were given before</b>: final values from <code>of_js</code>, or a handle to a value already in Hazel, so a rule called per event pays for what changed, not for the world (^ticket(539)).</li>
+<li><b>A view mounted in the page, not a frame</b> (<code>Hazel.mountEditor</code>, <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a>'s planned next feature): one app for every listing on a page, drawn where the page is, off screen or not.</li>
+<li><b>Counts as well as times</b>: evaluation steps and conversions per call, so a report can say what a call did, not only how long it took.</li>
+<li><b>A version a page can ask for</b>: the library's build and the embed's protocol, from the library itself, and a stable URL per release, so a page does not follow a branch.</li>
+</ol>
 
 <h2 id="next">What next</h2>
 <ol>
@@ -1702,6 +1719,47 @@ const RUNBOX = (() => {
     [
      "browser: heap, Hazel vs JS",
      "67 vs 51 MB"
+    ]
+   ]
+  },
+  {
+   "section": "Hazel's JS library, as this report uses it",
+   "section_id": "library",
+   "columns": [
+    "use",
+    "how",
+    "what worked",
+    "what was rough",
+    "ticket"
+   ],
+   "rows": [
+    [
+     "timing every rule (node)",
+     "Hazel.run(text) on hazel-lib.js, then the function it gives back called from JS (drivers/r25.mjs)",
+     "One script, no build: GitHub's Deploy build of any branch is a library to time (the four trial builds here). A Hazel function comes back as a JS function; records, lists, strings and constructors convert both ways.",
+     "Every call converts its argument to syntax with fresh ids and re-steps it (the floor, 31 µs a cell). No way to keep a Hazel value across calls except a closure (held). No step count, so per-step costs are inferred from times.",
+     "^ticket(539)"
+    ],
+    [
+     "the game's rules",
+     "Hazel.runProgram({preamble, modules, tail}), a function per room (25-scripting.js)",
+     "Named modules with their own errors; the game plays the same with 🧩 on (^ticket(531)'s checks).",
+     "Compiling the rules costs 0.8 s before the PRs (0.4 s after, above), first event or load. Handlers pay the boundary on all of Globals.",
+     "^ticket(540)"
+    ],
+    [
+     "the tiles under each listing",
+     "the embed frame, index.html#embed, protocol 1: set a program, get ready, size, status",
+     "The protocol is small and did what it says: ready, then the program drawn with statics and Hazel's marks, its height and its verdict back.",
+     "The cell is a static view: no caret, no selection, so the tile shapes never show (Matthew: They don't show up during selection). A whole Hazel app per frame. It draws, sizes and reports only while it can render: a hidden or background page gets height 0 and no status. It takes programs only from origins compiled into it (matthewhammer.org, localhost).",
+     "^ticket(538)"
+    ],
+    [
+     "the run boxes",
+     "hazel-lib.js as a plain script from hazel.org, Hazel.run on the first click",
+     "A page runs a listing in the reader's browser in a few lines: the value back, in Hazel's notation, and its time (neighbours only, 8x8: GoSquare(4, 4, \"W\", Done), about 3 ms after a 0.1 s compile).",
+     "2.8 MB to load; the build to load is a branch's folder on hazel.org, which moves when the branch is pushed; nothing in the library says which version or protocol it is.",
+     "^ticket(537)"
     ]
    ]
   }
