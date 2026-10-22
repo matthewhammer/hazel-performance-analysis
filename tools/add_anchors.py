@@ -32,14 +32,19 @@ def head(m):
             f'<button type="button" class="copyanchor" data-id="{hid}" title="copy this section\'s address">copy link</button></{tag}>')
 
 a, b = s.index("<main>"), s.index("</main>")
+# a listing card (<div class="listing" id="..."><div class="lh">...</div>): its own # and copy link at the end of its head line
+s = s[:a] + re.sub(r'(<div class="listing" id="([^"]+)"><div class="lh">)(.*?)(</div>)',
+    lambda m: m.group(1) + m.group(3) + f'<a class="anchor" href="#{m.group(2)}" aria-label="a link to this listing">#</a><button type="button" class="copyanchor" data-id="{m.group(2)}" title="copy this listing\'s address">copy link</button>' + m.group(4),
+    s[a:b], flags=re.S) + s[b:]
+a, b = s.index("<main>"), s.index("</main>")
 s = s[:a] + re.sub(r"<(h[23])([^>]*)>(.*?)</\1>", head, s[a:b], flags=re.S) + s[b:]
 
 CSS = """<style id="anchors-css">
-h2 .anchor, h3 .anchor { margin-left: 8px; color: var(--muted); text-decoration: none; font-weight: 400; opacity: 0.35; }
-h2:hover .anchor, h3:hover .anchor, .anchor:focus { opacity: 1; }
+h2 .anchor, h3 .anchor, .lh .anchor { margin-left: 8px; color: var(--muted); text-decoration: none; font-weight: 400; opacity: 0.35; }
+h2:hover .anchor, h3:hover .anchor, .lh:hover .anchor, .anchor:focus { opacity: 1; }
 .copyanchor { margin-left: 6px; font: 400 0.62em system-ui, sans-serif; vertical-align: middle; padding: 1px 6px; border-radius: 6px;
   border: 1px solid var(--line); background: var(--paper); color: var(--muted); cursor: pointer; opacity: 0.45; }
-h2:hover .copyanchor, h3:hover .copyanchor, .copyanchor:focus { opacity: 1; }
+h2:hover .copyanchor, h3:hover .copyanchor, .lh:hover .copyanchor, .copyanchor:focus { opacity: 1; }
 .copyanchor.done { color: var(--good); border-color: var(--good); opacity: 1; }
 :target { scroll-margin-top: 12px; }
 </style>"""
