@@ -1,0 +1,218 @@
+[
+ {
+  "sys": "fumola",
+  "k": "count",
+  "n": 100,
+  "ms": 1.1001,
+  "reps": 60,
+  "steps": 2725,
+  "text_chars": 10
+ },
+ {
+  "sys": "fumola",
+  "k": "count",
+  "n": 1000,
+  "ms": 5.9138,
+  "reps": 60,
+  "steps": 27025,
+  "text_chars": 11
+ },
+ {
+  "sys": "fumola",
+  "k": "count",
+  "n": 5000,
+  "ms": 29.1501,
+  "reps": 60,
+  "steps": 135025,
+  "text_chars": 11
+ },
+ {
+  "sys": "fumola",
+  "k": "fib",
+  "n": 10,
+  "ms": 1.5062,
+  "reps": 60,
+  "steps": 5129,
+  "text_chars": 7
+ },
+ {
+  "sys": "fumola",
+  "k": "fib",
+  "n": 13,
+  "ms": 4.9758,
+  "reps": 60,
+  "steps": 21833,
+  "text_chars": 7
+ },
+ {
+  "sys": "fumola",
+  "k": "fib",
+  "n": 16,
+  "ms": 20.1592,
+  "reps": 60,
+  "steps": 92593,
+  "text_chars": 7
+ },
+ {
+  "sys": "fumola",
+  "k": "sumbuild",
+  "n": 100,
+  "ms": 1.7941,
+  "reps": 60,
+  "steps": 5857,
+  "text_chars": 13
+ },
+ {
+  "sys": "fumola",
+  "k": "sumbuild",
+  "n": 1000,
+  "ms": 13.6528,
+  "reps": 60,
+  "steps": 58057,
+  "text_chars": 14
+ },
+ {
+  "sys": "fumola",
+  "k": "sumbuild",
+  "n": 3000,
+  "ms": 43.5614,
+  "reps": 58,
+  "steps": 174057,
+  "text_chars": 14
+ },
+ {
+  "sys": "fumola",
+  "k": "mapinc",
+  "n": 100,
+  "ms": 2.8485,
+  "reps": 60,
+  "steps": 10078,
+  "text_chars": 11
+ },
+ {
+  "sys": "fumola",
+  "k": "mapinc",
+  "n": 1000,
+  "ms": 24.5175,
+  "reps": 60,
+  "steps": 100078,
+  "text_chars": 12
+ },
+ {
+  "sys": "fumola",
+  "k": "mapinc",
+  "n": 3000,
+  "ms": 76.5545,
+  "reps": 33,
+  "steps": 300078,
+  "text_chars": 12
+ },
+ {
+  "sys": "fumola",
+  "k": "skip",
+  "n": 100,
+  "ms": 0.7333,
+  "reps": 60,
+  "steps": 213,
+  "text_chars": 398
+ },
+ {
+  "sys": "fumola",
+  "k": "skip",
+  "n": 1000,
+  "ms": 3.2801,
+  "reps": 60,
+  "steps": 2013,
+  "text_chars": 4899
+ },
+ {
+  "sys": "fumola",
+  "k": "skip",
+  "n": 3000,
+  "ms": 8.6807,
+  "reps": 60,
+  "steps": 6013,
+  "text_chars": 16899
+ },
+ {
+  "sys": "fumola",
+  "k": "h_id",
+  "n": 100,
+  "ms": 0.4174,
+  "reps": 60,
+  "steps": 13,
+  "text_chars": 7
+ },
+ {
+  "sys": "fumola",
+  "k": "h_id",
+  "n": 1000,
+  "ms": 0.4236,
+  "reps": 60,
+  "steps": 13,
+  "text_chars": 7
+ },
+ {
+  "sys": "fumola",
+  "k": "h_id",
+  "n": 3000,
+  "ms": 0.433,
+  "reps": 60,
+  "steps": 13,
+  "text_chars": 7
+ },
+ {
+  "sys": "fumola",
+  "k": "h_ref",
+  "n": 100,
+  "ms": 0.4195,
+  "reps": 60,
+  "steps": 16,
+  "text_chars": 8
+ },
+ {
+  "sys": "fumola",
+  "k": "h_ref",
+  "n": 1000,
+  "ms": 0.423,
+  "reps": 60,
+  "steps": 16,
+  "text_chars": 8
+ },
+ {
+  "sys": "fumola",
+  "k": "h_ref",
+  "n": 3000,
+  "ms": 0.423,
+  "reps": 60,
+  "steps": 16,
+  "text_chars": 8
+ },
+ {
+  "sys": "fumola",
+  "k": "h_walk",
+  "n": 100,
+  "ms": 1.057,
+  "reps": 60,
+  "steps": 2332,
+  "text_chars": 9
+ },
+ {
+  "sys": "fumola",
+  "k": "h_walk",
+  "n": 1000,
+  "ms": 6.7941,
+  "reps": 60,
+  "steps": 23032,
+  "text_chars": 9
+ },
+ {
+  "sys": "fumola",
+  "k": "h_walk",
+  "n": 3000,
+  "ms": 20.7103,
+  "reps": 60,
+  "steps": 69032,
+  "text_chars": 9
+ }
+]

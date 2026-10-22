@@ -1,0 +1,29 @@
+[
+ {
+  "n": 8,
+  "cells": 64,
+  "tree_setup": 142.27,
+  "held_setup": 24.54,
+  "tree": 3.628,
+  "held": 4.968,
+  "near": 1.403
+ },
+ {
+  "n": 16,
+  "cells": 256,
+  "tree_setup": 199.85,
+  "held_setup": 34.98,
+  "tree": 8.684,
+  "held": 14.054,
+  "near": 1.637
+ },
+ {
+  "n": 32,
+  "cells": 1024,
+  "tree_setup": 945.02,
+  "held_setup": 117.4,
+  "tree": 27.118,
+  "held": 59.334,
+  "near": 1.252
+ }
+]

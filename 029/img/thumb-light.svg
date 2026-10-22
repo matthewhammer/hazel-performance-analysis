@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" role="img" aria-label="Three bars on a log scale: wasm costs Fumola 1.4 times its native speed, a Hazel step about 15 times a Fumola step, and a Hazel list loop 141 times Fumola's.">
+<text x="20" y="22" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#1f2937">Where the gap comes from</text>
+<rect x="20" y="40" width="13" height="16" rx="3" fill="#0e7490"/>
+<text x="20" y="69" font-family="system-ui,sans-serif" font-size="10" fill="#6b7280">wasm / native</text>
+<text x="38" y="52" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#1f2937">1.4x</text>
+<rect x="20" y="74" width="102" height="16" rx="3" fill="#6d28d9"/>
+<text x="20" y="103" font-family="system-ui,sans-serif" font-size="10" fill="#6b7280">per step</text>
+<text x="127" y="86" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#1f2937">15x</text>
+<rect x="20" y="108" width="187" height="16" rx="3" fill="#b91c1c"/>
+<text x="20" y="137" font-family="system-ui,sans-serif" font-size="10" fill="#6b7280">list loop</text>
+<text x="212" y="120" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#1f2937">141x</text>
+</svg>

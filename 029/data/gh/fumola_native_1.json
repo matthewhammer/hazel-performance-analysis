@@ -1,0 +1,218 @@
+[
+  {
+    "k": "count",
+    "ms": 0.7141,
+    "n": 100,
+    "reps": 60,
+    "steps": 2725,
+    "sys": "fumola_native",
+    "text_chars": 10
+  },
+  {
+    "k": "count",
+    "ms": 4.2687,
+    "n": 1000,
+    "reps": 60,
+    "steps": 27025,
+    "sys": "fumola_native",
+    "text_chars": 11
+  },
+  {
+    "k": "count",
+    "ms": 20.4307,
+    "n": 5000,
+    "reps": 60,
+    "steps": 135025,
+    "sys": "fumola_native",
+    "text_chars": 11
+  },
+  {
+    "k": "fib",
+    "ms": 1.0016,
+    "n": 10,
+    "reps": 60,
+    "steps": 5129,
+    "sys": "fumola_native",
+    "text_chars": 7
+  },
+  {
+    "k": "fib",
+    "ms": 3.1861,
+    "n": 13,
+    "reps": 60,
+    "steps": 21833,
+    "sys": "fumola_native",
+    "text_chars": 7
+  },
+  {
+    "k": "fib",
+    "ms": 13.4062,
+    "n": 16,
+    "reps": 60,
+    "steps": 92593,
+    "sys": "fumola_native",
+    "text_chars": 7
+  },
+  {
+    "k": "sumbuild",
+    "ms": 1.3233,
+    "n": 100,
+    "reps": 60,
+    "steps": 5857,
+    "sys": "fumola_native",
+    "text_chars": 13
+  },
+  {
+    "k": "sumbuild",
+    "ms": 9.9705,
+    "n": 1000,
+    "reps": 60,
+    "steps": 58057,
+    "sys": "fumola_native",
+    "text_chars": 14
+  },
+  {
+    "k": "sumbuild",
+    "ms": 31.0285,
+    "n": 3000,
+    "reps": 60,
+    "steps": 174057,
+    "sys": "fumola_native",
+    "text_chars": 14
+  },
+  {
+    "k": "mapinc",
+    "ms": 2.1381,
+    "n": 100,
+    "reps": 60,
+    "steps": 10078,
+    "sys": "fumola_native",
+    "text_chars": 11
+  },
+  {
+    "k": "mapinc",
+    "ms": 18.0805,
+    "n": 1000,
+    "reps": 60,
+    "steps": 100078,
+    "sys": "fumola_native",
+    "text_chars": 12
+  },
+  {
+    "k": "mapinc",
+    "ms": 62.4062,
+    "n": 3000,
+    "reps": 41,
+    "steps": 300078,
+    "sys": "fumola_native",
+    "text_chars": 12
+  },
+  {
+    "k": "skip",
+    "ms": 0.5323,
+    "n": 100,
+    "reps": 60,
+    "steps": 213,
+    "sys": "fumola_native",
+    "text_chars": 398
+  },
+  {
+    "k": "skip",
+    "ms": 2.4093,
+    "n": 1000,
+    "reps": 60,
+    "steps": 2013,
+    "sys": "fumola_native",
+    "text_chars": 4899
+  },
+  {
+    "k": "skip",
+    "ms": 6.1847,
+    "n": 3000,
+    "reps": 60,
+    "steps": 6013,
+    "sys": "fumola_native",
+    "text_chars": 16899
+  },
+  {
+    "k": "h_id",
+    "ms": 0.315,
+    "n": 100,
+    "reps": 60,
+    "steps": 13,
+    "sys": "fumola_native",
+    "text_chars": 7
+  },
+  {
+    "k": "h_id",
+    "ms": 0.3177,
+    "n": 1000,
+    "reps": 60,
+    "steps": 13,
+    "sys": "fumola_native",
+    "text_chars": 7
+  },
+  {
+    "k": "h_id",
+    "ms": 0.3303,
+    "n": 3000,
+    "reps": 60,
+    "steps": 13,
+    "sys": "fumola_native",
+    "text_chars": 7
+  },
+  {
+    "k": "h_ref",
+    "ms": 0.3285,
+    "n": 100,
+    "reps": 60,
+    "steps": 16,
+    "sys": "fumola_native",
+    "text_chars": 8
+  },
+  {
+    "k": "h_ref",
+    "ms": 0.3395,
+    "n": 1000,
+    "reps": 60,
+    "steps": 16,
+    "sys": "fumola_native",
+    "text_chars": 8
+  },
+  {
+    "k": "h_ref",
+    "ms": 0.3369,
+    "n": 3000,
+    "reps": 60,
+    "steps": 16,
+    "sys": "fumola_native",
+    "text_chars": 8
+  },
+  {
+    "k": "h_walk",
+    "ms": 0.7805,
+    "n": 100,
+    "reps": 60,
+    "steps": 2332,
+    "sys": "fumola_native",
+    "text_chars": 9
+  },
+  {
+    "k": "h_walk",
+    "ms": 4.7469,
+    "n": 1000,
+    "reps": 60,
+    "steps": 23032,
+    "sys": "fumola_native",
+    "text_chars": 9
+  },
+  {
+    "k": "h_walk",
+    "ms": 14.9285,
+    "n": 3000,
+    "reps": 60,
+    "steps": 69032,
+    "sys": "fumola_native",
+    "text_chars": 9
+  }
+]

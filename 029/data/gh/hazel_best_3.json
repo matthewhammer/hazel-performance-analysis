@@ -1,0 +1,170 @@
+[
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 100,
+  "ms": 3.7048,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 1000,
+  "ms": 45.5429,
+  "reps": 53
+ },
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 5000,
+  "ms": 244.6769,
+  "reps": 11
+ },
+ {
+  "sys": "hazel",
+  "k": "fib",
+  "n": 10,
+  "ms": 6.22,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "fib",
+  "n": 13,
+  "ms": 25.857,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "fib",
+  "n": 16,
+  "ms": 109.9819,
+  "reps": 23
+ },
+ {
+  "sys": "hazel",
+  "k": "sumbuild",
+  "n": 100,
+  "ms": 16.0457,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "sumbuild",
+  "n": 1000,
+  "ms": 719.5686,
+  "reps": 5
+ },
+ {
+  "sys": "hazel",
+  "k": "sumbuild",
+  "n": 3000,
+  "ms": 6075.8988,
+  "reps": 5
+ },
+ {
+  "sys": "hazel",
+  "k": "mapinc",
+  "n": 100,
+  "ms": 23.5132,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "mapinc",
+  "n": 1000,
+  "ms": 825.8718,
+  "reps": 5
+ },
+ {
+  "sys": "hazel",
+  "k": "mapinc",
+  "n": 3000,
+  "ms": 6679.4123,
+  "reps": 5
+ },
+ {
+  "sys": "hazel",
+  "k": "skip",
+  "n": 100,
+  "ms": 0.1095,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "skip",
+  "n": 1000,
+  "ms": 0.4807,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "skip",
+  "n": 3000,
+  "ms": 1.3715,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "h_id",
+  "n": 100,
+  "ms": 0.0542,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "h_id",
+  "n": 1000,
+  "ms": 0.0225,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "h_id",
+  "n": 3000,
+  "ms": 0.0229,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "h_ref",
+  "n": 100,
+  "ms": 0.1793,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "h_ref",
+  "n": 1000,
+  "ms": 1.3469,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "h_ref",
+  "n": 3000,
+  "ms": 4.7061,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "h_walk",
+  "n": 100,
+  "ms": 4.0914,
+  "reps": 60
+ },
+ {
+  "sys": "hazel",
+  "k": "h_walk",
+  "n": 1000,
+  "ms": 67.1819,
+  "reps": 37
+ },
+ {
+  "sys": "hazel",
+  "k": "h_walk",
+  "n": 3000,
+  "ms": 219.3389,
+  "reps": 12
+ }
+]

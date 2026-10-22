@@ -1,0 +1,74 @@
+[
+ {
+  "n": 3,
+  "cells": 9,
+  "tree_setup": 19.93,
+  "held_setup": 3.25,
+  "tree": 1.856,
+  "held": 1.375,
+  "near": 1.248
+ },
+ {
+  "n": 4,
+  "cells": 16,
+  "tree_setup": 13.42,
+  "held_setup": 5.8,
+  "tree": 1.289,
+  "held": 1.505,
+  "near": 1.208
+ },
+ {
+  "n": 6,
+  "cells": 36,
+  "tree_setup": 22.04,
+  "held_setup": 5.54,
+  "tree": 1.787,
+  "held": 2.26,
+  "near": 1.123
+ },
+ {
+  "n": 8,
+  "cells": 64,
+  "tree_setup": 39.36,
+  "held_setup": 9.75,
+  "tree": 2.516,
+  "held": 3.461,
+  "near": 0.845
+ },
+ {
+  "n": 12,
+  "cells": 144,
+  "tree_setup": 79.88,
+  "held_setup": 15.44,
+  "tree": 5.029,
+  "held": 7.776,
+  "near": 1.053
+ },
+ {
+  "n": 16,
+  "cells": 256,
+  "tree_setup": 130.48,
+  "held_setup": 28.01,
+  "tree": 8.378,
+  "held": 14.104,
+  "near": 0.913
+ },
+ {
+  "n": 24,
+  "cells": 576,
+  "tree_setup": 320.92,
+  "held_setup": 89.82,
+  "tree": 18.2,
+  "held": 34.536,
+  "near": 1.18
+ },
+ {
+  "n": 32,
+  "cells": 1024,
+  "tree_setup": 672.3,
+  "held_setup": 101.78,
+  "tree": 33.179,
+  "held": 59.634,
+  "near": 1.081
+ }
+]

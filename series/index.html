@@ -46,6 +46,14 @@
   <script>if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) document.getElementById("dashboard-link").href = "http://localhost:8000/";</script>
   <ol class="issues" reversed>
     <li>
+      <a class="thumb" href="029/"><img class="light" src="029/img/thumb-light.svg" alt="Three bars on a log scale: wasm costs Fumola 1.4 times its native speed, a Hazel step about 15 times a Fumola step, and a Hazel list loop 141 times Fumola's."><img class="dark" src="029/img/thumb-dark.svg" alt="Three bars on a log scale: wasm costs Fumola 1.4 times its native speed, a Hazel step about 15 times a Fumola step, and a Hazel list loop 141 times Fumola's."></a>
+      <div>
+      <div class="num"><a href="029/"><code class="ref"><b>^report(</b>29<b>)</b></code></a> · 2026-10-22 · <span class="wip">work in progress</span></div>
+      <div class="title"><a href="029/">Where the Gap Comes From</a></div>
+      <p class="blurb">Hazel and Fumola on the same eight small programs, timed, step-counted and profiled (<code class="ref"><b>^ticket(</b>545<b>)</b></code>): wasm costs Fumola 1.2 to 1.5 times; Hazel takes half Fumola's steps but each costs about 15 times as much; a function Hazel's JS library returns re-evaluates what it holds at every call, and a list loop re-types its list, quadratic.</p>
+      </div>
+    </li>
+    <li>
       <a class="thumb" href="028/"><img class="light" src="028/img/thumb-light.svg" alt="Two columns of code, Hazel and Fumola, side by side."><img class="dark" src="028/img/thumb-dark.svg" alt="Two columns of code, Hazel and Fumola, side by side."></a>
       <div>
       <div class="num"><a href="028/"><code class="ref"><b>^report(</b>28<b>)</b></code></a> · 2026-10-22 · <span class="wip">work in progress</span></div>

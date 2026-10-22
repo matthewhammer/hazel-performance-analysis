@@ -1,0 +1,51 @@
+{
+ "label": "sumbuild(1000): a list built and summed",
+ "total_ms": 2508.4,
+ "groups": [
+  {
+   "group": "fresh ids (Id.re: a UUID, its bytes made a JS string)",
+   "ms": 1158.1,
+   "share": 0.4617
+  },
+  {
+   "group": "garbage collection",
+   "ms": 397.5,
+   "share": 0.1585
+  },
+  {
+   "group": "pushing types through values (Ascriptions.re)",
+   "ms": 234.4,
+   "share": 0.0934
+  },
+  {
+   "group": "terms and their ids (IdTagged.re, DHExp.re, Exp.re, ...)",
+   "ms": 183.2,
+   "share": 0.073
+  },
+  {
+   "group": "everything else",
+   "ms": 171.4,
+   "share": 0.0683
+  },
+  {
+   "group": "the evaluator's stages (Evaluator.re, EvaluatorState.re, IncrEval.re)",
+   "ms": 144.5,
+   "share": 0.0576
+  },
+  {
+   "group": "trampolines (Trampoline.re)",
+   "ms": 86.9,
+   "share": 0.0347
+  },
+  {
+   "group": "the step's rule (Transition.re, PatternMatch.re, Unboxing.re)",
+   "ms": 75.0,
+   "share": 0.0299
+  },
+  {
+   "group": "environments (Environment.re)",
+   "ms": 57.4,
+   "share": 0.0229
+  }
+ ]
+}

@@ -1,0 +1,37 @@
+type Tree = + Leaf + Node(Tree, Int, Cell, Tree) in
+let length = fun xs ->
+  case xs
+  | [] => 0
+  | _ :: rest => 1 + length(rest)
+  end in
+let build = fun (xs, n, w) ->
+  if n == 0 then (Leaf, xs)
+  else
+    let (l, rest) = build(xs, n / 2, w) in
+    case rest
+    | x :: rest2 =>
+      let (r, rest3) = build(rest2, n - n / 2 - 1, w) in
+      (Node(l, x.row * w + x.col, x, r), rest3)
+    | [] => (Leaf, [])
+    end in
+let lookup = fun (t, k) ->
+  case t
+  | Leaf => None
+  | Node(l, k2, x, r) =>
+    if k < k2 then lookup(l, k)
+    else if k > k2 then lookup(r, k)
+    else Some(x)
+  end in
+let held_tree = fun (cells, w) ->
+  let (t, _) = build(cells, length(cells), w) in
+  fun (n, e) ->
+    case e
+    | Way(d) =>
+      let (dx, dy) = dir(d) in
+      let c = n.at_col + dx in
+      let r = n.at_row + dy in
+      let back = opp(d) in
+      if c < 0 || r < 0 || c >= n.cols || r >= n.rows then Done
+      else decide(lookup(t, r * n.cols + c), back, c, r)
+    | _ => Done
+    end in

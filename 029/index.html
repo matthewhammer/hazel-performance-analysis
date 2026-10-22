@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<!-- theme: head begin -->
+<script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<!-- theme: head end -->
+<!-- nav: begin --><meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script><!-- nav: end -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where the Gap Comes From</title>
+<meta name="description" content="Hazel and Fumola on the same small programs, with step counts and profiles: Hazel takes about half Fumola's steps but each costs about fifteen times as much; lists in Hazel are re-walked on every reference and re-typed on every loop; wasm is a small part.">
+<style>  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8; --accent2: #0e7490; --cx: #d6d1c6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1020px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 26px 0 6px; }
+  p, li { max-width: 76ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  .headline > p { margin: 6px 0; }
+  ol.ans { padding-left: 1.4em; margin: 8px 0; }
+  ol.ans > li { max-width: none; margin: 14px 0; }
+  ol.ans > li > .row { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: center; }
+  ol.ans > li p { margin: 0; }
+  figure.mini { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  figure.mini figcaption { font-size: 0.8em; margin-top: 4px; }
+  @media (max-width: 760px) { ol.ans > li > .row { grid-template-columns: minmax(0, 1fr); } figure.mini { max-width: 340px; } }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  a.cl { text-decoration: none; } a.cl:hover code { text-decoration: underline; }
+  sup.at { font-size: 0.68em; color: var(--muted); margin-left: 2px; font-weight: 600; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure.fig { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 18px 0; }
+  .figscroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 80ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre.code { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto;
+             font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 6px 0 4px; }
+  pre.code .rm { color: var(--bad); } pre.code .ad { color: var(--good); } pre.code .cm { color: var(--muted); }
+  .codepair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .codepair { grid-template-columns: minmax(0, 1fr); } }
+  .codepair h4 { margin: 6px 0 0; font-size: 0.95em; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .callout { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent2); border-radius: 6px; padding: 8px 14px; margin: 14px 0; }
+  .callout.warn { border-left-color: var(--warn); }
+  section.q { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 6px 16px 10px; margin: 20px 0; }
+  section.q h3 { margin: 10px 0 6px; line-height: 1.4; }
+  section.q h3 .qn { color: var(--accent); margin-right: 6px; }
+  .tags { margin: 2px 0 8px; }
+  .tag { display: inline-block; font-size: 0.78em; font-weight: 600; padding: 1px 9px; border-radius: 999px; margin: 0 6px 4px 0; border: 1px solid; }
+  .tag.ans { color: var(--good); border-color: var(--good); background: color-mix(in srgb, var(--good) 10%, transparent); }
+  .tag.now { color: var(--accent2); border-color: var(--accent2); background: color-mix(in srgb, var(--accent2) 10%, transparent); }
+  .tag.cyrus { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .tag.block { color: var(--warn); border-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+  .tag.open { color: var(--muted); border-color: var(--line); }
+  .answer { background: color-mix(in srgb, var(--good) 9%, var(--paper)); border: 1px solid color-mix(in srgb, var(--good) 45%, var(--line)); border-radius: 6px; padding: 8px 12px; margin: 8px 0; max-width: 80ch; }
+  .after { max-width: 80ch; }
+  ul.ev { padding-left: 1.2em; } ul.ev li { margin: 5px 0; max-width: 84ch; }
+  ul.ev .refs { color: var(--muted); font-size: 0.92em; }
+  ol.opts li { margin: 6px 0; max-width: 82ch; }
+  .optnote { display: inline-block; font-size: 0.8em; font-weight: 600; color: var(--accent); margin-left: 4px; }
+  .optnote.out { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  button.copylink { margin-left: 8px; font: 600 12px system-ui, sans-serif; padding: 1px 8px; border: 1px solid var(--line);
+    border-radius: 999px; background: var(--bg); color: var(--muted); cursor: pointer; vertical-align: 2px; }
+  button.copylink:hover { color: var(--ink); border-color: var(--muted); }
+  button.copylink.done { color: var(--good); border-color: var(--good); }
+  input.copyfield { display: block; width: 100%; max-width: 640px; margin: 4px 0; font: 13px ui-monospace, monospace;
+    background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }
+  .cyrus { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 4px 16px; }
+  .cyrus li { margin: 8px 0; }
+  details.ev summary { cursor: pointer; color: var(--link); }
+  .wip { color: var(--warn); font-weight: 600; }
+
+pre.code .tk-k { color: var(--accent); font-weight: 600; } pre.code .tk-s { color: var(--good); } pre.code .tk-n { color: var(--warn); } pre.code .tk-c { color: var(--muted); font-style: italic; }
+pre.code { white-space: pre-wrap; font-size: 0.82em; }
+.panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 10px; }
+.panel p { margin: 0; font-size: 0.78em; color: var(--muted); }
+.keys { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.85em; color: var(--muted); margin: 6px 0; }
+.key { display: inline-flex; align-items: center; gap: 6px; } .sw { display: inline-block; width: 12px; height: 12px; border-radius: 2px; }
+.side { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 760px) { .side { grid-template-columns: minmax(0, 1fr); } }
+.side h4 { margin: 4px 0; font-size: 0.9em; color: var(--muted); }
+.pending { border-left: 4px solid var(--warn); padding: 6px 12px; background: var(--paper); border-radius: 6px; }
+</style><style id="anchors-css">
+h2 .anchor, h3 .anchor, .lh .anchor { margin-left: 8px; color: var(--muted); text-decoration: none; font-weight: 400; opacity: 0.35; }
+h2:hover .anchor, h3:hover .anchor, .lh:hover .anchor, .anchor:focus { opacity: 1; }
+.copyanchor { margin-left: 6px; font: 400 0.62em system-ui, sans-serif; vertical-align: middle; padding: 1px 6px; border-radius: 6px;
+  border: 1px solid var(--line); background: var(--paper); color: var(--muted); cursor: pointer; opacity: 0.45; }
+h2:hover .copyanchor, h3:hover .copyanchor, .lh:hover .copyanchor, .copyanchor:focus { opacity: 1; }
+.copyanchor.done { color: var(--good); border-color: var(--good); opacity: 1; }
+:target { scroll-margin-top: 12px; }
+</style>
+</head>
+<body><main>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>29<b>)</b></code> · performance · started 2026-10-22 · <span class="wip">work in progress</span> · about 10 minutes to read</p>
+<h1>Where the Gap Comes From</h1>
+<p class="sub">Matthew, on <a href="../027/#fig-sizes">^report(27)'s Figure 1</a>: <q>seems to say that Hazel and Fumola are less than 3x apart in this situation. How would you attribute the difference in performance? Is it Wasm vs JS -- or more than that? Both use a small-step evaluation system, for a language with purely-functional, higher order data. Let's draft a report WIP --- looking more into the contrast and how it shows up with actual analysis of each system, while running the same programs.</q> Eight small programs, written the same way in both languages, timed, step-counted and profiled (<code class="ref"><b>^ticket(</b>545<b>)</b></code>).</p>
+
+<div class="headline">
+<p><b>Short answers.</b> More than wasm against js. The first three are the causes, each measured below; the last two are where the target and the boundary come in.</p>
+<ol class="ans">
+<li><b>Hazel takes fewer steps, and each costs far more.</b> For the same loop, Hazel's evaluator makes about half as many passes as Fumola's machine takes steps (14,009 against 27,025 for <code>count(1000)</code>): Fumola's steps are finer. But a Hazel pass costs about 2.6 µs and a Fumola step about 0.13 µs, some 20 times as much. Net, Fumola is 10x faster on the loop and 6.5x on calls.</li>
+<li><b>A Hazel step pays for the editor around it.</b> Every term the evaluator visits, values included, goes through five stages: state merging, a reuse check, probe sampling, recording effects, then the rule itself. On the loop, the rule is 7% of the time; garbage collection is 36%, and the stages and their trampolines 37%. Fumola's machine keeps values apart from syntax and steps a continuation: one match, no stages.</li>
+<li><b>On lists, Hazel's costs grow with the list, so the gap does too.</b> Two causes, both found here:
+ <ul>
+ <li><b>A function handed to JS carries its captured values as text.</b> When Hazel's JS library returns a function, it writes the function's environment into its body (<code>finish</code>: <code>Substitution.in_exp</code>), so a list the function holds becomes a list literal inside it, evaluated again, element by element, at every call: 0.234, 1.14 and 3.94 ms for lists of 100, 1,000 and 3,000, where Fumola's stays at about 0.291 ms. Called from inside Hazel, the same function costs 27 passes at every size: <b>Hazel's evaluator holds values in O(1); its library does not.</b> This is what holding the world cost in <a href="../027/">^report(27)</a>, and what <code class="ref"><b>^ticket(</b>540<b>)</b></code> was chasing.</li>
+ <li><b>A list loop is quadratic.</b> Each iteration that passes the growing list on pushes its type, <code>[Int]</code>, over every element again, minting a fresh id for each part and then keeping none of them. Building and summing 3,000 numbers: 4,591 ms in Hazel, 24.7 ms in Fumola, 186x.</li>
+ </ul></li>
+<li><b>Where js does show, it is in Hazel's ids.</b> A fresh id is a UUID written into 16 bytes, and js_of_ocaml turns bytes into a JS string by hand: about three quarters of minting an id, and 46% of the list loop's time. A native build would copy 16 bytes. Wasm costs Fumola 1.2x to 1.5x against its native build on the same runner.</li>
+<li><b>Hazel's boundary is the cheaper one.</b> Passing in 3,000 numbers from JS costs Hazel 0.931 ms; Fumola, which takes only source text, parses them in 5.65 ms. For ^report(27)'s map of 4,096 cells: 80.3 ms in Hazel, most of Fumola's 148.</li>
+</ol>
+</div>
+
+<figure class="fig" id="fig-kernels"><div class="keys"><span class="key"><svg width="26" height="10"><line x1="1" x2="25" y1="5" y2="5" style="stroke:var(--bad)" stroke-width="2.4"/></svg>Hazel (js), best build</span><span class="key"><svg width="26" height="10"><line x1="1" x2="25" y1="5" y2="5" style="stroke:var(--accent)" stroke-width="2.4" stroke-dasharray="6 4"/></svg>Fumola (wasm)</span><span class="key"><svg width="26" height="10"><line x1="1" x2="25" y1="5" y2="5" style="stroke:var(--accent2)" stroke-width="2.4" stroke-dasharray="2 3"/></svg>Fumola (native)</span></div><div class="panels"><div class="panel"><svg viewBox="0 0 250 178" role="img" aria-label="a loop: &lt;code&gt;count(n)&lt;/code&gt; counts down to zero: ms per call against n, log scales" style="width:100%;height:auto;font:12px system-ui,sans-serif"><text x="44" y="13" style="fill:var(--ink);font-weight:600">count</text><line x1="44" x2="240" y1="148.0" y2="148.0" style="stroke:var(--line)"/><text x="39" y="152.0" text-anchor="end" style="fill:var(--muted)">0.1</text><line x1="44" x2="240" y1="116.5" y2="116.5" style="stroke:var(--line)"/><text x="39" y="120.5" text-anchor="end" style="fill:var(--muted)">1</text><line x1="44" x2="240" y1="85.0" y2="85.0" style="stroke:var(--line)"/><text x="39" y="89.0" text-anchor="end" style="fill:var(--muted)">10</text><line x1="44" x2="240" y1="53.5" y2="53.5" style="stroke:var(--line)"/><text x="39" y="57.5" text-anchor="end" style="fill:var(--muted)">100</text><line x1="44" x2="240" y1="22.0" y2="22.0" style="stroke:var(--line)"/><text x="39" y="26.0" text-anchor="end" style="fill:var(--muted)">1000</text><text x="44.0" y="162" text-anchor="middle" style="fill:var(--muted)">100</text><text x="159.4" y="162" text-anchor="middle" style="fill:var(--muted)">1,000</text><text x="240.0" y="162" text-anchor="middle" style="fill:var(--muted)">5,000</text><text x="142" y="175" text-anchor="middle" style="fill:var(--muted)">n</text><polyline points="44.0,98.0 159.4,64.0 240.0,41.1" fill="none" style="stroke:var(--bad)" stroke-width="2"/><circle cx="44.0" cy="98.0" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 100: 3.86 ms</title></circle><circle cx="159.4" cy="64.0" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 1,000: 46.6 ms</title></circle><circle cx="240.0" cy="41.1" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 5,000: 248 ms</title></circle><polyline points="44.0,115.1 159.4,92.0 240.0,70.3" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-dasharray="6 4"/><circle cx="44.0" cy="115.1" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 100: 1.11 ms</title></circle><circle cx="159.4" cy="92.0" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 1,000: 5.97 ms</title></circle><circle cx="240.0" cy="70.3" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 5,000: 29.4 ms</title></circle><polyline points="44.0,121.0 159.4,96.6 240.0,74.9" fill="none" style="stroke:var(--accent2)" stroke-width="2" stroke-dasharray="2 3"/><circle cx="44.0" cy="121.0" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 100: 0.721 ms</title></circle><circle cx="159.4" cy="96.6" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 1,000: 4.28 ms</title></circle><circle cx="240.0" cy="74.9" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 5,000: 20.9 ms</title></circle></svg><p>a loop: <code>count(n)</code> counts down to zero</p></div><div class="panel"><svg viewBox="0 0 250 178" role="img" aria-label="calls: &lt;code&gt;fib(n)&lt;/code&gt;, doubly recursive: ms per call against n, log scales" style="width:100%;height:auto;font:12px system-ui,sans-serif"><text x="44" y="13" style="fill:var(--ink);font-weight:600">fib</text><line x1="44" x2="240" y1="148.0" y2="148.0" style="stroke:var(--line)"/><text x="39" y="152.0" text-anchor="end" style="fill:var(--muted)">1</text><line x1="44" x2="240" y1="106.0" y2="106.0" style="stroke:var(--line)"/><text x="39" y="110.0" text-anchor="end" style="fill:var(--muted)">10</text><line x1="44" x2="240" y1="64.0" y2="64.0" style="stroke:var(--line)"/><text x="39" y="68.0" text-anchor="end" style="fill:var(--muted)">100</text><line x1="44" x2="240" y1="22.0" y2="22.0" style="stroke:var(--line)"/><text x="39" y="26.0" text-anchor="end" style="fill:var(--muted)">1000</text><text x="44.0" y="162" text-anchor="middle" style="fill:var(--muted)">10</text><text x="153.4" y="162" text-anchor="middle" style="fill:var(--muted)">13</text><text x="240.0" y="162" text-anchor="middle" style="fill:var(--muted)">16</text><text x="142" y="175" text-anchor="middle" style="fill:var(--muted)">n</text><polyline points="44.0,114.4 153.4,88.5 240.0,62.2" fill="none" style="stroke:var(--bad)" stroke-width="2"/><circle cx="44.0" cy="114.4" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 10: 6.31 ms</title></circle><circle cx="153.4" cy="88.5" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 13: 26.1 ms</title></circle><circle cx="240.0" cy="62.2" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 16: 110 ms</title></circle><polyline points="44.0,140.2 153.4,118.4 240.0,92.9" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-dasharray="6 4"/><circle cx="44.0" cy="140.2" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 10: 1.53 ms</title></circle><circle cx="153.4" cy="118.4" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 13: 5.06 ms</title></circle><circle cx="240.0" cy="92.9" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 16: 20.5 ms</title></circle><polyline points="44.0,147.7 153.4,126.6 240.0,100.4" fill="none" style="stroke:var(--accent2)" stroke-width="2" stroke-dasharray="2 3"/><circle cx="44.0" cy="147.7" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 10: 1.02 ms</title></circle><circle cx="153.4" cy="126.6" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 13: 3.24 ms</title></circle><circle cx="240.0" cy="100.4" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 16: 13.6 ms</title></circle></svg><p>calls: <code>fib(n)</code>, doubly recursive</p></div><div class="panel"><svg viewBox="0 0 250 178" role="img" aria-label="a list built by an accumulator, then summed: ms per call against n, log scales" style="width:100%;height:auto;font:12px system-ui,sans-serif"><text x="44" y="13" style="fill:var(--ink);font-weight:600">sumbuild</text><line x1="44" x2="240" y1="148.0" y2="148.0" style="stroke:var(--line)"/><text x="39" y="152.0" text-anchor="end" style="fill:var(--muted)">1</text><line x1="44" x2="240" y1="116.5" y2="116.5" style="stroke:var(--line)"/><text x="39" y="120.5" text-anchor="end" style="fill:var(--muted)">10</text><line x1="44" x2="240" y1="85.0" y2="85.0" style="stroke:var(--line)"/><text x="39" y="89.0" text-anchor="end" style="fill:var(--muted)">100</text><line x1="44" x2="240" y1="53.5" y2="53.5" style="stroke:var(--line)"/><text x="39" y="57.5" text-anchor="end" style="fill:var(--muted)">1000</text><line x1="44" x2="240" y1="22.0" y2="22.0" style="stroke:var(--line)"/><text x="39" y="26.0" text-anchor="end" style="fill:var(--muted)">10000</text><text x="44.0" y="162" text-anchor="middle" style="fill:var(--muted)">100</text><text x="176.7" y="162" text-anchor="middle" style="fill:var(--muted)">1,000</text><text x="240.0" y="162" text-anchor="middle" style="fill:var(--muted)">3,000</text><text x="142" y="175" text-anchor="middle" style="fill:var(--muted)">n</text><polyline points="44.0,109.9 176.7,57.9 240.0,28.8" fill="none" style="stroke:var(--bad)" stroke-width="2"/><circle cx="44.0" cy="109.9" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 100: 16.2 ms</title></circle><circle cx="176.7" cy="57.9" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 1,000: 725 ms</title></circle><circle cx="240.0" cy="28.8" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 3,000: 6,094 ms</title></circle><polyline points="44.0,139.8 176.7,112.1 240.0,96.5" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-dasharray="6 4"/><circle cx="44.0" cy="139.8" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 100: 1.82 ms</title></circle><circle cx="176.7" cy="112.1" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 1,000: 13.8 ms</title></circle><circle cx="240.0" cy="96.5" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 3,000: 43.2 ms</title></circle><polyline points="44.0,144.2 176.7,116.5 240.0,99.8" fill="none" style="stroke:var(--accent2)" stroke-width="2" stroke-dasharray="2 3"/><circle cx="44.0" cy="144.2" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 100: 1.32 ms</title></circle><circle cx="176.7" cy="116.5" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 1,000: 9.97 ms</title></circle><circle cx="240.0" cy="99.8" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 3,000: 33.9 ms</title></circle></svg><p>a list built by an accumulator, then summed</p></div><div class="panel"><svg viewBox="0 0 250 178" role="img" aria-label="a list built, a closure mapped over it, its length: ms per call against n, log scales" style="width:100%;height:auto;font:12px system-ui,sans-serif"><text x="44" y="13" style="fill:var(--ink);font-weight:600">mapinc</text><line x1="44" x2="240" y1="148.0" y2="148.0" style="stroke:var(--line)"/><text x="39" y="152.0" text-anchor="end" style="fill:var(--muted)">1</text><line x1="44" x2="240" y1="116.5" y2="116.5" style="stroke:var(--line)"/><text x="39" y="120.5" text-anchor="end" style="fill:var(--muted)">10</text><line x1="44" x2="240" y1="85.0" y2="85.0" style="stroke:var(--line)"/><text x="39" y="89.0" text-anchor="end" style="fill:var(--muted)">100</text><line x1="44" x2="240" y1="53.5" y2="53.5" style="stroke:var(--line)"/><text x="39" y="57.5" text-anchor="end" style="fill:var(--muted)">1000</text><line x1="44" x2="240" y1="22.0" y2="22.0" style="stroke:var(--line)"/><text x="39" y="26.0" text-anchor="end" style="fill:var(--muted)">10000</text><text x="44.0" y="162" text-anchor="middle" style="fill:var(--muted)">100</text><text x="176.7" y="162" text-anchor="middle" style="fill:var(--muted)">1,000</text><text x="240.0" y="162" text-anchor="middle" style="fill:var(--muted)">3,000</text><text x="142" y="175" text-anchor="middle" style="fill:var(--muted)">n</text><polyline points="44.0,104.4 176.7,56.3 240.0,28.0" fill="none" style="stroke:var(--bad)" stroke-width="2"/><circle cx="44.0" cy="104.4" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 100: 24.2 ms</title></circle><circle cx="176.7" cy="56.3" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 1,000: 817 ms</title></circle><circle cx="240.0" cy="28.0" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 3,000: 6,462 ms</title></circle><polyline points="44.0,133.5 176.7,104.2 240.0,88.5" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-dasharray="6 4"/><circle cx="44.0" cy="133.5" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 100: 2.89 ms</title></circle><circle cx="176.7" cy="104.2" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 1,000: 24.6 ms</title></circle><circle cx="240.0" cy="88.5" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 3,000: 77.4 ms</title></circle><polyline points="44.0,137.8 176.7,108.5 240.0,91.3" fill="none" style="stroke:var(--accent2)" stroke-width="2" stroke-dasharray="2 3"/><circle cx="44.0" cy="137.8" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 100: 2.11 ms</title></circle><circle cx="176.7" cy="108.5" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 1,000: 18 ms</title></circle><circle cx="240.0" cy="91.3" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 3,000: 62.9 ms</title></circle></svg><p>a list built, a closure mapped over it, its length</p></div><div class="panel"><svg viewBox="0 0 250 178" role="img" aria-label="a held list of n, referred to once: &lt;code&gt;let u = held in k&lt;/code&gt;: ms per call against n, log scales" style="width:100%;height:auto;font:12px system-ui,sans-serif"><text x="44" y="13" style="fill:var(--ink);font-weight:600">h_ref</text><line x1="44" x2="240" y1="148.0" y2="148.0" style="stroke:var(--line)"/><text x="39" y="152.0" text-anchor="end" style="fill:var(--muted)">0.1</text><line x1="44" x2="240" y1="85.0" y2="85.0" style="stroke:var(--line)"/><text x="39" y="89.0" text-anchor="end" style="fill:var(--muted)">1</text><line x1="44" x2="240" y1="22.0" y2="22.0" style="stroke:var(--line)"/><text x="39" y="26.0" text-anchor="end" style="fill:var(--muted)">10</text><text x="44.0" y="162" text-anchor="middle" style="fill:var(--muted)">100</text><text x="176.7" y="162" text-anchor="middle" style="fill:var(--muted)">1,000</text><text x="240.0" y="162" text-anchor="middle" style="fill:var(--muted)">3,000</text><text x="142" y="175" text-anchor="middle" style="fill:var(--muted)">n</text><polyline points="44.0,123.8 176.7,77.0 240.0,42.4" fill="none" style="stroke:var(--bad)" stroke-width="2"/><circle cx="44.0" cy="123.8" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 100: 0.242 ms</title></circle><circle cx="176.7" cy="77.0" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 1,000: 1.34 ms</title></circle><circle cx="240.0" cy="42.4" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 3,000: 4.74 ms</title></circle><polyline points="44.0,109.1 176.7,108.8 240.0,108.6" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-dasharray="6 4"/><circle cx="44.0" cy="109.1" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 100: 0.414 ms</title></circle><circle cx="176.7" cy="108.8" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 1,000: 0.419 ms</title></circle><circle cx="240.0" cy="108.6" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 3,000: 0.422 ms</title></circle><polyline points="44.0,114.9 176.7,114.6 240.0,114.4" fill="none" style="stroke:var(--accent2)" stroke-width="2" stroke-dasharray="2 3"/><circle cx="44.0" cy="114.9" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 100: 0.336 ms</title></circle><circle cx="176.7" cy="114.6" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 1,000: 0.339 ms</title></circle><circle cx="240.0" cy="114.4" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 3,000: 0.342 ms</title></circle></svg><p>a held list of n, referred to once: <code>let u = held in k</code></p></div><div class="panel"><svg viewBox="0 0 250 178" role="img" aria-label="a held list of n, walked: &lt;code&gt;len(held)&lt;/code&gt;: ms per call against n, log scales" style="width:100%;height:auto;font:12px system-ui,sans-serif"><text x="44" y="13" style="fill:var(--ink);font-weight:600">h_walk</text><line x1="44" x2="240" y1="148.0" y2="148.0" style="stroke:var(--line)"/><text x="39" y="152.0" text-anchor="end" style="fill:var(--muted)">0.1</text><line x1="44" x2="240" y1="116.5" y2="116.5" style="stroke:var(--line)"/><text x="39" y="120.5" text-anchor="end" style="fill:var(--muted)">1</text><line x1="44" x2="240" y1="85.0" y2="85.0" style="stroke:var(--line)"/><text x="39" y="89.0" text-anchor="end" style="fill:var(--muted)">10</text><line x1="44" x2="240" y1="53.5" y2="53.5" style="stroke:var(--line)"/><text x="39" y="57.5" text-anchor="end" style="fill:var(--muted)">100</text><line x1="44" x2="240" y1="22.0" y2="22.0" style="stroke:var(--line)"/><text x="39" y="26.0" text-anchor="end" style="fill:var(--muted)">1000</text><text x="44.0" y="162" text-anchor="middle" style="fill:var(--muted)">100</text><text x="176.7" y="162" text-anchor="middle" style="fill:var(--muted)">1,000</text><text x="240.0" y="162" text-anchor="middle" style="fill:var(--muted)">3,000</text><text x="142" y="175" text-anchor="middle" style="fill:var(--muted)">n</text><polyline points="44.0,97.3 176.7,59.1 240.0,43.2" fill="none" style="stroke:var(--bad)" stroke-width="2"/><circle cx="44.0" cy="97.3" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 100: 4.08 ms</title></circle><circle cx="176.7" cy="59.1" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 1,000: 66.2 ms</title></circle><circle cx="240.0" cy="43.2" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 3,000: 212 ms</title></circle><polyline points="44.0,115.7 176.7,89.7 240.0,74.3" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-dasharray="6 4"/><circle cx="44.0" cy="115.7" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 100: 1.06 ms</title></circle><circle cx="176.7" cy="89.7" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 1,000: 7.09 ms</title></circle><circle cx="240.0" cy="74.3" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 3,000: 21.8 ms</title></circle><polyline points="44.0,119.9 176.7,95.2 240.0,79.7" fill="none" style="stroke:var(--accent2)" stroke-width="2" stroke-dasharray="2 3"/><circle cx="44.0" cy="119.9" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 100: 0.779 ms</title></circle><circle cx="176.7" cy="95.2" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 1,000: 4.76 ms</title></circle><circle cx="240.0" cy="79.7" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 3,000: 14.7 ms</title></circle></svg><p>a held list of n, walked: <code>len(held)</code></p></div><div class="panel"><svg viewBox="0 0 250 178" role="img" aria-label="a held list of n, not touched: &lt;code&gt;k&lt;/code&gt;: ms per call against n, log scales" style="width:100%;height:auto;font:12px system-ui,sans-serif"><text x="44" y="13" style="fill:var(--ink);font-weight:600">h_id</text><line x1="44" x2="240" y1="148.0" y2="148.0" style="stroke:var(--line)"/><text x="39" y="152.0" text-anchor="end" style="fill:var(--muted)">0.01</text><line x1="44" x2="240" y1="85.0" y2="85.0" style="stroke:var(--line)"/><text x="39" y="89.0" text-anchor="end" style="fill:var(--muted)">0.1</text><line x1="44" x2="240" y1="22.0" y2="22.0" style="stroke:var(--line)"/><text x="39" y="26.0" text-anchor="end" style="fill:var(--muted)">1</text><text x="44.0" y="162" text-anchor="middle" style="fill:var(--muted)">100</text><text x="176.7" y="162" text-anchor="middle" style="fill:var(--muted)">1,000</text><text x="240.0" y="162" text-anchor="middle" style="fill:var(--muted)">3,000</text><text x="142" y="175" text-anchor="middle" style="fill:var(--muted)">n</text><polyline points="44.0,106.7 176.7,118.2 240.0,118.8" fill="none" style="stroke:var(--bad)" stroke-width="2"/><circle cx="44.0" cy="106.7" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 100: 0.045 ms</title></circle><circle cx="176.7" cy="118.2" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 1,000: 0.03 ms</title></circle><circle cx="240.0" cy="118.8" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 3,000: 0.029 ms</title></circle><polyline points="44.0,45.9 176.7,45.8 240.0,45.4" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-dasharray="6 4"/><circle cx="44.0" cy="45.9" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 100: 0.418 ms</title></circle><circle cx="176.7" cy="45.8" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 1,000: 0.419 ms</title></circle><circle cx="240.0" cy="45.4" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 3,000: 0.425 ms</title></circle><polyline points="44.0,53.3 176.7,53.2 240.0,52.8" fill="none" style="stroke:var(--accent2)" stroke-width="2" stroke-dasharray="2 3"/><circle cx="44.0" cy="53.3" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 100: 0.318 ms</title></circle><circle cx="176.7" cy="53.2" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 1,000: 0.319 ms</title></circle><circle cx="240.0" cy="52.8" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 3,000: 0.325 ms</title></circle></svg><p>a held list of n, not touched: <code>k</code></p></div><div class="panel"><svg viewBox="0 0 250 178" role="img" aria-label="a list of n passed in from JS and ignored: the boundary: ms per call against n, log scales" style="width:100%;height:auto;font:12px system-ui,sans-serif"><text x="44" y="13" style="fill:var(--ink);font-weight:600">skip</text><line x1="44" x2="240" y1="148.0" y2="148.0" style="stroke:var(--line)"/><text x="39" y="152.0" text-anchor="end" style="fill:var(--muted)">0.1</text><line x1="44" x2="240" y1="85.0" y2="85.0" style="stroke:var(--line)"/><text x="39" y="89.0" text-anchor="end" style="fill:var(--muted)">1</text><line x1="44" x2="240" y1="22.0" y2="22.0" style="stroke:var(--line)"/><text x="39" y="26.0" text-anchor="end" style="fill:var(--muted)">10</text><text x="44.0" y="162" text-anchor="middle" style="fill:var(--muted)">100</text><text x="176.7" y="162" text-anchor="middle" style="fill:var(--muted)">1,000</text><text x="240.0" y="162" text-anchor="middle" style="fill:var(--muted)">3,000</text><text x="142" y="175" text-anchor="middle" style="fill:var(--muted)">n</text><polyline points="44.0,145.1 176.7,104.8 240.0,76.1" fill="none" style="stroke:var(--bad)" stroke-width="2"/><circle cx="44.0" cy="145.1" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 100: 0.111 ms</title></circle><circle cx="176.7" cy="104.8" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 1,000: 0.485 ms</title></circle><circle cx="240.0" cy="76.1" r="2.4" style="fill:var(--bad)"><title>Hazel (js), best build, n = 3,000: 1.38 ms</title></circle><polyline points="44.0,93.6 176.7,52.4 240.0,25.9" fill="none" style="stroke:var(--accent)" stroke-width="2" stroke-dasharray="6 4"/><circle cx="44.0" cy="93.6" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 100: 0.731 ms</title></circle><circle cx="176.7" cy="52.4" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 1,000: 3.29 ms</title></circle><circle cx="240.0" cy="25.9" r="2.4" style="fill:var(--accent)"><title>Fumola (wasm), n = 3,000: 8.68 ms</title></circle><polyline points="44.0,101.8 176.7,60.7 240.0,35.3" fill="none" style="stroke:var(--accent2)" stroke-width="2" stroke-dasharray="2 3"/><circle cx="44.0" cy="101.8" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 100: 0.54 ms</title></circle><circle cx="176.7" cy="60.7" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 1,000: 2.43 ms</title></circle><circle cx="240.0" cy="35.3" r="2.4" style="fill:var(--accent2)"><title>Fumola (native), n = 3,000: 6.14 ms</title></circle></svg><p>a list of n passed in from JS and ignored: the boundary</p></div></div><figcaption><b>Figure 1.</b> ms per call against n, both scales logarithmic, one panel per program. On one GitHub runner, the mean of 3 rounds. Where the lines stay parallel the gap is a constant factor; where Hazel's climbs faster (<code>sumbuild</code>, <code>mapinc</code>, <code>h_ref</code>) it is growing with the data. <code>skip</code> is the only one Hazel wins.</figcaption></figure>
+
+<h2 id="programs">The programs<a class="anchor" href="#programs" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="programs" title="copy this section's address">copy link</button></h2>
+<p>Each written the way the other language would, as near as the two allow: recursion over numbers, and lists built from pairs (Hazel's <code>::</code>, Fumola's <code>?(x, rest)</code>, since Fumola's <code>[...]</code> are arrays). No type annotations in either; Hazel infers and inserts its own. A <i>held</i> list is built once, outside the call, and captured: in Hazel by a closure, in Fumola by a top-level binding. Every call's answer is checked.</p>
+<div class="side"><div><h4>Hazel (<code>drivers/kernels.hz</code>)</h4><pre class="code"><span class="tk-k">let</span> count = <span class="tk-k">fun</span> n -&gt; <span class="tk-k">if</span> n == <span class="tk-n">0</span> <span class="tk-k">then</span> <span class="tk-n">0</span> <span class="tk-k">else</span> count(n - <span class="tk-n">1</span>) <span class="tk-k">in</span>
+<span class="tk-k">let</span> fib = <span class="tk-k">fun</span> n -&gt; <span class="tk-k">if</span> n &lt; <span class="tk-n">2</span> <span class="tk-k">then</span> n <span class="tk-k">else</span> fib(n - <span class="tk-n">1</span>) + fib(n - <span class="tk-n">2</span>) <span class="tk-k">in</span>
+<span class="tk-k">let</span> build = <span class="tk-k">fun</span> (n, acc) -&gt; <span class="tk-k">if</span> n == <span class="tk-n">0</span> <span class="tk-k">then</span> acc <span class="tk-k">else</span> build(n - <span class="tk-n">1</span>, n :: acc) <span class="tk-k">in</span>
+<span class="tk-k">let</span> sum = <span class="tk-k">fun</span> l -&gt; <span class="tk-k">case</span> l | [] =&gt; <span class="tk-n">0</span> | x :: t =&gt; x + sum(t) <span class="tk-k">end</span> <span class="tk-k">in</span>
+<span class="tk-k">let</span> map = <span class="tk-k">fun</span> (f, l) -&gt; <span class="tk-k">case</span> l | [] =&gt; [] | x :: t =&gt; f(x) :: map(f, t) <span class="tk-k">end</span> <span class="tk-k">in</span>
+<span class="tk-k">let</span> len = <span class="tk-k">fun</span> l -&gt; <span class="tk-k">case</span> l | [] =&gt; <span class="tk-n">0</span> | _ :: t =&gt; <span class="tk-n">1</span> + len(t) <span class="tk-k">end</span> <span class="tk-k">in</span>
+<span class="tk-k">let</span> sumbuild = <span class="tk-k">fun</span> n -&gt; sum(build(n, [])) <span class="tk-k">in</span>
+<span class="tk-k">let</span> mapinc = <span class="tk-k">fun</span> n -&gt; len(map((<span class="tk-k">fun</span> x -&gt; x + <span class="tk-n">1</span>), build(n, []))) <span class="tk-k">in</span>
+<span class="tk-k">let</span> skip = <span class="tk-k">fun</span> l -&gt; <span class="tk-n">0</span> <span class="tk-k">in</span>
+<span class="tk-k">let</span> k_id = <span class="tk-k">fun</span> k -&gt; k <span class="tk-k">in</span>
+<span class="tk-k">let</span> hold = <span class="tk-k">fun</span> n -&gt;
+  <span class="tk-k">let</span> held = build(n, []) <span class="tk-k">in</span>
+  (h_id = (<span class="tk-k">fun</span> k -&gt; k),
+   h_ref = (<span class="tk-k">fun</span> k -&gt; <span class="tk-k">let</span> u = held <span class="tk-k">in</span> k),
+   h_walk = (<span class="tk-k">fun</span> k -&gt; len(held))) <span class="tk-k">in</span>
+(count = count, fib = fib, sumbuild = sumbuild, mapinc = mapinc, skip = skip, k_id = k_id, hold = hold)
+</pre></div>
+<div><h4>Fumola (<code>drivers/kernels.fum</code>)</h4><pre class="code"><span class="tk-k">func</span> count(n) { <span class="tk-k">if</span> (n == <span class="tk-n">0</span>) { <span class="tk-n">0</span> } <span class="tk-k">else</span> { count(n - <span class="tk-n">1</span>) } };
+<span class="tk-k">func</span> fib(n) { <span class="tk-k">if</span> (n &lt; <span class="tk-n">2</span>) { n } <span class="tk-k">else</span> { fib(n - <span class="tk-n">1</span>) + fib(n - <span class="tk-n">2</span>) } };
+<span class="tk-k">func</span> build(n, acc) { <span class="tk-k">if</span> (n == <span class="tk-n">0</span>) { acc } <span class="tk-k">else</span> { build(n - <span class="tk-n">1</span>, ?(n, acc)) } };
+<span class="tk-k">func</span> sum(l) { <span class="tk-k">switch</span> (l) { <span class="tk-k">case</span> <span class="tk-k">null</span> { <span class="tk-n">0</span> }; <span class="tk-k">case</span> (?(x, t)) { x + sum(t) } } };
+<span class="tk-k">func</span> map(f, l) { <span class="tk-k">switch</span> (l) { <span class="tk-k">case</span> <span class="tk-k">null</span> { <span class="tk-k">null</span> }; <span class="tk-k">case</span> (?(x, t)) { ?(f(x), map(f, t)) } } };
+<span class="tk-k">func</span> len(l) { <span class="tk-k">switch</span> (l) { <span class="tk-k">case</span> <span class="tk-k">null</span> { <span class="tk-n">0</span> }; <span class="tk-k">case</span> (?(_, t)) { <span class="tk-n">1</span> + len(t) } } };
+<span class="tk-k">func</span> sumbuild(n) { sum(build(n, <span class="tk-k">null</span>)) };
+<span class="tk-k">func</span> mapinc(n) { len(map(<span class="tk-k">func</span> (x) { x + <span class="tk-n">1</span> }, build(n, <span class="tk-k">null</span>))) };
+<span class="tk-k">func</span> skip(l) { <span class="tk-n">0</span> };
+<span class="tk-k">func</span> k_id(k) { k };
+</pre>
+<p class="note">and, for a held list of n, one text:</p><pre class="code"><span class="tk-k">let</span> held = build(n, <span class="tk-k">null</span>); <span class="tk-k">func</span> h_id(k) { k }; <span class="tk-k">func</span> h_ref(k) { <span class="tk-k">let</span> u = held; k }; <span class="tk-k">func</span> h_walk(k) { len(held) }; <span class="tk-n">0</span></pre></div></div>
+
+<h2 id="steps">Steps, and what each costs<a class="anchor" href="#steps" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="steps" title="copy this section's address">copy link</button></h2>
+<p>Fumola counts its steps in every answer. Hazel's count came from a measuring build (<code>trial/r25-stats</code>: the best build, with a counter in the evaluator) that tallies every pass of the evaluator by the kind of step it took, or none when the term was already final. Times are from the best build without the counter, on the laptop.</p>
+<div class="scroll"><table><tr><th>program</th><th>n</th><th>Hazel ms</th><th>Fumola ms</th><th>Hazel / Fumola</th><th>Hazel passes</th><th>Hazel steps</th><th>Fumola steps</th><th>Hazel µs a pass</th><th>Fumola µs a step</th></tr><tr><td><code>count</code></td><td class=n>100</td><td class=n>2.64</td><td class=n>1.09</td><td class=n><b>2.4x</b></td><td class=n>1,409</td><td class=n>907</td><td class=n>2,725</td><td class=n>1.87</td><td class=n>0.399</td></tr><tr><td><code>count</code></td><td class=n>1,000</td><td class=n>31.8</td><td class=n>3.99</td><td class=n><b>8.0x</b></td><td class=n>14,009</td><td class=n>9,007</td><td class=n>27,025</td><td class=n>2.27</td><td class=n>0.148</td></tr><tr><td><code>count</code></td><td class=n>5,000</td><td class=n>179</td><td class=n>17.5</td><td class=n><b>10x</b></td><td class=n>70,009</td><td class=n>45,007</td><td class=n>135,025</td><td class=n>2.56</td><td class=n>0.130</td></tr><tr><td><code>fib</code></td><td class=n>10</td><td class=n>4.59</td><td class=n>1.08</td><td class=n><b>4.2x</b></td><td class=n>2,562</td><td class=n>1,857</td><td class=n>5,129</td><td class=n>1.79</td><td class=n>0.211</td></tr><tr><td><code>fib</code></td><td class=n>13</td><td class=n>17.5</td><td class=n>3.22</td><td class=n><b>5.4x</b></td><td class=n>10,914</td><td class=n>7,905</td><td class=n>21,833</td><td class=n>1.61</td><td class=n>0.148</td></tr><tr><td><code>fib</code></td><td class=n>16</td><td class=n>85.8</td><td class=n>13.2</td><td class=n><b>6.5x</b></td><td class=n>46,294</td><td class=n>33,525</td><td class=n>92,593</td><td class=n>1.85</td><td class=n>0.142</td></tr><tr><td><code>sumbuild</code></td><td class=n>100</td><td class=n>12.3</td><td class=n>1.2</td><td class=n><b>10x</b></td><td class=n>3,122</td><td class=n>2,318</td><td class=n>5,857</td><td class=n>3.94</td><td class=n>0.204</td></tr><tr><td><code>sumbuild</code></td><td class=n>1,000</td><td class=n>547</td><td class=n>8.55</td><td class=n><b>64x</b></td><td class=n>31,022</td><td class=n>23,018</td><td class=n>58,057</td><td class=n>17.64</td><td class=n>0.147</td></tr><tr><td><code>sumbuild</code></td><td class=n>3,000</td><td class=n>4,591</td><td class=n>24.7</td><td class=n><b>186x</b></td><td class=n>93,022</td><td class=n>69,018</td><td class=n>174,057</td><td class=n>49.35</td><td class=n>0.142</td></tr><tr><td><code>mapinc</code></td><td class=n>100</td><td class=n>19.1</td><td class=n>1.85</td><td class=n><b>10x</b></td><td class=n>5,132</td><td class=n>3,826</td><td class=n>10,078</td><td class=n>3.72</td><td class=n>0.183</td></tr><tr><td><code>mapinc</code></td><td class=n>1,000</td><td class=n>644</td><td class=n>15.4</td><td class=n><b>42x</b></td><td class=n>51,032</td><td class=n>38,026</td><td class=n>100,078</td><td class=n>12.61</td><td class=n>0.154</td></tr><tr><td><code>mapinc</code></td><td class=n>3,000</td><td class=n>4,756</td><td class=n>46.4</td><td class=n><b>103x</b></td><td class=n>153,032</td><td class=n>114,026</td><td class=n>300,078</td><td class=n>31.08</td><td class=n>0.155</td></tr><tr><td><code>h_ref</code></td><td class=n>100</td><td class=n>0.234</td><td class=n>0.28</td><td class=n><b>1/1.2x</b></td><td class=n>108</td><td class=n>7</td><td class=n>16</td><td class=n>2.16</td><td class=n>17.525</td></tr><tr><td><code>h_ref</code></td><td class=n>1,000</td><td class=n>1.14</td><td class=n>0.278</td><td class=n><b>4.1x</b></td><td class=n>1,008</td><td class=n>7</td><td class=n>16</td><td class=n>1.13</td><td class=n>17.344</td></tr><tr><td><code>h_ref</code></td><td class=n>3,000</td><td class=n>3.94</td><td class=n>0.291</td><td class=n><b>14x</b></td><td class=n>3,008</td><td class=n>7</td><td class=n>16</td><td class=n>1.31</td><td class=n>18.175</td></tr><tr><td><code>h_walk</code></td><td class=n>100</td><td class=n>3.32</td><td class=n>0.693</td><td class=n><b>4.8x</b></td><td class=n>1,312</td><td class=n>910</td><td class=n>2,332</td><td class=n>2.53</td><td class=n>0.297</td></tr><tr><td><code>h_walk</code></td><td class=n>1,000</td><td class=n>51.4</td><td class=n>4.27</td><td class=n><b>12x</b></td><td class=n>13,012</td><td class=n>9,010</td><td class=n>23,032</td><td class=n>3.95</td><td class=n>0.185</td></tr><tr><td><code>h_walk</code></td><td class=n>3,000</td><td class=n>149</td><td class=n>12.5</td><td class=n><b>12x</b></td><td class=n>39,012</td><td class=n>27,010</td><td class=n>69,032</td><td class=n>3.82</td><td class=n>0.182</td></tr><tr><td><code>h_id</code></td><td class=n>100</td><td class=n>0.044</td><td class=n>0.288</td><td class=n><b>1/6.5x</b></td><td class=n>5</td><td class=n>5</td><td class=n>13</td><td class=n>8.86</td><td class=n>22.177</td></tr><tr><td><code>h_id</code></td><td class=n>1,000</td><td class=n>0.035</td><td class=n>0.291</td><td class=n><b>1/8.3x</b></td><td class=n>5</td><td class=n>5</td><td class=n>13</td><td class=n>7.00</td><td class=n>22.415</td></tr><tr><td><code>h_id</code></td><td class=n>3,000</td><td class=n>0.015</td><td class=n>0.283</td><td class=n><b>1/19x</b></td><td class=n>5</td><td class=n>5</td><td class=n>13</td><td class=n>3.02</td><td class=n>21.769</td></tr><tr><td><code>skip</code></td><td class=n>100</td><td class=n>0.127</td><td class=n>0.5</td><td class=n><b>1/4.0x</b></td><td class=n>5</td><td class=n>4</td><td class=n>213</td><td class=n>25.30</td><td class=n>2.347</td></tr><tr><td><code>skip</code></td><td class=n>1,000</td><td class=n>0.348</td><td class=n>2.17</td><td class=n><b>1/6.2x</b></td><td class=n>5</td><td class=n>4</td><td class=n>2,013</td><td class=n>69.52</td><td class=n>1.076</td></tr><tr><td><code>skip</code></td><td class=n>3,000</td><td class=n>0.931</td><td class=n>5.65</td><td class=n><b>1/6.1x</b></td><td class=n>5</td><td class=n>4</td><td class=n>6,013</td><td class=n>186.26</td><td class=n>0.940</td></tr></table></div>
+<p class="note">A Hazel <i>pass</i> is one trip through the evaluator's stages for one term; a <i>step</i> is a pass that rewrote the term (the rest found a value). Fumola's step is one transition of its machine. Hazel's steps for <code>count(1000)</code>: 9,007, nine an iteration (a lookup, an application, a comparison, a subtraction, ...); Fumola's: 27,025, twenty-seven an iteration, since its machine writes down every frame it pushes and pops.</p>
+<p><b>Read across a row.</b> Where the passes grow with n and the µs a pass stays put (<code>count</code>, <code>fib</code>, <code>h_walk</code>), the gap is steps times the cost of each: a constant factor, about 12x to 10x. Where the µs a pass climbs with n (<code>sumbuild</code>: 3.9, then 17.6, then 49.3 µs), some pass is doing work that grows with the data. And where the passes themselves grow with a list the program never walks (<code>h_ref</code>: 3,008 passes for one reference to 3,000 numbers), the evaluator is visiting it anyway.</p>
+
+<h2 id="hazel-step">What a Hazel step costs<a class="anchor" href="#hazel-step" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="hazel-step" title="copy this section's address">copy link</button></h2>
+<p>Hazel's evaluator is small-step in what it records, but it runs as a recursive descent: <code>evaluate</code> asks for each subterm's value by calling itself, on a trampoline so deep recursion does not overflow JS's stack. Every call goes through the same stack of stages (<code>src/language/dynamics/Evaluator.re</code>):</p>
+<ol>
+<li><code>eval_5_state_merge</code>: at the top level, a fresh state, merged back after.</li>
+<li><code>eval_4_reuse</code>: has this term's value been kept from a previous run? (the incremental evaluation of live programming)</li>
+<li><code>eval_3_record_probe_sample</code>: is this term probed? Open and close a sample.</li>
+<li><code>eval_2_until_final</code>: step until the term is final.</li>
+<li><code>eval_1_effects</code>: run the step's effects on the state (stack frames, pattern matches for probes), update the reuse map.</li>
+<li><code>eval_0_main</code>: the rule itself (<code>Transition.re</code>), with the stages above as its way of evaluating subterms.</li>
+</ol>
+<p>The stages are what make Hazel's live features work: probes, the stepper, results kept across edits. They run for every term, including numbers and lists that are already values. Profiles of the calls alone (set-up excluded), on a build that keeps OCaml's names (<code>embed-520</code>'s dev build, 2026-10-21; its evaluator is the same shape as the best build's):</p>
+<figure class="fig" id="fig-profile"><div class="keys"><span class="key"><span class="sw" style="background:var(--muted)"></span>garbage collection</span><span class="key"><span class="sw" style="background:var(--bad)"></span>the evaluator&#x27;s stages (Evaluator.re, EvaluatorState.re, IncrEval.re)</span><span class="key"><span class="sw" style="background:var(--warn)"></span>trampolines (Trampoline.re)</span><span class="key"><span class="sw" style="background:var(--cx)"></span>everything else</span><span class="key"><span class="sw" style="background:#8a7d5c"></span>environments (Environment.re)</span><span class="key"><span class="sw" style="background:var(--good)"></span>the step&#x27;s rule (Transition.re, PatternMatch.re, Unboxing.re)</span><span class="key"><span class="sw" style="background:var(--accent)"></span>fresh ids (Id.re: a UUID, its bytes made a JS string)</span><span class="key"><span class="sw" style="background:#b07aa1"></span>terms and their ids (IdTagged.re, DHExp.re, Exp.re, ...)</span><span class="key"><span class="sw" style="background:var(--accent2)"></span>pushing types through values (Ascriptions.re)</span></div><svg viewBox="0 0 760 148" role="img" aria-label="Where a Hazel call spends its time, three profiles, as shares of one bar each" style="width:100%;height:auto;font:12px system-ui,sans-serif"><text x="242" y="25" text-anchor="end" style="fill:var(--ink)">count(5000), a loop</text><rect x="250.0" y="8" width="184.2" height="26" style="fill:var(--muted)"><title>garbage collection: 36%</title></rect><text x="342.1" y="25" text-anchor="middle" style="fill:var(--bg);font-weight:600">36%</text><rect x="434.2" y="8" width="126.4" height="26" style="fill:var(--bad)"><title>the evaluator&#x27;s stages (Evaluator.re, EvaluatorState.re, IncrEval.re): 25%</title></rect><text x="497.4" y="25" text-anchor="middle" style="fill:var(--bg);font-weight:600">25%</text><rect x="560.6" y="8" width="59.4" height="26" style="fill:var(--warn)"><title>trampolines (Trampoline.re): 12%</title></rect><text x="590.3" y="25" text-anchor="middle" style="fill:var(--bg);font-weight:600">12%</text><rect x="620.0" y="8" width="37.2" height="26" style="fill:var(--cx)"><title>everything else: 7%</title></rect><text x="638.6" y="25" text-anchor="middle" style="fill:var(--bg);font-weight:600">7%</text><rect x="657.2" y="8" width="36.4" height="26" style="fill:#8a7d5c"><title>environments (Environment.re): 7%</title></rect><text x="675.4" y="25" text-anchor="middle" style="fill:var(--bg);font-weight:600">7%</text><rect x="693.6" y="8" width="35.6" height="26" style="fill:var(--good)"><title>the step&#x27;s rule (Transition.re, PatternMatch.re, Unboxing.re): 7%</title></rect><text x="711.4" y="25" text-anchor="middle" style="fill:var(--bg);font-weight:600">7%</text><rect x="729.2" y="8" width="20.3" height="26" style="fill:var(--accent)"><title>fresh ids (Id.re: a UUID, its bytes made a JS string): 4%</title></rect><rect x="749.6" y="8" width="6.3" height="26" style="fill:#b07aa1"><title>terms and their ids (IdTagged.re, DHExp.re, Exp.re, ...): 1%</title></rect><text x="242" y="69" text-anchor="end" style="fill:var(--ink)">sumbuild(1000), a list built and summed</text><rect x="250.0" y="52" width="233.6" height="26" style="fill:var(--accent)"><title>fresh ids (Id.re: a UUID, its bytes made a JS string): 46%</title></rect><text x="366.8" y="69" text-anchor="middle" style="fill:var(--bg);font-weight:600">46%</text><rect x="483.6" y="52" width="80.2" height="26" style="fill:var(--muted)"><title>garbage collection: 16%</title></rect><text x="523.7" y="69" text-anchor="middle" style="fill:var(--bg);font-weight:600">16%</text><rect x="563.8" y="52" width="47.3" height="26" style="fill:var(--accent2)"><title>pushing types through values (Ascriptions.re): 9%</title></rect><text x="587.5" y="69" text-anchor="middle" style="fill:var(--bg);font-weight:600">9%</text><rect x="611.1" y="52" width="36.9" height="26" style="fill:#b07aa1"><title>terms and their ids (IdTagged.re, DHExp.re, Exp.re, ...): 7%</title></rect><text x="629.6" y="69" text-anchor="middle" style="fill:var(--bg);font-weight:600">7%</text><rect x="648.0" y="52" width="34.6" height="26" style="fill:var(--cx)"><title>everything else: 7%</title></rect><text x="665.3" y="69" text-anchor="middle" style="fill:var(--bg);font-weight:600">7%</text><rect x="682.6" y="52" width="29.1" height="26" style="fill:var(--bad)"><title>the evaluator&#x27;s stages (Evaluator.re, EvaluatorState.re, IncrEval.re): 6%</title></rect><rect x="711.7" y="52" width="17.6" height="26" style="fill:var(--warn)"><title>trampolines (Trampoline.re): 3%</title></rect><rect x="729.3" y="52" width="15.1" height="26" style="fill:var(--good)"><title>the step&#x27;s rule (Transition.re, PatternMatch.re, Unboxing.re): 3%</title></rect><rect x="744.4" y="52" width="11.6" height="26" style="fill:#8a7d5c"><title>environments (Environment.re): 2%</title></rect><text x="242" y="113" text-anchor="end" style="fill:var(--ink)">h_ref, one reference to a held list of 3,000</text><rect x="250.0" y="96" width="220.8" height="26" style="fill:var(--bad)"><title>the evaluator&#x27;s stages (Evaluator.re, EvaluatorState.re, IncrEval.re): 44%</title></rect><text x="360.4" y="113" text-anchor="middle" style="fill:var(--bg);font-weight:600">44%</text><rect x="470.8" y="96" width="113.6" height="26" style="fill:var(--warn)"><title>trampolines (Trampoline.re): 22%</title></rect><text x="527.6" y="113" text-anchor="middle" style="fill:var(--bg);font-weight:600">22%</text><rect x="584.4" y="96" width="69.1" height="26" style="fill:var(--muted)"><title>garbage collection: 14%</title></rect><text x="618.9" y="113" text-anchor="middle" style="fill:var(--bg);font-weight:600">14%</text><rect x="653.5" y="96" width="59.7" height="26" style="fill:var(--cx)"><title>everything else: 12%</title></rect><text x="683.3" y="113" text-anchor="middle" style="fill:var(--bg);font-weight:600">12%</text><rect x="713.2" y="96" width="33.6" height="26" style="fill:var(--good)"><title>the step&#x27;s rule (Transition.re, PatternMatch.re, Unboxing.re): 7%</title></rect><rect x="746.8" y="96" width="7.4" height="26" style="fill:#b07aa1"><title>terms and their ids (IdTagged.re, DHExp.re, Exp.re, ...): 1%</title></rect><rect x="754.2" y="96" width="1.1" height="26" style="fill:#8a7d5c"><title>environments (Environment.re): 0%</title></rect><rect x="755.3" y="96" width="0.6" height="26" style="fill:var(--accent)"><title>fresh ids (Id.re: a UUID, its bytes made a JS string): 0%</title></rect></svg><figcaption><b>Figure 2.</b> Where a Hazel call's time goes, by the OCaml file each sample's code came from (js_of_ocaml's runtime helpers counted with their caller). <code>drivers/prof_ref.mjs</code> and <code>drivers/profiles.py</code>; values in <code>data/prof_*.json</code>.</figcaption></figure>
+<ul>
+<li><b>The loop</b> (<code>count</code>): garbage collection is the largest part. Each pass allocates: a trampoline closure per request, a new state record, a fresh term for each result. The rule is 7%.</li>
+<li><b>The list loop</b> (<code>sumbuild</code>): 46% minting fresh ids, and most of the rest pushing types and collecting the garbage. The next section is why.</li>
+<li><b>One reference to a held list, from JS</b> (<code>h_ref</code>): all of it in the stages and their trampolines: 3,008 passes, one for the list and one for each number in it, each finding a value and taking no step (why: the next section).</li>
+</ul>
+
+<h2 id="lists">Why lists cost more in Hazel<a class="anchor" href="#lists" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="lists" title="copy this section's address">copy link</button></h2>
+<h3 id="re-walk">A function returned to JS re-evaluates what it holds<a class="anchor" href="#re-walk" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="re-walk" title="copy this section's address">copy link</button></h3>
+<p>Using a list that a function holds costs a pass for every part of the list, when the function is called from JS: <code>let u = held in k</code>, <code>(held, 1)</code>, <code>case held | _ =&gt; k end</code>, <code>(fun x -&gt; k)(held)</code> all cost n + 8 passes for a list of n, twice that for two references, and three passes a pair for a list of pairs. It does not matter how the list was made (built in Hazel, passed in from JS, annotated). A reference in a branch not taken costs nothing.</p>
+<p>A trace of every pass (a copy of the dev build, patched to log the term each pass visits) shows why. The function's body, as the library calls it, is not <code>let u = held in k</code> but <code>let u = [1, 2, 3, 4] in k</code>: the held list has become a literal in the body. Evaluating a literal list evaluates each element, as it must for <code>[1 + 1, f(x)]</code>.</p>
+<pre class="code">&gt; Closure(Let(...))                 the body, after the call's FunAp
+  &gt; Let(...)
+    &gt; ListLit[4]                    held, written in as a literal
+      &gt; Atom  &lt; Atom Final (no step)   ... once for each element
+    &lt; ListLit[4] Final (no step)
+  &gt; Closure(Var(k))  &lt; Final</pre>
+<p>The literal is written in by the library, not the evaluator. <code>Evaluator.evaluate</code> finishes every result with <code>finish = e =&gt; e |&gt; Substitution.in_exp(env) |&gt; Exp.replace_all_ids</code>, which turns a closure (a function and its environment) into a closed term by substituting the environment's values into the body. <code>HazelLibCore.to_js</code> then wraps that closed term as a JS function. Inside Hazel nothing is substituted: a closure keeps its environment, and a variable's lookup is one step (<code>Transition.re</code> marks a looked-up list final and returns it as it is). Measured with the counter build, the same held function called 100 times by a Hazel loop against called once from JS:</p>
+<div class="scroll"><table><tr><th>list held (n)</th><th>passes a call, from Hazel</th><th>passes a call, from JS</th><th>ms a call, from JS</th></tr><tr><td class=n>100</td><td class=n>27</td><td class=n>108</td><td class=n>0.178</td></tr><tr><td class=n>1,000</td><td class=n>27</td><td class=n>1,008</td><td class=n>1.27</td></tr><tr><td class=n>3,000</td><td class=n>27</td><td class=n>3,008</td><td class=n>4.86</td></tr></table></div>
+<p>So this cost is the library's, and the fix is the library's: hand JS the closure as the evaluator left it, environment and all, rather than its finished form; the call then applies the closure as Hazel would. That is the same move as <code class="ref"><b>^ticket(</b>539<b>)</b></code>'s change for a call's argument (bind it in the environment, do not write it in), made for what comes back. Fumola never has this problem: its values are not syntax, so there is nothing to write back into a body.</p>
+<h3 id="re-type">A loop re-types its list<a class="anchor" href="#re-type" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="re-type" title="copy this section's address">copy link</button></h3>
+<p>Hazel is gradually typed: it inserts type ascriptions where it infers types, and pushes them through values as it runs. In <code>build(n - 1, n :: acc)</code> the accumulator meets <code>[Int]</code> once an iteration (the counter build shows one <code>Ascription</code> step per iteration), and the push walks the whole list, with a fresh term and a fresh id for each element (<code>src/language/dynamics/transition/Ascriptions.re</code>):</p>
+<pre class="code">| (ListLit(ds), List(ty)) =&gt;
+  let ds' = List.map(d =&gt; recur(Asc(d, ty) |&gt; DHExp.fresh), ds);
+  unchanged(ds, ds')
+    ? Some(e)
+    : Some(IdTagged.fast_copy(DHExp.rep_id(e), ListLit(ds') |&gt; DHExp.fresh));</pre>
+<p>In the profile of <code>sumbuild(1000)</code>, 60% of the time is spent inside <code>Ascriptions.re</code>, the ids it mints included. When every element already has the type, <code>unchanged</code> gives back the list as it was, so the result is right and small; but the n wrappers and their n ids were made first and are thrown away. Over a loop of n iterations that is about n²/2 ids. <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>'s memo (<a href="../026/">^report(26)</a>) skips this push for a value it has seen at the top of an annotated call; an accumulator is new at every iteration, so it is never seen.</p>
+<p>Two changes would help, neither tried yet: check whether a part needs the push before wrapping it (an element of type <code>Int</code> that is an <code>Int</code> needs nothing), and mint ids only for parts that change.</p>
+<h3 id="ids">And a fresh id is dear under js<a class="anchor" href="#ids" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="ids" title="copy this section's address">copy link</button></h3>
+<p>Hazel's ids are UUIDs (<code>src/util/Id.re</code>). Minting one is already cheap in OCaml terms (a counter written into 16 bytes, not a random draw), but <code>Uuidm.v4</code> copies the bytes into a string, and under js_of_ocaml bytes are an array and a string is a JS string, so the copy is a loop over 16 characters building a JS string. In the list loop's profile, 46% of the time is under <code>Id.mk</code>, and three quarters of that is js_of_ocaml's <code>caml_subarray_to_jsbytes</code> and <code>caml_convert_bytes_to_array</code>. This is the one place where the target clearly costs Hazel: natively it would be a 16-byte copy.</p>
+
+<h2 id="fumola-step">What a Fumola step is<a class="anchor" href="#fumola-step" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="fumola-step" title="copy this section's address">copy link</button></h2>
+<p>Fumola's machine (<code>crates/fumola_semantics/src/lib/vm_step.rs</code>) is a continuation machine: its state is the current continuation (an expression to evaluate or a value to return), a stack of frames, and an environment, a persistent hash map (<code>im_rc</code>) from names to values. Values are their own type, apart from syntax, so a list held in the environment is a pointer that is never looked into again. A step is one transition: push a frame, pop one, look a name up. Steps are many and small (twenty-seven an iteration of <code>count</code>) and cost about 0.13 µs each in wasm. Fumola's incremental machinery (Adapton's graph) is paid only when a program uses it; Hazel's stages run for every term. <code>do big { ... }</code> runs a region without writing its intermediate states down, about twice as fast again (<a href="https://github.com/Adapton/fumola/pull/128">Adapton/fumola#128</a>, not used here).</p>
+<p>One thing found on the way: a Fumola answer that is a list over about 1,000 deep crashes the wasm instance (<q>memory access out of bounds</q>): turning the answer into JSON recurses, and wasm's stack runs out. Holding a list is fine; returning it is not. The kernels end their set-up text with <code>0</code> to stay clear.</p>
+
+<h2 id="native">Wasm against native<a class="anchor" href="#native" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="native" title="copy this section's address">copy link</button></h2>
+<p>On one of GitHub's runners (AMD EPYC 7763 64-Core Processor), Fumola built twice from the same commit (<code>2ec634b</code>) runs every kernel through the same entry point, <code>fumola_eval_top</code>: once compiled to the machine, once to wasm in node. Hazel's best build runs beside them. The mean of 3 rounds, ms per call at the largest size:</p>
+<div class="scroll"><table><tr><th>kernel</th><th>n</th><th>Fumola native</th><th>Fumola wasm</th><th>Hazel (js)</th><th>wasm / native</th><th>Hazel / Fumola wasm</th><th>native µs a step</th><th>wasm µs a step</th></tr><tr><td><code>count</code></td><td class=n>5,000</td><td class=n>20.9</td><td class=n>29.4</td><td class=n>248</td><td class=n><b>1.4x</b></td><td class=n><b>8.4x</b></td><td class=n>0.155</td><td class=n>0.218</td></tr><tr><td><code>fib</code></td><td class=n>16</td><td class=n>13.6</td><td class=n>20.5</td><td class=n>110</td><td class=n><b>1.5x</b></td><td class=n><b>5.4x</b></td><td class=n>0.147</td><td class=n>0.221</td></tr><tr><td><code>sumbuild</code></td><td class=n>3,000</td><td class=n>33.9</td><td class=n>43.2</td><td class=n>6,094</td><td class=n><b>1.3x</b></td><td class=n><b>141x</b></td><td class=n>0.195</td><td class=n>0.248</td></tr><tr><td><code>mapinc</code></td><td class=n>3,000</td><td class=n>62.9</td><td class=n>77.4</td><td class=n>6,462</td><td class=n><b>1.2x</b></td><td class=n><b>83x</b></td><td class=n>0.210</td><td class=n>0.258</td></tr><tr><td><code>h_ref</code></td><td class=n>3,000</td><td class=n>0.342</td><td class=n>0.422</td><td class=n>4.74</td><td class=n><b>1.2x</b></td><td class=n><b>11x</b></td><td class=n>21.350</td><td class=n>26.383</td></tr><tr><td><code>h_walk</code></td><td class=n>3,000</td><td class=n>14.7</td><td class=n>21.8</td><td class=n>212</td><td class=n><b>1.5x</b></td><td class=n><b>9.7x</b></td><td class=n>0.213</td><td class=n>0.316</td></tr><tr><td><code>h_id</code></td><td class=n>3,000</td><td class=n>0.325</td><td class=n>0.425</td><td class=n>0.029</td><td class=n><b>1.3x</b></td><td class=n><b>1/15x</b></td><td class=n>24.997</td><td class=n>32.692</td></tr><tr><td><code>skip</code></td><td class=n>3,000</td><td class=n>6.14</td><td class=n>8.68</td><td class=n>1.38</td><td class=n><b>1.4x</b></td><td class=n><b>1/6.3x</b></td><td class=n>1.021</td><td class=n>1.443</td></tr></table></div>
+<p><b>Wasm costs Fumola 1.2x to 1.5x on the programs that run many steps</b> (the median of each program's ratio at its largest size: 1.4x). That is all the compilation target does to Fumola, and it is small beside the gap: against native Fumola, Hazel is 12x slower on the loop and 8.1x on calls; against Fumola in wasm, 8.4x and 5.4x. Hazel's own js penalty cannot be measured the same way: its core does not build natively (its utility library depends on a browser UI library, <code>bonsai.web</code>), so what js costs it shows only where a profile names a js-only cost, as with ids above.</p>
+<p>One more difference this table shows: <b>a call's floor</b>. A Fumola call that does nothing (<code>h_id</code>) costs 0.325 ms natively and 0.425 ms in wasm, the price of parsing the call's text and writing its answer as JSON, natively too. Hazel's is 0.029 ms: a JS function called with a JS value. For a game that asks a rule once a frame, Fumola's floor is about 2% of a 60 fps frame; Hazel's is nothing.</p>
+
+<h2 id="report-27">Report 27's Figure 1, read again<a class="anchor" href="#report-27" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="report-27" title="copy this section's address">copy link</button></h2>
+<p>At 64x64 (4,096 cells), the World rule:</p>
+<ul>
+<li><b>Passed in: Hazel 341 ms, Fumola 148 ms (2.3x).</b> Close, for different reasons. Fumola spends most of its time parsing the map, written out as 281,427 characters of source text, every call (195,144 steps). Hazel spends 80.3 ms bringing the map over from JS (a rule that ignores it, given the same map: <a href="../025/">^report(25)</a>'s <code>idU</code>), records and lists of text being dearer to convert than the numbers of <code>skip</code>, and the rest, 261 ms, walking the list, about 64 µs a cell, a few dozen passes each. The finder's annotation costs one look-up a call, not a walk: <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>'s memo knows every tail of a list it has checked.</li>
+<li><b>Held as a list and walked: Hazel 256 ms, Fumola 28.7 ms (8.9x).</b> Steps times their cost, as in <code>h_walk</code>, plus, in Hazel, the held world re-evaluated as a literal at every call, since the rule is a function the library returned to JS.</li>
+<li><b>Neighbours only: about 1 ms each.</b> The boundary is all there is, and the two boundaries cost about the same for a handful of cells.</li>
+</ul>
+<p>So the Figure's under-3x lines are the ones where something other than stepping dominates. Where stepping dominates, the gap is 12x to 10x; where Hazel's per-use walks and re-typing apply, it grows without bound.</p>
+
+
+<h2 id="next">What next<a class="anchor" href="#next" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="next" title="copy this section's address">copy link</button></h2>
+<ol>
+<li><b>Keep closures whole across the library</b> (<code class="ref"><b>^ticket(</b>547<b>)</b></code>): functions returned to JS as the evaluator left them, not finished, on a trial branch stacked with <code class="ref"><b>^ticket(</b>539<b>)</b></code>'s, and these programs measured again: <code>h_ref</code> should be flat. Then <code class="ref"><b>^ticket(</b>540<b>)</b></code>'s balanced tree for the World rule can pay off: a held world, O(log N) a move.</li>
+<li><b>Push types without copying</b> (<code class="ref"><b>^ticket(</b>548<b>)</b></code>): check before wrapping in <code>Ascriptions.re</code>, and measure <code>sumbuild</code> again: it should become linear.</li>
+<li><b>Cheaper ids under js</b>: an id that is a JS string from the start, or an integer, and what that does to the loop's 4%, the list loop's 46%.</li>
+<li><b>Fumola's deep answers</b> (<code class="ref"><b>^ticket(</b>549<b>)</b></code>): turn answers into JSON without recursion (an issue for Adapton/fumola, not filed yet).</li>
+<li>The per-pass cost of the stages when nothing is probed and nothing reused: a fast path for terms that are already values would skip all five.</li>
+</ol>
+
+<h2 id="method">How this was put together<a class="anchor" href="#method" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="method" title="copy this section's address">copy link</button></h2>
+<p>Node v22 on the Ubuntu laptop (Intel i7), one process at a time, pinned to two threads and niced. <code>drivers/kernels.mjs</code> runs the programs: Hazel through its JS library (<code>Hazel.run</code> once, then each program a JS function, called with n), Fumola through its wasm build (<code>fumola_eval_top</code> of the call's text, pinned build <code>2ec634b5df</code>). Three warm-up calls, then up to 60 timed (stopping after 2.5 s and at least 5), the median. Hazel's library: <code>trial/r25-best</code> (all the performance PRs, <a href="../025/#prs">^report(25)</a>) for times, <code>trial/r25-stats</code> (the same with a counter, <code>Hazel.stepCounts()</code>) for passes. Profiles: <code>drivers/prof_ref.mjs</code> records only the calls, through node's inspector, on a dev build with OCaml's names and source positions; <code>drivers/profiles.py</code> splits them by source file. GitHub: Adapton/fumola branch <code>bench/545-contrast</code> builds Fumola natively (<code>crates/fumola_wasm/examples/kernels.rs</code>, calling the same <code>fumola_eval_top</code>) and as wasm, and runs both and Hazel's best build, three rounds interleaved. One round on the laptop so far: read single differences under about 10% as noise.</p>
+
+<!-- data-line: begin -->
+<h2 id="data">The data<a class="anchor" href="#data" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="data" title="copy this section's address">copy link</button></h2>
+<ul>
+  <li><b>The numbers, for programs too:</b> every table in this report, and what its numbers measure, is also in this page as JSON, in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset. The same, with any raw files that survive, is in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/029/data"><code>029/data/</code></a>.</li>
+</ul>
+<!-- data-line: end -->
+
+</main><!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
+<!-- ref-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .ref-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
+  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
+    vertical-align: 1px; background: #6e7781; }
+  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
+  .rc-state.done { background: #8250df; }
+</style>
+<script>
+/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
+   ticket from the work dashboard's data (its area, its status, its first
+   line), carried by the dashboard's own pages and read live from the
+   published data anywhere else; a report from its own page, live (its
+   title, date and opening). Once per page load each. */
+(() => {
+  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
+  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
+  /* the dashboard itself carries its tickets (made with the page, changed
+     with it); any other page asks the published data */
+  const EMBED = null;
+  let data = EMBED ? Promise.resolve(EMBED) : null;
+  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
+  const pages = new Map();
+  const loadReport = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
+      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
+      let p = h1 && h1.nextElementSibling;
+      while (p && p.tagName !== "P") p = p.nextElementSibling;
+      const label = (doc.querySelector(".series") || {}).textContent || "";
+      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
+               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
+    }).catch(() => null));
+    return pages.get(url);
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
+  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
+  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
+  const ticketCard = (n, d) => {
+    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
+    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
+    const q = (d.queue || []).indexOf(n);
+    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
+      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
+      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
+    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
+      `<div class="rc-title">${esc(lead(t.text))}</div>` +
+      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
+      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
+  };
+  const reportCard = (n, r) => r
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
+      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
+    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
+    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = (a, ref) => {
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
+      card.hidden = false; place(a);
+      let html;
+      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
+      else html = reportCard(ref.n, await loadReport(a.href));
+      if (over !== a) return;
+      card.innerHTML = html; place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- ref-cards: end -->
+<!-- pr-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-base { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: 1px; }
+  .pr-base.dev { background: #dafbe1; color: #116329; } .pr-base.other { background: #fff1c2; color: #7a4b00; }
+  @media (prefers-color-scheme: dark) { .pr-base.dev { background: #12361f; color: #6fdd8b; } .pr-base.other { background: #3d2e00; color: #f2cc60; } }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, the branch a PR targets (dev or not: the distinction that
+   matters, ^ticket(478)), author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"Adapton/fumola#128": {"author": "matthewhammer", "comments": 2, "created": "2026-09-12T22:19:44Z", "kind": "pull", "state": "merged", "title": "do big { .. }: a region evaluated on the Rust stack", "updated": "2026-09-13T00:56:40Z", "base": "main"}, "hazelgrove/hazel#2681": {"author": "matthewhammer", "comments": 3, "created": "2026-10-13T13:04:35Z", "kind": "pull", "state": "open", "title": "A value known to have a type is not walked again for it", "updated": "2026-10-22T15:31:32Z", "base": "dev"}}, BUILT = "2026-10-22";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
+  const ask = (key, kind) => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#"), pull = kind === "pull";
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/${pull ? "pulls" : "issues"}/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: pull || j.pull_request ? "pull" : "issues", base: j.base && j.base.ref,
+                      state: j.merged_at || (j.pull_request && j.pull_request.merged_at) ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const baseChip = d => !d.base ? "" : d.base === "dev"
+    ? `<span class="pr-base dev" title="this PR merges into dev">into dev</span>`
+    : `<span class="pr-base other" title="this PR merges into ${esc(d.base)}, not dev">into ${esc(d.base)}, not dev</span>`;
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span>${baseChip(d)}</div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[3];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key, m[2]);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
+<!-- steps: begin -->
+<style>
+  button.mint { margin-left: 4px; font: inherit; font-size: 0.75em; padding: 0 6px; border: 1px solid var(--line, #ccc);
+    border-radius: 4px; background: transparent; color: var(--muted, #666); cursor: pointer; vertical-align: 1px; }
+  button.mint:hover { color: inherit; }
+  button.mint.done { color: var(--good, #15803d); border-color: var(--good, #15803d); }
+  a.step-link { color: var(--muted, #666); text-decoration: none; font-size: 0.85em; margin-left: 4px; }
+  a.step-link:hover { text-decoration: underline; }
+  li:target { background: color-mix(in srgb, var(--good, #15803d) 12%, transparent); border-radius: 6px; }
+</style>
+<script>
+/* Each "What next" step: a link to it, and a button copying a request to
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
+(() => {
+  const h = document.getElementById("next");
+  if (!h) return;
+  let list = h.nextElementSibling;
+  while (list && !/^(OL|UL)$/.test(list.tagName)) {
+    if (list.tagName === "H2") return;
+    list = list.nextElementSibling;
+  }
+  if (!list) return;
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/reports/" + report.padStart(3, "0") + "/";
+  [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
+    const n = i + 1;
+    if (!li.id) li.id = "step-" + n;
+    const b = li.querySelector("b, strong");
+    const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
+    const url = base + "#" + li.id;
+    const text = "Mint a ticket for this step: Hazel reports, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
+    const a = document.createElement("a");
+    a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "mint"; btn.textContent = "copy for a ticket";
+    btn.title = "Copies a request to mint a ticket for this step, to paste to Claude";
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) {
+        const t = document.createElement("textarea"); t.value = text; document.body.append(t);
+        t.select(); document.execCommand("copy"); t.remove();
+      }
+      btn.textContent = "copied"; btn.classList.add("done");
+      setTimeout(() => { btn.textContent = "copy for a ticket"; btn.classList.remove("done"); }, 1500);
+    });
+    li.append(" ", a, " ", btn);
+  });
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+})();
+</script>
+<!-- steps: end -->
+<!-- theme: begin -->
+<style>
+  .theme-toggle { position: fixed; top: 10px; right: 10px; z-index: 30; font: 13px system-ui, sans-serif; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--muted, GrayText);
+    cursor: pointer; opacity: 0.85; }
+  .theme-toggle:hover { opacity: 1; color: var(--ink, CanvasText); }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+/* The theme switch: Auto (the system's choice), Light, Dark; remembered for this site. */
+(() => {
+  const order = ["auto", "light", "dark"], label = { auto: "◐ auto", light: "☀ light", dark: "☾ dark" };
+  const get = () => { try { return localStorage.getItem("theme") || "auto"; } catch (_) { return "auto"; } };
+  const apply = m => m === "auto" ? document.documentElement.removeAttribute("data-theme")
+                                  : document.documentElement.setAttribute("data-theme", m);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "theme-toggle";
+  const show = () => { const m = get(); b.textContent = label[m] || label.auto;
+    b.title = "Theme: " + m + ". Click for " + order[(order.indexOf(m) + 1) % 3] + "; remembered on this site."; };
+  b.addEventListener("click", () => {
+    const m = order[(order.indexOf(get()) + 1) % 3];
+    try { m === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", m); } catch (_) {}
+    apply(m); show();
+  });
+  window.addEventListener("storage", e => { if (e.key === "theme") { apply(get()); show(); } });
+  show(); document.body.append(b);
+})();
+</script>
+<!-- theme: end -->
+<!-- report-data: begin -->
+<script type="application/json" id="report-data">
+{
+ "report": 29,
+ "title": "Where the Gap Comes From",
+ "date": "2026-10-22",
+ "kind": "performance",
+ "status": "work in progress",
+ "question": "Matthew, on ^report(27)'s Figure 1: how would you attribute the difference in performance between Hazel and Fumola? Is it Wasm vs JS, or more than that? Analysis of each system, running the same programs. (^ticket(545))",
+ "builds": [
+  {
+   "what": "Hazel library, times",
+   "branch": "trial/r25-best",
+   "commit": "bce9b4e5d1"
+  },
+  {
+   "what": "Hazel library, step counts",
+   "branch": "trial/r25-stats",
+   "commit": "1ff52da465"
+  },
+  {
+   "what": "Hazel dev build, profiles (names kept)",
+   "branch": "embed-520",
+   "date": "2026-10-21"
+  },
+  {
+   "what": "Fumola wasm",
+   "commit": "2ec634b5df"
+  },
+  {
+   "what": "Fumola native and wasm on one GitHub runner",
+   "repo": "Adapton/fumola",
+   "branch": "bench/545-contrast",
+   "commit": "f67f745"
+  }
+ ],
+ "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
+ "tables": [
+  {
+   "section": "Steps, and what each costs",
+   "section_id": "steps",
+   "columns": [
+    "program",
+    "n",
+    "Hazel ms",
+    "Fumola ms",
+    "Hazel / Fumola",
+    "Hazel passes",
+    "Hazel steps",
+    "Fumola steps",
+    "Hazel µs a pass",
+    "Fumola µs a step"
+   ],
+   "rows": [
+    [
+     "count",
+     "100",
+     "2.64",
+     "1.09",
+     "2.4x",
+     "1,409",
+     "907",
+     "2,725",
+     "1.87",
+     "0.399"
+    ],
+    [
+     "count",
+     "1,000",
+     "31.8",
+     "3.99",
+     "8.0x",
+     "14,009",
+     "9,007",
+     "27,025",
+     "2.27",
+     "0.148"
+    ],
+    [
+     "count",
+     "5,000",
+     "179",
+     "17.5",
+     "10x",
+     "70,009",
+     "45,007",
+     "135,025",
+     "2.56",
+     "0.130"
+    ],
+    [
+     "fib",
+     "10",
+     "4.59",
+     "1.08",
+     "4.2x",
+     "2,562",
+     "1,857",
+     "5,129",
+     "1.79",
+     "0.211"
+    ],
+    [
+     "fib",
+     "13",
+     "17.5",
+     "3.22",
+     "5.4x",
+     "10,914",
+     "7,905",
+     "21,833",
+     "1.61",
+     "0.148"
+    ],
+    [
+     "fib",
+     "16",
+     "85.8",
+     "13.2",
+     "6.5x",
+     "46,294",
+     "33,525",
+     "92,593",
+     "1.85",
+     "0.142"
+    ],
+    [
+     "sumbuild",
+     "100",
+     "12.3",
+     "1.2",
+     "10x",
+     "3,122",
+     "2,318",
+     "5,857",
+     "3.94",
+     "0.204"
+    ],
+    [
+     "sumbuild",
+     "1,000",
+     "547",
+     "8.55",
+     "64x",
+     "31,022",
+     "23,018",
+     "58,057",
+     "17.64",
+     "0.147"
+    ],
+    [
+     "sumbuild",
+     "3,000",
+     "4,591",
+     "24.7",
+     "186x",
+     "93,022",
+     "69,018",
+     "174,057",
+     "49.35",
+     "0.142"
+    ],
+    [
+     "mapinc",
+     "100",
+     "19.1",
+     "1.85",
+     "10x",
+     "5,132",
+     "3,826",
+     "10,078",
+     "3.72",
+     "0.183"
+    ],
+    [
+     "mapinc",
+     "1,000",
+     "644",
+     "15.4",
+     "42x",
+     "51,032",
+     "38,026",
+     "100,078",
+     "12.61",
+     "0.154"
+    ],
+    [
+     "mapinc",
+     "3,000",
+     "4,756",
+     "46.4",
+     "103x",
+     "153,032",
+     "114,026",
+     "300,078",
+     "31.08",
+     "0.155"
+    ],
+    [
+     "h_ref",
+     "100",
+     "0.234",
+     "0.28",
+     "1/1.2x",
+     "108",
+     "7",
+     "16",
+     "2.16",
+     "17.525"
+    ],
+    [
+     "h_ref",
+     "1,000",
+     "1.14",
+     "0.278",
+     "4.1x",
+     "1,008",
+     "7",
+     "16",
+     "1.13",
+     "17.344"
+    ],
+    [
+     "h_ref",
+     "3,000",
+     "3.94",
+     "0.291",
+     "14x",
+     "3,008",
+     "7",
+     "16",
+     "1.31",
+     "18.175"
+    ],
+    [
+     "h_walk",
+     "100",
+     "3.32",
+     "0.693",
+     "4.8x",
+     "1,312",
+     "910",
+     "2,332",
+     "2.53",
+     "0.297"
+    ],
+    [
+     "h_walk",
+     "1,000",
+     "51.4",
+     "4.27",
+     "12x",
+     "13,012",
+     "9,010",
+     "23,032",
+     "3.95",
+     "0.185"
+    ],
+    [
+     "h_walk",
+     "3,000",
+     "149",
+     "12.5",
+     "12x",
+     "39,012",
+     "27,010",
+     "69,032",
+     "3.82",
+     "0.182"
+    ],
+    [
+     "h_id",
+     "100",
+     "0.044",
+     "0.288",
+     "1/6.5x",
+     "5",
+     "5",
+     "13",
+     "8.86",
+     "22.177"
+    ],
+    [
+     "h_id",
+     "1,000",
+     "0.035",
+     "0.291",
+     "1/8.3x",
+     "5",
+     "5",
+     "13",
+     "7.00",
+     "22.415"
+    ],
+    [
+     "h_id",
+     "3,000",
+     "0.015",
+     "0.283",
+     "1/19x",
+     "5",
+     "5",
+     "13",
+     "3.02",
+     "21.769"
+    ],
+    [
+     "skip",
+     "100",
+     "0.127",
+     "0.5",
+     "1/4.0x",
+     "5",
+     "4",
+     "213",
+     "25.30",
+     "2.347"
+    ],
+    [
+     "skip",
+     "1,000",
+     "0.348",
+     "2.17",
+     "1/6.2x",
+     "5",
+     "4",
+     "2,013",
+     "69.52",
+     "1.076"
+    ],
+    [
+     "skip",
+     "3,000",
+     "0.931",
+     "5.65",
+     "1/6.1x",
+     "5",
+     "4",
+     "6,013",
+     "186.26",
+     "0.940"
+    ]
+   ]
+  },
+  {
+   "section": "A function returned to JS re-evaluates what it holds",
+   "section_id": "re-walk",
+   "columns": [
+    "list held (n)",
+    "passes a call, from Hazel",
+    "passes a call, from JS",
+    "ms a call, from JS"
+   ],
+   "rows": [
+    [
+     "100",
+     "27",
+     "108",
+     "0.178"
+    ],
+    [
+     "1,000",
+     "27",
+     "1,008",
+     "1.27"
+    ],
+    [
+     "3,000",
+     "27",
+     "3,008",
+     "4.86"
+    ]
+   ]
+  },
+  {
+   "section": "Wasm against native",
+   "section_id": "native",
+   "columns": [
+    "kernel",
+    "n",
+    "Fumola native",
+    "Fumola wasm",
+    "Hazel (js)",
+    "wasm / native",
+    "Hazel / Fumola wasm",
+    "native µs a step",
+    "wasm µs a step"
+   ],
+   "rows": [
+    [
+     "count",
+     "5,000",
+     "20.9",
+     "29.4",
+     "248",
+     "1.4x",
+     "8.4x",
+     "0.155",
+     "0.218"
+    ],
+    [
+     "fib",
+     "16",
+     "13.6",
+     "20.5",
+     "110",
+     "1.5x",
+     "5.4x",
+     "0.147",
+     "0.221"
+    ],
+    [
+     "sumbuild",
+     "3,000",
+     "33.9",
+     "43.2",
+     "6,094",
+     "1.3x",
+     "141x",
+     "0.195",
+     "0.248"
+    ],
+    [
+     "mapinc",
+     "3,000",
+     "62.9",
+     "77.4",
+     "6,462",
+     "1.2x",
+     "83x",
+     "0.210",
+     "0.258"
+    ],
+    [
+     "h_ref",
+     "3,000",
+     "0.342",
+     "0.422",
+     "4.74",
+     "1.2x",
+     "11x",
+     "21.350",
+     "26.383"
+    ],
+    [
+     "h_walk",
+     "3,000",
+     "14.7",
+     "21.8",
+     "212",
+     "1.5x",
+     "9.7x",
+     "0.213",
+     "0.316"
+    ],
+    [
+     "h_id",
+     "3,000",
+     "0.325",
+     "0.425",
+     "0.029",
+     "1.3x",
+     "1/15x",
+     "24.997",
+     "32.692"
+    ],
+    [
+     "skip",
+     "3,000",
+     "6.14",
+     "8.68",
+     "1.38",
+     "1.4x",
+     "1/6.3x",
+     "1.021",
+     "1.443"
+    ]
+   ]
+  }
+ ],
+ "files": [
+  "data/fixes",
+  "data/fumola_wasm_laptop_1.json",
+  "data/gh",
+  "data/hazel_best_laptop_1.json",
+  "data/hazel_stats_laptop_1.json",
+  "data/inside_vs_js_laptop_1.jsonl",
+  "data/meta.json",
+  "data/prof_count_5000.json",
+  "data/prof_h_ref_3000.json",
+  "data/prof_sumbuild_1000.json",
+  "data/tables.json"
+ ],
+ "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/029/data"
+}
+</script>
+<!-- report-data: end -->
+<!-- anchors (tools/add_anchors.py) -->
+<script id="anchors-js">
+/* each section's "copy link": its public address, whichever copy of the page this is (tools/add_anchors.py) */
+(() => {
+  const n = (location.pathname.match(/(\d{3})\/?(index\.html)?$/) || [])[1];
+  const base = n ? "https://matthewhammer.org/hazel/reports/" + n + "/" : location.origin + location.pathname;
+  document.querySelectorAll(".copyanchor").forEach(b => b.addEventListener("click", async () => {
+    const url = base + "#" + b.dataset.id;
+    try { await navigator.clipboard.writeText(url); b.textContent = "copied"; b.classList.add("done"); }
+    catch (e) { prompt("this section's address", url); }
+    setTimeout(() => { b.textContent = "copy link"; b.classList.remove("done"); }, 1500);
+  }));
+})();
+</script>
+</body></html>

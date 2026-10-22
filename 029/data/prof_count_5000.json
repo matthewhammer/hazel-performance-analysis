@@ -1,0 +1,51 @@
+{
+ "label": "count(5000): a loop",
+ "total_ms": 2835.5,
+ "groups": [
+  {
+   "group": "garbage collection",
+   "ms": 1032.3,
+   "share": 0.3641
+  },
+  {
+   "group": "the evaluator's stages (Evaluator.re, EvaluatorState.re, IncrEval.re)",
+   "ms": 708.4,
+   "share": 0.2498
+  },
+  {
+   "group": "trampolines (Trampoline.re)",
+   "ms": 332.8,
+   "share": 0.1174
+  },
+  {
+   "group": "everything else",
+   "ms": 208.3,
+   "share": 0.0735
+  },
+  {
+   "group": "environments (Environment.re)",
+   "ms": 204.0,
+   "share": 0.0719
+  },
+  {
+   "group": "the step's rule (Transition.re, PatternMatch.re, Unboxing.re)",
+   "ms": 199.6,
+   "share": 0.0704
+  },
+  {
+   "group": "fresh ids (Id.re: a UUID, its bytes made a JS string)",
+   "ms": 114.1,
+   "share": 0.0402
+  },
+  {
+   "group": "terms and their ids (IdTagged.re, DHExp.re, Exp.re, ...)",
+   "ms": 35.5,
+   "share": 0.0125
+  },
+  {
+   "group": "pushing types through values (Ascriptions.re)",
+   "ms": 0.5,
+   "share": 0.0002
+  }
+ ]
+}

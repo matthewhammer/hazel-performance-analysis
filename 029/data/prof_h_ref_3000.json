@@ -1,0 +1,46 @@
+{
+ "label": "h_ref, a held list of 3,000: one reference",
+ "total_ms": 1237.5,
+ "groups": [
+  {
+   "group": "the evaluator's stages (Evaluator.re, EvaluatorState.re, IncrEval.re)",
+   "ms": 539.9,
+   "share": 0.4363
+  },
+  {
+   "group": "trampolines (Trampoline.re)",
+   "ms": 277.9,
+   "share": 0.2245
+  },
+  {
+   "group": "garbage collection",
+   "ms": 169.1,
+   "share": 0.1366
+  },
+  {
+   "group": "everything else",
+   "ms": 146.0,
+   "share": 0.118
+  },
+  {
+   "group": "the step's rule (Transition.re, PatternMatch.re, Unboxing.re)",
+   "ms": 82.3,
+   "share": 0.0665
+  },
+  {
+   "group": "terms and their ids (IdTagged.re, DHExp.re, Exp.re, ...)",
+   "ms": 18.1,
+   "share": 0.0146
+  },
+  {
+   "group": "environments (Environment.re)",
+   "ms": 2.8,
+   "share": 0.0022
+  },
+  {
+   "group": "fresh ids (Id.re: a UUID, its bytes made a JS string)",
+   "ms": 1.5,
+   "share": 0.0012
+  }
+ ]
+}
