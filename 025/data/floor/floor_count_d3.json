@@ -1,0 +1,134 @@
+{
+ "mode": "count",
+ "lib": "/home/matthew/.cache/hazel-r25/libs/d3/hazel-lib.js",
+ "16x16": {
+  "idA": [
+   {
+    "get": 590,
+    "hit": 589,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 809,
+    "hit": 0,
+    "set": 532,
+    "kinds": {
+     "block tag 12 len 3": 17,
+     "block tag 10 len 2": 258,
+     "list cell": 256,
+     "block tag 23 len 4": 1
+    }
+   }
+  ],
+  "noann": [
+   {
+    "get": 590,
+    "hit": 589,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 809,
+    "hit": 0,
+    "set": 532,
+    "kinds": {
+     "block tag 12 len 3": 17,
+     "block tag 10 len 2": 258,
+     "list cell": 256,
+     "block tag 23 len 4": 1
+    }
+   }
+  ],
+  "shipped": [
+   {
+    "get": 1549,
+    "hit": 1548,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 1220,
+    "hit": 137,
+    "set": 669,
+    "kinds": {
+     "block tag 12 len 3": 17,
+     "block tag 10 len 2": 395,
+     "list cell": 256,
+     "block tag 23 len 4": 1
+    }
+   }
+  ]
+ },
+ "24x24": {
+  "idA": [
+   {
+    "get": 1230,
+    "hit": 1229,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 1769,
+    "hit": 0,
+    "set": 1172,
+    "kinds": {
+     "block tag 12 len 3": 17,
+     "block tag 10 len 2": 578,
+     "list cell": 576,
+     "block tag 23 len 4": 1
+    }
+   }
+  ],
+  "noann": [
+   {
+    "get": 1230,
+    "hit": 1229,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 1769,
+    "hit": 0,
+    "set": 1172,
+    "kinds": {
+     "block tag 12 len 3": 17,
+     "block tag 10 len 2": 578,
+     "list cell": 576,
+     "block tag 23 len 4": 1
+    }
+   }
+  ],
+  "shipped": [
+   {
+    "get": 3337,
+    "hit": 3336,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 2672,
+    "hit": 301,
+    "set": 1473,
+    "kinds": {
+     "block tag 12 len 3": 17,
+     "block tag 10 len 2": 879,
+     "list cell": 576,
+     "block tag 23 len 4": 1
+    }
+   }
+  ]
+ }
+}

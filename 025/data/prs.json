@@ -31,7 +31,8 @@
    "long": "+ #2681, its memo limited to depth 1",
    "branch": "trial/r25-2681-depth",
    "commit": "5b79ba5f95",
-   "what": "trial/r25-2681 with has_type asked and told only at a pushed value and its parts (Ascriptions.memo_depth = 1), ^ticket(535)"
+   "what": "trial/r25-2681 with has_type asked and told only at a pushed value and its parts (Ascriptions.memo_depth = 1), ^ticket(535)",
+   "tests": "the full tests pass too, with a new test (a list inside a part of the pushed value is not remembered) that is the only one of 4,417 to fail when the limit is taken away"
   }
  ],
  "prs": [

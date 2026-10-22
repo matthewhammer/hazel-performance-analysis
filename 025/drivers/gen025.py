@@ -200,6 +200,139 @@ def mini(svg, cap):
     return f'<figure class="mini">{svg}<figcaption>{cap}</figcaption></figure>'
 
 def tr(cells): return "<tr>" + "".join(f"<td class=n>{c}</td>" if i else f"<td>{c}</td>" for i, c in enumerate(cells)) + "</tr>"
+
+# ---------- the rules behind each line: drivers/r25.mjs's own text, with its hot spots marked
+# ⟪kind|text⟫ marks a hot spot: bad (the annotation's re-check), warn (the walk), floor (the call boundary),
+# held (converted once), good (the neighbours alone). Kinds match the figures' colours.
+HS = {"bad": ("var(--bad)", "the annotation re-checks the rest of the list at every step: quadratic before #2681"),
+      "warn": ("var(--warn)", "the walk over the cells: linear in the map"),
+      "floor": ("var(--accent)", "the call boundary: the whole argument converted, re-stepped and checked against its type, every call"),
+      "held": ("var(--accent2)", "the map converted once, at setup, and held in a closure"),
+      "good": ("var(--good)", "only the neighbours: at most nine cells, whatever the map's size")}
+HZ_KW = {"let", "in", "fun", "case", "end", "if", "then", "else", "type", "module", "true", "false"}
+JS_KW = {"const", "let", "new", "return", "await", "async", "function", "true", "false"}
+def hl(text, lang):
+    """syntax highlighting of plain code text: keywords, constructors and types, strings, numbers, comments"""
+    kw = HZ_KW if lang == "hz" else JS_KW
+    tok = (r'(?P<c>#[^#\n]*#)|' if lang == "hz" else r'(?P<c>//[^\n]*)|') + r'(?P<s>"[^"\n]*")|(?P<n>\b\d+(?:\.\d+)?\b)|(?P<w>[A-Za-z_][A-Za-z_0-9]*)'
+    out, i = [], 0
+    for m in re.finditer(tok, text):
+        out.append(esc(text[i:m.start()])); t = m.group(0)
+        if m.group("c"): out.append(f'<span class="tk-c">{esc(t)}</span>')
+        elif m.group("s"): out.append(f'<span class="tk-s">{esc(t)}</span>')
+        elif m.group("n"): out.append(f'<span class="tk-n">{esc(t)}</span>')
+        elif t in kw: out.append(f'<span class="tk-k">{esc(t)}</span>')
+        elif lang == "hz" and t[0].isupper(): out.append(f'<span class="tk-t">{esc(t)}</span>')
+        else: out.append(esc(t))
+        i = m.end()
+    out.append(esc(text[i:]))
+    return "".join(out)
+def code(src, lang="hz"):
+    out, i = [], 0
+    for m in re.finditer(r"⟪(\w+)\|(.*?)⟫", src, re.S):
+        out.append(hl(src[i:m.start()], lang)); out.append(f'<span class="hs hs-{m.group(1)}" title="{esc(HS[m.group(1)][1])}">{hl(m.group(2), lang)}</span>'); i = m.end()
+    out.append(hl(src[i:], lang))
+    return "".join(out)
+from listings_fmt import TILE_PREAMBLE, SHARED, MK, SHIPPED, NOANN, INDEX, HELD, IDA, NEAR, NTHU, FINDU   # laid out on more lines (listings_fmt.py)
+
+JS_MAP = """const g = globalsOf(map, n, ac, ar);   // ⟪floor|all 17 fields; cells: n × n records {col, row, kind, ways}⟫
+const ev = { tag: "Way", value: "E" };
+V.{k}(g, ev)"""
+LISTINGS = [
+ ("shipped", "shipped rule", "var(--bad)", SHIPPED, JS_MAP.replace("{k}", "shipped"),
+  "The driver's copy of the game's World rule: the game keeps <code>find</code> beside <code>on_event</code> and names <code>Common.dir</code> and <code>Common.opp</code> (its own text is folded below); here the lookup is passed to <code>mk</code>. The logic is the same, and the two times agree within noise above 8x8. Three costs stack: the boundary converts the whole map, the walk goes to the target, and the annotation on <code>findA</code> makes every step of the walk re-check the rest of the list."),
+ ("noann", "find unannotated", "var(--warn)", NOANN, JS_MAP.replace("{k}", "noann"),
+  "The same rule without the annotation on its helper: the walk is linear again. What #2681 gives the shipped rule without changing it."),
+ ("index", "index arithmetic", "var(--warn)", INDEX, JS_MAP.replace("{k}", "index"),
+  "Goes straight to the target's position, <code>r * cols + c</code>, with no comparison per cell; still a walk down the list to get there."),
+ ("held", "map held in a closure", "var(--accent2)", HELD, """const hf = V.held(⟪held|g.cells⟫);   // once: the map converted into a Hazel closure
+hf({ at_col: ac, at_row: ar, cols: n, rows: n }, ev)   // each event: four numbers""",
+  f"The map crosses the boundary once, into a closure ({fmt(pre[256]['held_setup'])} ms at 16x16, once); each event passes four numbers. The walk remains, and the held list is still re-stepped when it is substituted into the call."),
+ ("idA", "identity rule (floor)", "var(--accent)", IDA, JS_MAP.replace("{k}", "idA"),
+  "Ignores its argument: what is left is the boundary alone, converting the whole map and checking it against <code>(Globals, Event)</code>. Every rule that is passed the map pays at least this."),
+ ("near", "neighbours only", "var(--good)", NEAR, """const nb = { at_col: ac, at_row: ar, cols: n, rows: n,
+  ⟪good|near: g.cells.filter(x => Math.abs(x.col - ac) <= 1 && Math.abs(x.row - ar) <= 1)⟫ };   // at most 9 cells
+V.near(nb, ev)""",
+  "The same decision, given only the squares around the player: JS picks the at most nine neighbours before the call, so the argument, the walk and the check are all small, and the cost does not grow with the map."),
+]
+def listing(k, name, col, hz, js, note):
+    return (f'<div class="listing" id="code-{k}"><div class="lh"><span class="sw" style="background:{col}"></span><b>{name}</b>'
+            f'<span class="ms">16x16: {fmt(pre[256][k])} ms before, {fmt(post[256][k])} ms after</span></div>'
+            f'<pre class="code">{code(hz)}</pre>'
+            f'<div class="tiles" data-k="{k}"><div class="tiles-note">Hazel\'s tile editor, read only: the same code, with what it needs before it (the program\'s types and the helpers), from hazel.org\'s build of <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>. <button type="button" class="tiles-go">▶ show Hazel\'s tiles</button> <span class="tiles-phase"></span></div></div>'
+            f'<div class="runbox" data-k="{k}"><div class="rb-row"><b>Run it</b> on a map of grass, the player mid-map, going east: '
+            f'<select aria-label="the map\'s size"><option value="3">3x3</option><option value="8" selected>8x8</option><option value="16">16x16</option></select> '
+            f'<button type="button">▶ run, with Hazel\'s JS library</button></div><pre class="rb-out">Hazel\'s library (hazel.org\'s build of #2719, the tiles\' build) loads on the first run.</pre></div>'
+            f'<pre class="code js">{code(js, "js")}</pre><p class="note">{note}</p>'
+            + (f'<details><summary>the game\'s own World rule (<code>dress-up/js/25-scripting.js</code> at <code>2ebda59ab4</code>, as the game compiles it)</summary><pre class="code">{code(GAME_WORLD)}</pre></details>' if k == "shipped" else "")
+            + '</div>')
+GAME_WORLD = """# Places with no way out on a side, whatever their ways say: the waterfall's N, its cliff. #
+let no_way = fun (kind, d) : (String, String) -> kind == "waterfall" && d == "N";
+let find = fun (cs, c, r) ⟪bad|: ([Cell], Int, Int)⟫ -> case cs | [] => None | x :: rest => if x.col == c && x.row == r then Some(x) else ⟪warn|find(rest, c, r)⟫ end;
+# A way out walked through: into the square beside it, coming in from the side facing back, #
+# if that square is on the map and has a way back; else nowhere. #
+let on_event = ⟪floor|fun (g, e) : (Globals, Event)⟫ ->
+  case e
+  | Way(d) =>
+    let (dx, dy) = Common.dir(d) in
+    let c = g.at_col + dx in
+    let r = g.at_row + dy in
+    let back = Common.opp(d) in
+    if c < 0 || r < 0 || c >= g.cols || r >= g.rows then Done
+    else (case ⟪warn|find(g.cells, c, r)⟫
+      | Some(x) => if Common.member(back, x.ways) && !no_way(x.kind, back) then GoSquare(c, r, back, Done) else Done
+      | None => Done
+      end)
+  | _ => Done
+  end"""
+# ---------- each listing as a program for Hazel's tile editor (its embed, read only): the game's preamble, the helpers the
+# listing needs, the listing itself, then the function it makes; drivers/tiles_check.mjs checks each with the library
+PREAMBLE_TXT = open(os.path.join(HERE, "preamble.hz")).read()
+_body = open(os.path.join(HERE, "r25.mjs")).read()
+_line = lambda start: next(l for l in _body.split("\n") if l.startswith(start))
+HELPERS_FMT = [SHARED[SHARED.index("let no_way"):]]   # the helpers, laid out as the shared box shows them
+plain = lambda src: re.sub(r"⟪\w+\|(.*?)⟫", r"\1", src, flags=re.S)
+def tile_program(k, hz):
+    t = plain(hz).rstrip()
+    last = t.split("\n")[-1]
+    t = t + "\n" + {"shipped": "shipped", "noann": "noann", "index": "index", "held": "held", "idA": "idA", "near": "near"}[k]
+    need = [SHARED.split("type Event =")[0].split("type Cell =")[0]] if False else []
+    need = HELPERS_FMT + ([NTHU] if k == "held" else []) + ([FINDU] if k == "near" else [])
+    return "\n".join([TILE_PREAMBLE.rstrip(), *([] if k == "idA" else need), t])
+TILES = {L[0]: tile_program(L[0], L[3]) for L in LISTINGS}
+json.dump(TILES, open(os.path.join(R, "data", "tiles.json"), "w"), indent=1)
+LIST_HTML = "".join(listing(*L) for L in LISTINGS)
+RUNBOX_JS = open(os.path.join(HERE, "runbox.js")).read().replace("if (typeof module !== \"undefined\") module.exports = RUNBOX;", "")
+HS_LEGEND = "".join(f'<span class="hs hs-{k}">{esc(v[1].split(":")[0])}</span> ' for k, v in HS.items())
+LIST_CSS = """
+.hs { border-radius: 3px; padding: 0 1px; }
+.hs-bad { background: color-mix(in srgb, var(--bad) 24%, transparent); box-shadow: inset 0 -2px var(--bad); }
+.hs-warn { background: color-mix(in srgb, var(--warn) 24%, transparent); box-shadow: inset 0 -2px var(--warn); }
+.hs-floor { background: color-mix(in srgb, var(--accent) 20%, transparent); box-shadow: inset 0 -2px var(--accent); }
+.hs-held { background: color-mix(in srgb, var(--accent2) 22%, transparent); box-shadow: inset 0 -2px var(--accent2); }
+.hs-good { background: color-mix(in srgb, var(--good) 22%, transparent); box-shadow: inset 0 -2px var(--good); }
+.hslegend .hs { display: inline-block; margin: 2px 6px 2px 0; padding: 1px 6px; font-size: 0.86em; }
+.listing { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px 2px; margin: 14px 0; background: var(--bg); }
+.listing .lh { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.listing .sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+.listing .ms { color: var(--muted); font-size: 0.9em; margin-left: auto; }
+.listing pre.code { white-space: pre-wrap; word-break: break-word; font-size: 0.84em; margin: 8px 0; }
+.listing pre.code.js { border-style: dashed; }
+.gamepics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
+.gamepics img { width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); display: block; }
+.gamepics > div { display: grid; gap: 8px; }
+@media (max-width: 640px) { .gamepics { grid-template-columns: 1fr; } }
+.tiles { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; margin: 8px 0; background: var(--paper); }
+.tiles-note { color: var(--muted); font-size: 0.82em; }
+.runbox { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; margin: 8px 0; }
+.runbox .rb-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 0.9em; }
+.runbox button, .runbox select { font: inherit; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
+.runbox .rb-out { margin: 6px 0 2px; white-space: pre-wrap; font-size: 0.84em; color: var(--muted); }
+.runbox .rb-out b { color: var(--ink); }
+.tiles-frame { width: 100%; height: 120px; border: 0; display: block; margin-top: 6px; border-radius: 6px; background: #fff; }
+pre.code .tk-k { color: var(--accent); font-weight: 600; } pre.code .tk-t { color: var(--accent2); }
+pre.code .tk-s { color: var(--good); } pre.code .tk-n { color: var(--warn); } pre.code .tk-c { color: var(--muted); font-style: italic; }
+"""
 cm = {b: B[b]["compile"] for b in B}
 pc = lambda a, b: f"{round(100 * (1 - b / a))}%"   # how much less b is than a
 x_ = lambda a, b: f"{a / b:.1f}x"
@@ -230,6 +363,28 @@ fl_rows = "".join(tr([lab, fmt(pre[c][k]), fmt(mid[c][k]), fmt(dd[c][k]), fmt(fl
                   for k, kn in (("idA", "identity rule"), ("shipped", "shipped rule")) for c, n in ((256, "16x16"), (576, "24x24")) for lab in [f"{kn}, {n}"])
 TESTS_D = BN["d"].get("tests", "the full tests were still running at this writing")
 
+# ---------- the woods on #2635 (trial/2635-memo-depth, .github/workflows/picview.yml): three runners, 21 runs each
+WOODS_DIR = os.path.join(R, "data", "floor", "picview_a1e0189045")
+SETTINGS = [("off", "off"), ("depth1", "depth 1"), ("depth2", "depth 2"), ("depth3", "depth 3"), ("full", "whole")]
+def woods_runner(path):
+    """{"cpu": ..., ("A"|"B"|"view", setting): {"min", "p25", "median"}} from one runner's picview.txt"""
+    out = {}
+    for line in open(path):
+        if line.startswith("Model name:"): out["cpu"] = line.split(":", 1)[1].strip()
+        m = re.match(r"PICVIEW (A|B) (\w+): .* ms; (.*)$", line) or re.match(r"PICVIEW (view) (\w+) \(B - A\): (.*?); results", line)
+        if m: out[(m.group(1), m.group(2))] = {k: float(v) for k, v in (kv.split(" ") for kv in m.group(3).split(", "))}
+    return out
+woods = [woods_runner(os.path.join(WOODS_DIR, f"runner_{i}.txt")) for i in (1, 2, 3)]
+kept = lambda w, s, stat="min": (w[("B", "off")][stat] - w[("B", s)][stat]) / (w[("B", "off")][stat] - w[("B", "full")][stat])
+woods_rows = "".join(tr([f'{i + 1}: {w["cpu"].replace("AMD EPYC ", "EPYC ").replace(" Processor", "")}'] + [f'{w[("B", s)]["min"]:,.0f}' for s, _ in SETTINGS]
+                        + [f'{100 * kept(w, "depth1"):.0f}%']) for i, w in enumerate(woods))
+kept_min = sorted(100 * kept(w, "depth1") for w in woods); kept_med = sorted(100 * kept(w, "depth1", "median") for w in woods)
+krange = lambda s, stat="min": (lambda v: f"{v[0]:.0f}-{v[-1]:.0f}%")(sorted(100 * kept(w, s, stat) for w in woods))
+DB = {k: load_build(k)["by"] for k in ("d2", "d3")}   # depths 2 and 3, this report's driver, two rounds each
+depth_rows = "".join(tr([lab, fmt(fl_[256]["idA"]), f'{round(100 * (fl_[256]["idA"] / pre[256]["idA"] - 1)):+d}%', kp]) for lab, fl_, kp in (
+    ("no memo (before)", pre, "0%"), ("depth 1", dd, krange("depth1")), ("depth 2", DB["d2"], krange("depth2")),
+    ("depth 3", DB["d3"], krange("depth3")), ("whole (#2681)", mid, "100%")))
+
 comp_rows = "".join(tr([BN[b]["label"] + ": " + BN[b]["long"], f'{cm[b]["compile_ms"]:.0f} ({", ".join(f"{v:.0f}" for v in cm[b]["compile_ms_all"])})', f'{cm[b]["run_ms"]:.0f} ({", ".join(f"{v:.0f}" for v in cm[b]["run_ms_all"])})']) for b in ("base", "a", "b"))
 
 bars16 = [("shipped rule", round(r256["shipped"]), "var(--bad)"), ("find unannotated", round(r256["noann"], 1), "var(--warn)"),
@@ -250,7 +405,7 @@ PAGE = f"""<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>What a Call into Hazel Costs</title>
 <meta name="description" content="Why one Dress Up room rule, run as a Hazel function from JS, takes 40-150 ms on a 16x16 map, and what the open performance PRs do to it: #2681 makes the annotated rule linear ({fmt(pre[256]['shipped'])} to {fmt(mid[256]['shipped'])} ms), and the 14 PRs together halve the compile.">
-<style>{STYLE}</style></head>
+<style>{STYLE}{LIST_CSS}</style></head>
 <body><main>
 <p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>25<b>)</b></code> · performance · started 2026-10-22, updated 2026-10-22 {UPDATED} MDT · <span class="wip">work in progress</span> · about 11 minutes to read</p>
 <h1>What a Call into Hazel Costs</h1>
@@ -268,7 +423,13 @@ PAGE = f"""<!doctype html>
 </ol>
 </div>
 
-{fig("fig-sizes", 1, FP1, f"Time per call against map size, both scales logarithmic, for five versions of the World rule that return the same answer: dashed, the measured build (1 of the 14 PRs); solid, the same with all 14. Before, the shipped rule's slope is {slope(B['base']['rows'], 'shipped'):.2f} (quadratic-ish) and the others are linear, except neighbours-only, which is flat; after, the shipped rule is linear too ({slope(B['b']['rows'], 'shipped'):.2f}) and lies on the unannotated one. The identity floor moves up. Values from <code>data/prs/</code>, the mean of two rounds.")}
+{fig("fig-sizes", 1, FP1, f"Time per call against map size, both scales logarithmic, for five versions of the World rule that return the same answer: dashed, the measured build (1 of the 14 PRs); solid, the same with all 14. Before, the shipped rule's slope is {slope(B['base']['rows'], 'shipped'):.2f} (quadratic-ish) and the others are linear, except neighbours-only, which is flat; after, the shipped rule is linear too ({slope(B['b']['rows'], 'shipped'):.2f}) and lies on the unannotated one. The identity floor moves up. Values from <code>data/prs/</code>, the mean of two rounds. The code behind each line is in <a href=\"#code\">The rules behind each line</a>.")}
+
+<h2 id="code">The rules behind each line</h2>
+<p>Every line in Figures 1 and 3 is one of these Hazel functions, compiled once and then called from JS with the same move: the player mid-map, going east (<code>Way("E")</code>). They are the driver's own code (<code>drivers/r25.mjs</code>), laid out here on more lines, Hazel's usual way (the same tokens; the layout is in <code>drivers/listings_fmt.py</code>), and each one returns the same <code>GoSquare</code>. What they share is folded first. The marks show where each one's time goes, in the figures' colours; each card's times are its 16x16 call before and after the 14 PRs. The top box is Hazel; the dashed one is the JS that calls it.</p>
+<p class="hslegend">{HS_LEGEND}</p>
+<details><summary>shared by all of them: the types, from the program's start, and the helpers</summary><pre class="code">{code(SHARED)}</pre></details>
+{LIST_HTML}
 
 <h2 id="prs">Before and after the performance PRs</h2>
 <p>The dashboard lists 19 PRs against Hazel's performance. Five are not speed changes: {PRS["not_counted"].split(": ", 1)[1]} That leaves 14. Only <a href="https://github.com/hazelgrove/hazel/pull/2679">#2679</a> is merged into <code>dev</code>, so the measured build has 1 of the 14. To see what the other 13 would do, two trial branches were pushed to hazelgrove/hazel and built by GitHub's Deploy workflow, the same build as the measured one:</p>
@@ -303,9 +464,24 @@ PAGE = f"""<!doctype html>
 <div class="scroll"><table><tr><th>one 16x16 call</th><th>memo lookups</th><th>memo hits</th><th>memo writes</th><th>type-hash lookups</th></tr>{cnt_rows}</table></div>
 <div class="scroll"><table><tr><th rowspan=2>ms per call</th><th colspan=3>this report's driver, 2 rounds</th><th colspan=3>the floor driver, 3 rounds</th></tr><tr><th>before</th><th>#2681</th><th>depth-limited</th><th>before</th><th>#2681</th><th>depth-limited</th></tr>{fl_rows}</table></div>
 <p>So yes: limited this way, #2681 stops recording what these calls never see again. The floor is back where it was before #2681 ({fmt(dd[256]["idA"])} ms at 16x16 against {fmt(pre[256]["idA"])}), and the shipped rule keeps its gain ({fmt(dd[256]["shipped"])} ms against {fmt(mid[256]["shipped"])} with the whole memo, and {fmt(pre[256]["shipped"])} before). The two drivers disagree on how big the rise was ({round(100 * (mid[256]["idA"] / pre[256]["idA"] - 1))}% in this report's, which runs many variants and sizes in one process, {round(100 * (flm("a", "16x16", "idA") / flm("base", "16x16", "idA") - 1))}% in the floor driver's three variants); the limit removes it in both at 16x16. At 24x24 the floor driver's mean is {fmt(flm("d", "24x24", "idA"))} ms against {fmt(flm("base", "24x24", "idA"))} before, but one of its three rounds ran long ({" / ".join(fmt(x["24x24"]["idA"]) for x in fl["d"])} ms), and this report's driver puts it at {fmt(dd[576]["idA"])} against {fmt(pre[576]["idA"])}.</p>
-<p class="note">What the limit gives up: a value recognized deeper inside a later push, as when shapes already checked one by one are checked again as a list. #2681's own browser measurement (#2635's woods picture, 563.5 to 497.5 ms per figure move) may lean on that, so it should be re-measured with the limit before #2681 takes it. On GitHub the trial branch passes Fast checks; {TESTS_D}.</p>
+<p>On GitHub the trial branch passes Fast checks; {TESTS_D}.</p>
+
+<h3 id="woods">The woods, re-measured on #2635</h3>
+<p>What the limit could give up: a value recognized deeper inside a later push, as when shapes already checked one by one are checked again inside a list. #2681 was first measured on #2635's woods picture (the Scenes slide), so Matthew asked: <q>re-measure #2681's woods picture on #2635 with the depth limit, on GitHub's runners, and if it keeps the gain, propose the limit on #2681.</q></p>
+<p>The 2026-10-13 Firefox driver was lost with a crash's scratch folder; its node harness survived and is now <code>test/Test_PicView.re</code> on the trial branch <code>trial/2635-memo-depth</code> (#2635's head <code>2b080af683</code>, the same limit, and <code>memo_depth</code> made a reference so one build can time every setting). Program A is the Scenes slide's program up to its picture, B the same with the woods picture's view; each run times both at every setting in turn, after a full GC. <code>.github/workflows/picview.yml</code> builds the test runner and runs that group alone, on three runners at once, 21 runs each. Every setting gives the same result.</p>
+<div class="scroll"><table><tr><th>runner</th><th>off</th><th>depth 1</th><th>depth 2</th><th>depth 3</th><th>whole</th><th>depth 1 keeps</th></tr>{woods_rows}</table></div>
+<p class="note">The fastest of 21 runs, ms, program B (the Scenes program with the woods picture's view). <i>Depth 1 keeps</i> is its share of the whole memo's gain over <i>off</i>. Two earlier single runs of 9 disagreed, one finding depth 1 kept none of the gain and the other nearly all: each setting's runs fall in two clusters about 500 ms apart, so a median of nine can land in either. Hence three runners, the fastest run, and the median beside it ({krange("depth1", "median")} by the median). The raw runs are in <code>data/floor/picview_a1e0189045/</code>.</p>
+<p>Depth 1 keeps {krange("depth1")} of the memo's gain on the woods. Deeper limits keep a little more of it and give back part of the library's floor:</p>
+<div class="scroll"><table><tr><th>has_type asked and told to</th><th>library floor, 16x16 (ms)</th><th>against before</th><th>woods gain kept</th></tr>{depth_rows}</table></div>
+<p class="note">The floor is this report's driver, two rounds each; depths 2 and 3 were timed in a later session than the rest, and this laptop's run-to-run noise is about 10%. Writes per 16x16 identity call: 3 at depth 1, 276 at depth 2, 532 at depth 3, 2,580 with the whole memo.</p>
+<p>So depth 1 is the limit to propose: no rise in the library's floor, the annotated rule's gain kept in full, and most of the woods' gain.</p>
 
 <h2 id="call">What happens in one call</h2>
+<figure class="fig" id="fig-game"><div class="gamepics">
+<img src="img/world-grid.webp" alt="Messed Up Dress Up's World design tab: the world's grid, 6 by 7, a place in each square; the forest clearing, D4, is selected, with the castle east of it, E4." loading="lazy">
+<div><img src="img/clearing-at-its-east-way.webp" alt="The forest clearing, the friend at its east edge, where an arrow leads to the castle, E4." loading="lazy">
+<img src="img/castle-at-its-west-way.webp" alt="The castle, the friend at its west edge, where an arrow leads back to the forest clearing." loading="lazy"></div></div>
+<figcaption><b>The World room's move, in the game.</b> Left: the 🗺️ World design tab, the world's grid (6 by 7; the default world, Messed Up Dress Up 0.0.408); the forest clearing, D4, is selected, the castle beside it, E4. Right: the clearing, the friend at its east way, its arrow saying where it leads (the castle, E4); and the castle, the friend at its west way, back to the clearing. Walking through is the event <code>Way("E")</code> this report times: the rule finds the square east of the player in <code>cells</code> and answers <code>GoSquare(4, 3, "W", Done)</code> if it has a way back west (the rule counts from 0, so D4 is (3, 3)). Every arrow is shown here (🔬 Inspection's 🧭 all arrows); a player sees one when near it. Pictures from GitHub's runner (kids-choice-games, branch <code>shots-535</code>, <code>tools/shots.mjs</code>).</figcaption></figure>
 <p>The game compiles each room's module once (<code>runProgram</code>) and keeps the JS function Hazel gives back for the room's <code>on_event</code>. On each event it calls that function with two arguments, <code>Globals</code> and <code>Event</code>. For the World room, <code>Globals</code> holds the player's position, the map size and <code>cells</code>, a list with one record per square: <code>{{col, row, kind, ways}}</code>. The game rebuilds it on every event (0.098 ms in JS at 16x16, negligible). Inside the library (<code>src/web/HazelLibCore.re</code>, <code>function_of</code>), each call then:</p>
 <ol>
 <li>runs <code>of_js</code> on each argument. This does not build Hazel values: arrays become <code>ListLit</code> syntax, objects a <code>Tuple</code> of <code>TupLabel</code>s, and every node gets a fresh id (<code>Exp.fresh</code>, which calls <code>Id.mk</code>, a UUID). 256 cells make about 4.6k nodes.</li>
@@ -370,9 +546,10 @@ PAGE = f"""<!doctype html>
 
 <h2 id="next">What next</h2>
 <ol>
+<li><b>Asymptotic analysis of every event handler</b> in the game's Hazel rules (matthewhammer/kids-choice-games#2, <code class="ref"><b>^ticket(</b>531<b>)</b></code>), against a world (the game's JSON world data) of size N. Matthew: <q>Each one should be O(1) or at the worst, O(log N), for a world (json data file) of size N.</q> For each room's <code>on_event</code> and each event it takes: its cost in N, counting the call boundary (today every call converts and checks all of <code>Globals</code>, so even a handler that does nothing is O(N)), and a version meeting the bound. Known so far: World's <code>Way</code> is O(N) in the cells (the <code>find</code> walk; quadratic with its annotation before #2681) and O(1) given only the neighbours (<a href="#code-near">neighbours only</a>); the Square's levers are O(doors), quadratic through the annotated <code>find</code> and <code>doors</code>; the Castle's <code>FallPit</code> and <code>WayOut</code> are O(rooms) through <code>index_of</code> and <code>nth</code>. The boundary itself is the first thing to take out of N: pass each handler only what it reads, or hold the world in Hazel once and pass only what changes, as <a href="#code-held">held</a> does, with lookups that are not walks.</li>
 <li>Change the World and Square rules on matthewhammer/kids-choice-games#2: no annotations on recursive helpers, and neighbours only in World's <code>Globals</code>; re-time the game's moves at 16x16.</li>
 <li>Land <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a> and <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> in <code>dev</code>, then rebase <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a> and <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> on it: the game gets the linear rule without changing its rules. (Measured here on <code>{BN["a"]["branch"]}</code>.)</li>
-<li>Re-measure #2681's woods picture on #2635 with its memo limited to depth 1 (<code>{BN["d"]["branch"]}</code>), and if it keeps that gain, propose the limit on #2681.</li>
+<li>The depth-1 limit is proposed on #2681 (<a href="https://github.com/hazelgrove/hazel/pull/2681#issuecomment-6344616722">the proposal</a>, with these numbers); if taken, its two commits go onto #2681's branch.</li>
 <li>Prototype <code>of_js</code> producing final values, and time the identity rule's floor.</li>
 <li>Pin the noise floor: two rounds give a spread under {noise_p90*100:.0f}% for nine in ten of the times; five would say more.</li>
 <li>Measure the compile's halving PR by PR (<a href="https://github.com/hazelgrove/hazel/pull/2603">#2603</a>, <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a>, <a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a>).</li>
@@ -381,6 +558,78 @@ PAGE = f"""<!doctype html>
 <h2 id="method">How this was put together</h2>
 <p>Node v22.23.2 on the Ubuntu laptop (Intel i7), one process at a time. The library is hazel-lib.js from <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a> at <code>0d66c36618</code>: the minified build for every time, the dev build <code>hazelLib.bc.js</code> for named profiles (3 s each). The rules are the game's at <code>2ebda59ab4</code>. Each time is one p50 over 20-60 reps after warm-up; for that first run the noise floor was not measured, so treat differences under about 10% as noise (the reruns below give it: under {noise_p90*100:.0f}% for nine in ten times). The target cell is mid-map, at (n/2-1, n/2), moving east; every variant's result was checked against the game's World handler. The library exposes no step count, so per-step costs are inferred from timings. The drivers are in <code>drivers/</code> (<code>r25.mjs</code> for the sizes, <code>steps.mjs</code>, <code>profheld.mjs</code>, and the earlier <code>prof.mjs</code> and <code>prof_noann.mjs</code>; they read the game and library from local checkouts); the data is in <a href="https://github.com/matthewhammer/hazel-reports/tree/main/025/data"><code>data/</code></a>, and the profiles, too big to keep, are summarized in <code>data/profiles.json</code>.</p>
 <p>Before and after the PRs: <code>drivers/prs.sh</code> runs <code>r25.mjs</code> on GitHub's Deploy builds of three branches (hazelgrove/build, <code>&lt;branch&gt;/hazel-lib.js</code>): <code>js-library-embed</code> at <code>0d66c36618</code>, <code>{BN["a"]["branch"]}</code> at <code>{BN["a"]["commit"]}</code> and <code>{BN["b"]["branch"]}</code> at <code>{BN["b"]["commit"]}</code>, in two rounds with the builds interleaved (before, + #2681, after; then again), one node process at a time, pinned to two threads and niced, as this laptop needs. Every time above is the mean of the two rounds; each round is in <code>data/prs/</code>, with each build's compile times. The builds and the 14 PRs are in <code>data/prs.json</code>. The per-step costs are one round per build (<code>steps.mjs</code>). The figures and the first table use these reruns; <i>the first run</i> is the first draft's, kept as it was.</p>
+<script type="application/json" id="tiles-data">{json.dumps(TILES).replace("</", "<\\/")}</script>
+<script>
+{RUNBOX_JS}
+/* each run box: Hazel's library loaded once, on the first click (a plain script from hazel.org), then its listing run */
+(() => {{
+  const LIB = "https://hazel.org/build/js-library-embed/hazel-lib.js";
+  let loading = null;
+  const lib = () => loading || (loading = new Promise((ok, no) => {{
+    if (window.Hazel) return ok(window.Hazel);
+    const s = document.createElement("script"); s.src = LIB; s.onload = () => window.Hazel ? ok(window.Hazel) : no(new Error("no window.Hazel"));
+    s.onerror = () => {{ loading = null; no(new Error("could not load " + LIB)); }}; document.head.appendChild(s);
+  }}));
+  const T = JSON.parse(document.getElementById("tiles-data").textContent);
+  const esc = t => t.replace(/[&<>]/g, c => ({{ "&": "&amp;", "<": "&lt;", ">": "&gt;" }})[c]);
+  document.querySelectorAll(".runbox[data-k]").forEach(box => {{
+    const k = box.dataset.k, out = box.querySelector(".rb-out"), btn = box.querySelector("button"), sel = box.querySelector("select");
+    btn.addEventListener("click", async () => {{
+      btn.disabled = true; out.textContent = window.Hazel ? "running…" : "loading Hazel's library…";
+      try {{
+        const H = await lib(); out.textContent = "running…";
+        await new Promise(r => setTimeout(r, 0));
+        const r = RUNBOX.run(H, k, T[k], +sel.value);
+        out.innerHTML = r.error ? esc(r.error) :
+          "input:  " + esc(r.input) + "\\n<b>output: " + esc(r.output) + "</b>\\n" +
+          "in this browser: " + r.ms.toFixed(2) + " ms a call (the median of 5, after one to warm up)" +
+          (r.setup !== undefined ? "; holding the map: " + r.setup.toFixed(1) + " ms, once" : "") +
+          (r.compileMs !== undefined ? "; compiled first, once: " + r.compileMs.toFixed(0) + " ms" : "");
+      }} catch (e) {{ out.textContent = "could not run: " + (e && e.message || e); }}
+      btn.disabled = false;
+    }});
+  }});
+}})();
+</script>
+<script>
+/* Hazel's tile editor below each listing: Hazel's app in a frame, in its embed mode (protocol 1, docs/hazel-as-a-js-library.md on
+   #2719), which takes a program from this page (matthewhammer.org and localhost are on its list) and shows it read only, posting back
+   its height and what Hazel says of the program. Each frame is made only when its box comes near the screen. */
+(() => {{
+  const URL = "https://hazel.org/build/js-library-embed/index.html#embed", ORIGIN = "https://hazel.org";
+  const T = JSON.parse(document.getElementById("tiles-data").textContent);
+  const frames = [];
+  addEventListener("message", e => {{
+    if (e.origin !== ORIGIN) return;
+    const f = frames.find(f => f.iframe.contentWindow === e.source); if (!f) return;
+    const m = e.data || {{}};
+    const say = t => {{ f.phase.textContent = t; }};
+    if (m.type === "ready") {{
+      if (m.protocol !== 1) {{ say("these tiles speak protocol " + m.protocol + "; this page knows protocol 1"); return; }}
+      f.iframe.contentWindow.postMessage({{ type: "set", text: T[f.k] }}, ORIGIN);
+      say("ready (build " + String(m.build || "?").slice(0, 10) + "); program sent, waiting for Hazel to draw it");
+    }} else if (m.type === "size") {{
+      f.iframe.style.height = Math.max(40, Math.min(3000, Math.ceil(+m.height || 0))) + "px";
+      if (!f.status) say("drawn, " + Math.ceil(+m.height || 0) + " px tall; waiting for Hazel's verdict");
+    }} else if (m.type === "status") {{
+      f.status = m; say("Hazel says: " + (m.ok ? "no errors" : (m.errors || 0) + " errors, " + (m.holes || 0) + " holes"));
+    }} else if (m.type === "crash") say("the tiles stopped: " + (m.message || "an error"));
+  }});
+  const mount = box => {{
+    if (box.querySelector("iframe")) return;
+    const iframe = document.createElement("iframe");
+    iframe.src = URL; iframe.className = "tiles-frame"; iframe.tabIndex = -1; iframe.loading = "eager";
+    iframe.title = "Hazel's tile editor, read only: " + box.dataset.k;
+    box.appendChild(iframe);
+    const phase = box.querySelector(".tiles-phase"); phase.textContent = "loading Hazel…";
+    box.querySelector(".tiles-go").remove();
+    frames.push({{ iframe, k: box.dataset.k, note: box.querySelector(".tiles-note"), phase, status: null }});
+  }};
+  document.querySelectorAll(".tiles[data-k] .tiles-go").forEach(b => b.addEventListener("click", () => mount(b.closest(".tiles"))));
+  const io = new IntersectionObserver(es => es.forEach(e => {{ if (e.isIntersecting) {{ io.unobserve(e.target); mount(e.target); }} }}), {{ rootMargin: "300px" }});
+  document.querySelectorAll(".tiles[data-k]").forEach(b => io.observe(b));
+}})();
+</script>
 </main></body></html>
 """
 open(OUT, "w").write(PAGE)

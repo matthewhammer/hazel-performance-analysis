@@ -1,0 +1,134 @@
+{
+ "mode": "count",
+ "lib": "/home/matthew/.cache/hazel-r25/libs/d2/hazel-lib.js",
+ "16x16": {
+  "idA": [
+   {
+    "get": 78,
+    "hit": 77,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 297,
+    "hit": 0,
+    "set": 276,
+    "kinds": {
+     "block tag 12 len 3": 17,
+     "list cell": 256,
+     "block tag 10 len 2": 2,
+     "block tag 23 len 4": 1
+    }
+   }
+  ],
+  "noann": [
+   {
+    "get": 78,
+    "hit": 77,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 297,
+    "hit": 0,
+    "set": 276,
+    "kinds": {
+     "block tag 12 len 3": 17,
+     "list cell": 256,
+     "block tag 10 len 2": 2,
+     "block tag 23 len 4": 1
+    }
+   }
+  ],
+  "shipped": [
+   {
+    "get": 1037,
+    "hit": 1036,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 708,
+    "hit": 137,
+    "set": 413,
+    "kinds": {
+     "block tag 12 len 3": 17,
+     "list cell": 256,
+     "block tag 10 len 2": 139,
+     "block tag 23 len 4": 1
+    }
+   }
+  ]
+ },
+ "24x24": {
+  "idA": [
+   {
+    "get": 78,
+    "hit": 77,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 617,
+    "hit": 0,
+    "set": 596,
+    "kinds": {
+     "block tag 12 len 3": 17,
+     "list cell": 576,
+     "block tag 10 len 2": 2,
+     "block tag 23 len 4": 1
+    }
+   }
+  ],
+  "noann": [
+   {
+    "get": 78,
+    "hit": 77,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 617,
+    "hit": 0,
+    "set": 596,
+    "kinds": {
+     "block tag 12 len 3": 17,
+     "list cell": 576,
+     "block tag 10 len 2": 2,
+     "block tag 23 len 4": 1
+    }
+   }
+  ],
+  "shipped": [
+   {
+    "get": 2185,
+    "hit": 2184,
+    "set": 1,
+    "kinds": {
+     "list cell": 1
+    }
+   },
+   {
+    "get": 1520,
+    "hit": 301,
+    "set": 897,
+    "kinds": {
+     "block tag 12 len 3": 17,
+     "list cell": 576,
+     "block tag 10 len 2": 303,
+     "block tag 23 len 4": 1
+    }
+   }
+  ]
+ }
+}

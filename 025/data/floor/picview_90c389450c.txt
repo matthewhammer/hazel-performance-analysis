@@ -1,0 +1,16 @@
+Model name:                              AMD EPYC 7763 64-Core Processor
+PICVIEW A off: 2627 2819 2281 2356 2248 2302 2299 2283 2737 ms, median 2302
+PICVIEW A depth1: 2431 2060 1986 2057 1953 2033 2489 2503 2065 ms, median 2060
+PICVIEW A depth2: 2014 2013 2020 2048 2374 2543 2068 2012 1994 ms, median 2020
+PICVIEW A depth3: 1970 2012 2447 2532 2086 2023 2028 2017 2016 ms, median 2023
+PICVIEW A full: 2565 2457 2045 2019 1963 1964 1999 2517 2583 ms, median 2045
+PICVIEW B off: 3183 2842 2848 2918 2870 3343 3370 2895 2926 ms, median 2918
+PICVIEW B depth1: 2598 2955 2909 3005 2961 2550 2498 2485 2546 ms, median 2598
+PICVIEW B depth2: 2987 2542 2468 2535 2509 2444 2472 2912 3195 ms, median 2535
+PICVIEW B depth3: 2482 2480 2484 2500 2862 2919 2865 2486 2731 ms, median 2500
+PICVIEW B full: 2488 2931 3133 2951 2483 2492 2430 2406 2617 ms, median 2492
+PICVIEW view off (B - A medians): 616 ms; results equal to off: true
+PICVIEW view depth1 (B - A medians): 538 ms; results equal to off: true
+PICVIEW view depth2 (B - A medians): 515 ms; results equal to off: true
+PICVIEW view depth3 (B - A medians): 477 ms; results equal to off: true
+PICVIEW view full (B - A medians): 447 ms; results equal to off: true

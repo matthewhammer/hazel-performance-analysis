@@ -295,6 +295,90 @@
   ]
  },
  {
+  "section": "The woods, re-measured on #2635",
+  "section_id": "woods",
+  "columns": [
+   "runner",
+   "off",
+   "depth 1",
+   "depth 2",
+   "depth 3",
+   "whole",
+   "depth 1 keeps"
+  ],
+  "rows": [
+   [
+    "1: EPYC 7763 64-Core",
+    "2,823",
+    "2,434",
+    "2,402",
+    "2,390",
+    "2,416",
+    "96%"
+   ],
+   [
+    "2: EPYC 7763 64-Core",
+    "2,601",
+    "2,283",
+    "2,264",
+    "2,236",
+    "2,214",
+    "82%"
+   ],
+   [
+    "3: EPYC 9V74 80-Core",
+    "2,061",
+    "1,786",
+    "1,764",
+    "1,756",
+    "1,749",
+    "88%"
+   ]
+  ]
+ },
+ {
+  "section": "The woods, re-measured on #2635",
+  "section_id": "woods",
+  "columns": [
+   "has_type asked and told to",
+   "library floor, 16x16 (ms)",
+   "against before",
+   "woods gain kept"
+  ],
+  "rows": [
+   [
+    "no memo (before)",
+    "8.54",
+    "+0%",
+    "0%"
+   ],
+   [
+    "depth 1",
+    "8.53",
+    "+0%",
+    "82-96%"
+   ],
+   [
+    "depth 2",
+    "9.55",
+    "+12%",
+    "87-103%"
+   ],
+   [
+    "depth 3",
+    "10.5",
+    "+23%",
+    "94-106%"
+   ],
+   [
+    "whole (#2681)",
+    "10.1",
+    "+18%",
+    "100%"
+   ]
+  ]
+ },
+ {
   "section": "Before and after the PRs, by map size (ms, p50, the mean of two rounds)",
   "section_id": "t-prs",
   "columns": [

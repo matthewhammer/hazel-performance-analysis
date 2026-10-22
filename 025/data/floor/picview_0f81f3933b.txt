@@ -1,0 +1,10 @@
+Model name:                              AMD EPYC 9V45 96-Core Processor
+PICVIEW A off: 1930 1935 1555 1568 1768 1485 1422 1356 1359 ms, median 1555
+PICVIEW A depth1: 1329 1376 1685 1657 1428 1641 1617 1582 1504 ms, median 1582
+PICVIEW A full: 1363 1350 1327 1303 1250 1352 1289 1221 1223 ms, median 1303
+PICVIEW B off: 2471 1983 1826 1817 1827 1901 1894 1780 1704 ms, median 1827
+PICVIEW B depth1: 1721 1903 1986 1958 1889 1903 1970 1876 1811 ms, median 1903
+PICVIEW B full: 1669 1608 1609 1478 1557 1657 1571 1462 1449 ms, median 1571
+PICVIEW view off (B - A medians): 272 ms; results equal to off: true
+PICVIEW view depth1 (B - A medians): 321 ms; results equal to off: true
+PICVIEW view full (B - A medians): 268 ms; results equal to off: true
