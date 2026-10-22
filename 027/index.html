@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<!-- theme: head begin -->
+<script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<!-- theme: head end -->
+<!-- nav: begin --><meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script><!-- nav: end -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The World Rule in Hazel and in Fumola</title>
+<meta name="description" content="Dress Up's World rule in Hazel at its best and in Fumola (wasm), 3x3 to 64x64: Fumola with the world held in a HashMap answers in about 0.5 ms and 450 steps at every size; passed or walked, both grow with the map.">
+<style>  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8; --accent2: #0e7490; --cx: #d6d1c6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1020px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 26px 0 6px; }
+  p, li { max-width: 76ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  .headline > p { margin: 6px 0; }
+  ol.ans { padding-left: 1.4em; margin: 8px 0; }
+  ol.ans > li { max-width: none; margin: 14px 0; }
+  ol.ans > li > .row { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: center; }
+  ol.ans > li p { margin: 0; }
+  figure.mini { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  figure.mini figcaption { font-size: 0.8em; margin-top: 4px; }
+  @media (max-width: 760px) { ol.ans > li > .row { grid-template-columns: minmax(0, 1fr); } figure.mini { max-width: 340px; } }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  a.cl { text-decoration: none; } a.cl:hover code { text-decoration: underline; }
+  sup.at { font-size: 0.68em; color: var(--muted); margin-left: 2px; font-weight: 600; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure.fig { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 18px 0; }
+  .figscroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 80ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre.code { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto;
+             font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 6px 0 4px; }
+  pre.code .rm { color: var(--bad); } pre.code .ad { color: var(--good); } pre.code .cm { color: var(--muted); }
+  .codepair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .codepair { grid-template-columns: minmax(0, 1fr); } }
+  .codepair h4 { margin: 6px 0 0; font-size: 0.95em; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .callout { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent2); border-radius: 6px; padding: 8px 14px; margin: 14px 0; }
+  .callout.warn { border-left-color: var(--warn); }
+  section.q { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 6px 16px 10px; margin: 20px 0; }
+  section.q h3 { margin: 10px 0 6px; line-height: 1.4; }
+  section.q h3 .qn { color: var(--accent); margin-right: 6px; }
+  .tags { margin: 2px 0 8px; }
+  .tag { display: inline-block; font-size: 0.78em; font-weight: 600; padding: 1px 9px; border-radius: 999px; margin: 0 6px 4px 0; border: 1px solid; }
+  .tag.ans { color: var(--good); border-color: var(--good); background: color-mix(in srgb, var(--good) 10%, transparent); }
+  .tag.now { color: var(--accent2); border-color: var(--accent2); background: color-mix(in srgb, var(--accent2) 10%, transparent); }
+  .tag.cyrus { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .tag.block { color: var(--warn); border-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+  .tag.open { color: var(--muted); border-color: var(--line); }
+  .answer { background: color-mix(in srgb, var(--good) 9%, var(--paper)); border: 1px solid color-mix(in srgb, var(--good) 45%, var(--line)); border-radius: 6px; padding: 8px 12px; margin: 8px 0; max-width: 80ch; }
+  .after { max-width: 80ch; }
+  ul.ev { padding-left: 1.2em; } ul.ev li { margin: 5px 0; max-width: 84ch; }
+  ul.ev .refs { color: var(--muted); font-size: 0.92em; }
+  ol.opts li { margin: 6px 0; max-width: 82ch; }
+  .optnote { display: inline-block; font-size: 0.8em; font-weight: 600; color: var(--accent); margin-left: 4px; }
+  .optnote.out { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  button.copylink { margin-left: 8px; font: 600 12px system-ui, sans-serif; padding: 1px 8px; border: 1px solid var(--line);
+    border-radius: 999px; background: var(--bg); color: var(--muted); cursor: pointer; vertical-align: 2px; }
+  button.copylink:hover { color: var(--ink); border-color: var(--muted); }
+  button.copylink.done { color: var(--good); border-color: var(--good); }
+  input.copyfield { display: block; width: 100%; max-width: 640px; margin: 4px 0; font: 13px ui-monospace, monospace;
+    background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }
+  .cyrus { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 4px 16px; }
+  .cyrus li { margin: 8px 0; }
+  details.ev summary { cursor: pointer; color: var(--link); }
+  .wip { color: var(--warn); font-weight: 600; }
+
+pre.code .tk-k { color: var(--accent); font-weight: 600; } pre.code .tk-t { color: var(--accent2); } pre.code .tk-s { color: var(--good); } pre.code .tk-n { color: var(--warn); } pre.code .tk-c { color: var(--muted); font-style: italic; }
+pre.code { white-space: pre-wrap; font-size: 0.84em; }
+</style><style id="anchors-css">
+h2 .anchor, h3 .anchor, .lh .anchor { margin-left: 8px; color: var(--muted); text-decoration: none; font-weight: 400; opacity: 0.35; }
+h2:hover .anchor, h3:hover .anchor, .lh:hover .anchor, .anchor:focus { opacity: 1; }
+.copyanchor { margin-left: 6px; font: 400 0.62em system-ui, sans-serif; vertical-align: middle; padding: 1px 6px; border-radius: 6px;
+  border: 1px solid var(--line); background: var(--paper); color: var(--muted); cursor: pointer; opacity: 0.45; }
+h2:hover .copyanchor, h3:hover .copyanchor, .lh:hover .copyanchor, .copyanchor:focus { opacity: 1; }
+.copyanchor.done { color: var(--good); border-color: var(--good); opacity: 1; }
+:target { scroll-margin-top: 12px; }
+</style>
+</head>
+<body><main>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>27<b>)</b></code> · performance · started 2026-10-22 · <span class="wip">work in progress</span> · about 7 minutes to read</p>
+<h1>The World Rule in Hazel and in Fumola</h1>
+<p class="sub">Matthew, after <a href="../025/">^report(25)</a>: <q>do the same game logic that we've exported to Hazel in report 25, but now do a Hazel (best PRs for performance) against Fumola in Wasm, doing the same logic ... I especially want to compare the map-based version in Fumola (store world data in maps, not lists) --- so there's a chance at O(log N).</q> This is the World room's rule (a step to the square beside), written in Fumola, and timed against Hazel with every performance change we have, at map sizes from 3x3 to 64x64 (<code class="ref"><b>^ticket(</b>542<b>)</b></code>). The syntax of the two side by side is <a href="../028/">^report(28)</a>.</p>
+
+<div class="headline">
+<p><b>Short answers.</b> Node on the Ubuntu laptop, one process at a time, the median call, the mean of two rounds; every answer checked against the game's.</p>
+<ol class="ans">
+<li><b>Fumola with the world held in a HashMap is flat: about 0.54 ms and 450 steps a call at 64x64, the same as at 3x3.</b> The map is built once, when the world changes (295 ms at 64x64), and each move passes four numbers and a direction and looks up one square. Fumola's <code>HashMap</code> is a persistent hash trie, O(log₃₂ N), constant at these sizes. That meets the goal set in <a href="../025/#next">^report(25)'s next steps</a>: O(1) or O(log N) in the world's size.</li>
+<li><b>Hazel has no map to do the same.</b> Its best here walks a list: 254 ms at 64x64 with the world held in a closure, 346 ms passed in. Against Fumola's held map, that is 471x and 641x.</li>
+<li><b>Like for like, Fumola is faster on every version that grows.</b> At 64x64, passing the whole map: 145 ms against Hazel's 346 (2.4x). Holding it as a list and walking it: 26.3 ms against 254 (9.7x).</li>
+<li><b>With only the neighbours passed, the two are the same: about 1 ms, at every size</b> (1.35 and 1.27 ms at 64x64). There the call boundary is all there is.</li>
+<li><b>The boundaries differ.</b> Hazel's library converts JS values into Hazel's. Fumola's wasm build takes only source text, so a passed map is written out and parsed every call: 281,427 characters at 64x64, most of its 195,144 steps. Holding the world in the instance avoids that, in either language.</li>
+</ol>
+</div>
+
+<figure class="fig" id="fig-sizes"><svg viewBox="0 0 700 380" role="img" aria-label="Time per World call against map size, log scales, Hazel at its best (solid) and Fumola (dashed); Fumola with the map held in a HashMap stays near 0.5 ms from 3x3 to 64x64." style="width:100%;height:auto;font:12px system-ui,sans-serif"><line x1="58" x2="450" y1="278.4" y2="278.4" style="stroke:var(--line)"/><text x="52" y="282.4" text-anchor="end" style="fill:var(--muted)">1 ms</text><line x1="58" x2="450" y1="190.3" y2="190.3" style="stroke:var(--line)"/><text x="52" y="194.3" text-anchor="end" style="fill:var(--muted)">10 ms</text><line x1="58" x2="450" y1="102.1" y2="102.1" style="stroke:var(--line)"/><text x="52" y="106.1" text-anchor="end" style="fill:var(--muted)">100 ms</text><line x1="58" x2="450" y1="14.0" y2="14.0" style="stroke:var(--line)"/><text x="52" y="18.0" text-anchor="end" style="fill:var(--muted)">1000 ms</text><text x="73.0" y="356" text-anchor="middle" style="fill:var(--muted)">3x3</text><text x="190.0" y="356" text-anchor="middle" style="fill:var(--muted)">8x8</text><text x="272.7" y="356" text-anchor="middle" style="fill:var(--muted)">16x16</text><text x="355.4" y="356" text-anchor="middle" style="fill:var(--muted)">32x32</text><text x="438.1" y="356" text-anchor="middle" style="fill:var(--muted)">64x64</text><text x="254.0" y="374" text-anchor="middle" style="fill:var(--muted)">map size (cells, log scale)</text><polyline points="73.0,259.9 107.3,239.3 155.7,207.2 190.0,171.5 238.4,128.4 272.7,88.2 321.1,28.8" fill="none" style="stroke:var(--muted)" stroke-width="2.2" stroke-dasharray="6 4"/><circle cx="73.0" cy="259.9" r="2.6" style="fill:var(--bg);stroke:var(--muted)"/><circle cx="107.3" cy="239.3" r="2.6" style="fill:var(--bg);stroke:var(--muted)"/><circle cx="155.7" cy="207.2" r="2.6" style="fill:var(--bg);stroke:var(--muted)"/><circle cx="190.0" cy="171.5" r="2.6" style="fill:var(--bg);stroke:var(--muted)"/><circle cx="238.4" cy="128.4" r="2.6" style="fill:var(--bg);stroke:var(--muted)"/><circle cx="272.7" cy="88.2" r="2.6" style="fill:var(--bg);stroke:var(--muted)"/><circle cx="321.1" cy="28.8" r="2.6" style="fill:var(--bg);stroke:var(--muted)"/><polyline points="73.0,261.2 107.3,252.4 155.7,235.6 190.0,215.5 238.4,186.1 272.7,161.6 321.1,131.1 355.4,108.2 403.8,76.3 438.1,54.6" fill="none" style="stroke:var(--bad)" stroke-width="2.2"/><circle cx="73.0" cy="261.2" r="2.6" style="fill:var(--bad);stroke:var(--bad)"/><circle cx="107.3" cy="252.4" r="2.6" style="fill:var(--bad);stroke:var(--bad)"/><circle cx="155.7" cy="235.6" r="2.6" style="fill:var(--bad);stroke:var(--bad)"/><circle cx="190.0" cy="215.5" r="2.6" style="fill:var(--bad);stroke:var(--bad)"/><circle cx="238.4" cy="186.1" r="2.6" style="fill:var(--bad);stroke:var(--bad)"/><circle cx="272.7" cy="161.6" r="2.6" style="fill:var(--bad);stroke:var(--bad)"/><circle cx="321.1" cy="131.1" r="2.6" style="fill:var(--bad);stroke:var(--bad)"/><circle cx="355.4" cy="108.2" r="2.6" style="fill:var(--bad);stroke:var(--bad)"/><circle cx="403.8" cy="76.3" r="2.6" style="fill:var(--bad);stroke:var(--bad)"/><circle cx="438.1" cy="54.6" r="2.6" style="fill:var(--bad);stroke:var(--bad)"/><polyline points="73.0,274.9 107.3,260.6 155.7,247.3 190.0,229.5 238.4,194.3 272.7,175.3 321.1,141.6 355.4,120.3 403.8,88.4 438.1,66.4" fill="none" style="stroke:var(--accent2)" stroke-width="2.2"/><circle cx="73.0" cy="274.9" r="2.6" style="fill:var(--accent2);stroke:var(--accent2)"/><circle cx="107.3" cy="260.6" r="2.6" style="fill:var(--accent2);stroke:var(--accent2)"/><circle cx="155.7" cy="247.3" r="2.6" style="fill:var(--accent2);stroke:var(--accent2)"/><circle cx="190.0" cy="229.5" r="2.6" style="fill:var(--accent2);stroke:var(--accent2)"/><circle cx="238.4" cy="194.3" r="2.6" style="fill:var(--accent2);stroke:var(--accent2)"/><circle cx="272.7" cy="175.3" r="2.6" style="fill:var(--accent2);stroke:var(--accent2)"/><circle cx="321.1" cy="141.6" r="2.6" style="fill:var(--accent2);stroke:var(--accent2)"/><circle cx="355.4" cy="120.3" r="2.6" style="fill:var(--accent2);stroke:var(--accent2)"/><circle cx="403.8" cy="88.4" r="2.6" style="fill:var(--accent2);stroke:var(--accent2)"/><circle cx="438.1" cy="66.4" r="2.6" style="fill:var(--accent2);stroke:var(--accent2)"/><polyline points="73.0,277.1 107.3,278.8 155.7,283.0 190.0,280.7 238.4,276.6 272.7,277.0 321.1,274.2 355.4,276.1 403.8,271.7 438.1,269.1" fill="none" style="stroke:var(--good)" stroke-width="2.2"/><circle cx="73.0" cy="277.1" r="2.6" style="fill:var(--good);stroke:var(--good)"/><circle cx="107.3" cy="278.8" r="2.6" style="fill:var(--good);stroke:var(--good)"/><circle cx="155.7" cy="283.0" r="2.6" style="fill:var(--good);stroke:var(--good)"/><circle cx="190.0" cy="280.7" r="2.6" style="fill:var(--good);stroke:var(--good)"/><circle cx="238.4" cy="276.6" r="2.6" style="fill:var(--good);stroke:var(--good)"/><circle cx="272.7" cy="277.0" r="2.6" style="fill:var(--good);stroke:var(--good)"/><circle cx="321.1" cy="274.2" r="2.6" style="fill:var(--good);stroke:var(--good)"/><circle cx="355.4" cy="276.1" r="2.6" style="fill:var(--good);stroke:var(--good)"/><circle cx="403.8" cy="271.7" r="2.6" style="fill:var(--good);stroke:var(--good)"/><circle cx="438.1" cy="269.1" r="2.6" style="fill:var(--good);stroke:var(--good)"/><polyline points="73.0,256.8 107.3,264.7 155.7,246.2 190.0,238.4 238.4,211.1 272.7,192.1 321.1,163.6 355.4,142.0 403.8,110.5 438.1,87.9" fill="none" style="stroke:var(--bad)" stroke-width="2.2" stroke-dasharray="6 4"/><circle cx="73.0" cy="256.8" r="2.6" style="fill:var(--bg);stroke:var(--bad)"/><circle cx="107.3" cy="264.7" r="2.6" style="fill:var(--bg);stroke:var(--bad)"/><circle cx="155.7" cy="246.2" r="2.6" style="fill:var(--bg);stroke:var(--bad)"/><circle cx="190.0" cy="238.4" r="2.6" style="fill:var(--bg);stroke:var(--bad)"/><circle cx="238.4" cy="211.1" r="2.6" style="fill:var(--bg);stroke:var(--bad)"/><circle cx="272.7" cy="192.1" r="2.6" style="fill:var(--bg);stroke:var(--bad)"/><circle cx="321.1" cy="163.6" r="2.6" style="fill:var(--bg);stroke:var(--bad)"/><circle cx="355.4" cy="142.0" r="2.6" style="fill:var(--bg);stroke:var(--bad)"/><circle cx="403.8" cy="110.5" r="2.6" style="fill:var(--bg);stroke:var(--bad)"/><circle cx="438.1" cy="87.9" r="2.6" style="fill:var(--bg);stroke:var(--bad)"/><polyline points="73.0,286.4 107.3,290.4 155.7,289.0 190.0,280.8 238.4,262.4 272.7,254.1 321.1,221.7 355.4,207.5 403.8,176.6 438.1,153.2" fill="none" style="stroke:var(--accent2)" stroke-width="2.2" stroke-dasharray="6 4"/><circle cx="73.0" cy="286.4" r="2.6" style="fill:var(--bg);stroke:var(--accent2)"/><circle cx="107.3" cy="290.4" r="2.6" style="fill:var(--bg);stroke:var(--accent2)"/><circle cx="155.7" cy="289.0" r="2.6" style="fill:var(--bg);stroke:var(--accent2)"/><circle cx="190.0" cy="280.8" r="2.6" style="fill:var(--bg);stroke:var(--accent2)"/><circle cx="238.4" cy="262.4" r="2.6" style="fill:var(--bg);stroke:var(--accent2)"/><circle cx="272.7" cy="254.1" r="2.6" style="fill:var(--bg);stroke:var(--accent2)"/><circle cx="321.1" cy="221.7" r="2.6" style="fill:var(--bg);stroke:var(--accent2)"/><circle cx="355.4" cy="207.5" r="2.6" style="fill:var(--bg);stroke:var(--accent2)"/><circle cx="403.8" cy="176.6" r="2.6" style="fill:var(--bg);stroke:var(--accent2)"/><circle cx="438.1" cy="153.2" r="2.6" style="fill:var(--bg);stroke:var(--accent2)"/><polyline points="73.0,291.2 107.3,297.6 155.7,298.8 190.0,302.1 238.4,305.8 272.7,304.1 321.1,303.3 355.4,303.6 403.8,300.8 438.1,302.0" fill="none" style="stroke:var(--accent)" stroke-width="2.2" stroke-dasharray="6 4"/><circle cx="73.0" cy="291.2" r="2.6" style="fill:var(--bg);stroke:var(--accent)"/><circle cx="107.3" cy="297.6" r="2.6" style="fill:var(--bg);stroke:var(--accent)"/><circle cx="155.7" cy="298.8" r="2.6" style="fill:var(--bg);stroke:var(--accent)"/><circle cx="190.0" cy="302.1" r="2.6" style="fill:var(--bg);stroke:var(--accent)"/><circle cx="238.4" cy="305.8" r="2.6" style="fill:var(--bg);stroke:var(--accent)"/><circle cx="272.7" cy="304.1" r="2.6" style="fill:var(--bg);stroke:var(--accent)"/><circle cx="321.1" cy="303.3" r="2.6" style="fill:var(--bg);stroke:var(--accent)"/><circle cx="355.4" cy="303.6" r="2.6" style="fill:var(--bg);stroke:var(--accent)"/><circle cx="403.8" cy="300.8" r="2.6" style="fill:var(--bg);stroke:var(--accent)"/><circle cx="438.1" cy="302.0" r="2.6" style="fill:var(--bg);stroke:var(--accent)"/><polyline points="73.0,268.3 107.3,277.5 155.7,274.7 190.0,277.1 238.4,278.3 272.7,279.3 321.1,284.0 355.4,284.1 403.8,281.0 438.1,266.9" fill="none" style="stroke:var(--good)" stroke-width="2.2" stroke-dasharray="6 4"/><circle cx="73.0" cy="268.3" r="2.6" style="fill:var(--bg);stroke:var(--good)"/><circle cx="107.3" cy="277.5" r="2.6" style="fill:var(--bg);stroke:var(--good)"/><circle cx="155.7" cy="274.7" r="2.6" style="fill:var(--bg);stroke:var(--good)"/><circle cx="190.0" cy="277.1" r="2.6" style="fill:var(--bg);stroke:var(--good)"/><circle cx="238.4" cy="278.3" r="2.6" style="fill:var(--bg);stroke:var(--good)"/><circle cx="272.7" cy="279.3" r="2.6" style="fill:var(--bg);stroke:var(--good)"/><circle cx="321.1" cy="284.0" r="2.6" style="fill:var(--bg);stroke:var(--good)"/><circle cx="355.4" cy="284.1" r="2.6" style="fill:var(--bg);stroke:var(--good)"/><circle cx="403.8" cy="281.0" r="2.6" style="fill:var(--bg);stroke:var(--good)"/><circle cx="438.1" cy="266.9" r="2.6" style="fill:var(--bg);stroke:var(--good)"/><text x="329.1" y="32.8" style="fill:var(--muted)">678 ms Hazel before the PRs: the map passed</text><text x="446.1" y="58.6" style="fill:var(--bad)">346 ms Hazel at its best: the map passed</text><text x="446.1" y="71.6" style="fill:var(--accent2)">254 ms Hazel at its best: the map held</text><text x="446.1" y="91.9" style="fill:var(--bad)">145 ms Fumola: the map passed</text><text x="446.1" y="157.2" style="fill:var(--accent2)">26.3 ms Fumola: the map held, a list</text><text x="446.1" y="270.9" style="fill:var(--good)">1.35 ms Fumola: neighbours passed</text><text x="446.1" y="283.9" style="fill:var(--good)">1.27 ms Hazel at its best: neighbours passed</text><text x="446.1" y="306.0" style="fill:var(--accent)">0.54 ms Fumola: the map held, a HashMap</text></svg><figcaption><b>Figure 1.</b> One World call against the map's size, both scales logarithmic. Solid: Hazel at its best. Dashed: Fumola, and Hazel before the PRs (grey, to 24x24, from <a href="../025/">^report(25)</a>). Colour is how the world reaches the rule: passed in (red), held as a list (teal), held in a HashMap (violet), only the neighbours (green). Values from <code>data/</code>.</figcaption></figure>
+
+<h2 id="builds">What was measured<a class="anchor" href="#builds" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="builds" title="copy this section's address">copy link</button></h2>
+<ul>
+<li><b>Hazel at its best:</b> its JS library built by GitHub from <code>trial/r25-best</code> (<code>bce9b4e5d1</code>): <a href="../025/#prs">all 14 performance PRs</a>, <a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>'s memo limited to depth 1 (<a href="https://github.com/hazelgrove/hazel/pull/2681#issuecomment-6344616722">proposed</a>), and the library binding a call's argument in the environment (<code class="ref"><b>^ticket(</b>539<b>)</b></code>). Timed with <a href="../025/#code">^report(25)'s driver and rules</a>: <i>passed</i> is the shipped rule, <i>held</i> the map held in a closure, <i>neighbours</i> the neighbours-only rule.</li>
+<li><b>Fumola:</b> its wasm build (<code>fumola_wasm_bg.wasm</code>, from <code>667a34d</code>), in node through <code>initSync</code>, one instance per size. The rules are below; each call is <code>fumola_eval_top</code> of a call written as text, its answer read back from JSON and checked.</li>
+</ul>
+
+<h2 id="code">The Fumola rules<a class="anchor" href="#code" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="code" title="copy this section's address">copy link</button></h2>
+<p>The World rule, as the game's Hazel one reads (<a href="../028/#world">both, side by side</a>): a step in a direction, the square there found, and a <code>GoSquare</code> if it has a way back. <code>step</code> stays in Nat: it checks an edge before stepping off it, since Fumola keeps Nat and Int apart (<a href="../028/#traps">^report(28)'s traps</a>).</p>
+<pre class="code"><span class="tk-k">func</span> no_way(kind, d) { kind == <span class="tk-s">&quot;waterfall&quot;</span> <span class="tk-k">and</span> d == <span class="tk-s">&quot;N&quot;</span> };
+<span class="tk-k">func</span> member(s, xs) { <span class="tk-k">var</span> found = <span class="tk-k">false</span>; <span class="tk-k">for</span> (x <span class="tk-k">in</span> xs.vals()) { <span class="tk-k">if</span> (x == s) { found := <span class="tk-k">true</span> } }; found };
+<span class="tk-k">func</span> opp(d) { <span class="tk-k">if</span> (d == <span class="tk-s">&quot;N&quot;</span>) { <span class="tk-s">&quot;S&quot;</span> } <span class="tk-k">else</span> <span class="tk-k">if</span> (d == <span class="tk-s">&quot;NE&quot;</span>) { <span class="tk-s">&quot;SW&quot;</span> } <span class="tk-k">else</span> <span class="tk-k">if</span> (d == <span class="tk-s">&quot;E&quot;</span>) { <span class="tk-s">&quot;W&quot;</span> } <span class="tk-k">else</span> <span class="tk-k">if</span> (d == <span class="tk-s">&quot;SE&quot;</span>) { <span class="tk-s">&quot;NW&quot;</span> } <span class="tk-k">else</span> <span class="tk-k">if</span> (d == <span class="tk-s">&quot;S&quot;</span>) { <span class="tk-s">&quot;N&quot;</span> } <span class="tk-k">else</span> <span class="tk-k">if</span> (d == <span class="tk-s">&quot;SW&quot;</span>) { <span class="tk-s">&quot;NE&quot;</span> } <span class="tk-k">else</span> <span class="tk-k">if</span> (d == <span class="tk-s">&quot;W&quot;</span>) { <span class="tk-s">&quot;E&quot;</span> } <span class="tk-k">else</span> <span class="tk-k">if</span> (d == <span class="tk-s">&quot;NW&quot;</span>) { <span class="tk-s">&quot;SE&quot;</span> } <span class="tk-k">else</span> { <span class="tk-s">&quot;&quot;</span> } };
+<span class="tk-k">func</span> step(c, r, d, cols, rows) {
+  <span class="tk-k">let</span> up = d == <span class="tk-s">&quot;N&quot;</span> <span class="tk-k">or</span> d == <span class="tk-s">&quot;NE&quot;</span> <span class="tk-k">or</span> d == <span class="tk-s">&quot;NW&quot;</span>;
+  <span class="tk-k">let</span> down = d == <span class="tk-s">&quot;S&quot;</span> <span class="tk-k">or</span> d == <span class="tk-s">&quot;SE&quot;</span> <span class="tk-k">or</span> d == <span class="tk-s">&quot;SW&quot;</span>;
+  <span class="tk-k">let</span> left = d == <span class="tk-s">&quot;W&quot;</span> <span class="tk-k">or</span> d == <span class="tk-s">&quot;NW&quot;</span> <span class="tk-k">or</span> d == <span class="tk-s">&quot;SW&quot;</span>;
+  <span class="tk-k">let</span> right = d == <span class="tk-s">&quot;E&quot;</span> <span class="tk-k">or</span> d == <span class="tk-s">&quot;NE&quot;</span> <span class="tk-k">or</span> d == <span class="tk-s">&quot;SE&quot;</span>;
+  <span class="tk-k">if</span> ((up <span class="tk-k">and</span> r == <span class="tk-n">0</span>) <span class="tk-k">or</span> (left <span class="tk-k">and</span> c == <span class="tk-n">0</span>)) { <span class="tk-k">null</span> }
+  <span class="tk-k">else</span> {
+    <span class="tk-k">let</span> c2 = <span class="tk-k">if</span> (left) { c - <span class="tk-n">1</span> } <span class="tk-k">else</span> <span class="tk-k">if</span> (right) { c + <span class="tk-n">1</span> } <span class="tk-k">else</span> { c };
+    <span class="tk-k">let</span> r2 = <span class="tk-k">if</span> (up) { r - <span class="tk-n">1</span> } <span class="tk-k">else</span> <span class="tk-k">if</span> (down) { r + <span class="tk-n">1</span> } <span class="tk-k">else</span> { r };
+    <span class="tk-k">if</span> (c2 &lt; cols <span class="tk-k">and</span> r2 &lt; rows) { ?(c2, r2) } <span class="tk-k">else</span> { <span class="tk-k">null</span> }
+  }
+};
+<span class="tk-k">func</span> decide(x, back, c, r) { <span class="tk-k">if</span> (member(back, x.ways) <span class="tk-k">and</span> (no_way(x.kind, back) == <span class="tk-k">false</span>)) { <span class="tk-t">#GoSquare</span>((c, r, back, <span class="tk-t">#Done</span>)) } <span class="tk-k">else</span> { <span class="tk-t">#Done</span> } };
+<span class="tk-k">func</span> find_at(cs, i, n, c, r) { <span class="tk-k">if</span> (i == n) { <span class="tk-k">null</span> } <span class="tk-k">else</span> { <span class="tk-k">let</span> x = cs[i]; <span class="tk-k">if</span> (x.col == c <span class="tk-k">and</span> x.row == r) { ?x } <span class="tk-k">else</span> { find_at(cs, i + <span class="tk-n">1</span>, n, c, r) } } };
+<span class="tk-k">func</span> world_list(g, e) {
+  <span class="tk-k">switch</span> (e) {
+    <span class="tk-k">case</span> (<span class="tk-t">#Way</span>(d)) {
+      <span class="tk-k">switch</span> (step(g.at_col, g.at_row, d, g.cols, g.rows)) {
+        <span class="tk-k">case</span> (?(c, r)) { <span class="tk-k">switch</span> (find_at(g.cells, <span class="tk-n">0</span>, g.cells.size(), c, r)) { <span class="tk-k">case</span> (?x) { decide(x, opp(d), c, r) }; <span class="tk-k">case</span> <span class="tk-k">null</span> { <span class="tk-t">#Done</span> } } };
+        <span class="tk-k">case</span> <span class="tk-k">null</span> { <span class="tk-t">#Done</span> }
+      }
+    };
+    <span class="tk-k">case</span> _ { <span class="tk-t">#Done</span> }
+  }
+}
+</pre>
+<p>The held versions: the world bound once in the instance, as a list (<code>wl</code>) and as a HashMap keyed by <code>(col, row)</code> (<code>wm</code>). A move passes four numbers and a direction.</p>
+<pre class="code"><span class="tk-k">let</span> wl = [ ...every cell, as written <span class="tk-k">for</span> a passed call... ];
+<span class="tk-k">func</span> world_held_list(ac, ar, cols, rows, d) {
+  <span class="tk-k">switch</span> (step(ac, ar, d, cols, rows)) {
+    <span class="tk-k">case</span> (?(c, r)) { <span class="tk-k">switch</span> (find_at(wl, <span class="tk-n">0</span>, wl.size(), c, r)) { <span class="tk-k">case</span> (?x) { decide(x, opp(d), c, r) }; <span class="tk-k">case</span> <span class="tk-k">null</span> { <span class="tk-t">#Done</span> } } };
+    <span class="tk-k">case</span> <span class="tk-k">null</span> { <span class="tk-t">#Done</span> }
+  }
+};
+<span class="tk-k">var</span> wm0 = <span class="tk-t">HashMap</span>.new();
+<span class="tk-k">for</span> (x <span class="tk-k">in</span> wl.vals()) { <span class="tk-k">let</span> (m2, _) = <span class="tk-t">HashMap</span>.put(wm0, (x.col, x.row), x); wm0 := m2 };
+<span class="tk-k">let</span> wm = wm0;
+<span class="tk-k">func</span> world_held_map(ac, ar, cols, rows, d) {
+  <span class="tk-k">switch</span> (step(ac, ar, d, cols, rows)) {
+    <span class="tk-k">case</span> (?(c, r)) { <span class="tk-k">switch</span> (<span class="tk-t">HashMap</span>.get(wm, (c, r))) { <span class="tk-k">case</span> (?x) { decide(x, opp(d), c, r) }; <span class="tk-k">case</span> <span class="tk-k">null</span> { <span class="tk-t">#Done</span> } } };
+    <span class="tk-k">case</span> <span class="tk-k">null</span> { <span class="tk-t">#Done</span> }
+  }
+}</pre>
+
+<h2 id="numbers">The numbers<a class="anchor" href="#numbers" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="numbers" title="copy this section's address">copy link</button></h2>
+<div class="scroll"><table><tr><th>map (cells)</th><th>Hazel before, passed</th><th>Hazel best, passed (shipped)</th><th>Hazel best, passed (unannotated)</th><th>Hazel best, held</th><th>Hazel best, neighbours</th><th>Fumola, passed</th><th>Fumola, held list</th><th>Fumola, held map</th><th>Fumola, neighbours</th><th>Fumola, held map: steps</th></tr><tr><td>3x3 (9)</td><td class=n>1.62</td><td class=n>1.57</td><td class=n>1.14</td><td class=n>1.1</td><td class=n>1.03</td><td class=n>1.76</td><td class=n>0.812</td><td class=n>0.717</td><td class=n>1.3</td><td class=n>450</td></tr><tr><td>4x4 (16)</td><td class=n>2.78</td><td class=n>1.97</td><td class=n>1.7</td><td class=n>1.59</td><td class=n>0.99</td><td class=n>1.43</td><td class=n>0.731</td><td class=n>0.605</td><td class=n>1.02</td><td class=n>450</td></tr><tr><td>6x6 (36)</td><td class=n>6.42</td><td class=n>3.06</td><td class=n>2.5</td><td class=n>2.25</td><td class=n>0.887</td><td class=n>2.32</td><td class=n>0.758</td><td class=n>0.588</td><td class=n>1.1</td><td class=n>450</td></tr><tr><td>8x8 (64)</td><td class=n>16.3</td><td class=n>5.18</td><td class=n>4.5</td><td class=n>3.59</td><td class=n>0.942</td><td class=n>2.84</td><td class=n>0.94</td><td class=n>0.539</td><td class=n>1.03</td><td class=n>450</td></tr><tr><td>12x12 (144)</td><td class=n>50.3</td><td class=n>11.2</td><td class=n>9.16</td><td class=n>8.99</td><td class=n>1.05</td><td class=n>5.8</td><td class=n>1.52</td><td class=n>0.489</td><td class=n>1</td><td class=n>450</td></tr><tr><td>16x16 (256)</td><td class=n>144</td><td class=n>21.1</td><td class=n>18.8</td><td class=n>14.8</td><td class=n>1.04</td><td class=n>9.52</td><td class=n>1.89</td><td class=n>0.512</td><td class=n>0.976</td><td class=n>450</td></tr><tr><td>24x24 (576)</td><td class=n>678</td><td class=n>46.9</td><td class=n>41</td><td class=n>35.7</td><td class=n>1.12</td><td class=n>20</td><td class=n>4.4</td><td class=n>0.521</td><td class=n>0.865</td><td class=n>450</td></tr><tr><td>32x32 (1024)</td><td class=n>–</td><td class=n>85.4</td><td class=n>74.4</td><td class=n>62.3</td><td class=n>1.06</td><td class=n>35.3</td><td class=n>6.38</td><td class=n>0.517</td><td class=n>0.863</td><td class=n>450</td></tr><tr><td>48x48 (2304)</td><td class=n>–</td><td class=n>197</td><td class=n>170</td><td class=n>143</td><td class=n>1.19</td><td class=n>80.3</td><td class=n>14.3</td><td class=n>0.557</td><td class=n>0.933</td><td class=n>450</td></tr><tr><td>64x64 (4096)</td><td class=n>–</td><td class=n>346</td><td class=n>295</td><td class=n>254</td><td class=n>1.27</td><td class=n>145</td><td class=n>26.3</td><td class=n>0.54</td><td class=n>1.35</td><td class=n>450</td></tr></table></div>
+<p class="note">ms per call, the median of each round, the mean of 2 rounds (Hazel) and 2 (Fumola). Growth exponents from 64 to 4,096 cells (1 is linear, 0 flat): Hazel best passed 1.01, held 1.02, neighbours 0.07; Fumola passed 0.95, held list 0.80, held map 0.00, neighbours 0.06.</p>
+
+<h2 id="hazel-map">What Hazel would need<a class="anchor" href="#hazel-map" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="hazel-map" title="copy this section's address">copy link</button></h2>
+<p>For the world's size to leave a move's cost alone, the rule must find a square without walking to it. Hazel's rules have lists and records, and no map. Three ways there:</p>
+<ol>
+<li><b>Pass only what the rule reads</b>: the neighbours. Flat today, in both languages (answer 4), but the game must know what each rule reads.</li>
+<li><b>A map in Hazel, written in Hazel</b>: a balanced tree keyed by <code>(col, row)</code>, held as the world is held now. O(log N) evaluator steps a lookup. An estimate, not measured: a 64x64 world is twelve levels deep, and at a few dozen steps a level and about 3 µs a step (<a href="../025/#t-steps-prs">^report(25)</a>), a lookup would cost about a millisecond, at any size near this one.</li>
+<li><b>A map built in</b>, as Fumola's <code>HashMap</code> is a primitive over a persistent hash trie: one step a lookup.</li>
+</ol>
+<p>That is <code class="ref"><b>^ticket(</b>540<b>)</b></code>'s question, every handler in O(1) or O(log N), now with a measured target.</p>
+
+<h2 id="next">What next<a class="anchor" href="#next" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="next" title="copy this section's address">copy link</button></h2>
+<ol>
+<li>The other rooms: the Square's levers, the Castle's ways, the Trap and the Tree, in Fumola too, and the game playing with <code>?logic=fumola</code> (a PR against Dress Up, in progress).</li>
+<li>A map for Hazel's rules (above), and the World rule timed with it.</li>
+<li>Fumola's boundary without source text: a JSON value in as a Fumola value, so a passed map is not parsed every call.</li>
+<li>The same comparison in the game, in GitHub's browsers.</li>
+</ol>
+
+<h2 id="method">How this was put together<a class="anchor" href="#method" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="method" title="copy this section's address">copy link</button></h2>
+<p>Node v22 on the Ubuntu laptop (Intel i7), one process at a time, pinned to two threads and niced. Fumola: <code>drivers/measure.mjs</code> (<code>world.fum</code>, <code>held.fum.js</code>), per size a fresh instance, three warm-up calls, then up to 60 timed (stopping after 2.5 s and at least 9), the median; its answer checked against the game's (<code>GoSquare(c + 1, r, "W", Done)</code>). Hazel: <code>025/drivers/r25.mjs</code> on <code>trial/r25-best</code>'s library, the same sizes. Two rounds each. The target cell is mid-map, moving east, as in ^report(25).</p>
+
+<!-- data-line: begin -->
+<h2 id="data">The data<a class="anchor" href="#data" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="data" title="copy this section's address">copy link</button></h2>
+<ul>
+  <li><b>The numbers, for programs too:</b> every table in this report, and what its numbers measure, is also in this page as JSON, in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset. The same, with any raw files that survive, is in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/027/data"><code>027/data/</code></a>.</li>
+</ul>
+<!-- data-line: end -->
+
+</main><!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
+<!-- ref-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .ref-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
+  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
+    vertical-align: 1px; background: #6e7781; }
+  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
+  .rc-state.done { background: #8250df; }
+</style>
+<script>
+/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
+   ticket from the work dashboard's data (its area, its status, its first
+   line), carried by the dashboard's own pages and read live from the
+   published data anywhere else; a report from its own page, live (its
+   title, date and opening). Once per page load each. */
+(() => {
+  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
+  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
+  /* the dashboard itself carries its tickets (made with the page, changed
+     with it); any other page asks the published data */
+  const EMBED = null;
+  let data = EMBED ? Promise.resolve(EMBED) : null;
+  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
+  const pages = new Map();
+  const loadReport = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
+      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
+      let p = h1 && h1.nextElementSibling;
+      while (p && p.tagName !== "P") p = p.nextElementSibling;
+      const label = (doc.querySelector(".series") || {}).textContent || "";
+      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
+               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
+    }).catch(() => null));
+    return pages.get(url);
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
+  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
+  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
+  const ticketCard = (n, d) => {
+    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
+    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
+    const q = (d.queue || []).indexOf(n);
+    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
+      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
+      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
+    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
+      `<div class="rc-title">${esc(lead(t.text))}</div>` +
+      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
+      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
+  };
+  const reportCard = (n, r) => r
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
+      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
+    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
+    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = (a, ref) => {
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
+      card.hidden = false; place(a);
+      let html;
+      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
+      else html = reportCard(ref.n, await loadReport(a.href));
+      if (over !== a) return;
+      card.innerHTML = html; place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- ref-cards: end -->
+<!-- pr-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-base { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: 1px; }
+  .pr-base.dev { background: #dafbe1; color: #116329; } .pr-base.other { background: #fff1c2; color: #7a4b00; }
+  @media (prefers-color-scheme: dark) { .pr-base.dev { background: #12361f; color: #6fdd8b; } .pr-base.other { background: #3d2e00; color: #f2cc60; } }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, the branch a PR targets (dev or not: the distinction that
+   matters, ^ticket(478)), author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2681": {"author": "matthewhammer", "comments": 3, "created": "2026-10-13T13:04:35Z", "kind": "pull", "state": "open", "title": "A value known to have a type is not walked again for it", "updated": "2026-10-22T15:31:32Z", "base": "dev"}}, BUILT = "2026-10-22";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
+  const ask = (key, kind) => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#"), pull = kind === "pull";
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/${pull ? "pulls" : "issues"}/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: pull || j.pull_request ? "pull" : "issues", base: j.base && j.base.ref,
+                      state: j.merged_at || (j.pull_request && j.pull_request.merged_at) ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const baseChip = d => !d.base ? "" : d.base === "dev"
+    ? `<span class="pr-base dev" title="this PR merges into dev">into dev</span>`
+    : `<span class="pr-base other" title="this PR merges into ${esc(d.base)}, not dev">into ${esc(d.base)}, not dev</span>`;
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span>${baseChip(d)}</div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[3];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key, m[2]);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
+<!-- steps: begin -->
+<style>
+  button.mint { margin-left: 4px; font: inherit; font-size: 0.75em; padding: 0 6px; border: 1px solid var(--line, #ccc);
+    border-radius: 4px; background: transparent; color: var(--muted, #666); cursor: pointer; vertical-align: 1px; }
+  button.mint:hover { color: inherit; }
+  button.mint.done { color: var(--good, #15803d); border-color: var(--good, #15803d); }
+  a.step-link { color: var(--muted, #666); text-decoration: none; font-size: 0.85em; margin-left: 4px; }
+  a.step-link:hover { text-decoration: underline; }
+  li:target { background: color-mix(in srgb, var(--good, #15803d) 12%, transparent); border-radius: 6px; }
+</style>
+<script>
+/* Each "What next" step: a link to it, and a button copying a request to
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
+(() => {
+  const h = document.getElementById("next");
+  if (!h) return;
+  let list = h.nextElementSibling;
+  while (list && !/^(OL|UL)$/.test(list.tagName)) {
+    if (list.tagName === "H2") return;
+    list = list.nextElementSibling;
+  }
+  if (!list) return;
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/reports/" + report.padStart(3, "0") + "/";
+  [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
+    const n = i + 1;
+    if (!li.id) li.id = "step-" + n;
+    const b = li.querySelector("b, strong");
+    const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
+    const url = base + "#" + li.id;
+    const text = "Mint a ticket for this step: Hazel reports, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
+    const a = document.createElement("a");
+    a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "mint"; btn.textContent = "copy for a ticket";
+    btn.title = "Copies a request to mint a ticket for this step, to paste to Claude";
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) {
+        const t = document.createElement("textarea"); t.value = text; document.body.append(t);
+        t.select(); document.execCommand("copy"); t.remove();
+      }
+      btn.textContent = "copied"; btn.classList.add("done");
+      setTimeout(() => { btn.textContent = "copy for a ticket"; btn.classList.remove("done"); }, 1500);
+    });
+    li.append(" ", a, " ", btn);
+  });
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+})();
+</script>
+<!-- steps: end -->
+<!-- theme: begin -->
+<style>
+  .theme-toggle { position: fixed; top: 10px; right: 10px; z-index: 30; font: 13px system-ui, sans-serif; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--muted, GrayText);
+    cursor: pointer; opacity: 0.85; }
+  .theme-toggle:hover { opacity: 1; color: var(--ink, CanvasText); }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+/* The theme switch: Auto (the system's choice), Light, Dark; remembered for this site. */
+(() => {
+  const order = ["auto", "light", "dark"], label = { auto: "◐ auto", light: "☀ light", dark: "☾ dark" };
+  const get = () => { try { return localStorage.getItem("theme") || "auto"; } catch (_) { return "auto"; } };
+  const apply = m => m === "auto" ? document.documentElement.removeAttribute("data-theme")
+                                  : document.documentElement.setAttribute("data-theme", m);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "theme-toggle";
+  const show = () => { const m = get(); b.textContent = label[m] || label.auto;
+    b.title = "Theme: " + m + ". Click for " + order[(order.indexOf(m) + 1) % 3] + "; remembered on this site."; };
+  b.addEventListener("click", () => {
+    const m = order[(order.indexOf(get()) + 1) % 3];
+    try { m === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", m); } catch (_) {}
+    apply(m); show();
+  });
+  window.addEventListener("storage", e => { if (e.key === "theme") { apply(get()); show(); } });
+  show(); document.body.append(b);
+})();
+</script>
+<!-- theme: end -->
+<!-- report-data: begin -->
+<script type="application/json" id="report-data">
+{
+ "report": 27,
+ "title": "The World Rule in Hazel and in Fumola",
+ "date": "2026-10-22",
+ "kind": "performance",
+ "status": "work in progress",
+ "question": "Matthew: Hazel (best PRs) against Fumola in Wasm, the same game logic; especially the map-based version in Fumola, for O(log N). (^ticket(542))",
+ "builds": [
+  {
+   "what": "Hazel library",
+   "branch": "trial/r25-best",
+   "commit": "bce9b4e5d1"
+  },
+  {
+   "what": "Fumola wasm",
+   "commit": "667a34d"
+  }
+ ],
+ "files": [
+  "data/compile_hazel_best_1.json",
+  "data/compile_hazel_best_2.json",
+  "data/data_hazel_best_1.json",
+  "data/data_hazel_best_2.json",
+  "data/fumola_1.json",
+  "data/fumola_2.json",
+  "data/meta.json",
+  "data/summary.json",
+  "data/tables.json"
+ ],
+ "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
+ "tables": [
+  {
+   "section": "The numbers",
+   "section_id": "numbers",
+   "columns": [
+    "map (cells)",
+    "Hazel before, passed",
+    "Hazel best, passed (shipped)",
+    "Hazel best, passed (unannotated)",
+    "Hazel best, held",
+    "Hazel best, neighbours",
+    "Fumola, passed",
+    "Fumola, held list",
+    "Fumola, held map",
+    "Fumola, neighbours",
+    "Fumola, held map: steps"
+   ],
+   "rows": [
+    [
+     "3x3 (9)",
+     "1.62",
+     "1.57",
+     "1.14",
+     "1.1",
+     "1.03",
+     "1.76",
+     "0.812",
+     "0.717",
+     "1.3",
+     "450"
+    ],
+    [
+     "4x4 (16)",
+     "2.78",
+     "1.97",
+     "1.7",
+     "1.59",
+     "0.99",
+     "1.43",
+     "0.731",
+     "0.605",
+     "1.02",
+     "450"
+    ],
+    [
+     "6x6 (36)",
+     "6.42",
+     "3.06",
+     "2.5",
+     "2.25",
+     "0.887",
+     "2.32",
+     "0.758",
+     "0.588",
+     "1.1",
+     "450"
+    ],
+    [
+     "8x8 (64)",
+     "16.3",
+     "5.18",
+     "4.5",
+     "3.59",
+     "0.942",
+     "2.84",
+     "0.94",
+     "0.539",
+     "1.03",
+     "450"
+    ],
+    [
+     "12x12 (144)",
+     "50.3",
+     "11.2",
+     "9.16",
+     "8.99",
+     "1.05",
+     "5.8",
+     "1.52",
+     "0.489",
+     "1",
+     "450"
+    ],
+    [
+     "16x16 (256)",
+     "144",
+     "21.1",
+     "18.8",
+     "14.8",
+     "1.04",
+     "9.52",
+     "1.89",
+     "0.512",
+     "0.976",
+     "450"
+    ],
+    [
+     "24x24 (576)",
+     "678",
+     "46.9",
+     "41",
+     "35.7",
+     "1.12",
+     "20",
+     "4.4",
+     "0.521",
+     "0.865",
+     "450"
+    ],
+    [
+     "32x32 (1024)",
+     "–",
+     "85.4",
+     "74.4",
+     "62.3",
+     "1.06",
+     "35.3",
+     "6.38",
+     "0.517",
+     "0.863",
+     "450"
+    ],
+    [
+     "48x48 (2304)",
+     "–",
+     "197",
+     "170",
+     "143",
+     "1.19",
+     "80.3",
+     "14.3",
+     "0.557",
+     "0.933",
+     "450"
+    ],
+    [
+     "64x64 (4096)",
+     "–",
+     "346",
+     "295",
+     "254",
+     "1.27",
+     "145",
+     "26.3",
+     "0.54",
+     "1.35",
+     "450"
+    ]
+   ]
+  }
+ ],
+ "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/027/data"
+}
+</script>
+<!-- report-data: end -->
+<!-- anchors (tools/add_anchors.py) -->
+<script id="anchors-js">
+/* each section's "copy link": its public address, whichever copy of the page this is (tools/add_anchors.py) */
+(() => {
+  const n = (location.pathname.match(/(\d{3})\/?(index\.html)?$/) || [])[1];
+  const base = n ? "https://matthewhammer.org/hazel/reports/" + n + "/" : location.origin + location.pathname;
+  document.querySelectorAll(".copyanchor").forEach(b => b.addEventListener("click", async () => {
+    const url = base + "#" + b.dataset.id;
+    try { await navigator.clipboard.writeText(url); b.textContent = "copied"; b.classList.add("done"); }
+    catch (e) { prompt("this section's address", url); }
+    setTimeout(() => { b.textContent = "copy link"; b.classList.remove("done"); }, 1500);
+  }));
+})();
+</script>
+</body></html>
