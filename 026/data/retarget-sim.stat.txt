@@ -1,0 +1,5 @@
+ src/language/dynamics/transition/Ascriptions.re | 84 ++++++++++++++++++++++++-
+ src/util/IdentityTable.re                       | 24 +++++++
+ src/util/Util.re                                |  1 +
+ test/evaluator/Test_Ascriptions.re              | 54 ++++++++++++++++
+ 4 files changed, 161 insertions(+), 2 deletions(-)

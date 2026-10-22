@@ -1,0 +1,23 @@
+[
+ {
+  "section": "The branches today",
+  "section_id": "branches",
+  "columns": [
+   "branch",
+   "head",
+   "against dev"
+  ],
+  "rows": [
+   [
+    "#2661, typ-hash-consistent",
+    "09b8af372f",
+    "4 commits ahead (its three, and a merge of dev), 0 behind"
+   ],
+   [
+    "#2681, ascriptions-has-type",
+    "a4fee77a63",
+    "6 commits ahead (#2661's first two, a merge of #2679, its own 8546bde64e, a merge of #2661's three-lane hash, a copy of #2661's test commit), 14 behind"
+   ]
+  ]
+ }
+]

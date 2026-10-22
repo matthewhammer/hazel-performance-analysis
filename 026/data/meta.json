@@ -1,0 +1,29 @@
+{
+ "title": "Does #2681 Need #2661?",
+ "date": "2026-10-22",
+ "kind": "review",
+ "status": "work in progress",
+ "question": "Alexander, on hazelgrove/hazel#2681: \"Looks like it needs #2661 as a dependency. Might be worth just changing the parent branch of the pr to that branch.\" (^ticket(541))",
+ "builds": [
+  {
+   "what": "#2661",
+   "branch": "typ-hash-consistent",
+   "commit": "09b8af372f"
+  },
+  {
+   "what": "#2681",
+   "branch": "ascriptions-has-type",
+   "commit": "a4fee77a63"
+  },
+  {
+   "what": "dev",
+   "branch": "dev",
+   "commit": "962a7cb009"
+  }
+ ],
+ "files": [
+  "8546bde64e.stat.txt",
+  "retarget-sim.stat.txt"
+ ],
+ "caveats": "git only: nothing built or run; the merge was simulated in a scratch worktree and not pushed."
+}
