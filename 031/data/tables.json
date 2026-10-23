@@ -1,0 +1,56 @@
+[
+ {
+  "section": "Pull request by pull request",
+  "section_id": "summary",
+  "columns": [
+   "PR",
+   "title",
+   "reviewers",
+   "open",
+   "unclear",
+   "answered"
+  ],
+  "rows": [
+   [
+    "#2608",
+    "Leave the source's whitespace and comments out of elaborations",
+    "7h3kk1d",
+    "5",
+    "0",
+    "0"
+   ],
+   [
+    "#2651",
+    "Statics: a module binding analyzes its definition once, not twice",
+    "7h3kk1d, disconcision",
+    "3",
+    "1",
+    "5"
+   ],
+   [
+    "#2613",
+    "Colors: every var() a stylesheet reads is one the theme defines",
+    "7h3kk1d",
+    "2",
+    "0",
+    "1"
+   ],
+   [
+    "#2583",
+    "Deep links: the URL can say which slide, which panel, and where the cursor is",
+    "7h3kk1d",
+    "1",
+    "1",
+    "14"
+   ],
+   [
+    "#2681",
+    "A value known to have a type is not walked again for it",
+    "7h3kk1d",
+    "0",
+    "1",
+    "0"
+   ]
+  ]
+ }
+]

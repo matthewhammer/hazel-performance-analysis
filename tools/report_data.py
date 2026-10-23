@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Give a report its data, twice: as JSON in the page, and as files.
 
-  python3 tools/report_data.py NNN          (001 is the root index.html)
+  python3 tools/report_data.py NNN
 
 Reads NNN/data/meta.json, written by hand: what the report measured and
 how (the builds and their commits, the browser or runtime, each measure and
@@ -110,9 +110,9 @@ def shape(t):
 
 
 def main(nnn):
-    page = os.path.join(ROOT, "index.html" if nnn == "001" else f"{nnn}/index.html")
-    ddir = os.path.join(ROOT, "data" if nnn == "001" else f"{nnn}/data")
-    tree = f"{REPO}/tree/main/{'data' if nnn == '001' else nnn + '/data'}"
+    page = os.path.join(ROOT, f"{nnn}/index.html")
+    ddir = os.path.join(ROOT, f"{nnn}/data")
+    tree = f"{REPO}/tree/main/{nnn}/data"
     meta = json.load(open(os.path.join(ddir, "meta.json")))
     text = open(page).read()
     body = re.sub(r"<!-- report-data: begin -->.*?<!-- report-data: end -->", "", text, flags=re.S)
@@ -135,7 +135,7 @@ def main(nnn):
     line = (f'<li><b>The numbers, for programs too:</b> every table in this report, and what its numbers measure, '
             f'is also in this page as JSON, in its <code>&lt;script type="application/json" id="report-data"&gt;</code> '
             f'element, so a reader or an agent that fetches the page alone has the dataset. The same, with any raw files '
-            f'that survive, is in <a href="{tree}"><code>{"data" if nnn == "001" else nnn + "/data"}/</code></a>.</li>')
+            f'that survive, is in <a href="{tree}"><code>{nnn}/data/</code></a>.</li>')
     text = re.sub(r"\s*<!-- data-line: begin -->.*?<!-- data-line: end -->", "", text, flags=re.S)
     secs = {k: re.search(rf'<h2 id="{k}">.*?(?=<h2 |</main>)', text, re.S) for k in ("method", "measured")}
     home = next((secs[k] for k in ("method", "measured") if secs[k] and "</ul>" in secs[k].group(0)), None)

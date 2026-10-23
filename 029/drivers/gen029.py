@@ -213,6 +213,86 @@ if FIXROWS or treerows() or handlerows():
 '''
     if handlerows():
         FIXES += f'<h3 id="fix-world-passed">The World rule, the world passed</h3><p>The map passed at every call, as JS (converted each time) and as a handle (converted once, <code>Hazel.value</code>), ms a call; <i>ignore</i> is a rule that does not look at it, so the boundary alone; <i>U</i> and <i>A</i> the unannotated and annotated finder:</p><div class="scroll"><table><tr><th>map (cells)</th><th>ignore, JS</th><th>ignore, handle</th><th>U, JS</th><th>U, handle</th><th>A, JS</th><th>A, handle</th><th>Hazel.value, once</th></tr>{handlerows()}</table></div>\n'
+# ---------- second fixes (^ticket(559), ^ticket(553)): data/fixes/559/, data/fixes/553/, job rows from GitHub's runners
+import statistics
+def jobrows(d, side):
+    """per job, per key, the better of that side's rounds: {job: {key: row}}"""
+    out = {}
+    for jd in sorted(glob.glob(os.path.join(FX, d, "job-*"))):
+        acc = {}
+        for f in sorted(glob.glob(os.path.join(jd, f"{side}_*.json"))):
+            for r in json.load(open(f)): acc.setdefault((r.get("k"), r["n"]), []).append(r)
+        out[jd] = acc
+    return out
+def runners(d):
+    return [" ".join(open(f).read().split()[3:]) for f in sorted(glob.glob(os.path.join(FX, d, "job-*", "runner.txt")))]
+def rows559():
+    st, fp, be, fb = (jobrows("559", s) for s in ("stats", "fastpath", "best", "fastbest"))
+    if not st: return ""
+    j0 = sorted(st)[0]; o = []
+    for key in st[j0]:
+        if key not in fp[j0]: continue
+        k, n = key
+        b, f = st[j0][key][0]["by_kind"], fp[j0][key][0]["by_kind"]
+        rat = [min(r["ms"] for r in fb[j][key]) / min(r["ms"] for r in be[j][key]) for j in be if key in be[j] and key in fb[j]]
+        noise = [max(r["ms"] for r in be[j][key]) / min(r["ms"] for r in be[j][key]) - 1 for j in be if key in be[j]]
+        bm = statistics.median(min(r["ms"] for r in be[j][key]) for j in be if key in be[j])
+        fm = statistics.median(min(r["ms"] for r in fb[j][key]) for j in fb if key in fb[j])
+        r = statistics.median(rat)
+        o.append(f"<tr><td><code>{k}</code></td><td class=n>{n:,}</td><td class=n>{b.get('evaluate', 0):,}</td><td class=n>{f.get('evaluate', 0):,}</td><td class=n>{fmt(bm)}</td><td class=n>{fmt(fm)}</td><td class=n><b>{x(1, r) if r <= 1 else '1/' + x(r, 1)}</b></td><td class=n>{statistics.median(noise):.0%}</td></tr>")
+    return "".join(o)
+def rows553():
+    be, b5 = jobrows("553", "best"), jobrows("553", "553")
+    if not b5: return ""
+    ns = sorted({n for j in b5 for (_, n) in b5[j]})
+    med = lambda src, n, k: statistics.median(min(r[k] for r in src[j][(None, n)]) for j in src if (None, n) in src[j])
+    o = []
+    for n in ns:
+        rat = statistics.median(min(r["map"] for r in b5[j][(None, n)]) / min(r["passed"] for r in b5[j][(None, n)]) for j in b5 if (None, n) in b5[j])
+        o.append(f"<tr><td class=n>{n}x{n} ({n*n:,})</td><td class=n>{fmt(med(be, n, 'passed'))}</td><td class=n>{fmt(med(b5, n, 'passed'))}</td><td class=n>{fmt(med(b5, n, 'passed_handle'))}</td><td class=n>{fmt(med(b5, n, 'map'))}</td><td class=n>{fmt(med(b5, n, 'map_setup'))}</td><td class=n><b>{x(1, rat)}</b></td></tr>")
+    return "".join(o)
+R559, R553 = rows559(), rows553()
+if R559 or R553:
+    FIXES += '<h2 id="fixes-2">Second fixes, on trial branches</h2>\n<p>Two more, measured on GitHub\'s runners, never the laptop: four jobs each, the two builds alternating on one runner, so a time is compared only with the other build on the same machine; the median over the jobs. Not PRs yet.</p>\n'
+if R559:
+    FIXES += f'''<h3 id="fix-fast-path">The evaluator\'s fast path for values</h3>
+<p>Every term the evaluator visits goes through five stages before its rule, values included (<a href="#step-5">What next, step 5</a>). <code>trial/r25-fastpath</code> (<code class="ref"><b>^ticket(</b>559<b>)</b></code>) returns a term already final at once, when nothing is probed, nothing reused and nothing published (the library\'s calls, an app\'s update; the editor always has statics, so it never takes this path): an atom, a constructor, a function\'s closure, or a list or tuple of these. The step count goes up by the passes the stages would have made, so it reads the same, and the evaluator\'s tests pass unchanged (CI green on both trial branches). Passes from the counter build and the fast path on it, exact; times from <code>trial/r25-best</code> and the same fast path on it (<code>trial/r25-fastpath-best</code>):</p>
+<div class="scroll"><table><tr><th>program</th><th>n</th><th>passes</th><th>passes, fast path</th><th>ms</th><th>ms, fast path</th><th>faster</th><th>noise</th></tr>{R559}</table></div>
+<p>A third fewer passes on a loop buys about a tenth of its time: the stages are only part of a pass\'s cost. The held list a function refers to (<code>h_ref</code>), written into its body as a literal by the library\'s finish, is now skipped whole: 7 passes at every size, without <code class="ref"><b>^ticket(</b>547<b>)</b></code>. The long list loops do not move: their time is the re-typing <code class="ref"><b>^ticket(</b>548<b>)</b></code> fixes. Noise is the timing build\'s own spread over its two rounds in a job. Runners: {"; ".join(runners("559"))}.</p>
+'''
+if R553:
+    FIXES += f'''<h3 id="fix-game-map">The game\'s own map</h3>
+<p>The World rule with the world\'s squares held in a map, in the game\'s own rule texts: kids-choice-games\' branch <code>hazel-map-553</code> (<code class="ref"><b>^ticket(</b>553<b>)</b></code>) adds to 📚 Common a balanced search tree of the squares, ordered by row and column (<code>Common.squares</code>, <code>square</code>, <code>set_square</code>), and to 🗺️ World <code>with_squares(m)</code>, the same rule looking one square up instead of walking the list. Checked first in every run: on a world of random kinds and ways, its cells shuffled, the map rule and the shipped one agree for every square and all eight directions (392 cases). Library: <code>trial/r25-553</code>, <code>trial/r25-best</code> with 547, 548 and 551 together. ms a move, the map made once:</p>
+<div class="scroll"><table><tr><th>map (cells)</th><th>passed, best</th><th>passed</th><th>passed as a handle</th><th>map</th><th>map\'s set-up</th><th>map faster than passed</th></tr>{R553}</table></div>
+<p>The map rule is flat, about a millisecond a move at every size: the goal <code class="ref"><b>^ticket(</b>540<b>)</b></code> set. It needs 547: on <code>trial/r25-best</code> alone the held map is written into the closure and walked at every call, slower than passing the list. Making the map, once a world, is still about 1.5 s at 64x64. Runners: {"; ".join(runners("553"))}.</p>
+'''
+def rows553f():
+    h, f = jobrows("553f", "hazel"), jobrows("553f", "fumola")
+    if not h: return ""
+    ns = sorted({n for j in h for (_, n) in h[j]})
+    med = lambda src, n, k: statistics.median(min(r[k] for r in src[j][(None, n)]) for j in src if (None, n) in src[j])
+    o = []
+    for n in ns:
+        rat = statistics.median(min(r["map"] for r in h[j][(None, n)]) / min(r["held_map"] for r in f[j][(None, n)]) for j in h if (None, n) in h[j] and (None, n) in f[j])
+        o.append(f"<tr><td class=n>{n}x{n} ({n*n:,})</td><td class=n>{fmt(med(h, n, 'map'))}</td><td class=n>{fmt(med(f, n, 'held_map'))}</td><td class=n>{rat:.1f}x</td><td class=n>{fmt(med(h, n, 'map_setup'))}</td><td class=n>{fmt(med(f, n, 'setup_ms'))}</td></tr>")
+    return "".join(o)
+def rows553s():
+    s3 = jobrows("553s", "setup")
+    if not s3: return ""
+    ns = sorted({n for j in s3 for (_, n) in s3[j]})
+    med = lambda n, k: statistics.median(min(r[k] for r in s3[j][(None, n)]) for j in s3 if (None, n) in s3[j])
+    return "".join(f"<tr><td class=n>{n}x{n} ({n*n:,})</td>" + "".join(f"<td class=n>{fmt(med(n, 'annotated_' + k))}</td>" for k in ("squares", "in_order", "count", "take", "id")) + f"<td class=n>{fmt(med(n, 'unannotated_squares'))}</td></tr>" for n in ns)
+R553F, R553S = rows553f(), rows553s()
+if R553F:
+    FIXES += f'''<p>Against Fumola\'s HashMap (^report(27)\'s driver, wasm built from <code>667a34d</code>), on the same runners, alternating, ms a move and the map\'s set-up:</p>
+<div class="scroll"><table><tr><th>map (cells)</th><th>Hazel, map</th><th>Fumola, HashMap</th><th>Hazel / Fumola</th><th>Hazel, set-up</th><th>Fumola, set-up</th></tr>{R553F}</table></div>
+<p>Both are flat; Hazel\'s lookup is within about 1.3x to 3.5x of Fumola\'s. Its set-up is not: about 6.5x at 64x64. Runners: {"; ".join(runners("553f"))}.</p>
+'''
+if R553S:
+    FIXES += f'''<p>Where Hazel\'s set-up goes: <code>Common.squares</code> whole, then each of its parts called alone (the order check, the count, the balanced build), and a call that ignores the cells (the conversion from JS alone), ms; then the whole with the map\'s helpers unannotated:</p>
+<div class="scroll"><table><tr><th>map (cells)</th><th>squares</th><th>order check</th><th>count</th><th>build</th><th>conversion</th><th>squares, unannotated</th></tr>{R553S}</table></div>
+<p>Annotations make no difference here. Each part is a walk of the list at Hazel\'s cost per pass, about 60 to 70 µs a cell even for the bare count: the set-up is the per-pass cost three times over, not the map. Runners: {"; ".join(runners("553s"))}.</p>
+'''
 PAGE = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

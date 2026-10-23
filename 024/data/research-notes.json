@@ -1,0 +1,1557 @@
+[
+ {
+  "angle": "pipeline",
+  "notes": {
+   "summary": "How an edit travels on dev. A key press becomes an Action (Keyboard.handle_key_event). CodeEditable wraps it as Perform and calls Editor.Update.update, which runs Perform.go on the zipper. The zipper is a cursor into a Segment: a list of pieces (tiles, grout, whitespace, projectors), and every tile carries an id. Perform.go reads the PREVIOUS statics: insertion, the completion buffer and problem navigation all consult the old info map and error_ids. Main.apply then runs a \"calculate\" phase after every action, which goes Page -> Editors -> mode (e.g. ScratchMode) -> CellEditor -> CodeWithStatics.Update.calculate. While you type, a 225 ms debounce (StaticsDebounce) holds statics back (\"Defer\"). When the timer fires it sends RefreshStatics (\"Force\"). A projector or livelit commit forces statics at once.\n\nWhen statics does run, CachedStatics.init parses the zipper a second time, apart from the syntax parse. The semantic parse fills in missing pieces of the visible segment (the canonical completion), then turns tiles into an Exp.t whose ids are the tile ids. Statics.mk then runs uexp_to_info_map over the whole program, starting from an empty map. The result is the info map (Id -> Info, last write wins) plus the elaborated program. Dev has no per-subterm reuse in statics, only a whole-program memo. Statics runs synchronously on the main thread. From the info map CachedStatics derives error_ids, warning_ids and probe targets.\n\nThe same calculate pass then rebuilds the syntax cache (CachedSyntax: its own parse of the segment, the layout, projector shapes, each fed the info map). It recomputes the completion buffer from the Info at the caret and runs the probe effects. Finally EvalResult projects the info map to EvalInfo (elab_term, co_ctx and probe_targets per expression id) and posts {elaborated program, EvalInfo, previous incremental state} to the eval worker. The worker's results come back as actions, go through update and calculate again, and are drawn by the view.\n\nEverything downstream reads the info map by id:\n- the cursor inspector (Indicated.ci_of at the caret's piece)\n- error and warning marks (error_ids)\n- completion (Info.ctx and ana)\n- projectors and livelits (the Info at the projector's id; livelits look up their definition in that Info's ctx)\n- probes (ctx and co_ctx through refs_in, ancestors through AutoProbe)\n- the worker's reuse check (elab_term and co_ctx per id)\n\nSo in statics, whichever analysis writes a node's Info LAST is the one every consumer sees.\n\nWhat PR #2651 changes, seen from the pipeline. On dev, `module M = def in body` is analyzed as a Let. The Let analyzes def twice itself: a probe whose map is thrown away, then the recorded pass. The ModuleExp case then analyzes def a third time, directly, and that pass overwrites every Info in def's subtree. With the PR the Let's recorded Info survives, and the definition's elaboration is read back from the Info at rep_id(def). So def is analyzed 2 times instead of 3; with #2603 (\"a let is analyzed once unless it refers to itself\", not yet on dev) it would be 1.\n\nIn the common case the surviving Info differs from dev's only in ancestors: the ModuleExp id now appears twice, as it already did for body. But there are two places where the read-back is not equivalent to dev:\n- **Function-valued modules.** The Let treats a function definition as possibly recursive. Its Infos then carry a ctx with the module's own name bound, unless the definition uses the name and a FixF results, which is the only case the PR's names_itself guard catches. Completion would then suggest F inside F's own definition, and using it is an error.\n- **One-member signatures.** For a module ascribed a one-member signature, def is analyzed against a singleton labeled product. There autolabel_singleton_tuple records one elaboration (the inner one) but returns another (the wrapper). That is why the new evaluator test changes M.x from \"the whole unelaborated module\" to 1. The PR's premise \"add records exactly the elab_term it returns\" does not hold on that path.",
+   "facts": [
+    {
+     "claim": "A Segment is a list of pieces: Tile | Grout | Secondary | Projector. A tile carries an id, a form, a cached sort, its present shards and its child segments. The derived equality ignores the tile id.",
+     "ref": "src/haz3lcore/tiles/Base.re:3-28 (origin/dev)"
+    },
+    {
+     "claim": "Zipper.t = {selection, relatives, caret, refractors}. Refractors hold the manual probes and the ephemeral (auto) probes.",
+     "ref": "src/haz3lcore/zipper/ZipperBase.re:13-20 (origin/dev)"
+    },
+    {
+     "claim": "Editor.Model.t = {root sort, state: {zipper, col_target}, syntax: CachedSyntax.t}.",
+     "ref": "src/haz3lcore/Editor.re:13-32 (origin/dev)"
+    },
+    {
+     "claim": "A key becomes an Action.t (e.g. Insert(key)), and CodeEditable wraps it as Update.Perform.",
+     "ref": "src/web/Keyboard.re:28-71; src/web/app/editors/code/CodeEditable.re:343 (origin/dev)"
+    },
+    {
+     "claim": "CodeEditable.Update.update calls Editor.Update.update with the model's CURRENT (pre-edit) statics and dynamics. The result is Updated.t with is_edit set from Action.is_edit.",
+     "ref": "src/web/app/editors/code/CodeEditable.re:21-51 (origin/dev)"
+    },
+    {
+     "claim": "Editor.Update.update clears the completion buffer, records the column target, then runs Perform.go(~statics=old_statics, ~syntax, a, state, ~root).",
+     "ref": "src/haz3lcore/Editor.re:146-184 (origin/dev)"
+    },
+    {
+     "claim": "Perform.go consults the previous info map during the edit: Introduce, the completion buffer, character insertion (Insert.go ~ci), problem navigation over error_ids/warning_ids, and the projector actions (statics.elaborated).",
+     "ref": "src/haz3lcore/zipper/action/Perform.re:244, 362, 374, 397-402, 566 (origin/dev)"
+    },
+    {
+     "claim": "Main.apply runs an update phase, then a calculate phase, on every action. Updated.t has a recalculate flag, but Main does not read it.",
+     "ref": "src/web/Main.re:73-110; src/web/Updated.re:3-11 (origin/dev)"
+    },
+    {
+     "claim": "Page.calculate runs Editors.Update.calculate, then computes cursor info against the post-calculate editors, then the ExplainThis color highlights.",
+     "ref": "src/web/app/Page.re:449-537 (origin/dev)"
+    },
+    {
+     "claim": "ScratchMode.calculate takes a StaticsMode from StaticsDebounce.consume, runs CellEditor.Update.calculate with a queue_worker callback, then sends the queued batch with EvalRequest.request.",
+     "ref": "src/web/view/ScratchMode.re:978-1022 (origin/dev)"
+    },
+    {
+     "claim": "Statics debounce: 225 ms. An edit gives Defer and (re)arms a timer. When it fires, the timer sets force_on_next and dispatches RefreshStatics, which yields Force. A projector commit (AgentPulse.projector_commit, set by ProjectorPerform SetSyntax) forces statics immediately.",
+     "ref": "src/web/app/editors/code/CodeWithStatics.re:93-141; src/web/view/ScratchMode.re:790-792; src/haz3lcore/projectors/ProjectorPerform.re:213-217 (origin/dev)"
+    },
+    {
+     "claim": "CodeWithStatics.Update.calculate recomputes statics only when the mode is Force, or the probe set changed, or (is_edited and not Defer). Otherwise it keeps the old statics and clears only completion. It then runs Editor.Update.calculate, re-inits statics if autoprobe changed the probes, and refreshes targets.",
+     "ref": "src/web/app/editors/code/CodeWithStatics.re:148-252 (origin/dev)"
+    },
+    {
+     "claim": "Statics recompute time is recorded by PerfMetrics.time_statics around CachedStatics.init (the Statics section of the debug sidebar).",
+     "ref": "src/web/app/editors/code/CodeWithStatics.re:188-198 (origin/dev)"
+    },
+    {
+     "claim": "CachedStatics.init runs MakeTerm.from_zip_for_sem_with_completion(z, ~root), applies stitch, collects the probe ids from the zipper, and calls init_from_term. That calls Statics.mk, then derives error_ids, warning_ids and targets.",
+     "ref": "src/haz3lcore/derived/CachedStatics.re:99-135, 188-232 (origin/dev)"
+    },
+    {
+     "claim": "CachedStatics.t = {term, elaborated, info_map, error_ids, warning_ids, completion, targets}.",
+     "ref": "src/haz3lcore/derived/CachedStatics.re:4-13 (origin/dev)"
+    },
+    {
+     "claim": "The semantic parse erases the buffer, zips the zipper, takes the canonical completion of the segment, and parses the completed segment with go_impl.",
+     "ref": "src/haz3lcore/lang/MakeTerm.re:1992-2013 (origin/dev)"
+    },
+    {
+     "claim": "MakeTerm gives each term the ids of the tiles that make it up (plus adopted inner ids) and registers the term under all of them in TermMap. A term's rep id is the head of that list.",
+     "ref": "src/haz3lcore/lang/MakeTerm.re:290-306, 741-765; src/language/term/IdTagged.re:165-166 (origin/dev)"
+    },
+    {
+     "claim": "Aside (not this PR): from_zip_for_sem_with_completion takes ~root after z (MakeTerm.re:1997), so Core.Memo.general memoizes only on z and caches a partial application. The conversion appears to run on every call, while the memo still holds up to 1000 zippers. Worth confirming.",
+     "ref": "src/haz3lcore/lang/MakeTerm.re:1997, 2015-2016 (origin/dev)"
+    },
+    {
+     "claim": "Statics.mk memoizes the whole program on (ana, ctx, term, probe_ids), with cache bound 1000. It runs uexp_to_info_map from Id.Map.empty and then copies Info to sibling shard ids. Statics has no per-subterm incrementality on dev.",
+     "ref": "src/language/statics/Statics.re:4350-4392 (origin/dev)"
+    },
+    {
+     "claim": "Statics.Map.t = Id.Map.t(Info.t). add_info is Id.Map.add over a list of ids, so the last write wins. error_ids and warning_ids are folds over the map that keep only representative ids.",
+     "ref": "src/language/statics/StaticsBase.re:4-43 (origin/dev)"
+    },
+    {
+     "claim": "Info.t = InfoDrv | InfoExp | InfoPat | InfoTyp | InfoTPat | InfoMod | InfoSig | InfoMPat | Secondary. Info.exp holds user_term, elab_term, ancestors, ctx, ana, elab_syn_ty, marks, co_ctx, probe_targets, cls, message, warnings, ty and the label fields.",
+     "ref": "src/language/statics/Info.re:35-53, 138-148 (origin/dev)"
+    },
+    {
+     "claim": "Inside uexp_to_info_map, add builds the InfoExp, records it at IdTagged.ids(user_term), and returns the same elab_term it recorded. go passes ancestors_inclusive = [rep_id(uexp)] @ ancestors.",
+     "ref": "src/language/statics/Statics.re:204-291 (origin/dev)"
+    },
+    {
+     "claim": "CachedSyntax.mk runs its OWN parse, MakeTerm.go(segment) (memoized on the segment), for terms, term_data and projectors. Projector shapes and refractor rows come from the info map, dynamics and elaborated program, then the layout is measured. calculate chooses between a full mk, refresh_shapes, or selection-only, by physical equality of info_map, dyn_map and elaborated.",
+     "ref": "src/haz3lcore/CachedSyntax.re:67-143, 196-216 (origin/dev)"
+    },
+    {
+     "claim": "Editor.Update.calculate sets the completion buffer from Indicated.ci_for_completion(zipper, info_map), recalculates CachedSyntax, then runs ProbeFocus.editor_effects and AutoProbe, all with statics.info_map.",
+     "ref": "src/haz3lcore/Editor.re:186-275 (origin/dev)"
+    },
+    {
+     "claim": "Cursor inspector: Indicated.ci_of looks up the Info at the indicated piece's id. CodeWithStatics.Model.get_cursor_info builds the Cursor record, and CursorInspector.view renders it from Page.",
+     "ref": "src/haz3lcore/zipper/action/Indicated.re:228-236; src/web/app/editors/code/CodeWithStatics.re:59-84; src/web/app/inspector/CursorInspector.re:1102; src/web/app/Page.re:836 (origin/dev)"
+    },
+    {
+     "claim": "Error and warning marks are drawn by Arms.Errors.of_ids over statics.error_ids and warning_ids.",
+     "ref": "src/web/app/editors/code/CodeWithStatics.re:293-315 (origin/dev)"
+    },
+    {
+     "claim": "Completion: TyDi.set_buffer suggests from the Info at the caret, and variable suggestions iterate Info.ctx_of(ci) filtered for shadowing.",
+     "ref": "src/haz3lcore/TyDi/TyDi.re:155-171; src/haz3lcore/TyDi/TyDiCtx.re:192-200, 240 (origin/dev)"
+    },
+    {
+     "claim": "Projectors receive the Info at their own id. When elaborate_syntax is set, they also receive their elaborated subterm, found by id in CachedStatics.elaborated. The livelit projector looks up the livelit definition in that Info's ctx.",
+     "ref": "src/haz3lcore/projectors/ProjectorInfo.re:64-109; src/haz3lcore/projectors/implementations/LivelitProj.re:36-49, 83-93 (origin/dev)"
+    },
+    {
+     "claim": "EvalResult.calculate projects the info map to EvalInfo, because LivelitCtx closures cannot cross postMessage. It queues {expr: elaborated, eval_info_map, prev} to the worker, or evaluates synchronously when there is no worker (ExplainThis examples). Re-evaluation is gated on the elaborated program, settings and targets changing.",
+     "ref": "src/web/app/editors/result/EvalResult.re:229-313; src/web/app/explainthis/ExplainThis.re:257 (origin/dev)"
+    },
+    {
+     "claim": "EvalInfo keeps, for every InfoExp id, its elab_term, co_ctx and probe_targets, plus the sample targets.",
+     "ref": "src/language/dynamics/EvalInfo.re:18-29, 56-74 (origin/dev)"
+    },
+    {
+     "claim": "Worker protocol: a Request.value is {expr, eval_info_map, prev}. WorkerClient.request posts the batch and starts the timeouts. Results come back through callbacks that EvalRequest turns into EvalResult actions (UpdateResult, streaming merges).",
+     "ref": "src/web/util/WorkerServer.re:7-35, 229-245; src/web/util/WorkerClient.re:198-237; src/web/view/EvalRequest.re:6-41 (origin/dev)"
+    },
+    {
+     "claim": "The worker's incremental reuse_check at an id requires the previous elab to equal info.elab_term (fast_equal plus lexeme trace), and the reuse map restricted to info.co_ctx to be unchanged.",
+     "ref": "src/language/dynamics/IncrEval.re:313-345 (origin/dev)"
+    },
+    {
+     "claim": "CellEditor.calculate calculates the editor, then the result (which may queue a worker request). If dynamics changed or a probe focus or cursor is pending, it runs a second editor pass with is_edited=false.",
+     "ref": "src/web/app/editors/cell/CellEditor.re:96-172 (origin/dev)"
+    },
+    {
+     "claim": "ModuleExp on dev: record MPat info; build expanded = fast_copy(rep_id(uexp), Let(mpat_to_pat(mp), def, body)); analyze it with go(~ana); override cls; then analyze def again directly with go(~ana=def_ana, def, m), which re-records def's whole subtree; then splice that elaboration in with moduleexp_elab and add.",
+     "ref": "src/language/statics/Statics.re:2725-2772 (origin/dev)"
+    },
+    {
+     "claim": "The Let case analyzes def more than once on dev. Every Let runs a recursion probe at 2070 (map discarded). The non-recursive path then records the pass at 2079. The recursive path runs 2091 and 2103 (discarded) and records 2121 in def_ctx, where the binder is in scope. So a non-recursive module definition is analyzed 3 times on dev (2070, 2079, 2762) and 2 with the PR. A function-valued one: 5 on dev, 4 with the PR (5 if it names itself).",
+     "ref": "src/language/statics/Statics.re:2052-2123, 2762 (origin/dev)"
+    },
+    {
+     "claim": "is_recursive is structural: a pattern with one variable and a def that is one function of arrow-like type counts as recursive. So `module F = fun x -> ...` takes the recursive path whether or not it mentions F.",
+     "ref": "src/language/statics/Statics.re:2024-2039, 2070-2076; src/language/term/Pat.re:159-181; src/language/term/Exp.re:407-430 (origin/dev)"
+    },
+    {
+     "claim": "requires_fixf = is_rec and (def.co_ctx, body.co_ctx minus the binders, or the pattern's type refs mention a bound var). Only then is the elaboration Let(p, FixF(...), body), and the Let then strips the binders from the co_ctx at fun_id. The Let already reads Info back from the map here.",
+     "ref": "src/language/statics/Statics.re:2171-2229 (origin/dev)"
+    },
+    {
+     "claim": "moduleexp_elab keeps the Let's pattern and body elaboration but substitutes def_elab_direct for the definition. If the expanded elaboration is not a Let, it ignores def_elab_direct.",
+     "ref": "src/language/statics/ModuleHelpers.re:447-456 (origin/dev)"
+    },
+    {
+     "claim": "PR change: names_itself = expanded_elab.term is Let(_, FixF(_), _). If the Info at Exp.rep_id(def) is an InfoExp and names_itself is false, its elab_term becomes def_elab_direct. Otherwise the old direct analysis runs.",
+     "ref": "src/language/statics/Statics.re:2757-2789 (29c08fd8fa)"
+    },
+    {
+     "claim": "autolabel_singleton_tuple records inner_for_source (elab_term from analyzing a fresh-id copy against the field type) at uexp's ids, but returns elaborated_exp: an unelaborated Tuple([TupLabel(l, original_expression)]) carrying uexp's annotation. Here the recorded elab and the returned elab differ.",
+     "ref": "src/language/statics/Statics.re:310-359 (origin/dev)"
+    },
+    {
+     "claim": "Every expression analyzed against a singleton labeled product whose synthesized type is not that same singleton goes through autolabel_singleton_tuple.",
+     "ref": "src/language/statics/Statics.re:2776-2791 (origin/dev)"
+    },
+    {
+     "claim": "A one-member signature `{ let x : Int }` desugars to Prod([TupLabel(x, Int)]), a singleton labeled product. mpat_to_pat and the pattern Asc case both desugar the signature this way.",
+     "ref": "src/language/term/Typ.re:615-646; src/language/statics/ModuleHelpers.re:51-60; src/language/statics/Statics.re:3655-3670 (origin/dev)"
+    },
+    {
+     "claim": "New evaluator test: `module M : { let x : Int } = { let x = 1; let y = 2 } in M.x` evaluates to 1. Its comment says that before the PR, M.x was the whole unelaborated module, which matches dev's direct analysis returning the autolabel wrapper.",
+     "ref": "test/evaluator/Test_Evaluator_Modules.re:86-96 (29c08fd8fa)"
+    },
+    {
+     "claim": "New statics test: `module F = fun x -> F(x) in 1` must be inconsistent, because modules are not recursive.",
+     "ref": "test/statics/Test_Statics_Modules.re:406-413 (29c08fd8fa)"
+    },
+    {
+     "claim": "Because expanded carries uexp's rep id (fast_copy), the Let's children get ancestors [M, M, ...outer]. With the PR, def's subtree keeps those, where dev's direct pass wrote [M, ...outer]. The body already had the duplicate on dev. AutoProbe already removes adjacent duplicate ancestors.",
+     "ref": "src/language/statics/Statics.re:270, 2737-2742 (origin/dev); src/haz3lcore/AutoProbePerform.re:81-93 (origin/dev)"
+    },
+    {
+     "claim": "Other consumers of Info.ancestors: EvalWorklist (is_inside_function, parent_id_of), ProblemCollection, ProbePerform and StaticsBase climbs, the DebugSidebar.",
+     "ref": "src/language/dynamics/EvalWorklist.re:15-40; src/haz3lcore/ProblemCollection.re:53; src/haz3lcore/ProbePerform.re:483; src/language/statics/StaticsBase.re:150 (origin/dev)"
+    },
+    {
+     "claim": "Pre-existing dead write: the 'Override cls' add_info at uexp's ids is overwritten by the final add, which writes the same ids. That add's cls is already Exp(ModuleExp).",
+     "ref": "src/language/statics/Statics.re:2743-2756, 2765 (origin/dev); src/language/term/Exp.re:179 (origin/dev)"
+    },
+    {
+     "claim": "Pre-existing last-write-wins effect: the ModuleExp case records InfoMPat for the module name. The Let's go_pat then records InfoPat at the same id, because mpat_to_pat fast_copies MPat.rep_id.",
+     "ref": "src/language/statics/Statics.re:2728-2735, 4320-4338; src/language/statics/ModuleHelpers.re:51-53 (origin/dev)"
+    },
+    {
+     "claim": "Tuple-valued definitions: before analyzing, the Let rearranges a Tuple def to match a Prod pattern type, keeping the rep id. align_exp_if_needed is applied only after the recorded pass. So the read-back elab is of the rearranged tuple, not yet aligned.",
+     "ref": "src/language/statics/Statics.re:2054-2069, 2184-2191 (origin/dev)"
+    },
+    {
+     "claim": "Other places where statics reads its own map in mid-analysis: module_actual_type reads pattern Infos for export types, and reclassify_expanded_module_items rewrites cls.",
+     "ref": "src/language/statics/ModuleHelpers.re:389-439 (origin/dev)"
+    },
+    {
+     "claim": "#2603 (a let is analyzed once unless it refers to itself) is not on origin/dev; its commit is 4eec302a50. For function-shaped defs it keeps the probe, which is analyzed in p_syn.ctx, where the binder is in scope. is_rec and requires_fixf are unchanged.",
+     "ref": "git show 4eec302a50 (Statics.re hunk at ~2054)"
+    }
+   ],
+   "representations": [
+    {
+     "name": "Segment / Piece / Tile",
+     "defined_at": "src/haz3lcore/tiles/Base.re:3-28 (origin/dev)",
+     "what": "The editor's source: a list of pieces (tiles with ids and child segments, grout holes, whitespace and comments, projectors).",
+     "produced_by": "Perform.go edits; Parser.to_zipper; ExpToSegment for read-only editors (CodeWithStatics.re:41-55)",
+     "consumed_by": "MakeTerm (both parses), Measured layout, CanonicalCompletion, Printer"
+    },
+    {
+     "name": "Zipper.t",
+     "defined_at": "src/haz3lcore/zipper/ZipperBase.re:13-20 (origin/dev)",
+     "what": "Cursor into the segment: selection, relatives (siblings and ancestors), caret, and refractors (manual and ephemeral probes, sample focus).",
+     "produced_by": "Perform.go (Editor.re:173-174), ProbeFocus/AutoProbe in Editor.Update.calculate",
+     "consumed_by": "CachedStatics.init (probe ids, semantic parse), CachedSyntax.calculate, Indicated.ci_of, the view"
+    },
+    {
+     "name": "Editor.Model.t",
+     "defined_at": "src/haz3lcore/Editor.re:13-32 (origin/dev)",
+     "what": "{root sort, state: {zipper, col_target}, syntax: CachedSyntax.t}",
+     "produced_by": "Editor.Update.update (edit) and Editor.Update.calculate (derived refresh)",
+     "consumed_by": "CodeWithStatics / CodeEditable models and views"
+    },
+    {
+     "name": "MakeTerm.t and completion_snapshot",
+     "defined_at": "src/haz3lcore/lang/MakeTerm.re:67-73, 1986-1990 (origin/dev)",
+     "what": "Parsed term (Exp.t), TermMap (id -> term), TermData (id -> skeleton/segment/root piece), projectors. The snapshot keeps the visible and completed segments.",
+     "produced_by": "MakeTerm.go (syntax parse, MakeTerm.re:1918-1919); from_zip_for_sem_with_completion (semantic parse, 1997-2016)",
+     "consumed_by": "CachedSyntax (syntax parse); CachedStatics.init (semantic term)"
+    },
+    {
+     "name": "Exp.t with IdTag",
+     "defined_at": "src/language/term/IdTagged.re:53-64, 165-185 (origin/dev)",
+     "what": "User terms and elaborated terms share one structure (DHExp includes Exp). The annotation holds ids (rep id = head = the tile id), secondary runs, incomplete-shard masks and the lexeme. fast_copy gives a term a single chosen id.",
+     "produced_by": "MakeTerm.return; statics elaboration; ModuleExp expansion (Statics.re:2737-2741)",
+     "consumed_by": "Statics, the evaluator, ExpToSegment, projectors (Exp.find_by_id)"
+    },
+    {
+     "name": "Statics.Map.t (info map)",
+     "defined_at": "src/language/statics/StaticsBase.re:4-11 (origin/dev)",
+     "what": "Id.Map.t(Info.t): one Info per syntax id. Persistent map; the last write wins.",
+     "produced_by": "Statics.uexp_to_info_map via add/add_info (Statics.re:204-269); Statics.mk fills shard ids (4363-4378)",
+     "consumed_by": "cursor inspector, error/warning marks, completion, Perform.go, projectors/livelits, probes and AutoProbe, EvalInfo/IncrEval, EvalWorklist, ProblemCollection, ContextMenu, ImpliedHole, agent tools"
+    },
+    {
+     "name": "Info.t / Info.exp",
+     "defined_at": "src/language/statics/Info.re:35-53, 138-148 (origin/dev)",
+     "what": "Per-node static facts: user_term, elab_term, ancestors, ctx, ana, elab_syn_ty, marks, co_ctx, probe_targets, cls, message, warnings, ty, label inference.",
+     "produced_by": "add inside uexp_to_info_map, plus post-hoc rewrites (FixF co_ctx at Statics.re:2216-2228; autolabel at 356-357; cls overrides)",
+     "consumed_by": "same as the info map; elab_term is ALSO read back by the ModuleExp case in PR #2651 (Statics.re:2775-2780 at 29c08fd8fa)"
+    },
+    {
+     "name": "CachedStatics.t",
+     "defined_at": "src/haz3lcore/derived/CachedStatics.re:4-13 (origin/dev)",
+     "what": "{term, elaborated, info_map, error_ids, warning_ids, completion snapshot, targets}",
+     "produced_by": "CachedStatics.init / init_from_term, called from CodeWithStatics.Update.calculate (CodeWithStatics.re:177-199)",
+     "consumed_by": "Editor.Update.update/calculate, CodeWithStatics.View, EvalResult.calculate, Perform.go"
+    },
+    {
+     "name": "StaticsMode.t",
+     "defined_at": "src/web/util/StaticsMode.re:5-8 (origin/dev)",
+     "what": "Normal | Defer | Force: whether this frame recomputes statics.",
+     "produced_by": "CodeWithStatics.StaticsDebounce.consume (CodeWithStatics.re:104-140)",
+     "consumed_by": "CodeWithStatics.Update.calculate needs_refresh (CodeWithStatics.re:200-204)"
+    },
+    {
+     "name": "CachedSyntax.t",
+     "defined_at": "src/haz3lcore/CachedSyntax.re:1-42 (origin/dev)",
+     "what": "Zipped segment, Measured layout, term_data/terms from the syntax parse, projector shapes and errors, refractor rows, plus the physical identities of the inputs it was built from.",
+     "produced_by": "CachedSyntax.mk / refresh_shapes / calculate (CachedSyntax.re:108-216)",
+     "consumed_by": "the view (CodeViewable, Arms), Perform.go (~syntax), ProbeFocus/AutoProbe"
+    },
+    {
+     "name": "ProjectorBase.info",
+     "defined_at": "src/haz3lcore/projectors/ProjectorBase.re:81ff; built at ProjectorInfo.re:64-109 (origin/dev)",
+     "what": "What a projector or livelit sees: its id, its syntax, the Info at its id, its dynamics samples, and its elaborated subterm.",
+     "produced_by": "ProjectorInfo.mk_info, called from CachedSyntax",
+     "consumed_by": "projector placeholder/view/update; LivelitProj reads info.statics ctx for the definition"
+    },
+    {
+     "name": "EvalInfo.t",
+     "defined_at": "src/language/dynamics/EvalInfo.re:18-29 (origin/dev)",
+     "what": "Serializable slice of the info map: for each InfoExp id, {elab_term, co_ctx, probe_targets}, plus sample targets.",
+     "produced_by": "EvalInfo.of_info_map in EvalResult.calculate (EvalResult.re:270-275)",
+     "consumed_by": "the worker's evaluator and IncrEval.reuse_check (IncrEval.re:313-345); ReusePass"
+    },
+    {
+     "name": "WorkerServer.Request.value / Response",
+     "defined_at": "src/web/util/WorkerServer.re:7-35 (origin/dev)",
+     "what": "{expr: elaborated program, eval_info_map, prev incremental state}; the response is the result value and the EvaluatorState.",
+     "produced_by": "EvalResult.calculate via queue_worker; WorkerClient.request posts it",
+     "consumed_by": "the worker (Worker.re installs WorkerServer's handler); results return as EvalResult actions via EvalRequest"
+    },
+    {
+     "name": "Dynamics.Map.t",
+     "defined_at": "src/language/dynamics/Dynamics.re:51-55 (origin/dev)",
+     "what": "{probe_map: samples by id, test_results, theorems}",
+     "produced_by": "EvalResult from the worker's EvaluatorState (EvalResult.re:375-380)",
+     "consumed_by": "Editor.Update.calculate, CachedSyntax (projector shapes), probes, the view"
+    },
+    {
+     "name": "Updated.t",
+     "defined_at": "src/web/Updated.re:3-11 (origin/dev)",
+     "what": "{model, is_edit, recalculate, scroll_active, logged, historic}: what an update step tells the app loop.",
+     "produced_by": "every Update.update (e.g. CodeEditable.re:44-79)",
+     "consumed_by": "Main.apply (is_edit drives the calculate phase's is_edited and autosave)"
+    }
+   ],
+   "diagram_ideas": [
+    "EDIT ROUND TRIP, two swimlanes (MAIN THREAD | EVAL WORKER). Main lane, top to bottom: [Key event] -> 'Keyboard.handle_key_event' -> [Action.t] -> 'CodeEditable.Update.update' -> [Editor.Update.update] -> [Perform.go] (side arrow IN from a [CachedStatics (OLD)] box, labeled 'ci for Insert/Buffer, error_ids for NextProblem') -> [new Zipper] -> 'Updated.t {is_edit}' -> [Main.apply: CALCULATE phase] -> [Page -> Editors -> ScratchMode.calculate] -> [StaticsDebounce.consume] with three exits: 'Defer (typing, 225 ms timer)', 'Normal', 'Force (timer fired / projector commit)'. A dashed arrow from the timer loops back to the top as action 'RefreshStatics'. Normal/Force -> [CodeWithStatics.calculate: needs_refresh?] -> [CachedStatics.init] -> [MakeTerm: canonical completion + go_impl] -> [Exp.t, ids = tile ids] -> [Statics.mk: whole program, empty map] -> [info_map + elaborated] -> [error_ids / warning_ids / targets] -> [Editor.Update.calculate: TyDi buffer, CachedSyntax, probes] -> [EvalResult.calculate: EvalInfo.of_info_map]. Arrow across to the worker lane labeled 'postMessage {elaborated, EvalInfo, prev}' -> [Evaluator + IncrEval.reuse_check] -> arrow back labeled 'UpdateResult / streaming actions' -> re-enters [update] at the top -> [calculate (no statics recompute; CachedSyntax refresh_shapes)] -> [View: code, error arms, CursorInspector].",
+    "TWO PARSES, ONE ID SPACE. Left box [Zipper / Segment (tiles carry ids)] with two arrows. Upper arrow 'MakeTerm.go(segment)' -> [Syntax term: TermMap, TermData] -> [Measured layout] -> [view geometry]. Lower arrow 'CanonicalCompletion + go_impl' -> [Semantic Exp.t] -> 'Statics.mk' -> [Id.Map(Info)] and [elaborated Exp.t]. Then -> 'EvalInfo.of_info_map' -> [EvalInfo] -> worker -> [Dynamics.Map (samples by id)]. A dotted line labeled 'same tile id' links one tile in the segment to its TermData row, its Info entry, its EvalInfo entry, its probe sample and its projector. This shows that all consumers meet at the id.",
+    "INFO MAP HUB. Center box [Statics.Map.t : Id -> Info (last write wins)]. Spokes, each labeled with the Info fields it reads: [Cursor inspector] 'cls, ty, ana, marks, message (Indicated.ci_of)'; [Error/warning arms] 'marks via error_ids'; [Completion / TyDi] 'ctx, ana (TyDiCtx.re:193)'; [Perform.go] 'ci for Insert/Buffer/Introduce; error_ids for problem navigation'; [Projectors & livelits] 'Info at projector id; ctx for livelit lookup; elaborated subterm by id'; [Probes / AutoProbe] 'co_ctx+ctx (refs_in), ancestors'; [Worker / IncrEval] 'elab_term, co_ctx, probe_targets'; [EvalWorklist / ProblemCollection] 'ancestors'. Mark in red the spokes whose fields the PR can change for a module definition's subtree: ancestors (duplicate M id), ctx (module name bound for function-valued modules), and the spliced elab (one-member signature case).",
+    "MODULEEXP, DEV vs PR (two side-by-side sequence diagrams over a shared 'info map' column). DEV: [record MPat info] -> [go(expanded Let)] whose inner Let box has 'probe(def) — map discarded' and 'analyze(def) — writes subtree infos A' -> [cls override (dead: overwritten by final add)] -> [go(def) direct — writes subtree infos B, OVERWRITING A] -> [moduleexp_elab(def_elab from B)] -> [add ModuleExp info]. PR: same through the Let -> diamond 'expanded_elab = Let(_, FixF, _)?' with branches: 'no' -> [read info[rep_id(def)].elab_term (A)] -> [moduleexp_elab(A)]; 'yes' -> [go(def) direct (B), as on dev]. Under the map column, show which infos survive (A or B) and the fields that can differ: ancestors [M,M,...] in A vs [M,...] in B; ctx with F bound in A for the recursive path.",
+    "ONE-MEMBER SIGNATURE PATH (why M.x changed). Box [def = { let x = 1; let y = 2 }] analyzed against ana = (x = Int) (the desugared signature) -> diamond 'singleton labeled product and syn type not (x = _)' -> [autolabel_singleton_tuple]. Two output arrows: 'RECORDS at rep_id(def): inner_for_source, elab = elaborated module (top id is fresh)' and 'RETURNS: Tuple([x = <UNELABORATED module>])'. The dev arrow takes RETURNS -> 'M.x = whole module'. The PR arrow takes RECORDS -> 'M.x = 1'. Caption: the premise 'add records exactly the elab it returns' fails on this path.",
+    "ANALYSIS-COUNT BARS per module binding's definition. Rows: 'non-recursive def (e.g. module block)': dev 3 (Let probe 2070, Let pass 2079, direct 2762), PR 2, PR + #2603 1. 'function-valued def, not self-naming': dev 5 (2070, 2091, 2103, 2121, direct), PR 4. 'function-valued def that names itself': dev 5, PR 5 (fallback). Footnote: each bar is a full walk of the definition, on the main thread, after every debounced edit."
+   ],
+   "review_points": [
+    "Common case is safe. For a definition that is not a function and does not hit the singleton-labeled-tuple path (the usual `module M = { ... } in ...`), the Let's recorded Info matches what dev's direct pass wrote: same ctx, effectively the same ana, same elab. Only ancestors differ: the ModuleExp id now appears twice ([M, M, ...]), because the expanded Let carries M's rep id (Statics.re:270, 2737-2742). The body already had this on dev, and AutoProbe already removes adjacent duplicates (AutoProbePerform.re:81-93). Worth a glance in the debug sidebar's ancestors field; no consumer appears to break.",
+    "Function-valued modules change what editor features see. `module F = fun x -> ? in ...` is structurally 'recursive' (Statics.re:2024-2039), so the Let records def's subtree with def_ctx, where F is bound (2090-2122). The FixF guard catches only the case where def actually USES F. So with the PR, the hole's Info.ctx contains F: completion (TyDiCtx.re:193) and the context inspector will offer F inside its own definition, and accepting it turns into the unbound-name error. On dev the direct pass overwrote these Infos with the outer ctx. Suggested fix: fall back whenever the recorded Info at rep_id(def) has the module's own binder in its ctx (or the ctx is not the outer one). A cleaner follow-up is a non-recursive flag on the Let expansion, so modules never take the recursive path. Add a test that checks the hole's ctx.",
+    "The PR's premise is false on one path, and the new evaluator test depends on that path. autolabel_singleton_tuple records inner_for_source at uexp's ids but returns a different, unelaborated wrapper (Statics.re:356-358). A module under a one-member signature is analyzed against a singleton labeled product (Typ.re:615-646), so it takes this path. That is why M.x changes from 'the whole unelaborated module' to 1 (Test_Evaluator_Modules.re:86-96 at 29c08fd8fa). This is a semantic change, an improvement but not a pure refactor. The PR description and the code comment ('add records exactly the elab_term it returns', Statics.re:2757-2763 at 29c08fd8fa) should say so.",
+    "In that same case the read-back elaboration's top node has a FRESH id (Statics.re:312, original_expression = Exp.fresh(term)), so the elaborated program has no node at rep_id(def). A probe placed on such a module definition may show no samples, and IncrEval cannot reuse at that id (EvalInfo.is_program_node). This only happens in an already-erroneous program; worth one check in the browser.",
+    "names_itself inspects only the top of expanded_elab (Statics.re:2770-2774 at 29c08fd8fa). If the ModuleExp itself sits where a singleton labeled product is expected, the outer autolabel wrapper makes expanded_elab a Tuple. A self-naming definition would then keep the recursive analysis's Infos and lose the unbound-name mark. It is an edge case, but it shows the guard keys on the shape of the elaboration rather than on the fact that matters: was def analyzed with its own name in scope?",
+    "Statics is now using the info map as a side channel: it writes a node's Info and later reads it back in the same pass. That joins existing cases (FixF co_ctx rewrite at Statics.re:2216-2228; ModuleHelpers.module_actual_type at ModuleHelpers.re:413-439). Correctness depends on which write comes last (StaticsBase.re:10-11). Consider a debug-only assertion that the read-back elab equals the direct elab (Exp.fast_equal) outside the known autolabel case, so drift shows up in tests.",
+    "Interaction with #2603 (a let is analyzed once unless it refers to itself; not on dev; commit 4eec302a50). For function-shaped definitions that do not mention their binders, #2603 keeps the probe pass, which runs in the pattern's ctx. So point 2 (the module name visible in ctx) would hold for those as well. requires_fixf is unchanged by #2603, so the FixF guard still works. The two touch adjacent code: rebase one on the other and rerun Test_Statics_Modules and Test_Evaluator_Modules.",
+    "Why the saving matters in the pipeline. Statics runs synchronously on the main thread in the calculate phase. It re-walks the whole program from an empty map on every refresh (Statics.re:4354-4362); the only reuse is a whole-program memo. A refresh happens after the 225 ms typing debounce, or immediately on a livelit or projector commit (CodeWithStatics.re:93-141). Removing one of three walks of every module definition therefore shortens the blocking statics step directly. Measure it with the Statics section timer (PerfMetrics.time_statics, CodeWithStatics.re:188), and state the run count and spread, since one timing run is noise.",
+    "Consistency with the worker is preserved. In both the read-back and the fallback branch, the Info at rep_id(def) and the elaboration spliced into the program come from the same pass, so IncrEval's elab_term and co_ctx checks (IncrEval.re:313-345) keep agreeing with the program. The exception is the fresh-id autolabel case above.",
+    "Small corners, if relevant: (a) a tuple-valued definition is read back from the Let's rearranged tuple before align_exp_if_needed (Statics.re:2054-2069, 2184-2191), whereas dev used the original tuple; (b) pre-existing, not this PR: the 'Override cls' write (Statics.re:2743-2756) is dead because the final add writes the same ids with cls ModuleExp, and the module name's InfoMPat is overwritten by the Let's InfoPat (Statics.re:2728-2735 vs ModuleHelpers.re:53). Both are candidates for a follow-up cleanup."
+   ]
+  }
+ },
+ {
+  "angle": "statics",
+  "notes": {
+   "summary": "Statics in Hazel on dev is one recursive walk over the user's term. uexp_to_info_map (src/language/statics/Statics.re:191) takes a context (ctx), an expectation (ana) and a term, and threads one map, an Id.Map from term ids to Info.t. Every expression form ends by calling the local add (Statics.re:204-269). add works out the error marks, the inspector message and the fixed type, builds an Info.exp record, writes it at every id of the term, and returns three things: the info, the term's elaboration (elab_term) and the new map. So the walk produces two outputs at once. One is the map: cursor inspector, error list, completion, and the incremental evaluator's per-node cache keys, which come from the InfoExp elab_term and co_ctx (EvalInfo.re:56-73, IncrEval.re:328-334). The other is the returned elaboration of the whole program, which Statics.mk hands to evaluation (Statics.re:4350-4380, CachedStatics.re:114-121). Elaboration lives inside statics: the separate Elaborator.re was deleted in cc620bbbdc (April 2026). The older Mode and Self modules are also gone (Mode in d22a778d64, Self in ae3f3edde3). Today \"mode\" is just the ana type, where Unknown(SynSwitch) means \"synthesize\" (StaticsBase.re:263). \"Self\" is now elab_syn_ty plus the marks and message that add computes.\n\nWrites to the map are last-write-wins (Map.add_info = Id.Map.add, StaticsBase.re:10-11). A subterm analyzed twice ends up with the second analysis's info. Many cases also run probe analyses whose map they throw away (`let (x, _, _) = go(...)`, e.g. Statics.re:746, 2070, 2091, 2103). Those cost time but leave no trace. The walk also reads its own map back mid-walk: the ModuleExp cls override (2743-2756), the FixF co_ctx patch (2216-2228), reclassify_expanded_module_items, and module_actual_type, which reads the InfoPat of each export. So reading a child's info back out of m, which is what #2651 does, is an existing idiom.\n\nHow a let is analyzed on dev (Statics.re:2023-2248):\n1. A pattern probe (2052-2053).\n2. A probe of the definition in the pattern's context, map discarded (2070). It feeds the structural is_recursive test (2024-2039, 2076).\n3. If not recursive: one recorded pass of the definition against p_syn.ty in the outer ctx (2079).\n4. If recursive (any let-bound function counts): two more discarded passes and a recorded one in def_ctx, which has the binder in scope (2091, 2103, 2121).\n5. The body is analyzed once (2152), then the pattern again with the body's co_ctx, for unused-variable warnings (2154-2155).\n6. The let's own elaboration wraps the definition's elaboration: align_exp_if_needed plus add_name (2183-2187). When the definition actually mentions its binder, it gets a FixF fixpoint instead, and the co_ctx at that id is patched (2188-2230).\n\nSo on dev any let takes two passes over its definition, and a function let takes four. These multiply when nested. #2603 (\"Statics: a let is analyzed once unless it refers to itself\", branch dev-statics-perf, commit 4eec302a50) is still OPEN, not merged to dev. It makes non-function definitions take a single pass, and keeps the probe as the final pass for function definitions that neither mention nor shadow their binder.\n\n`module M = def in body` (ModuleExp, Statics.re:2725-2772) is rewritten to a Let. fast_copy re-ids only the new top node, so the Let takes the ModuleExp's id while def and body keep their own ids. That Let goes through the path above: probe plus recorded pass, so two passes over def. Then on dev ModuleExp analyzes def a third time, directly (2757-2762). The only purpose is to get def's elaboration without the Let's align/add_name/FixF wrapping (def_elab_direct). ModuleHelpers.moduleexp_elab then splices that into the Let's elaboration (ModuleHelpers.re:448-456). The third pass also overwrites every info inside def.\n\n#2651 reads def's elab_term back from the InfoExp the Let recorded at Exp.rep_id(def) (29c08fd8fa Statics.re:2775-2789). It falls back to the direct pass in two cases: no info was recorded, or the Let's elaboration is Let(_, FixF, _) (2770-2774). FixF is the only remaining sign that the definition named the module and was analyzed with that name in scope; the co_ctx no longer shows it.\n\nNet passes over a module definition: 3 on dev, 2 with #2651, 1 with #2651 and #2603 together. The ci/statics-passes-dev branch pins that last figure.\n\nOne thing for the review: the comment's claim \"add records exactly the elab_term it returns\" is true of add (Statics.re:268) but not of the whole walk. The singleton-labeled-tuple path (2778-2791 into 310-358) records the unlabeled inner elaboration at the term's ids and returns an unelaborated surface tuple. #2651 reads the recorded one. That is why the new evaluator test gets M.x = 1 where dev gave the unelaborated module. It is a behavior change (an improvement), not a pure refactor.",
+   "facts": [
+    {
+     "claim": "uexp_to_info_map takes ~ctx, ~ana (default syn), ~is_in_filter, ~ancestors, ~probe_ids, the term and the map, and returns (Info.exp, Exp.t elaboration, Map.t).",
+     "ref": "origin/dev src/language/statics/Statics.re:191-201"
+    },
+    {
+     "claim": "`syn` is Unknown(SynSwitch): analyzing against it means synthesize. There is no Mode type on dev; mode is just the ana Typ.t.",
+     "ref": "origin/dev src/language/statics/StaticsBase.re:263"
+    },
+    {
+     "claim": "Mode.re was deleted in d22a778d64 (2025-04-08, 'delete mode'), Self.re in ae3f3edde3 (2026-04-17), and the separate Elaborator.re in cc620bbbdc (2026-04-17, 'delete elaborator', Matt Keenan). Elaboration now happens inside statics.",
+     "ref": "git show --stat d22a778d64 / ae3f3edde3 / cc620bbbdc"
+    },
+    {
+     "claim": "add computes the ExpectationMismatch mark from ana vs elab_syn_ty (only when no other marks are present), the inspector message, cls, and ty = fixed_typ(ctx, ana, elab_syn_ty); builds Info.exp; writes it at all ids of user_term; returns (info, elab_term, m).",
+     "ref": "origin/dev src/language/statics/Statics.re:204-269 (the return at 268)"
+    },
+    {
+     "claim": "fixed_typ is the meet of ana and the synthesized type. If the meet fails, it falls back to the synthesized type under synthesis and to ana under analysis.",
+     "ref": "origin/dev src/language/statics/StaticsBase.re:268-277"
+    },
+    {
+     "claim": "Map.add_info overwrites (Id.Map.add per id): the last analysis of a subterm determines its recorded info. add_missing_info only fills gaps and is used by Statics.mk for shard ids.",
+     "ref": "origin/dev src/language/statics/StaticsBase.re:10-22; Statics.re:4361-4376"
+    },
+    {
+     "claim": "Info.exp fields: user_term, elab_term, ancestors, ctx, ana, elab_syn_ty, marks, co_ctx, probe_targets, cls, message, warnings, ty, label_inference, inferred_label, label_sort, dot_labels.",
+     "ref": "origin/dev src/language/statics/Info.re:35-53"
+    },
+    {
+     "claim": "Info.t variants: InfoDrv, InfoExp, InfoPat, InfoTyp, InfoTPat, InfoMod, InfoSig, InfoMPat, Secondary.",
+     "ref": "origin/dev src/language/statics/Info.re:139-148"
+    },
+    {
+     "claim": "A CoCtx maps each variable name to its uses (use-site id, expected type). CoCtx.mk(ctx_before, ctx_after, co) removes the names a binder added; union concatenates the use lists.",
+     "ref": "origin/dev src/language/statics/CoCtx.re:30-73"
+    },
+    {
+     "claim": "Ctx.t is {use_mode, entries}, where entries holds VarEntry, ConstructorEntry, TVarEntry and LivelitEntry. Extending it conses onto the front, and lookups scan the list.",
+     "ref": "origin/dev src/language/statics/Ctx.re:37-57, 86-120"
+    },
+    {
+     "claim": "A Var use records CoCtx.singleton(name, id, ana) and gets Mark.Free(name) when name is not in ctx. That is how an unbound module name becomes an error.",
+     "ref": "origin/dev src/language/statics/Statics.re:691-705"
+    },
+    {
+     "claim": "Holes add a '$hole' co_ctx entry, which suppresses unused-variable warnings in enclosing binders.",
+     "ref": "origin/dev src/language/statics/Statics.re:367-372"
+    },
+    {
+     "claim": "At the top of every expression's analysis: if ana is a singleton labeled product, the term is first analyzed in synthesis mode (keeping m). If its type does not match, autolabel_singleton_tuple runs.",
+     "ref": "origin/dev src/language/statics/Statics.re:2778-2791"
+    },
+    {
+     "claim": "autolabel_singleton_tuple analyzes a fresh copy against the inner type, then analyzes a surface Tuple([TupLabel(l, copy)]) and discards its elaboration. It records inner_for_source, whose elab_term is the inner elaboration, at the term's own ids, and returns the surface tuple `elaborated_exp`, not an elaboration. Here the recorded elab_term differs from the returned one.",
+     "ref": "origin/dev src/language/statics/Statics.re:310-358 (discard at 336, record at 357, return at 358)"
+    },
+    {
+     "claim": "Fun analyzes its pattern twice: a probe for the body's ctx (map discarded), then again with the body's co_ctx so unused variables can be found. Its co_ctx is CoCtx.mk(ctx, p.ctx, e.co_ctx).",
+     "ref": "origin/dev src/language/statics/Statics.re:1902-1943"
+    },
+    {
+     "claim": "Let on dev: pattern probe; then def_rec_probe, a full analysis of def whose map is discarded; then is_recursive, a structural test (as many pattern vars as functions, and an arrow-like type).",
+     "ref": "origin/dev src/language/statics/Statics.re:2024-2039, 2052-2053, 2070-2076"
+    },
+    {
+     "claim": "If def is a Tuple and the pattern's type is a Prod, the Let rearranges def's labels before analyzing it. def_rewrap keeps def's ids.",
+     "ref": "origin/dev src/language/statics/Statics.re:2054-2069"
+    },
+    {
+     "claim": "Non-recursive Let: one recorded pass of def in the outer ctx against p_syn.ty. Recursive Let: def_base and def_base2 (both discarded), then a recorded pass in def_ctx with the binder in scope. Counting the probe, that is 2 passes for any let and 4 for a function let.",
+     "ref": "origin/dev src/language/statics/Statics.re:2077-2123"
+    },
+    {
+     "claim": "When def is a Module literal and the pattern binds one name, the Let's body ctx gets a type alias under the module's name for its type exports. Module names therefore live in both namespaces.",
+     "ref": "origin/dev src/language/statics/Statics.re:2124-2151"
+    },
+    {
+     "claim": "The Let's elaboration wraps def's elaboration: Let(p, align_exp_if_needed(...) |> add_name(...), body). Only when requires_fixf (is_rec and the binder appears in def.co_ctx, the body's co_ctx or pat_typ_refs) does it become Let(p, FixF(p, def), body), with the co_ctx at fun_id patched to drop the binder.",
+     "ref": "origin/dev src/language/statics/Statics.re:2172-2230"
+    },
+    {
+     "claim": "A Let's co_ctx is union(def.co_ctx, CoCtx.mk(ctx, p_ana.ctx, body.co_ctx), pat_typ_refs).",
+     "ref": "origin/dev src/language/statics/Statics.re:2231-2248"
+    },
+    {
+     "claim": "#2603 ('Statics: a let is analyzed once unless it refers to itself') is OPEN, not on dev. Its commit 4eec302a50 makes the probe lazy: non-function definitions take a single pass, and a function definition that neither mentions nor shadows its binder keeps the probe as its final analysis.",
+     "ref": "origin/dev-statics-perf, commit 4eec302a50, Statics.re Let case"
+    },
+    {
+     "claim": "is_recursive can never be true for a Module literal: get_num_of_functions returns None for Module(_) and ModuleExp(_).",
+     "ref": "origin/dev src/language/term/Exp.re:407-459"
+    },
+    {
+     "claim": "ModuleExp expansion: MPat info first; then pat = mpat_to_pat(mp) (desugars a Sig ascription with Ctx.empty); expanded = fast_copy(rep_id(uexp), Let(pat, def, body)); analyzed with go(~ana).",
+     "ref": "origin/dev src/language/statics/Statics.re:2725-2742; ModuleHelpers.re:51-60"
+    },
+    {
+     "claim": "fast_copy replaces only the top node's ids, so the expanded Let has the ModuleExp's id while def and body keep their own ids. As a result, children of the Let carry ancestors [M_id, M_id, ...].",
+     "ref": "origin/dev src/language/term/IdTagged.re:175-183; Statics.re:270, 277"
+    },
+    {
+     "claim": "On dev, ModuleExp then analyzes def a third time, directly, against the Asc type or syn, to get def_elab_direct. This overwrites every info inside def.",
+     "ref": "origin/dev src/language/statics/Statics.re:2757-2762"
+    },
+    {
+     "claim": "moduleexp_elab replaces the Let's (wrapped) def with def_elab_direct and strips the signature Asc from the pattern, so a signature is not enforced at runtime. When expanded_elab is not a Let, it ignores def_elab_direct.",
+     "ref": "origin/dev src/language/statics/ModuleHelpers.re:448-456"
+    },
+    {
+     "claim": "The cls override at the ModuleExp id is redundant: the final add records cls = Exp(Exp.cls_of_term(ModuleExp)) = Exp(ModuleExp) anyway.",
+     "ref": "origin/dev src/language/statics/Statics.re:2743-2756, 240, 2765; Exp.re:179"
+    },
+    {
+     "claim": "def_elab_direct was introduced with the Elaborator deletion. Before that, the old Elaborator elaborated ModuleExp as Let(pat', elaborate(m, def), elaborate(m, body)), reading the statics map rather than re-analyzing.",
+     "ref": "cc620bbbdc Statics.re ModuleExp hunk; cc620bbbdc^:src/language/statics/Elaborator.re:518-524"
+    },
+    {
+     "claim": "PR #2651 sets names_itself when the expanded elaboration is Let(_, FixF(_), _). Otherwise it uses the elab_term of the InfoExp at Exp.rep_id(def). It falls back to the old direct analysis when names_itself is set or no InfoExp is found.",
+     "ref": "29c08fd8fa src/language/statics/Statics.re:2770-2789"
+    },
+    {
+     "claim": "Commit e3013b0360 alone lost the error for `module F = fun x -> F(x) in 1`, because the recursive Let analyzed def with F in scope. 29c08fd8fa restores the error and adds a statics test for it.",
+     "ref": "29c08fd8fa test/statics/Test_Statics_Modules.re:409-413, 689"
+    },
+    {
+     "claim": "New evaluator test: `module M : { let x : Int } = { let x = 1; let y = 2 } in M.x` evaluates to 1. Its comment says dev gave the whole unelaborated module.",
+     "ref": "29c08fd8fa test/evaluator/Test_Evaluator_Modules.re:86-96, 161"
+    },
+    {
+     "claim": "The incremental evaluator keys reuse on each InfoExp's elab_term and co_ctx. EvalInfo.of_info_map copies them, and reuse_check requires prev_elab to fast_equal info.elab_term.",
+     "ref": "origin/dev src/language/dynamics/EvalInfo.re:19-23, 56-73; IncrEval.re:313-334"
+    },
+    {
+     "claim": "Statics.mk is memoized on the whole (ana, ctx, term, probe_ids) and returns (map, program elaboration). Subterm re-analyses are not cached.",
+     "ref": "origin/dev src/language/statics/Statics.re:4350-4392; src/haz3lcore/derived/CachedStatics.re:114-121"
+    },
+    {
+     "claim": "Module(items) lowers each item to a Let, TyAlias or wildcard Let (wrap_item) around an export tuple, analyzes that in synthesis mode, and builds its type from the exports' InfoPat entries read back from m.",
+     "ref": "origin/dev src/language/statics/Statics.re:2693-2724; ModuleHelpers.re:286-339, 413-440"
+    },
+    {
+     "claim": "On the CI branch that merges #2603 and #2651, `module M = { let a = 1; let b = a + 1 } in M.b` takes one analysis more than its number of expressions. Each Known case there pins a remaining x3 multiplier: recursive lets, shadowing lets, and label access on an unannotated parameter.",
+     "ref": "origin/ci/statics-passes-dev test/Test_StaticsPasses.re:163-212 (not on dev)"
+    }
+   ],
+   "representations": [
+    {
+     "name": "Map.t (the info map)",
+     "defined_at": "origin/dev src/language/statics/StaticsBase.re:4-11",
+     "what": "Id.Map.t(Info.t): one entry per term id, written last-write-wins.",
+     "produced_by": "add (Statics.re:268) and the pattern/type/module adds; patched in place by set_marks_exp, patch_elab_syn_ty_exp, the ModuleExp cls override and the FixF co_ctx patch",
+     "consumed_by": "cursor inspector, error_ids/warning_ids (StaticsBase.re:24-43), completion, EvalInfo.of_info_map for incremental evaluation, and the walk itself reading back (ModuleExp, module_actual_type, and #2651's read-back)"
+    },
+    {
+     "name": "Info.exp",
+     "defined_at": "origin/dev src/language/statics/Info.re:35-53",
+     "what": "Per-expression record: user_term, elab_term, ctx, ana, elab_syn_ty, ty, marks, co_ctx, probe_targets, ancestors, message, cls and label fields.",
+     "produced_by": "add in uexp_to_info_map (Statics.re:249-268); autolabel_singleton_tuple writes inner_for_source (357)",
+     "consumed_by": "parent cases through the returned info (child.ty, .co_ctx, .elab_syn_ty); the map's consumers above; #2651 reads .elab_term at Exp.rep_id(def)"
+    },
+    {
+     "name": "ana (expectation / mode)",
+     "defined_at": "origin/dev src/language/statics/Statics.re:194, 275; StaticsBase.re:263",
+     "what": "A Typ.t. Unknown(SynSwitch) means synthesize; anything else means analyze against it. Replaces the deleted Mode module.",
+     "produced_by": "the parent case, e.g. MatchedTyp.arrow_tolerant for Fun, p_syn.ty for a Let definition, the Asc type for ModuleExp's direct pass",
+     "consumed_by": "add (mismatch mark, message, fixed_typ); the singleton-labeled-tuple switch (2778); form-specific matching"
+    },
+    {
+     "name": "elab_syn_ty / ty",
+     "defined_at": "origin/dev src/language/statics/Info.re:41, 48; StaticsBase.re:268-277",
+     "what": "elab_syn_ty is the type synthesized for the elaborated term. ty is fixed_typ(ctx, ana, elab_syn_ty), the type after hole fixing. Together with marks and message they replace the deleted Self module.",
+     "produced_by": "each case passes ~elab_syn_ty to add; add computes ty",
+     "consumed_by": "parents (e.g. Let uses def.ty as ty_p_ana at 2080, 2092), inspector, module_actual_type"
+    },
+    {
+     "name": "marks (Mark.t list)",
+     "defined_at": "origin/dev src/language/statics/Mark.re:50-85",
+     "what": "Static errors on a node: Free, ExpectationMismatch, InexhaustiveMatch, BadToken, NoMeet and others. A node with marks is an error (Info.is_error).",
+     "produced_by": "case-specific marks plus add's expectation_mismatch_mark (StaticsBase.re:335-353)",
+     "consumed_by": "Map.error_ids, the editor's error display, and tests such as inconsistent_typecheck"
+    },
+    {
+     "name": "Ctx.t",
+     "defined_at": "origin/dev src/language/statics/Ctx.re:37-57",
+     "what": "Typing context: a list of Var, Constructor, TVar and Livelit entries plus use_mode. Extending it conses onto the front.",
+     "produced_by": "pattern analysis (Var case, Statics.re:3164-3192) and binders such as TyAlias, TypFun and the module export aliases (2124-2151)",
+     "consumed_by": "Var lookup (691-705), recorded in each Info as ctx, used by completion and get_binding_site"
+    },
+    {
+     "name": "CoCtx.t",
+     "defined_at": "origin/dev src/language/statics/CoCtx.re:30-53",
+     "what": "Free-variable uses: name to a list of (use id, expected type). It flows up the tree.",
+     "produced_by": "Var (singleton), holes ('$hole'), and union/mk at each compound or binder",
+     "consumed_by": "unused-variable warnings (second pattern pass), the requires_fixf decision (2172-2181), Map.refs_in, the IncrEval reuse map (reuse_map_for_co_ctx)"
+    },
+    {
+     "name": "elab_term / returned elaboration",
+     "defined_at": "origin/dev src/language/statics/Info.re:37; Statics.re:201, 268",
+     "what": "The elaborated Exp.t for a node. It is both recorded in the Info and returned up the walk; parents build their own elab_term from the children's returned elabs.",
+     "produced_by": "each case passes ~elab_term to add, which records and returns the same value. Exception: autolabel_singleton_tuple returns the surface tuple but records the inner elaboration (Statics.re:357-358).",
+     "consumed_by": "parent elaboration; Statics.mk's program elaboration (evaluator); EvalInfo/IncrEval reuse_check; #2651's def_elab_direct"
+    },
+    {
+     "name": "def_elab_direct",
+     "defined_at": "origin/dev src/language/statics/Statics.re:2762; 29c08fd8fa Statics.re:2775-2789",
+     "what": "The ModuleExp definition's elaboration, without the Let's align/add_name/FixF wrapper.",
+     "produced_by": "dev: a third, direct analysis of def. PR: the recorded InfoExp.elab_term at Exp.rep_id(def), with the direct analysis as fallback.",
+     "consumed_by": "ModuleHelpers.moduleexp_elab (ModuleHelpers.re:448-456), which builds the ModuleExp's elaboration"
+    },
+    {
+     "name": "expanded (ModuleExp to Let)",
+     "defined_at": "origin/dev src/language/statics/Statics.re:2736-2741",
+     "what": "Let(mpat_to_pat(mp), def, body) re-id'd with the ModuleExp's id; def and body keep their own ids.",
+     "produced_by": "ModuleExp case via fast_copy",
+     "consumed_by": "the Let case (all type checking of module bindings happens here); expanded_elab feeds names_itself and moduleexp_elab"
+    },
+    {
+     "name": "EvalInfo.entry",
+     "defined_at": "origin/dev src/language/dynamics/EvalInfo.re:19-23",
+     "what": "{elab_term, co_ctx, probe_targets} per InfoExp id, the key the incremental evaluator uses for cache reuse.",
+     "produced_by": "EvalInfo.of_info_map (EvalInfo.re:56-73) from the statics map",
+     "consumed_by": "IncrEval.reuse_check (IncrEval.re:313-334)"
+    },
+    {
+     "name": "lowered (module literal expansion)",
+     "defined_at": "origin/dev src/language/statics/ModuleHelpers.re:319-339",
+     "what": "A Module(items) literal rewritten as nested Let/TyAlias ending in a labeled export tuple, plus its value and type export lists.",
+     "produced_by": "ModuleHelpers.lower (via wrap_item, 286-317)",
+     "consumed_by": "the Module case (Statics.re:2701-2723), which analyzes it in synthesis mode and post-processes it with module_elab"
+    }
+   ],
+   "diagram_ideas": [
+    "THE WALK AND ITS TWO OUTPUTS. Left: a box 'uexp_to_info_map(ctx, ana, term, m)' (Statics.re:191). Arrow down into a box 'case on term form' with small child boxes 'go(child, ctx', ana')', downward arrows labeled 'ctx, ana'. Upward arrows from the children labeled '(Info.exp: ty, co_ctx, elab_syn_ty), elab, m'. These feed a box 'add (204-269): mismatch mark, message, ty = fixed_typ'. From add, two arrows: (1) right into a table 'info map: id -> InfoExp {ctx, ana, elab_syn_ty, ty, marks, co_ctx, elab_term, ...}' labeled 'add_info, last write wins'; (2) up, labeled 'returns (info, elab_term, m)'. From the table: arrows to 'cursor inspector / errors / completion' and to 'EvalInfo.of_info_map -> IncrEval.reuse_check (elab_term + co_ctx)'. From the root's returned elab: an arrow 'Statics.mk -> CachedStatics.elaborated -> evaluator'. A side note box: 'Mode, Self, Elaborator deleted; ana with SynSwitch = synthesize'.",
+    "LET ON DEV, PASS BY PASS. A vertical sequence of boxes, each tagged RECORDED (solid border) or DISCARDED (dashed): 'pattern probe p_syn (2053) DISCARDED' -> 'def_rec_probe: go(def) in p_syn.ctx (2070) DISCARDED' -> diamond 'is_recursive? (structural, 2076)'. No branch: 'go(def) in ctx vs p_syn.ty (2079) RECORDED'. Yes branch: 'def_base (2091) DISCARDED' -> 'def_base2 (2103) DISCARDED' -> 'go(def) in def_ctx with binder (2121) RECORDED'. Both join at 'body (2152) RECORDED' -> 'pattern again with body.co_ctx (2155) RECORDED' -> diamond 'requires_fixf? (2172)' -> 'Let(p, align+add_name(def_elab), body)' or 'Let(p, FixF(p, def_elab), body) + co_ctx patch at fun_id'. A counter on the right: 'passes over def: 2 (non-rec) / 4 (rec)'. A ghosted overlay labeled '#2603 (open)': 'non-function def: 1 pass, no probe; function def without self-reference or shadowing: probe kept as the final pass'.",
+    "MODULEEXP, DEV VS PR, SIDE BY SIDE. Top: 'module M = def in body (ModuleExp, id M)' -> 'fast_copy -> Let(M_pat, def, body) with id M; def/body keep their ids' -> 'Let analysis: probe (discarded) + pass (records InfoExp at rep_id(def))'. Left column 'dev': -> 'direct go(def_ana, def) (2762): 3rd pass, overwrites def's infos' -> 'def_elab_direct'. Right column 'PR #2651': -> diamond 'expanded_elab = Let(_, FixF, _)?' -> no: 'm[rep_id(def)].elab_term (lookup)'; yes or not found: 'direct go(def) (fallback, gives the Free error)'. Both columns -> 'moduleexp_elab: Let(strip(p_elab), def_elab_direct, body_elab)'. A footer bar with three cells: 'dev 3 passes | PR 2 | PR + #2603: 1'.",
+    "WHO WROTE THE INFO AT def's IDS (a timeline of writes). Horizontal time axis with three ticks. Tick 1: 'probe (2070): no write'. Tick 2: 'Let's pass: ctx = outer (or def_ctx if function-shaped), ana = p_syn.ty, ancestors = [M, M, ...]'. Tick 3 (dev only, red): 'direct pass: ctx = outer, ana = Asc type or syn, ancestors = [M, ...]; overwrites'. Under it, a 'final value' row: dev = tick 3; PR = tick 2. Annotate which consumers see the difference: cursor ctx inside a function-valued module def, ancestors, and EvalInfo elab_term (same except in the autolabel corner).",
+    "THE AUTOLABEL CORNER (why M.x changed). Input box: 'def = { let x = 1; let y = 2 } against ana (x : Int)'. Arrow: 'synthesis pre-pass (2782): type (x, y) does not match (x)' -> 'autolabel_singleton_tuple (310-358)'. It forks into two arrows. 'RECORDED at def's ids (357): inner_for_source, elab_term = proper module elaboration (x=1, y=2)'. 'RETURNED (358): surface (x = { let x = 1; let y = 2 }), unelaborated'. Dev's direct pass takes the RETURNED arrow -> 'M.x = unelaborated module'. The PR takes the RECORDED arrow -> 'M.x = 1' (test Test_Evaluator_Modules.re:90-96).",
+    "NESTING MULTIPLIES. A tree of nested ModuleExp/let definitions to depth d. Each level is labeled with its pass factor: dev 'x3' (module def) / 'x2' (plain let) / 'x4' (function let); PR 'x2' for module defs; PR + #2603 'x1'. Leaf annotation: 'analyses of the innermost def = product of the factors along the path', e.g. 3^d vs 2^d vs 1."
+   ],
+   "review_points": [
+    "Fix the comment and PR description wording. 'add records exactly the elab_term it returns' (29c08fd8fa Statics.re:2759) is true of add (dev Statics.re:268) but not of uexp_to_info_map. Under a singleton-labeled expectation, autolabel_singleton_tuple records the inner elaboration at the term's ids (357) and returns an unelaborated surface tuple (358). The read-back follows the record, not the return, so the one-member-signature module now evaluates M.x to 1 instead of the raw module. This is a behavior change, an improvement pinned by the new evaluator test. Commit 29c08fd8fa's message says this; the code comment and PR description should too.",
+    "Adjacent latent bug, not for this PR: autolabel_singleton_tuple discards the elaboration of its wrapper (Statics.re:336) and returns surface syntax (358). Any term that needs real elaboration (module literals, function-sugar lets, ascription-inserting forms) analyzed against a singleton labeled product that it does not match reaches the evaluator unelaborated. A plain `let` with such an ascription is untouched by #2651 and still hits this. Worth a follow-up issue.",
+    "Confirm the editor-visible changes inside a module definition. Infos for def's subterms now come from the Let's pass, not the direct pass. (a) For a function-shaped def (`module F = fun x -> ...`), the Let takes the recursive path, so ctx inside def includes F itself (def_ctx, dev 2102/2121). Completion and hover inside the definition will see F, as they already do for `let f = fun ...`. (b) Ancestors gain a duplicated module id because the expanded Let shares it (fast_copy, 2737-2741). The body already had this on dev. (c) ana is p_syn.ty, the same desugared signature type.",
+    "names_itself relies on FixF. FixF appears only when requires_fixf (dev 2172-2181): is_rec, and the binder is in def.co_ctx, the body's co_ctx after removing the binder, or pat_typ_refs. That is conservative: a signature whose types mention the module triggers the fallback too, costing the old extra pass, never a wrong answer. Non-function definitions are never recursive (Exp.re:407-459), so they are analyzed in the outer ctx and the Free mark is already recorded. Please add a test for a module that refers to an earlier module of the same name: `module F = fun x -> x in module F = fun y -> F(y) in F(1)`. It should take the fallback and elaborate non-recursively, as on dev.",
+    "The 'no info recorded' fallback looks unreachable on dev. The Let always records def's info in a recording pass (2079 or 2121), and only probes discard their maps. Keeping it as a guard is fine. Reviewers may want a comment or a test-only assertion so a future change that silently falls back (and doubles the cost again) gets noticed.",
+    "Interaction with #2603 (open). With #2603, the Let's recorded pass may be the probe (ctx = p_syn.ctx, binder at its synthesized type). An InfoExp at rep_id(def) still exists with the returned elab_term, so the two PRs compose in either merge order. They touch different cases, Let vs ModuleExp, so there should be no textual conflict. ci/statics-passes-dev merges both and pins a module definition at one extra visit in total.",
+    "Pass count to state precisely. On dev a module-literal definition is analyzed 3 times: the Let's probe (2070), the Let's pass (2079), and the direct pass (2762). After #2651 alone it is 2, after both PRs 1. The PR description's 'twice' counts only the ModuleExp's own extra pass. Items inside the literal are themselves Lets, so on dev each item's definition gets 3 x 2 = 6 analyses.",
+    "A Tuple definition under a signature. The Let rearranges a Tuple def to the pattern's labels before analyzing it (dev 2054-2069); the old direct pass analyzed the original tuple. The Tuple case does its own label matching (928+), so the result is probably the same, but one test would settle it: `module M : { let x : Int; let y : Int } = (y = 2, x = 1) in M.x`.",
+    "Consistency for incremental evaluation. EvalInfo takes each InfoExp's elab_term and co_ctx (EvalInfo.re:56-73), and reuse_check compares them (IncrEval.re:328-334). With the PR, the elab_term recorded at def's ids equals what actually runs at def, as on dev. In the autolabel corner the PR closes a mismatch dev had (recorded inner elaboration vs running surface tuple).",
+    "Optional cleanup, out of scope. The 'Override cls' write at the ModuleExp id (dev 2743-2756) is overwritten by the final add, which already sets cls = Exp(ModuleExp) (Exp.re:179). The signature type is also analyzed about four times per module binding: once by MPat (2728-2735) and once in each of the Let's three pattern passes. Signatures are small, so this is cheap."
+   ]
+  }
+ },
+ {
+  "angle": "modules",
+  "notes": {
+   "summary": "On dev, modules are not a separate kind of value. docs/modules.md:5 calls them \"a syntactic gloss over labeled tuples\". A module body `{ let a = 1; type T = Int; let b = a }` is lowered to an ordinary chain of lets and type aliases ending in a labeled tuple of the exported names: `let a = 1 in type T = Int in let b = a in (a=a, b=b)`. This is done by ModuleHelpers.lower / wrap_item / labeled_tuple_exp, then analyzed by the plain Let and TyAlias code. The module's type is the product of its exported value members (module_actual_type). Member access `M.x` is the ordinary labeled-tuple Dot: in statics it finds the label in the Prod, and at runtime Transition projects the field from the tuple. A signature `{ let x : Int; type T = Int }` is a type that Typ.desugar_sig turns into a labeled product `(x=Int)`; the `type` items in a signature are dropped. A module name enters the context in two ways. As a value, it is a VarEntry made by the let pattern, and its type is the module's product. As a type, it is a TVarEntry alias (Singleton) to the product of the module's type members; this is what makes `M.T` resolve through ProdProjection. A capitalized `M` is parsed as a constructor, and the Constructor case turns it back into Var M when a variable of that name is the newest binding.\n\n`module M = def in body` (ModuleExp) works the same way. Statics builds `let M = def in body` and gives that Let the ModuleExp's own id (fast_copy). The MPat becomes a Pat: Var, or Asc with the signature desugared. Then the Let is analyzed. The Let case analyzes def twice on dev: a recursion probe whose map is discarded (Statics.re:2070), then the real pass that is kept (2079). It then elaborates def as `align_exp_if_needed(ctx, sig, def_elab) |> add_name`, or wraps it in a FixF if def is a function that names its own binder. The ModuleExp case on dev then analyzed def a third time, directly (2757-2762), to get `def_elab_direct`. ModuleHelpers.moduleexp_elab (448-456) builds the runtime term as `Let(pattern with the signature ascription removed, def_elab_direct, body_elab)`. The point of the direct elaboration is to skip what the Let puts around def. The one that matters is the labeled-tuple alignment. A module's elaboration is a let-chain, not a Tuple, so against a one-member signature align_exp wraps the whole module in a one-field tuple, and `M.x` would give back the module instead of 42. The direct elaboration has a history. Matt Keenan's \"delete elaborator\" commit (cc620bbbdc, April 2026) folded elaboration into statics. The old Elaborator's ModuleExp case elaborated def on its own by reading the info map, and the port turned that into a second full analysis.\n\nPR #2651 (\"a module binding analyzes its definition once\") drops the third analysis. It reads def's elaboration back from the InfoExp the Let's pass recorded at Exp.rep_id(def). When the Let's elaboration is `Let(_, FixF(_), _)`, meaning the definition names its own module, it still runs the direct analysis, because only that pass reports the name as unbound (the second commit). The read-back relies on \"the info at def's id holds the elab the pass returned\". That holds for `add` (Statics.re:249-268), but not for autolabel_singleton_tuple (310-359). That path runs when def is checked against a one-label product that its own type does not match, for example a module with more members than its one-member signature. There the info at def's ids is the inner elaboration of the module, while the elab actually returned is a one-field tuple around the *unelaborated* source (`elaborated_exp`). Dev's direct analysis took the returned one, so `M.x` evaluated to the raw Module term, which steps to Indet (Transition.re:1314-1317). The PR reads the info, so `M.x` evaluates to 1. This is the second \"corner\" in the PR description, and the new evaluator test pins it. In most other cases the read-back gives the same elaboration the direct pass would, because both run in the same ctx with the same expected type. The visible differences are in the infos: for function-valued modules the infos now come from the Let's recursive pass, a tuple def is analyzed in its rearranged form, and the ancestors list differs. After this PR, a module def is still analyzed twice per ModuleExp: by the Let's probe, which the open PR #2603 (\"a let is analyzed once unless it refers to itself\") removes for non-function defs, and by the Let's real pass. With a one-member signature that matches, the singleton-label pre-pass at Statics.re:2778-2786 doubles each of those passes again.",
+   "facts": [
+    {
+     "claim": "Expression forms for modules: Module(list(mod_t)) is the `{ ... }` body and ModuleExp(mpat, exp, exp) is `module M = def in body`.",
+     "ref": "src/language/term/Grammar.re:77-78 (origin/dev)"
+    },
+    {
+     "claim": "Signatures are a type form Sig(list(sig_t)). Mod items are ModLet/ModType/ModExp/ModuleMod plus hole forms. Sig items are SigLet(pat)/SigType. MPat is Var or Asc(mpat, typ) plus hole forms. Mod, Sig and MPat are sorts of their own in any_t.",
+     "ref": "src/language/term/Grammar.re:23-25, 118, 131-153 (origin/dev)"
+    },
+    {
+     "claim": "The design doc says modules are 'a syntactic gloss over labeled tuples' and that ModuleExp expands to Let during statics.",
+     "ref": "docs/modules.md:5, 126 (origin/dev)"
+    },
+    {
+     "claim": "lower builds the expansion: the items are folded right with wrap_item around a final labeled tuple of the value exports, and type exports are collected separately.",
+     "ref": "src/language/statics/ModuleHelpers.re:319-337 (origin/dev)"
+    },
+    {
+     "claim": "wrap_item turns ModLet into Let, ModType into TyAlias and ModuleMod into Let(mpat_to_pat(mp), def, body), each with the item's own id (fast_copy). A bare expression (ModExp) becomes Let(Wild, e, body) with a fresh id. So a `module` item inside a module body becomes a plain Let and never reaches the ModuleExp case.",
+     "ref": "src/language/statics/ModuleHelpers.re:286-317 (origin/dev)"
+    },
+    {
+     "claim": "Only names that are not shadowed by a later item are exported. The final tuple is (name=name, ...) with fresh ids.",
+     "ref": "src/language/statics/ModuleHelpers.re:123-171 (origin/dev)"
+    },
+    {
+     "claim": "The Module case lowers the items (with ana, so signature member types are put on member patterns), analyzes the expansion in syn mode, reclassifies item infos as Mod, builds the actual Prod type from the export patterns, and records module_elab.",
+     "ref": "src/language/statics/Statics.re:2693-2724 (origin/dev)"
+    },
+    {
+     "claim": "module_elab removes signature ascriptions from let patterns in the expansion and copies the Module's id onto the final tuple. The elaboration's root keeps the first item's id.",
+     "ref": "src/language/statics/ModuleHelpers.re:341-386, 442-445 (origin/dev)"
+    },
+    {
+     "claim": "Step 1 of the ModuleExp case: record cursor info for the MPat (InfoMPat).",
+     "ref": "src/language/statics/Statics.re:2728-2735 (origin/dev)"
+    },
+    {
+     "claim": "mpat_to_pat gives the resulting Pat the MPat's rep id. Asc desugars the signature with Typ.desugar_sig(Ctx.empty, ...). Anything else becomes Wild. So the Let's pattern info later lands on the MPat's rep id.",
+     "ref": "src/language/statics/ModuleHelpers.re:51-60 (origin/dev)"
+    },
+    {
+     "claim": "Step 2: expanded = fast_copy(rep_id(uexp), Let(pat, def, body)), so the Let has the ModuleExp's id. It is analyzed with the ModuleExp's ana.",
+     "ref": "src/language/statics/Statics.re:2736-2742 (origin/dev); IdTagged.fast_copy at src/language/term/IdTagged.re:175-183"
+    },
+    {
+     "claim": "Step 3: the cls of the info at the ModuleExp's ids is overridden to ModuleExp. The final add at 2765-2772 writes the same ids again, with cls from Exp.cls_of_term(ModuleExp), so this override is overwritten.",
+     "ref": "src/language/statics/Statics.re:240, 2743-2756, 2765-2772 (origin/dev); src/language/term/Exp.re:179"
+    },
+    {
+     "claim": "Step 4 on dev: def is analyzed a second time, directly, with ana = the pattern's ascription type or syn. Its returned elab is def_elab_direct, and its infos overwrite those the Let recorded for every node in def.",
+     "ref": "src/language/statics/Statics.re:2757-2762 (origin/dev)"
+    },
+    {
+     "claim": "Step 5: moduleexp_elab takes the Let's elab, keeps its pattern (ascription removed) and body, and swaps in def_elab_direct for the def. If the Let's elab is not a Let, it just removes signature ascriptions and ignores def_elab_direct.",
+     "ref": "src/language/statics/ModuleHelpers.re:448-456 (origin/dev)"
+    },
+    {
+     "claim": "Inside the Let case, def is analyzed once as a recursion probe in p_syn.ctx, and the map from that pass is thrown away. Then it is analyzed again for real (non-recursive path), or three more times (recursive path).",
+     "ref": "src/language/statics/Statics.re:2070, 2079, 2091, 2103, 2121 (origin/dev)"
+    },
+    {
+     "claim": "is_recursive needs the number of pattern variables to equal Exp.get_num_of_functions(def). That function returns None for Module and ModuleExp, so a `{...}` module def is never recursive. Only a function-shaped def can be.",
+     "ref": "src/language/statics/Statics.re:2024-2039, 2076; src/language/term/Exp.re:407-459 (origin/dev)"
+    },
+    {
+     "claim": "What the Let wraps around def: non-recursive gives align_exp_if_needed(ctx, p_syn.ty, def_elab) |> Exp.add_name. Recursive and self-referring gives FixF(p, def) under the function's id, and the info at that id has the bound names removed from its co_ctx.",
+     "ref": "src/language/statics/Statics.re:2172-2230 (origin/dev)"
+    },
+    {
+     "claim": "align_exp wraps any non-Tuple expression in a one-field tuple when the expected type has a single labeled field. A module elaboration's root is a Let, so against a one-member signature it becomes (x = <whole module>). This wrapping is what def_elab_direct avoids.",
+     "ref": "src/language/statics/LabeledTupleHelpers.re:7-78, 108-110 (origin/dev)"
+    },
+    {
+     "claim": "dev already has an evaluator test showing the direct elaboration matters: `module M : { let x : Int } = { let x = 42 } in M.x` evaluates to 42.",
+     "ref": "test/evaluator/Test_Evaluator_Modules.re:127 (origin/dev)"
+    },
+    {
+     "claim": "add records an Info.exp whose elab_term is the same elab_term it returns.",
+     "ref": "src/language/statics/Statics.re:204-269 (origin/dev); Info.re:37"
+    },
+    {
+     "claim": "Exception to that: when ana is a one-label product that the term's own type does not match, autolabel_singleton_tuple runs. It analyzes a fresh copy against the inner type, records inner_for_source (the inner elab) at the term's ids, and returns `elaborated_exp`, a one-field tuple around the unelaborated term.",
+     "ref": "src/language/statics/Statics.re:310-359, 2776-2791 (origin/dev)"
+    },
+    {
+     "claim": "In the singleton-label wrapper, the syn pre-pass's map is rebound, but default_case closes over the original m. When the label matches, the pre-pass's work is thrown away, so every term checked against a one-label product is analyzed twice.",
+     "ref": "src/language/statics/Statics.re:375, 2778-2790 (origin/dev)"
+    },
+    {
+     "claim": "An unelaborated Module or ModuleExp that reaches dynamics steps to Indet.",
+     "ref": "src/language/dynamics/transition/Transition.re:1314-1321 (origin/dev)"
+    },
+    {
+     "claim": "PR: names_itself is true when the expanded Let's elab is Let(_, FixF(_), _). Unless names_itself, def_elab_direct is read from the InfoExp at Exp.rep_id(def). The direct analysis runs only as the fallback.",
+     "ref": "src/language/statics/Statics.re:2757-2789 (29c08fd8fa)"
+    },
+    {
+     "claim": "PR tests: `module F = fun x -> F(x) in 1` must be a static error, and `module M : { let x : Int } = { let x = 1; let y = 2 } in M.x` must evaluate to 1.",
+     "ref": "test/statics/Test_Statics_Modules.re:406-413; test/evaluator/Test_Evaluator_Modules.re:86-96 (29c08fd8fa)"
+    },
+    {
+     "claim": "Module name as a value: the pattern Var case adds VarEntry{name, id = pattern rep id (= MPat id), typ}.",
+     "ref": "src/language/statics/Statics.re:3164-3193 (origin/dev)"
+    },
+    {
+     "claim": "Module name as a type: when def is Module(items) with type members, the body ctx gets Ctx.extend_alias(name, Prod of type exports). When def is a variable or capitalized name that already has such an alias, the alias is copied (module aliasing).",
+     "ref": "src/language/statics/Statics.re:2040-2051, 2124-2151; ModuleHelpers.re:214-272; Ctx.re:62-70 (origin/dev)"
+    },
+    {
+     "claim": "Ctx has VarEntry, ConstructorEntry, TVarEntry (kind Singleton or Abstract) and LivelitEntry. There is no entry kind for modules.",
+     "ref": "src/language/statics/Ctx.re:13-15, 37-41 (origin/dev)"
+    },
+    {
+     "claim": "A capitalized `M` is parsed as Constructor. If the newest binding of the name is a variable (newest_var_or_ctr), or no constructor exists, it elaborates to Var(M) and gets the variable's type.",
+     "ref": "src/language/statics/Statics.re:1561-1597; Ctx.re:128-142 (origin/dev)"
+    },
+    {
+     "claim": "Value member access: Dot analyzes the left side, normalizes its type to a Prod, finds the label (LabelNotFound otherwise), and elaborates to Dot(e1_elab, label).",
+     "ref": "src/language/statics/Statics.re:1278-1420 (origin/dev)"
+    },
+    {
+     "claim": "Type member access: M.T is ProdProjection(Var M, Label T). weak_head_normalize resolves Var M through lookup_alias and projects the field.",
+     "ref": "src/language/term/Typ.re:481-500 (origin/dev)"
+    },
+    {
+     "claim": "Signature to type: desugar_sig keeps only SigLet items as labeled fields and drops SigType. The pattern Asc case uses it for the expected type and elaborates to Asc(p, normalize(ann)).",
+     "ref": "src/language/term/Typ.re:615-657; src/language/statics/Statics.re:3655-3670 (origin/dev)"
+    },
+    {
+     "claim": "At runtime, Dot projects the labeled field out of a tuple value.",
+     "ref": "src/language/dynamics/transition/Transition.re:1024-1058 (origin/dev)"
+    },
+    {
+     "claim": "The elab the evaluator runs is the root elab that statics returns (Statics.mk), not one read from the map. InfoExp.elab_term is still consumed by EvalInfo and by the incremental evaluator's reuse check.",
+     "ref": "src/language/statics/Statics.re:4350-4381; src/language/dynamics/EvalInfo.re:63-65; src/language/dynamics/IncrEval.re:328-334 (origin/dev)"
+    },
+    {
+     "claim": "History: def_elab_direct and the second go() came in with 'delete elaborator' (Matt Keenan, cc620bbbdc). The old Elaborator elaborated ModuleExp as Let(pat', elaborate(m, def), elaborate(m, body)), reading the info map.",
+     "ref": "git show cc620bbbdc^:src/language/statics/Elaborator.re:518-524"
+    },
+    {
+     "claim": "docs/modules.md still describes an Elaborator.re that does 'permanent expansion for evaluation'. That file was deleted in cc620bbbdc.",
+     "ref": "docs/modules.md:261-264, 300 (origin/dev)"
+    },
+    {
+     "claim": "The elaboration test for a one-member signature on a plain let compares against `let m : (x=Int) = (let x = 1 in (x=x)) in m`. Both sides go through the same Let alignment, so it cannot detect wrapping.",
+     "ref": "test/Test_Elaboration.re:799-809 (origin/dev)"
+    },
+    {
+     "claim": "PR #2603 ('a let is analyzed once unless it refers to itself') is still OPEN.",
+     "ref": "gh pr view 2603 (checked 2026-10-21); dev's probe still at src/language/statics/Statics.re:2070"
+    }
+   ],
+   "representations": [
+    {
+     "name": "ModuleExp(mpat, def, body)",
+     "defined_at": "src/language/term/Grammar.re:78",
+     "what": "Surface form `module M = def in body`. The name pattern can be capitalized, and def can be any expression (usually a `{...}` module).",
+     "produced_by": "The parser (MakeTerm / Menhir)",
+     "consumed_by": "The ModuleExp case at Statics.re:2725-2772, which expands it to a Let. It never reaches dynamics; if it did, Transition.re:1318-1321 gives Indet."
+    },
+    {
+     "name": "Module(items) and mod_term items",
+     "defined_at": "src/language/term/Grammar.re:77, 131-139",
+     "what": "A `{ let x = 1; type T = Int; e; module N = ... }` body made of ModLet/ModType/ModExp/ModuleMod items",
+     "produced_by": "The parser",
+     "consumed_by": "The Module case at Statics.re:2693-2724 via ModuleHelpers.lower/wrap_item. The Let case peeks at it for type exports (Statics.re:2041-2045). mod_to_info_map (4201-4254) handles only items outside a module."
+    },
+    {
+     "name": "Sig(items) and sig_term",
+     "defined_at": "src/language/term/Grammar.re:118, 140-146",
+     "what": "A signature type `{ let x : Int; type T = Int }`",
+     "produced_by": "The parser, in type position (an MPat ascription or a let annotation)",
+     "consumed_by": "Typ.desugar_sig (Typ.re:615-657) turns it into a Prod of SigLet fields (SigType is dropped). sig_to_info_map handles cursor info."
+    },
+    {
+     "name": "MPat",
+     "defined_at": "src/language/term/Grammar.re:147-153",
+     "what": "Module name pattern: Var(name) or Asc(mpat, typ)",
+     "produced_by": "The parser",
+     "consumed_by": "mpat_to_info_map (Statics.re:4311-4348) writes InfoMPat. ModuleHelpers.mpat_to_pat (51-60) turns it into Pat.Var or Pat.Asc(desugared sig) with the same rep id, and the expanded Let's pattern info then overwrites that rep id."
+    },
+    {
+     "name": "lowered",
+     "defined_at": "src/language/statics/ModuleHelpers.re:8-12",
+     "what": "{expanded: a Let/TyAlias chain ending in a labeled tuple, value_exports: name+pattern list, type_exports: (name, type) list}",
+     "produced_by": "ModuleHelpers.lower (319-337)",
+     "consumed_by": "The Module case: analysis of expanded (2702), module_actual_type (2706-2711), module_elab (2712-2716)"
+    },
+    {
+     "name": "Module elaboration",
+     "defined_at": "src/language/statics/ModuleHelpers.re:442-445",
+     "what": "The runtime term for a module: `let a = .. in type T = .. in let b = .. in (a=a, b=b)`. Pattern ascriptions are removed, the root carries the first item's id, and the final tuple carries the Module's id.",
+     "produced_by": "module_elab applied to the expansion's elab (Statics.re:2712-2716)",
+     "consumed_by": "An enclosing Let/ModuleExp as def's elab, and then the evaluator (Dot projection at Transition.re:1024-1058)"
+    },
+    {
+     "name": "Module type",
+     "defined_at": "src/language/statics/ModuleHelpers.re:413-439",
+     "what": "Prod of TupLabel(name, type) for the value exports. Module-local aliases are expanded so they don't escape their scope.",
+     "produced_by": "module_actual_type, read from the export patterns' infos",
+     "consumed_by": "The Module's info (elab_syn_ty), the Let's pattern type, the VarEntry for M, and the Dot case's label lookup (Statics.re:1296-1399)"
+    },
+    {
+     "name": "expanded_elab",
+     "defined_at": "src/language/statics/Statics.re:2742",
+     "what": "The Let's elaboration of `let M = def in body`: Let(p_elab, align(def_elab)|>add_name, body_elab), or Let(p_elab, FixF(p, def_elab), body_elab)",
+     "produced_by": "The Let case (Statics.re:2182-2230)",
+     "consumed_by": "moduleexp_elab, which keeps the pattern (ascription removed) and the body and replaces the def. The PR's names_itself check also reads it (29c08fd8fa Statics.re:2770-2774)."
+    },
+    {
+     "name": "def_elab_direct",
+     "defined_at": "src/language/statics/Statics.re:2762 (origin/dev); 2775-2789 (29c08fd8fa)",
+     "what": "def's elaboration without what the Let wraps around it (alignment, function name, FixF)",
+     "produced_by": "dev: a second go(~ana=def_ana, def). PR: InfoExp.elab_term at Exp.rep_id(def), falling back to the second go() when names_itself.",
+     "consumed_by": "ModuleHelpers.moduleexp_elab (448-456)"
+    },
+    {
+     "name": "InfoExp (Info.exp)",
+     "defined_at": "src/language/statics/Info.re:37-41, 141",
+     "what": "Per-id statics record: ctx, ana, ty, marks, co_ctx, ancestors, and elab_term",
+     "produced_by": "add in uexp_to_info_map (Statics.re:204-269). It can be overwritten later at the same ids, for example by autolabel_singleton_tuple (356-357), the Constructor-as-variable path (1588-1596), or the FixF co_ctx patch (2216-2228).",
+     "consumed_by": "Cursor inspector and completions, EvalInfo (EvalInfo.re:63-65), the incremental evaluator's reuse check (IncrEval.re:328-334), and now the PR's read-back"
+    },
+    {
+     "name": "Ctx entries for a module name",
+     "defined_at": "src/language/statics/Ctx.re:13-15, 37-41",
+     "what": "VarEntry{name M, id = MPat rep id, typ = module Prod} for the value. TVarEntry{name M, kind Singleton(Prod of type exports)} for the type members.",
+     "produced_by": "The pattern Var case (Statics.re:3164-3193), and Ctx.extend_alias in the Let case (Statics.re:2135, 2146)",
+     "consumed_by": "Ctx.lookup_var / newest_var_or_ctr for `M` (Statics.re:1571-1597), and Ctx.lookup_alias inside weak_head_normalize for `M.T` (Typ.re:481-500)"
+    }
+   ],
+   "diagram_ideas": [
+    "ModuleExp pipeline, dev vs PR (left to right). Box 'module M : S = def in body' (Statics.re:2725). Arrow 'MPat info' to box 'InfoMPat at MPat ids' (2728). Arrow 'mpat_to_pat' to box 'Pat Asc(Var M, desugar_sig S), same rep id' (ModuleHelpers:51-60). Arrow 'fast_copy with the ModuleExp id' to box 'Let(pat, def, body)' (2737). That box opens into a sub-box 'Let case' holding three stacked pass boxes: 'def pass #1: recursion probe, map discarded' (2070); 'def pass #2: kept; InfoExp at rep_id(def), elab E' (2079); 'body pass' (2152). Arrow from it to box 'expanded_elab = Let(p, align(E)+name or FixF(E), body)' (2182-2230). From there two parallel lanes. Red lane 'dev' to box 'def pass #3: go(def) again, overwrites def's infos, gives E' (2762). Green lane 'PR' to diamond 'expanded_elab has FixF?'. 'no' goes to box 'read E from InfoExp at rep_id(def)'; 'yes' goes to the red pass #3 box (29c08fd8fa:2770-2789). Both lanes meet at box 'moduleexp_elab: Let(strip Asc(p), E, body_elab)' (ModuleHelpers:448), then box 'add info at the ModuleExp ids' (2765).",
+    "Why def_elab_direct exists, as two columns from one source box E = 'let x = 42 in (x=x)' (a module elab whose root is a Let). Left arrow 'Let path: align_exp_if_needed(ctx, (x:Int), E)' (LabeledTupleHelpers:49-75) to box '(x = let x = 42 in (x=x))', then arrow 'M.x' to red box '(x=42)'. Right arrow 'moduleexp_elab uses E directly' to box 'let M = let x = 42 in (x=x) in M.x', then arrow to green box '42' (test at Test_Evaluator_Modules.re:127). Bottom note box, dashed: 'plain let m : {let x:Int} = {...} and a `module` item inside a module body take only the left path (unverified)'.",
+    "Corner 2 mechanism (the singleton-label wrapper). Box 'def = { let x = 1; let y = 2 } checked against (x:Int)' (Statics.re:2778). Arrow 'syn pre-pass' to box 'type (x=Int, y=Int): not one matching label' (2782-2788). Arrow to box 'autolabel_singleton_tuple' (310). From it two output arrows. The first, labeled 'add_info at def's ids', goes to box 'InfoExp = inner_for_source; elab_term = the module's real elab' (357). The second, labeled 'returned elab', goes to box 'elaborated_exp = (x = <unelaborated Module>)' (329-334, 358). From the returned box, a red arrow 'dev: direct pass takes this' to box 'M.x evaluates to the raw Module, Indet' (Transition:1314-1317). From the info box, a green arrow 'PR: reads this' to box 'M = (x=1, y=2), M.x = 1' (new test at 29c08fd8fa Test_Evaluator_Modules.re:86-96).",
+    "How a module name lives in the context. Center box 'body ctx after module M = { type T = Int; let x : T = 1 }'. Two entry boxes hang off it: 'VarEntry M : (x=Int), id = MPat id' (Statics.re:3164-3193) and 'TVarEntry M = Singleton((T=Int))' (Statics.re:2135; Ctx.re:62-70). From VarEntry, arrow 'value lookup' to box 'M (parsed as Constructor), newest_var_or_ctr says Var, so Var M' (Statics.re:1571-1597), then box 'Dot: find_label x in Prod, gives Int' (1278-1399), then runtime box 'Transition Dot: project field' (1024-1058). From TVarEntry, arrow 'type lookup' to box 'M.T = ProdProjection(Var M, Label T)', then box 'weak_head_normalize: lookup_alias M, project_type T, gives Int' (Typ.re:481-500).",
+    "Lowering a module body, ids drawn as colored tags. Row of item boxes [ModLet a (id i1)] [ModType T (id i2)] [ModExp e (fresh)] [ModLet b (id i3)]. Arrow 'wrap_item, folded right' (ModuleHelpers:286-337) to a nested box 'Let a (i1) > TyAlias T (i2) > Let _ = e (fresh) > Let b (i3) > Tuple (a=a, b=b) (fresh id)'. Arrow 'module_elab: remove Asc from patterns; restore_module_body_id' (442-445) to the same nest with the Tuple's tag changed to 'Module id'. Side boxes 'value_exports: non-shadowed names' (123-160) and 'type_exports, which become TVarEntry for M' (221-272).",
+    "Analysis-count table (rows by columns, each cell 'how many times def's whole subtree is analyzed'). Rows: 'module M = {...} in b'; 'module M : {one member, matches} = {...} in b'; 'module F = fun x -> ... in b, no self-reference'; 'module F = fun x -> F(x) in b'. Columns: dev; PR #2651; #2651 + #2603 (the open PR). Values to fill from code: row 1 = 3 / 2 / 1 (probe 2070, real 2079, direct 2762). Row 2 doubles each pass through the singleton-label pre-pass (2778-2790), giving 6 / 4 / 2. Row 3 = 5 / 4 / fewer with #2603 (probe, def_base, def_base2, final, direct). Row 4 = 5 / 5 / -. Footer: nested ModuleExp multiplies per level."
+   ],
+   "review_points": [
+    "The read-back depends on one invariant: 'the InfoExp at rep_id(def) holds the elab the Let used for def'. The code comment states it as 'add records exactly the elab_term it returns' (29c08fd8fa Statics.re:2759). That is true of add (Statics.re:249-268) but not of autolabel_singleton_tuple (310-359), where the info is the inner elab and the returned elab is an unelaborated one-field wrapper. That gap causes corner 2, and the new evaluator test (Test_Evaluator_Modules.re:86-96 @29c08fd8fa) now pins it. Decide whether to keep a test whose result depends on this gap, or fix autolabel to return an elaborated wrapper separately. Either way, the comment should name the exception.",
+    "The fallback 'when no info was recorded' is effectively unreachable. Every uexp_to_info_map ends in add at the term's ids, so the fallback really only serves names_itself. The comment and PR text could say that, so nobody relies on it as a safety net.",
+    "names_itself detects self-reference from the shape of the Let's elab (Let(_, FixF, _)). That matches requires_fixf (Statics.re:2172-2181, 2229) only while the expanded Let is not autolabeled. When it is autolabeled, moduleexp_elab ignores def_elab_direct anyway (ModuleHelpers.re:454), so it is safe, but it is coupled to the Let's elaboration shape. A sturdier signal would be for the Let to report is_rec/requires_fixf some other way. Worth a question to Alexander about which he would prefer to maintain.",
+    "Function-valued modules that do not name themselves (`module F = fun x -> ? in ...`) take the Let's recursive path (one variable, one function), so def is analyzed in def_ctx with F bound. Dev's direct pass overwrote those infos using the outer ctx. With the PR they stay, so the cursor inspector and completions inside the function now list F as in scope, and using F then turns names_itself on and becomes an error. This is a small editor-facing change. If #2603 merges, its probe in p_syn.ctx has the same effect. There is also no test that pins the read-back on this path; something like `module F = fun x -> x + 1 in F(2)` evaluating to 3 would.",
+    "Smaller info differences to sanity-check, all present on dev for body infos already. (1) def's infos now carry the ModuleExp id twice in ancestors, because the expanded Let reuses that id (Statics.re:270, 2737-2742). (2) A Tuple def with a labeled-product signature is analyzed in its rearranged form (Statics.re:2054-2069), so its label-inference message can change.",
+    "Architecture question for Modules II: def_elab_direct exists only to keep a module's let-chain elaboration out of align_exp's one-field wrapping (LabeledTupleHelpers.re:49-75). The plain-let form `let m : { let x : Int } = { let x = 1 } in m.x`, and a `module N : {one member} = {...}` item inside a module body (lowered to a plain Let by wrap_item, ModuleHelpers.re:300-304), go through the Let's alignment with no such guard. By reading the code they likely evaluate to a wrapped module rather than the member. This is unverified; a one-line CLI probe at dev would settle it. Test_Elaboration.re:799-809 cannot catch it. If align_exp could see through a Let/TyAlias chain to its final tuple, as restore_module_body_id already does (ModuleHelpers.re:375-386), then the ModuleExp could use the Let's elaboration as is, and both def_elab_direct and this PR's read-back would go away.",
+    "Repeat analysis this PR leaves in place for module defs: the Let's recursion probe at Statics.re:2070 (removed for non-function defs by the open #2603), and the singleton-label pre-pass at 2778-2790, whose map is discarded because default_case closes over the original m. A module under a matching one-member signature is still analyzed twice per pass. Both are the same 'statics re-analyzes whole subterms' finding as #2609 item 7 ('Performance Challenges (Fall 2026)'), and each extra pass multiplies with nesting.",
+    "Pre-existing and not caused by the PR: the cls override at Statics.re:2743-2756 is overwritten by the final add at 2765-2772, which writes the same ids with cls ModuleExp. docs/modules.md:261-264 and :300 still describe the deleted Elaborator.re. The double analysis came from cc620bbbdc (the 'delete elaborator' commit) porting the old Elaborator's 'elaborate def directly from the map'. The PR's read-back returns to that original design, and a sentence in the PR or the docs saying so would help reviewers.",
+    "Sound as long as the PR keeps both: the final ModuleExp info still takes co_ctx, probe_targets and elab_syn_ty from the expanded Let, as on dev (dev discarded the direct pass's co_ctx too), so the co_ctx used for reuse is the same. In the non-self-referring case, def_elab_direct is now physically the same term as the InfoExp elab_term at def's id, which the incremental evaluator's reuse check reads (IncrEval.re:328-334)."
+   ]
+  }
+ },
+ {
+  "angle": "dynamics",
+  "notes": {
+   "summary": "What the evaluator gets. On dev, the statics pass (Statics.mk → uexp_to_info_map) produces two things. The first is the elaborated program: a single Exp.t. DHExp is just `include Exp`, so there is no separate runtime term type. The second is the info_map, where every expression id has an InfoExp holding its own elab_term, co_ctx (free variables) and probe_targets. The editor keeps both in CachedStatics. EvalResult.calculate sends a new evaluation only when the root elaboration changes under fast_equal_with_lexemes (ids are ignored), or when settings or probe targets change. It also cuts the info_map down to EvalInfo.t, which holds per id {elab_term, co_ctx, probe_targets} plus the probe targets. The full info_map cannot cross postMessage because LivelitCtx entries contain closures. A worker request is a batch of (key, {expr = root elaboration, eval_info_map, prev = last run's incremental cache}), Marshal-encoded. The worker replies in four steps: an instant Ack; a ReusePlan (the reuse pre-pass, run only when EvalInfo has at least 2500 entries); Stream updates after each 5000-step slice; and finally a Result holding (key, Ok((value Exp.t, EvaluatorState.t)) | Error) plus eval_time. EvaluatorState carries probes, tests, theorems and incr_eval. The client turns it into Dynamics.t {probe_map, test_results, theorems} and keeps incr_eval as `prev` for the next request.\n\nHow modules run. There is no module value type such as ModVal. A module is lowered in statics into a chain of lets that ends in a labeled tuple (x = x, y = y). `module M = def in body` becomes `let M = def in body`. At runtime M is bound in the environment like any other let, and `M.x` is the Dot transition doing labeled-tuple projection. Signatures are removed before runtime: ascriptions on member patterns and on the module pattern are stripped, so nothing is sealed when the program runs. If a raw Module or ModuleExp ever reaches the evaluator, it is Indet (stuck). Ids decide what the evaluator records and reuses. Ids on surface nodes are deterministic: each member's let takes the item's id, and the export tuple takes the def's id. But every lowering mints fresh ids for the export-tuple field nodes.\n\nWhat evaluation depends on from statics: (1) the root elaboration, which is the program actually run; (2) EvalInfo per id: elab_term + co_ctx + probe_targets are the keys of incremental reuse (IncrEval.reuse_check). Reuse compares this run's recorded elab_term at an id with last run's; it does not compare against the subtree the evaluator meets at that id. is_program_node also uses EvalInfo to decide what gets streamed; (3) probe targets, built from info_map co_ctx/ctx through refs_in, which decide where samples are recorded; (4) the count of EvalInfo entries, which decides incremental vs from-scratch. So a change in elaboration matters downstream in two ways: if the root elaboration changes, the program's behaviour changes; if the recorded elab_term or co_ctx at an id stops describing what runs at that id, reuse can be stale or never hit.\n\nWhat #2651 changes downstream. For ordinary module bindings the root elaboration should be structurally the same as on dev. In the usual cases the Let analyzes the def with the same context and expected type as the old second analysis did. What changes is that the info at def.id and the def slot in the ModuleExp elaboration are now one value by construction. Also, the leftover InfoExp entries from the first lowering go away: on dev that lowering's elaboration was thrown out, but its fresh-id entries stayed in info_map. This makes EvalInfo and the worker payload smaller, and it can move a program across the 2500-entry incremental threshold. One case does change at runtime: a module under a one-member signature whose def synthesizes a different product. The Let's analysis records, at def.id, an inner elaboration (from autolabel_singleton_tuple) that is different from the elaboration it returns. On dev, M was bound to a tuple wrapping the raw, unelaborated Module, so M.x was Indet. Now M is the full module tuple, unsealed, and M.x is 1. The second commit (the names_itself check for FixF) matters for dynamics as well as for the error mark. In the FixF branch, the Let's recorded info at def.id is a plain Fun whose co_ctx has had the module name removed. Reading that back would put a non-recursive Fun in the slot without the name in its co_ctx, so reuse could ignore changes to an outer binding of that name. The fallback re-analysis overwrites that info.",
+   "facts": [
+    {
+     "claim": "DHExp is not a separate type: DHExp.re includes Exp, so the evaluator consumes the same Exp.t data structure that statics elaborates into.",
+     "ref": "src/language/dynamics/DHExp.re:1-11 (origin/dev)"
+    },
+    {
+     "claim": "Statics.mk returns (info_map, root elaboration), memoized on (ana, ctx, term, probe_ids), with a post-pass copying info to sibling shard ids.",
+     "ref": "src/language/statics/Statics.re:4350-4392 (origin/dev)"
+    },
+    {
+     "claim": "CachedStatics stores term, elaborated, info_map, error/warning ids and probe targets; elaborated is replaced by a dummy Var when statics or dynamics+elaboration are off.",
+     "ref": "src/haz3lcore/derived/CachedStatics.re:4-13, 99-135 (origin/dev)"
+    },
+    {
+     "claim": "Probe targets are computed from info_map: each probed expression id captures Statics.Map.refs_in, which maps the info's co_ctx through its ctx to binding ids; with probe_all every InfoExp/InfoPat id is a target.",
+     "ref": "src/haz3lcore/derived/CachedStatics.re:43-88; src/language/statics/StaticsBase.re:46-53 (origin/dev)"
+    },
+    {
+     "claim": "Statics `add` records an InfoExp whose elab_term is exactly the elab it returns; every node's info carries cls, ana, ty, ctx, co_ctx, probe_targets, ancestors, user_term, elab_term.",
+     "ref": "src/language/statics/Statics.re:205-269 (origin/dev)"
+    },
+    {
+     "claim": "Exception to 'add records what it returns': autolabel_singleton_tuple returns elaborated_exp = Tuple([TupLabel(l, original_expression)]) where original_expression is the RAW user term with a fresh root id, but records inner_for_source (the inner analysis against the field type) at the source term's ids.",
+     "ref": "src/language/statics/Statics.re:310-358 (origin/dev)"
+    },
+    {
+     "claim": "The singleton-label lift wraps EVERY expression node: if ana normalizes to a one-field labeled Prod and the synthesized type is not that label, autolabel_singleton_tuple is used.",
+     "ref": "src/language/statics/Statics.re:2775-2791 (origin/dev)"
+    },
+    {
+     "claim": "On dev the ModuleExp case expands to Let(mpat_to_pat(mp), def, body) with the ModuleExp's id, analyzes it, then analyzes def a second time directly (def_ana = ascribed type or syn) and splices that elaboration into the Let's def slot via moduleexp_elab.",
+     "ref": "src/language/statics/Statics.re:2725-2772 (origin/dev)"
+    },
+    {
+     "claim": "The PR replaces the direct analysis with a read-back of InfoExp.elab_term at Exp.rep_id(def), unless the expanded elaboration is Let(_, FixF(_), _) (names_itself) or no InfoExp exists; then it falls back to the old direct analysis.",
+     "ref": "src/language/statics/Statics.re:2757-2799 (29c08fd8fa)"
+    },
+    {
+     "claim": "moduleexp_elab rebuilds Let(strip_module_sig_pats_in_pat(p), def_elab_direct, body_elab); if the expanded elaboration is not a Let it ignores def_elab_direct and just strips signature patterns.",
+     "ref": "src/language/statics/ModuleHelpers.re:448-456 (origin/dev)"
+    },
+    {
+     "claim": "The Let case on dev analyzes def once as a throwaway (def_rec_probe, map discarded) and once for real; so a module def was analyzed three times on dev, and after #2651 twice (#2603 is not on dev).",
+     "ref": "src/language/statics/Statics.re:2070, 2079, 2762 (origin/dev)"
+    },
+    {
+     "claim": "The Let elaboration wraps def: align_exp_if_needed + Exp.add_name in the non-recursive path; in the recursive-and-self-referencing path a FixF placed at fun_id = rep_id(def_elab), with the inner Fun given a derived id.",
+     "ref": "src/language/statics/Statics.re:2172-2230 (origin/dev)"
+    },
+    {
+     "claim": "In the FixF branch the InfoExp at fun_id is rewritten with co_ctx = CoCtx.mk(ctx, p_ana.ctx, info.co_ctx), i.e. the recursive name removed, because the FixF binds it; its elab_term stays the plain Fun.",
+     "ref": "src/language/statics/Statics.re:2208-2229 (origin/dev)"
+    },
+    {
+     "claim": "Module lowering: each item becomes a Let/TyAlias carrying the item's Mod id; the final export is a labeled tuple whose Tuple, TupLabel, Label and Var nodes are all Exp.fresh (new ids every lowering).",
+     "ref": "src/language/statics/ModuleHelpers.re:162-171, 286-337 (origin/dev)"
+    },
+    {
+     "claim": "Exp.fresh mints a new unique id from a monotonic counter plus session-random bits; ids are not derived from the source term.",
+     "ref": "src/language/term/IdTagged.re:69-75, 124-127; src/util/Id.re:60-93 (origin/dev)"
+    },
+    {
+     "claim": "module_elab strips signature ascriptions from member let patterns and copies the Module expression's id onto the export Tuple; the Module's info records that as elab_term.",
+     "ref": "src/language/statics/ModuleHelpers.re:341-386, 442-445; src/language/statics/Statics.re:2693-2724 (origin/dev)"
+    },
+    {
+     "claim": "Module access M.x elaborates to Dot(e1_elab, label) and runs as labeled-tuple projection: req_final both sides, unbox LabeledTupleProjection, pick the matching TupLabel field.",
+     "ref": "src/language/statics/Statics.re:1342; src/language/dynamics/transition/Transition.re:1024-1087 (origin/dev)"
+    },
+    {
+     "claim": "There is no module value form at runtime: if a raw Module or ModuleExp reaches the evaluator it is Indet ('should be expanded before reaching dynamics').",
+     "ref": "src/language/dynamics/transition/Transition.re:1314-1321 (origin/dev)"
+    },
+    {
+     "claim": "Let evaluation: requires def final, pattern-matches, extends the environment, steps to Closure(env', body); it emits RecordPatMatch{pat, rhs: d1 (the unevaluated def), samples}.",
+     "ref": "src/language/dynamics/transition/Transition.re:528-560 (origin/dev)"
+    },
+    {
+     "claim": "Var lookup copies the environment entry with a fresh id; FixF and Let entries are not treated as final values.",
+     "ref": "src/language/dynamics/transition/Transition.re:492-517 (origin/dev)"
+    },
+    {
+     "claim": "FixF in environment mode first captures its env, then unwraps by binding the name(s) to the fixpoint and stepping into the body.",
+     "ref": "src/language/dynamics/transition/Transition.re:606-641 (origin/dev)"
+    },
+    {
+     "claim": "EvalInfo is the serializable slice of statics the evaluator uses: statics: Id.Map(entry{elab_term, co_ctx, probe_targets}) plus targets; of_info_map keeps only InfoExp entries.",
+     "ref": "src/language/dynamics/EvalInfo.re:19-29, 56-74 (origin/dev)"
+    },
+    {
+     "claim": "is_program_node(id) = id has an EvalInfo entry; the evaluator uses it to decide which top-level ids may publish to the streaming outbox.",
+     "ref": "src/language/dynamics/EvalInfo.re:43-44; src/language/dynamics/Evaluator.re:119-136 (origin/dev)"
+    },
+    {
+     "claim": "Evaluator pipeline per node: eval_5 (separate state per top-level expr) -> eval_4 (reuse check / record incr entry) -> eval_3 (probe span open/close if id in targets) -> eval_2 (until final) -> eval_1 (EvaluatorState.update with side effects) -> eval_0 (Transition).",
+     "ref": "src/language/dynamics/Evaluator.re:92-497 (origin/dev)"
+    },
+    {
+     "claim": "reuse_check hits only at top level (empty call stack) when: a prev entry exists at the id, EvalInfo's elab_term at that id is fast_equal (ids ignored) with lexemes equal to the prev entry's prev_elab, the reuse_map restricted to the info's co_ctx matches, and probe targets match.",
+     "ref": "src/language/dynamics/IncrEval.re:313-353 (origin/dev)"
+    },
+    {
+     "claim": "On a cache miss at top level the evaluator records an incr entry keyed by the id, snapshotting EvalInfo's elab_term, co_ctx-restricted reuse_map and probe_targets with the computed value and replay state.",
+     "ref": "src/language/dynamics/Evaluator.re:369-450 (origin/dev)"
+    },
+    {
+     "claim": "Reuse provenance for a let-bound name comes from RecordPatMatch: source = rep_id of the rhs expression, flag Clean iff that id was reused.",
+     "ref": "src/language/dynamics/evaluation/ReusePass.re:28-50; src/language/dynamics/IncrEval.re:306-311 (origin/dev)"
+    },
+    {
+     "claim": "Reuse tracking and the reuse pre-pass run only if prev is non-empty or EvalInfo has statics; results are finished by substituting the env and replacing all ids.",
+     "ref": "src/language/dynamics/Evaluator.re:499-560 (origin/dev)"
+    },
+    {
+     "claim": "EvalResult re-requests evaluation only when the root elaboration changes under fast_equal_with_lexemes, or settings/targets change; EvalInfo is rebuilt on the main thread because LivelitCtx closures cannot cross postMessage.",
+     "ref": "src/web/app/editors/result/EvalResult.re:252-300 (origin/dev)"
+    },
+    {
+     "claim": "Worker request value = {expr: Exp.t, eval_info_map: EvalInfo.t, prev: incr_eval}; a request is {request_id, batch: list((key, value))}; response per key is Result((Exp.t, EvaluatorState.t), ProgramResult.error).",
+     "ref": "src/web/util/WorkerServer.re:7-41 (origin/dev)"
+    },
+    {
+     "claim": "Server messages: Ack{request_id} (liveness), ReusePlan{request_id, initial: (key, IncrEval.t) list}, Stream{request_id, key, update: IncrEval.outbox}, Result{request_id, response, eval_time}.",
+     "ref": "src/web/util/WorkerServer.re:43-89 (origin/dev)"
+    },
+    {
+     "claim": "Both directions are Marshal-encoded strings (the #2368 fix for structured-clone overflow on deep payloads).",
+     "ref": "src/web/util/WorkerServer.re:169-217; src/web/util/WorkerClient.re:55-65 (origin/dev)"
+    },
+    {
+     "claim": "Worker phases: on_request posts Ack immediately and enters Planning; the next slice posts ReusePlan; then items run as yielding evaluations in 5000-trampoline-step slices scheduled by setTimeout(0), flushing Stream updates, then Result; a newer request abandons stale slices.",
+     "ref": "src/web/util/WorkerServer.re:271-292, 431-439, 443-597 (origin/dev)"
+    },
+    {
+     "claim": "Incremental mode only applies to items whose EvalInfo has >= 2500 entries; below that the worker passes an empty prev and skips the reuse pre-pass.",
+     "ref": "src/web/util/WorkerServer.re:294-338, 361-376 (origin/dev)"
+    },
+    {
+     "claim": "Client: ack timeout 5 s (15 s cold start), up to 3 retries with worker restart; whole-request timeout 20 s restarts the worker and reports Timeout; messages for superseded request ids are dropped.",
+     "ref": "src/web/util/WorkerClient.re:5-11, 44-53, 148-237 (origin/dev)"
+    },
+    {
+     "claim": "EvalRequest maps worker callbacks to EvalResult actions: Result -> UpdateResult, ReusePlan -> UpdateStreamingEval, Stream -> MergeStreamingEval.",
+     "ref": "src/web/view/EvalRequest.re:6-41 (origin/dev)"
+    },
+    {
+     "claim": "Without a worker the same evaluation runs synchronously on the main thread via WorkerServer.evaluate_sync, which clears transient state before returning.",
+     "ref": "src/web/util/WorkerServer.re:229-245; src/web/app/editors/result/EvalResult.re:292-310 (origin/dev)"
+    },
+    {
+     "claim": "EvaluatorState is a write-only log: theorems, tests, probes (Sample.Map), obs_opens/obs_trace (observation spans), step_count, incr_eval.",
+     "ref": "src/language/dynamics/state/EvaluatorState.re:22-58 (origin/dev)"
+    },
+    {
+     "claim": "The UI turns EvaluatorState into Dynamics.t {probe_map, test_results, theorems} and saves state.incr_eval as next request's prev.",
+     "ref": "src/web/app/editors/result/EvalResult.re:266, 376-411; src/language/dynamics/Dynamics.re:50-55 (origin/dev)"
+    },
+    {
+     "claim": "Pending-eval UI ids are computed from info_map (top-level leaves by parent user_term and ancestors), not from the elaboration.",
+     "ref": "src/language/dynamics/EvalWorklist.re:29-60; src/web/app/editors/result/EvalResult.re:328-341 (origin/dev)"
+    },
+    {
+     "claim": "The PR's new evaluator test asserts that `module M : { let x : Int } = { let x = 1; let y = 2 } in M.x` runs to 1 (comment: before #2651 M.x was the whole unelaborated module).",
+     "ref": "test/evaluator/Test_Evaluator_Modules.re:86-96 (29c08fd8fa)"
+    },
+    {
+     "claim": "Evaluator tests elaborate via Statics.mk and run Evaluator.evaluate with no eval_info and no prev, so incremental reuse and probe recording are not exercised.",
+     "ref": "test/evaluator/Test_Evaluator_Prelude.re:25-28, 113-142 (29c08fd8fa)"
+    }
+   ],
+   "representations": [
+    {
+     "name": "Exp.t (elaborated program; a.k.a. DHExp.t)",
+     "defined_at": "src/language/term/Exp.re (include TermBase.Exp) ; src/language/dynamics/DHExp.re:11 (origin/dev)",
+     "what": "The one syntax tree for both user terms and runtime terms. Each node has an IdTag of ids, secondary formatting and a lexeme. The elaboration is the user term with modules lowered into lets and a labeled tuple, signature ascriptions stripped, FixF inserted for recursive lets, and casts/alignments added.",
+     "produced_by": "Statics.uexp_to_info_map, via Statics.mk (Statics.re:4350-4392); stored as CachedStatics.elaborated",
+     "consumed_by": "EvalResult.calculate (gate at EvalResult.re:255) -> WorkerServer.Request.value.expr -> Evaluator.start_yielding_evaluation / evaluate; also stepper, projectors (info.elaborated), CLI Run/Grade"
+    },
+    {
+     "name": "Info.InfoExp in the info_map (StaticsBase.Map.t)",
+     "defined_at": "src/language/statics/Info.re; populated at src/language/statics/Statics.re:205-269 (origin/dev)",
+     "what": "Per-id record from statics: cls, ana, ty, elab_syn_ty, ctx, co_ctx (free vars), probe_targets, ancestors, user_term, elab_term (the elaboration of that subterm), marks",
+     "produced_by": "uexp_to_info_map `add` (plus overrides such as autolabel_singleton_tuple, the FixF co_ctx patch, reclassify_expanded_module_items)",
+     "consumed_by": "EvalInfo.of_info_map, CachedStatics.compute_targets (refs_in), EvalWorklist.pending_ids, cursor inspector; #2651 now also reads elab_term back at rep_id(def) in the ModuleExp case"
+    },
+    {
+     "name": "EvalInfo.t",
+     "defined_at": "src/language/dynamics/EvalInfo.re:19-29 (origin/dev)",
+     "what": "Serializable slice of statics for the evaluator: statics: Id.Map(entry{elab_term, co_ctx, probe_targets}) for every InfoExp id, plus targets (probe capture specs)",
+     "produced_by": "EvalInfo.of_info_map on the main thread (EvalResult.re:270-275); CLI Run.re:24",
+     "consumed_by": "Evaluator (is_program_node, has_statics, incr-entry snapshots), IncrEval.reuse_check, ReusePass, WorkerServer.wants_incremental (entry count >= 2500)"
+    },
+    {
+     "name": "Sample.targets / capture_spec",
+     "defined_at": "src/language/dynamics/Sample.re; built at src/haz3lcore/derived/CachedStatics.re:54-88 (origin/dev)",
+     "what": "Map from probed expression or pattern id to the variable bindings to capture (refs_in = info co_ctx mapped through ctx; bound_in for patterns)",
+     "produced_by": "CachedStatics.compute_targets from info_map and the zipper's probe refractors",
+     "consumed_by": "Transition (pattern-match samples, fresh vs temp ids), Evaluator eval_3 span open/close, RecordStackFrame CallEnter in EvaluatorState.update"
+    },
+    {
+     "name": "Environment.t(Exp.t) and Closure(env, d)",
+     "defined_at": "src/language/term/Environment.re (origin/dev)",
+     "what": "Runtime variable environment, starting from Builtins.env_init. Let/FixF/Ap extend it, and functions capture it in Closure nodes. A module is just a name bound to a labeled-tuple value.",
+     "produced_by": "Transition Let (Transition.re:528-560), FixF (606-641), Ap; initial env passed by WorkerServer (Builtins.env_init)",
+     "consumed_by": "Transition Var lookup (492-517), Closure (1200-1222), Evaluator.finish substitution (499-500)"
+    },
+    {
+     "name": "Module runtime value (labeled tuple)",
+     "defined_at": "src/language/statics/ModuleHelpers.re:162-171, 319-337, 442-456 (origin/dev)",
+     "what": "No ModVal: a module evaluates to Tuple([TupLabel(Label name, value), ...]). Its elaboration is a chain of member lets (each with its item id) ending in the export tuple (with the Module expression's id). Field nodes get fresh ids on every lowering. Signatures are erased.",
+     "produced_by": "ModuleHelpers.lower + module_elab (Module case, Statics.re:2693-2724); ModuleExp splices the def's elaboration in through moduleexp_elab",
+     "consumed_by": "Transition Dot labeled projection (Transition.re:1024-1087); a raw Module/ModuleExp is Indet (1314-1321)"
+    },
+    {
+     "name": "IncrEval.t / IncrEval.entry",
+     "defined_at": "src/language/dynamics/IncrEval.re:39-48 (origin/dev)",
+     "what": "Incremental cache keyed by expression id: {prev_elab (EvalInfo elab_term at record time), prev_reuse_map, prev_probe_targets, value, state}",
+     "produced_by": "Evaluator.eval_4_reuse on top-level misses (Evaluator.re:420-450); streamed via the outbox; returned in EvaluatorState.incr_eval",
+     "consumed_by": "next run's reuse_check (IncrEval.re:313-353) via Request.prev; ReusePlan predictions; frozen/pending UI tint (visible_ids)"
+    },
+    {
+     "name": "IncrEval.reuse_map",
+     "defined_at": "src/language/dynamics/IncrEval.re:24-34 (origin/dev)",
+     "what": "Map from bound name to provenance {source id of the let's rhs, projection path, Clean|Dirty}: where a variable's value came from and whether that source was reused",
+     "produced_by": "ReusePass.update_reuse_map_after_effects from RecordPatMatch effects (rhs rep_id)",
+     "consumed_by": "reuse_check (restricted to the info's co_ctx), incr-entry snapshots"
+    },
+    {
+     "name": "EvaluatorState.t",
+     "defined_at": "src/language/dynamics/state/EvaluatorState.re:22-58 (origin/dev)",
+     "what": "Write-only log of an evaluation: theorems, tests, probes, observation trace and open spans, step_count, incr_eval; side effects RecordTest/RecordStackFrame/RecordPatMatch/RecordTheorem/RecordPrint",
+     "produced_by": "Evaluator via EvaluatorState.update and record_event",
+     "consumed_by": "WorkerServer Result (after clear_transient); EvalResult.dynamics_of_state -> Dynamics.t; incr_eval -> next prev"
+    },
+    {
+     "name": "WorkerServer.Request / ClientMessage.Evaluate",
+     "defined_at": "src/web/util/WorkerServer.re:7-41 (origin/dev)",
+     "what": "{request_id, batch: [(key, {expr, eval_info_map, prev})]}, Marshal-encoded",
+     "produced_by": "EvalResult.calculate queue_worker, collected by ScratchMode/Exercise modes, sent by EvalRequest -> WorkerClient.request",
+     "consumed_by": "WorkerServer.install_message_handler on_request -> plan/start/run slices"
+    },
+    {
+     "name": "WorkerServer.ServerMessage",
+     "defined_at": "src/web/util/WorkerServer.re:43-89 (origin/dev)",
+     "what": "Ack | ReusePlan(predicted IncrEval per key) | Stream(outbox per key) | Result(list (key, Ok((Exp.t, EvaluatorState.t)) | Error), eval_time)",
+     "produced_by": "WorkerServer post_ack / post_reuse_plan / post_stream_update / post_batch_result",
+     "consumed_by": "WorkerClient.setup_worker_message_handler -> EvalRequest callbacks -> EvalResult.Update actions"
+    },
+    {
+     "name": "Dynamics.t",
+     "defined_at": "src/language/dynamics/Dynamics.re:50-55 (origin/dev)",
+     "what": "Evaluation results as the UI uses them: probe_map (finalized Sample.Map keyed by source ids), test_results, theorems",
+     "produced_by": "EvalResult.dynamics_of_state (EvalResult.re:376-381) from the final or streaming state",
+     "consumed_by": "probe projectors, test panel, theorem views"
+    }
+   ],
+   "diagram_ideas": [
+    "Pipeline, left to right, two lanes (main thread above, worker below). Boxes: [Zipper] -> [MakeTerm: Exp.t term] -> [Statics.mk / uexp_to_info_map]. Statics.mk forks into [root elaboration Exp.t] and [info_map: id -> InfoExp{elab_term, co_ctx, probe_targets, ctx}]. Both go into [CachedStatics {elaborated, info_map, targets}] -> [EvalResult.calculate]. A diamond gate inside it is labeled 'elab changed? (fast_equal_with_lexemes, ids ignored) or settings/targets changed'. Two side arrows: info_map -> [EvalInfo.of_info_map] -> 'eval_info_map', and info_map -> [compute_targets] -> 'targets'. Then [Request {expr, eval_info_map, prev}] -> 'Marshal + postMessage' crossing into the worker lane -> [Evaluator] -> [Result (value, EvaluatorState)] -> back across -> [Dynamics.t {probe_map, tests, theorems}]. A dashed arrow 'state.incr_eval saved as prev' loops back into the next Request. Color the two arrows that #2651 touches: 'def slot of ModuleExp elab' inside the root elaboration, and 'InfoExp at def.id' inside info_map.",
+    "ModuleExp elaboration on dev vs #2651, two columns. Shared top: [module M = def in body] -> 'expand' -> [Let(M, def, body) with ModuleExp id] -> 'go (Let analysis)' -> [records InfoExp at def.id: elab_term E1] and [expanded_elab = Let(p, wrap(E1), body_elab), where wrap = align + add_name, or FixF]. Dev column: an extra box [second go(def) in outer ctx -> E2, overwrites infos in def's subtree; E1's fresh-id export entries stay as orphans] -> [moduleexp_elab: Let(strip(p), E2, body_elab)]. PR column: [read info[def.id].elab_term = E1] -> [moduleexp_elab: Let(strip(p), E1, body_elab)]. A diamond before it, 'expanded_elab is Let(_, FixF, _) or no InfoExp?', has a 'yes' arrow back to the dev-style box. Bottom label: 'root elab -> evaluator; info map -> EvalInfo'.",
+    "Runtime picture of one module program: `module M = { let x = 1; let y = 2 } in M.x`. Elaboration tree with id provenance in brackets: Let[ModuleExp id](M, Let[item1 id](x, 1, Let[item2 id](y, 2, Tuple[def.id](TupLabel[fresh](x, Var[fresh] x), TupLabel[fresh](y, Var[fresh] y)))), Dot[id](Var M, Label x)). Mark '[fresh]' ids in red with the note 'minted on each lowering; on dev a second set existed in info_map only'. Next to it, the environment after the Let step: {M -> (x=1, y=2)}. Then 'Dot step -> 1'. A side note: 'RecordPatMatch rhs = node with item1 id -> reuse provenance source for M'.",
+    "Evaluator per-node ladder, top to bottom: eval_5_state_merge -> eval_4_reuse -> eval_3_record_probe_sample -> eval_2_until_final -> eval_1_effects -> eval_0_main (Transition). Each rung has a callout naming what it reads from statics. eval_4: 'EvalInfo.find_opt(id): elab_term fast_equal prev_elab? reuse_map over co_ctx equal? probe_targets equal?' with a 'hit -> cached value' exit and 'miss -> record entry {prev_elab, reuse_map|co_ctx, value}'. eval_3: 'id in eval_info.targets -> SpanOpen/SpanClose -> probe sample'. eval_1: 'EvaluatorState.update; RecordPatMatch -> reuse_map provenance (rhs id)'. eval_5: 'is_program_node -> outbox publication'.",
+    "Worker protocol sequence diagram, with two lifelines (Client main thread, Worker). Client: request() posts Evaluate{request_id, batch} (Marshal) and starts the 5 s ack timer and the 20 s eval timer. Worker: Ack{request_id} right away -> runtime Planning -> setTimeout(0) -> ReusePlan{request_id, [(key, IncrEval.t)]} (ReusePass only if EvalInfo >= 2500 entries) -> Starting -> Running: loop [run 5000 trampoline steps -> Stream{request_id, key, outbox}] -> Result{request_id, [(key, Ok((Exp, EvaluatorState)) | Error)], eval_time}. Client side: Ack clears the ack timer; ReusePlan -> UpdateStreamingEval; Stream -> MergeStreamingEval; Result -> UpdateResult. Add a dashed 'newer request' arrow showing the worker abandoning the old Running item and the client's with_latest dropping stale messages. Add a timeout branch: 3 ack retries with worker restart, or 20 s -> restart + Timeout."
+   ],
+   "review_points": [
+    "For an ordinary module binding, check that the root elaboration really does not change. The old second analysis used ana = def_ana (the ascribed type or syn) in the outer ctx. The Let's analysis uses ana = p_syn.ty and, for non-recursive lets, the same outer ctx. Compare Statics.re:2050-2051, 2079 (dev) with PR Statics.re:2782-2786. For Var patterns both are Unknown(SynSwitch). For an Asc pattern, p_syn.ty should be the ascribed signature type, but this is worth confirming. Cheap check: elaborate a few module programs on both commits and compare them with Exp.fast_equal_with_lexemes. This is also the exact gate that decides whether EvalResult re-requests evaluation (EvalResult.re:255).",
+    "The one runtime change, the one-member signature case, comes from autolabel_singleton_tuple (Statics.re:310-358). It records inner_for_source at the def's ids, but returns a tuple that wraps the raw user term. So the PR comment's 'add records exactly the elab_term it returns' does not always hold, and this exception is the one that turns M.x from Indet into 1. Decide whether this is the intended semantics. M is now the full, unsealed 2-member tuple, because signatures are stripped before runtime (ModuleHelpers.re:341-371, 452). So M.y would presumably also run. One test pinning this down would document it.",
+    "A related bug is on dev and outside this PR. autolabel_singleton_tuple returns an elaboration that contains the raw, unelaborated term (Statics.re:329-334, 357). Any Module or ModuleExp that ends up inside that elaboration evaluates to Indet (Transition.re:1314-1321). For example, a `module ... in ...` expression analyzed against a one-label tuple type with a different label. #2651 fixes only the def-slot instance. Worth an issue.",
+    "The second commit matters for incremental reuse as well as for the error mark. In the FixF branch the Let rewrites the InfoExp at fun_id: co_ctx drops the module name and elab_term is a plain Fun (Statics.re:2208-2229). Read back without the FixF guard, this would put a non-recursive Fun in the slot whose co_ctx is missing a name it actually uses. reuse_check (IncrEval.re:336-341) would then ignore changes to an outer binding of that name, so a cached closure could be reused stale. The fallback re-analysis overwrites that info. Check that the guard catches every way FixF can be placed: Var or Asc patterns, tuple patterns of functions, defs wrapped in parens.",
+    "names_itself looks only at the top shape of expanded_elab (PR Statics.re:2770-2774). If the ModuleExp itself is analyzed against a one-label product with a different label, the Let is wrapped by the singleton lift (Statics.re:2775-2791). names_itself is then false and the read-back happens. moduleexp_elab ignores def_elab_direct in that case (ModuleHelpers.re:454), so the root elaboration is unaffected. But the info at def.id keeps the Let's recursive analysis, including the patched co_ctx and no unbound-name error. Very rare; worth a sentence in the PR or a TODO.",
+    "EvalInfo shrinks. On dev the Let's lowering of the def was thrown out, but its fresh-id InfoExp entries stayed in info_map: export Tuple/TupLabel/Label/Var nodes (ModuleHelpers.re:162-171) and Let(Wild) wrappers (299-316). They then went into EvalInfo and the Marshal'd worker request. Every subtree of the Let's analysis was also redone. Downstream effects: a smaller postMessage payload. A program near incremental_min_statics = 2500 (WorkerServer.re:300-304) can switch between incremental and from-scratch evaluation. And with probe_all, fewer orphan targets (CachedStatics.re:43-48). None of this should change results.",
+    "Incremental reuse is keyed on what the info_map recorded at an id, not on the subtree the evaluator actually meets there (IncrEval.re:326-334). The PR makes info[def.id].elab_term and the ModuleExp's def slot the same value by construction, which is a good invariant to state in the PR. Note that for a non-empty Module def, the slot's root node has the first item's id (wrap_item, ModuleHelpers.re:290-292), and def.id sits on the export Tuple (restore_module_body_id, 375-386). This is unchanged by the PR, but it is how a reviewer should read reuse and provenance for M (RecordPatMatch rhs id, Transition.re:549-556; ReusePass.re:38-45).",
+    "Test coverage: the new evaluator test runs Evaluator.evaluate with no eval_info and no prev (Test_Evaluator_Prelude.re:25-28, 126-142). It does not exercise reuse, probes or the worker path. A probe inside a module def would check that samples still land on surface ids. A two-run incremental test would cover the read-back: edit the body, check that the module binding is reused (entry at the first item's id / def.id) and that an edit inside the def invalidates it.",
+    "Performance claim on dev: a module def was analyzed three times: the throwaway def_rec_probe at Statics.re:2070, the main Let analysis at 2079, and the direct analysis at 2762. #2651 removes the third, and #2603 (not on dev) targets the first kind. Because nested module defs repeat the work, the saving compounds with depth. Evaluation step counts should be unchanged; a step-count or probe step-range diff on a module-heavy example would confirm the evaluator sees an identical program."
+   ]
+  }
+ },
+ {
+  "angle": "pr",
+  "notes": {
+   "summary": "What this code is. Hazel's statics (uexp_to_info_map in src/language/statics/Statics.re) walks an expression and returns three things: an info record for the root, the root's elaborated term, and an updated info map. The info map is a persistent Id.Map that holds an Info record for every node. The cursor inspector, probes and the evaluator all read it. `module M = def in body` (a ModuleExp) has no typing rule of its own. The ModuleExp case turns it into `let M = def in body`: the pattern comes from ModuleHelpers.mpat_to_pat, and the new Let is given the module's own id. The ordinary Let case then type-checks it. The module's elaboration is not the Let's, though. ModuleHelpers.moduleexp_elab rebuilds `Let(pattern without its signature, def_elab_direct, body_elab)`, which throws away everything the Let wrapped around def: label alignment, a function name and, for a function that calls itself, a FixF fixpoint. A module is not meant to be recursive. So dev got def_elab_direct by analyzing def one more time, directly, in the outer context (Statics.re:2757-2762). That pass also overwrote the Let's info for every node inside def.\n\nWhat the PR changes. Commit e3013b0360 drops that extra pass and looks the result up instead. When the Let analyzed def, def's own `add` wrote an InfoExp at def's ids. Its elab_term is the same value `add` returned to the Let, taken before the Let applied align_exp_if_needed, add_name or FixF. So right after `go(~ana, expanded, m)` returns, the ModuleExp case reads `Id.Map.find_opt(Exp.rep_id(def), m)` and uses that elab_term. The map is persistent and passed along explicitly, and passes whose maps are thrown away (the Let's recursion probe) never reach it. So the entry found is the one this same invocation's Let wrote. The direct pass stays as the fallback branch. Commit 29c08fd8fa adds one guard. If the Let's elaboration has the shape `Let(_, FixF(...), _)`, the Let analyzed def with the module's own name in scope, so a self-reference produced no error. In that case the old direct pass runs again and reports the name as unbound, as dev does. The Let also strips the name from the co_ctx of def's info (Statics.re:2216-2228), so that co_ctx can't be used as the signal; the FixF is. The commit adds two tests: one for a definition that names its own module, one for a module under a one-member signature.\n\nWhy it is equivalent, and where it is not. In the Let's non-recursive branch (Statics.re:2079), the Let's pass and dev's direct pass call the same function. The ctx is the same (the ModuleExp's). The expected type is the same: p_syn.ty is the meet of `syn` with the Asc type (or with an unknown), and since desugar_sig ignores ctx and is idempotent, that equals the direct pass's def_ana. The term is the same, unless the Let's tuple rearrangement rewrote a tuple-literal def. is_in_filter and probe_ids are the same. Only the ancestors list differs: the module's id appears twice, as it already does for the body. So the elaborations match whenever the info def records equals the elab it returns. Every path that ends in `add` does that (Statics.re:249-268). The one exception is the singleton-label lift (autolabel_singleton_tuple, Statics.re:310-358). It records the inner elaboration at def's ids but returns raw relabeled syntax, and that is exactly the one-member-signature corner. On dev, `module M : { let x : Int } = { let x = 1; let y = 2 } in M.x` evaluated to unelaborated module source; with the PR it evaluates to 1. The PR keeps this change and pins it with a test. In the recursive branch without FixF (a function-valued module that does not name itself), the elaboration is the same, but the info for nodes inside def now has a ctx that includes the module's own name. The editor can show that; the elaboration does not depend on it.\n\nCost and status. On today's dev, a plain module definition is analyzed three times per module binding: the Let's recursion probe (2070, always run), the Let's real pass (2079), and the ModuleExp's direct pass (2762). The PR makes it two. It reaches one only together with #2603 (\"a let is analyzed once unless it refers to itself\"), which is still open. Function-valued modules go from 5 passes to 4, and a module that names itself stays at 5. The branch has 2 commits on merge base 34f9605ddf and is 19 commits behind origin/dev (962a7cb009). `git merge-tree --write-tree origin/dev 29c08fd8fa` is clean (tree 596aa2bbc1), and Statics.re is unchanged on dev since the merge base. The only change under src/language on dev since then is Ascriptions.re (#2679, \"an ascription pushed through a value gives the value back\"). CI (Fast checks, Full tests, codecov) was green on 10-19 at the old base. It also merges cleanly with #2603's head, 4aa493c05a.",
+   "facts": [
+    {
+     "claim": "Branch state: 2 commits (e3013b0360 the read-back, 29c08fd8fa the self-naming guard + 2 tests) on merge base 34f9605ddf; 19 commits behind origin/dev 962a7cb009; `git merge-tree --write-tree origin/dev 29c08fd8fa` exits 0 (tree 596aa2bbc1); GitHub reports MERGEABLE / CLEAN.",
+     "ref": "src/language/statics/Statics.re:2725 (origin/dev; file identical at 34f9605ddf)"
+    },
+    {
+     "claim": "Since the merge base, dev's only change under src/language is src/language/dynamics/transition/Ascriptions.re (#2679, an ascription pushed through a value returns the value when it already has the type); Statics.re, ModuleHelpers.re and Typ.re are untouched, so the PR's line numbers are the same on a merge with today's dev.",
+     "ref": "src/language/dynamics/transition/Ascriptions.re (origin/dev)"
+    },
+    {
+     "claim": "Before (dev): the ModuleExp case writes MPat info, builds `Let(pat, def, body)` carrying the module's own id via IdTagged.fast_copy, and type-checks it with the ordinary Let case.",
+     "ref": "src/language/statics/Statics.re:2725-2742 (origin/dev); src/language/term/IdTagged.re:175-183"
+    },
+    {
+     "claim": "Before (dev): the case then analyzes def a second time, directly, in the ModuleExp's ctx, with def_ana = the signature type if the pattern is Asc, else syn. That pass also overwrites the Let's info for every node inside def.",
+     "ref": "src/language/statics/Statics.re:2757-2762 (origin/dev)"
+    },
+    {
+     "claim": "moduleexp_elab rebuilds the Let's elaboration with def_elab_direct in place of the Let's def, which may be aligned, named or FixF-wrapped, and strips the signature from the pattern. If the expanded elab is not a Let, it ignores def_elab_direct entirely.",
+     "ref": "src/language/statics/ModuleHelpers.re:447-456 (origin/dev)"
+    },
+    {
+     "claim": "After (PR): names_itself is true exactly when expanded_elab.term matches `Let(_, {term: FixF(_), _}, _)`.",
+     "ref": "src/language/statics/Statics.re:2764-2774 (29c08fd8fa)"
+    },
+    {
+     "claim": "After (PR): def_elab_direct is the elab_term of the InfoExp found at Exp.rep_id(def) in the map returned by the Let, unless names_itself holds. If it holds, or no InfoExp is found, the old direct pass runs unchanged, with def_ana = Asc type or syn.",
+     "ref": "src/language/statics/Statics.re:2775-2789 (29c08fd8fa)"
+    },
+    {
+     "claim": "`add` builds the Info.exp with elab_term set to the elab_term it was given, writes it at all of the user_term's ids, and returns that same elab_term. This is the 'add records exactly what it returns' property the PR relies on.",
+     "ref": "src/language/statics/Statics.re:204-268 (origin/dev)"
+    },
+    {
+     "claim": "Exception to that property: autolabel_singleton_tuple returns the raw syntax `rewrap(Tuple([TupLabel(Label l, original_expression)]))`, not an elaboration. Its last write at the expression's ids is inner_for_source, whose elab_term is the inner elaboration of a fresh copy analyzed against the label's type. So for this path, recorded elab != returned elab.",
+     "ref": "src/language/statics/Statics.re:310-358 (origin/dev)"
+    },
+    {
+     "claim": "The singleton lift fires whenever the expected type is a one-field labeled product and the expression's synthesized type is neither that one-field product nor unknown. A one-member signature `{ let x : Int }` desugars to exactly such a product.",
+     "ref": "src/language/statics/Statics.re:2778-2791 (origin/dev); src/language/term/Typ.re:615-646"
+    },
+    {
+     "claim": "The Let case analyzes def several times. A recursion probe in p_syn.ctx always runs and its map is discarded. Then either one real pass in the outer ctx (non-recursive), or def_base and def_base2 (maps discarded) followed by a real pass in def_ctx with the bound name in scope (recursive). Only the real pass's writes stay in m.",
+     "ref": "src/language/statics/Statics.re:2070, 2079, 2091, 2103, 2121 (origin/dev)"
+    },
+    {
+     "claim": "is_recursive needs the pattern's variable count to equal the number of functions in def and an arrow-like type. A Module(items) literal is never 'recursive'. Only a function-valued (or one-function-tuple) module definition takes the recursive branch.",
+     "ref": "src/language/statics/Statics.re:2024-2039, 2076 (origin/dev); src/language/term/Exp.re:407-429"
+    },
+    {
+     "claim": "FixF is used only when is_rec and the bound name appears in def's co_ctx (or in pattern type refs). CoCtx.mk filters the pattern's own bindings out of the body's co_ctx, so a use in the body alone does not trigger it.",
+     "ref": "src/language/statics/Statics.re:2172-2181 (origin/dev); src/language/statics/CoCtx.re:43-53"
+    },
+    {
+     "claim": "The Let applies align_exp_if_needed and Exp.add_name to def's elab (and FixF in the recursive case) only after def's info was recorded. So the recorded elab_term is the unwrapped elaboration, the same thing the direct pass returns.",
+     "ref": "src/language/statics/Statics.re:2182-2230 (origin/dev)"
+    },
+    {
+     "claim": "In the FixF case the Let rewrites the info at fun_id (= def's rep id) to drop the bound name from its co_ctx, leaving elab_term unchanged. This is why the info's co_ctx cannot reveal self-reference.",
+     "ref": "src/language/statics/Statics.re:2207-2228 (origin/dev)"
+    },
+    {
+     "claim": "The Let's own co_ctx is union(def.co_ctx, ...), where def is the unpatched info returned by the real pass. So expanded_info.co_ctx still contains the bound name when def mentions it: a second, unused signal.",
+     "ref": "src/language/statics/Statics.re:2235-2240 (origin/dev)"
+    },
+    {
+     "claim": "The expected type matches. mpat_to_pat already applies Typ.desugar_sig(Ctx.empty, typ). The pattern's Asc case uses desugar_sig(ctx, ann.user_term), which ignores ctx and is idempotent. p_syn.ty = fixed_typ(ctx, syn, ann_ty) = meet(Unknown SynSwitch, ann_ty) = ann_ty. For a bare Var pattern, meet(SynSwitch, SynSwitch) = SynSwitch = syn.",
+     "ref": "src/language/statics/ModuleHelpers.re:51-60; src/language/statics/Statics.re:3655-3671; src/language/term/Typ.re:615-657, 216-227, 782-784; src/language/statics/StaticsBase.re:268-277 (origin/dev)"
+    },
+    {
+     "claim": "The Let rewrites def before analyzing it only when def is a tuple literal and the pattern's type is a product (label rearrangement with fresh TupLabel nodes, ids kept via def_rewrap). The Tuple case rearranges its elaboration against a product the same way, so this can differ from the direct pass only in fresh ids and label-inference info.",
+     "ref": "src/language/statics/Statics.re:2054-2069, 1117-1132 (origin/dev)"
+    },
+    {
+     "claim": "Statics.mk starts every run from Id.Map.empty, and passes inside one run thread a persistent map. So no stale info from an earlier run or a discarded pass can be what the read-back finds.",
+     "ref": "src/language/statics/Statics.re:4350-4362 (origin/dev)"
+    },
+    {
+     "claim": "Module items of the form `module N = def` inside `{ ... }` are lowered to a plain Let, not a ModuleExp. So the read-back and the self-naming guard apply only to expression-level `module M = def in body`, and by reading, a self-naming module item is analyzed (and elaborated) recursively with FixF.",
+     "ref": "src/language/statics/ModuleHelpers.re:300-304 (origin/dev)"
+    },
+    {
+     "claim": "The 'Override cls to show Module binding' block is redundant. The ModuleExp's final `add` recomputes cls from uexp.term, which is already Exp(ModuleExp). This is pre-existing and untouched by the PR.",
+     "ref": "src/language/statics/Statics.re:2743-2756, 240 (origin/dev); src/language/term/Exp.re:179"
+    },
+    {
+     "claim": "Duplicate adjacent ancestor ids already occur, and at least one consumer works around them. The PR gives def's nodes ancestors [module id, module id, ...], the same shape the body already has.",
+     "ref": "src/haz3lcore/AutoProbePerform.re:77-93 (origin/dev)"
+    },
+    {
+     "claim": "The self-naming test uses inconsistent_typecheck, which only asserts that the list of static errors is non-empty anywhere in the program. It does not pin the error's place or kind.",
+     "ref": "test/statics/Test_Statics_Modules.re:406-413, 689 (29c08fd8fa); test/statics/Test_Statics_Prelude.re:225-242"
+    },
+    {
+     "claim": "The new evaluator test checks that `module M : { let x : Int } = { let x = 1; let y = 2 } in M.x` evaluates to 1. The existing exact-signature case (`= { let x = 42 }`, giving 42) sits next to it.",
+     "ref": "test/evaluator/Test_Evaluator_Modules.re:86-96, 136-141, 161 (29c08fd8fa)"
+    },
+    {
+     "claim": "No test reaches the fallback with a signature-ascribed pattern (no `module F : ... = fun ...` anywhere in test/). That arm is the likeliest owner of the one patch line codecov reports uncovered.",
+     "ref": "src/language/statics/Statics.re:2782-2786 (29c08fd8fa)"
+    },
+    {
+     "claim": "#2603 (open, head 4aa493c05a, branch dev-statics-perf) makes the Let's probe lazy and reuses it as the final pass for function-shaped definitions that do not mention or shadow their binder. It still threads the reused pass's map (m_probe), so the read-back still finds the info for the pass whose elab the Let used. merge-tree of 4aa493c05a with 29c08fd8fa is clean.",
+     "ref": "src/language/statics/Statics.re:2070-2123 (origin/dev-statics-perf diff vs its base 6a816c4b29)"
+    }
+   ],
+   "representations": [
+    {
+     "name": "Statics.Map.t (the info map)",
+     "defined_at": "src/language/statics/StaticsBase.re:8-22 (origin/dev)",
+     "what": "Persistent Id.Map from node id to Info.t (InfoExp/InfoPat/InfoTyp/...). add_info overwrites, add_missing_info only fills gaps.",
+     "produced_by": "add / add_info inside uexp_to_info_map and friends, threaded explicitly through every call; passes that discard their map leave no trace",
+     "consumed_by": "the PR's read-back at Statics.re:2776 (29c08fd8fa); cursor inspector, probes (AutoProbePerform, ProbePerform), problem list, evaluator caching"
+    },
+    {
+     "name": "Info.exp record, field elab_term",
+     "defined_at": "src/language/statics/Statics.re:249-267 (origin/dev, built in add)",
+     "what": "Per-node statics result: ctx, co_ctx, ana, ty, marks, ancestors, user_term, and elab_term, the node's elaboration exactly as add returned it",
+     "produced_by": "add (Statics.re:204-268); autolabel_singleton_tuple writes inner_for_source instead (Statics.re:324-357)",
+     "consumed_by": "ModuleExp read-back (29c08fd8fa Statics.re:2777), which takes elab_term as def_elab_direct"
+    },
+    {
+     "name": "expanded",
+     "defined_at": "src/language/statics/Statics.re:2736-2741 (origin/dev)",
+     "what": "`Let(pat, def, body)` built from the module binding, carrying the module's own rep id (ids = [rep_id(uexp)])",
+     "produced_by": "ModuleExp case via ModuleHelpers.mpat_to_pat and IdTagged.fast_copy",
+     "consumed_by": "Let case Statics.re:2023-2248 via go(~ana, expanded, m) at 2742"
+    },
+    {
+     "name": "pat (from mpat_to_pat)",
+     "defined_at": "src/language/statics/ModuleHelpers.re:51-60 (origin/dev)",
+     "what": "Var(M), Asc(Var(M), desugared signature type), or Wild, with the MPat's rep id",
+     "produced_by": "ModuleExp case at Statics.re:2736",
+     "consumed_by": "the Let (p_syn at 2052-2053 gives def its expected type) and the fallback's def_ana (29c08fd8fa 2782-2786)"
+    },
+    {
+     "name": "p_syn.ty",
+     "defined_at": "src/language/statics/Statics.re:2052-2053 (origin/dev)",
+     "what": "Expected type the Let gives def: the signature type for an ascribed module, else Unknown(SynSwitch); equal to the direct pass's def_ana",
+     "produced_by": "go_pat(~is_synswitch=true, ~ana=syn) on pat; upat Asc case Statics.re:3655-3671",
+     "consumed_by": "Let's probe and real passes over def (2070, 2079, 2091, 2103)"
+    },
+    {
+     "name": "expanded_elab",
+     "defined_at": "src/language/statics/Statics.re:2182-2230 (origin/dev, built in the Let case)",
+     "what": "The Let's elaboration: Let(p_elab, def wrapped by align_exp_if_needed and add_name, body_elab), or Let(p_elab, FixF(p_elab, def_elab, None), body_elab) when requires_fixf",
+     "produced_by": "Let case, returned through go at Statics.re:2742",
+     "consumed_by": "names_itself shape check (29c08fd8fa 2770-2774) and ModuleHelpers.moduleexp_elab"
+    },
+    {
+     "name": "FixF node in the Let's elab",
+     "defined_at": "src/language/statics/Statics.re:2200-2206 (origin/dev)",
+     "what": "Fixpoint wrapper with the def's surface id. Present only when the Let bound the name recursively and def (or the pattern type) mentions it.",
+     "produced_by": "Let case when requires_fixf (2172-2181)",
+     "consumed_by": "names_itself (PR) as the signal to fall back; dropped by moduleexp_elab in every case"
+    },
+    {
+     "name": "def_elab_direct",
+     "defined_at": "src/language/statics/ModuleHelpers.re:448 (parameter of moduleexp_elab, origin/dev)",
+     "what": "def's own elaboration, without the Let's alignment, name or FixF",
+     "produced_by": "dev: second direct pass Statics.re:2762; PR: info read-back 29c08fd8fa 2777, or the fallback pass at 2787",
+     "consumed_by": "ModuleHelpers.moduleexp_elab (447-456), which puts it into the ModuleExp's elaboration, recorded by add at 29c08fd8fa 2792-2799"
+    },
+    {
+     "name": "inner_for_source (singleton-label lift)",
+     "defined_at": "src/language/statics/Statics.re:324-327, 357 (origin/dev)",
+     "what": "Info for the original expression analyzed against the label's inner type; its elab_term is the inner elaboration of a fresh copy, while the function returns raw relabeled syntax",
+     "produced_by": "autolabel_singleton_tuple, reached from the singleton-lift switch at 2778-2791",
+     "consumed_by": "the PR's read-back in the one-member-signature corner (this is why M.x became 1)"
+    },
+    {
+     "name": "Test helpers inconsistent_typecheck / parse_and_evaluate_test",
+     "defined_at": "test/statics/Test_Statics_Prelude.re:225-242; test/evaluator/Test_Evaluator_Prelude.re:126-140 (29c08fd8fa)",
+     "what": "The first asserts that at least one static error exists; the second elaborates with Statics.mk, evaluates, and compares to the expected expression",
+     "produced_by": "test suite",
+     "consumed_by": "test_module_names_itself (Test_Statics_Modules.re:409) and test_module_one_member_signature (Test_Evaluator_Modules.re:90)"
+    }
+   ],
+   "diagram_ideas": [
+    "Before/after control flow of the ModuleExp case, as two columns sharing a top. Shared boxes: [ModuleExp(mp, def, body)] -> [MPat info (2728-2735)] -> [build expanded = Let(pat, def, body), module's id (2736-2741)] -> [Let case 2023-2248: recursion probe on def, map thrown away (2070, grey dashed) -> real pass on def writes InfoExp at def ids, elab_term = E (2079 / 2121) -> body (2152) -> pattern (2154) -> FixF? (2172)] -> [cls override, dead (2744-2756, greyed)]. Left column BEFORE (origin/dev): [direct pass go(~ana=def_ana, def) (2762), red label 'whole module again; overwrites def's infos'] -> [moduleexp_elab(E', expanded_elab) (ModuleHelpers 448-456)] -> [add (2765)]. Right column AFTER (29c08fd8fa): diamond [expanded_elab = Let(_, FixF, _)?] -- yes --> [direct pass (2787), labeled 'self-naming: report F unbound'] ; -- no --> diamond [InfoExp at rep_id(def) in m?] -- yes --> [E = info.elab_term (2777), green 'no pass'] ; -- no --> same direct pass box. Both branches -> [moduleexp_elab (2790)] -> [add (2792)].",
+    "Timeline of writes to the info map during one ModuleExp call, as a horizontal strip of slots keyed by id (rows: mp id, def ids, body ids, module id) and time running left to right: t1 InfoMPat @ mp; t2 probe pass on def (drawn as a ghost row with an X 'map discarded'); t3 InfoExp @ def ids, elab_term=E (Let real pass); t4 body infos; t5 InfoPat @ mp id (overwrites the InfoMPat); t6 Let info @ module id; then the fork: BEFORE t7 InfoExp @ def ids again, elab E' (direct pass, overwrite arrows down every def slot); AFTER t7' an arrow reading slot def@t3 upward into the ModuleExp box. Final t8 ModuleExp info @ module id with elab Let(pat', E, body').",
+    "Equivalence checklist, two columns 'Let's real pass (2079)' vs 'dev's direct pass (2762)' and one row per input: ctx (= ModuleExp ctx | = ModuleExp ctx, green), expected type (p_syn.ty | Asc type or syn, green, with a footnote arrow to desugar_sig idempotence + meet(SynSwitch, T) = T), term (def, or the rearranged tuple | def, amber 'only tuple-literal def under a product signature'), ancestors ([M, M, ...] | [M, ...], amber 'info only'), is_in_filter / probe_ids (green), recorded == returned (holds when the path ends in add | n/a, red cell 'singleton-label lift: one-member signature corner'). A third column for the recursive branch (2121): ctx = outer + M (amber 'editor sees M inside a function module'), FixF -> fallback (blue).",
+    "Pass-count grid: rows = program shape [plain module `{...}`; function module not naming itself `module F = fun x -> x`; self-naming `module F = fun x -> F(x)`], columns = [dev, PR #2651, #2603 alone, #2603 + #2651], cells = full analyses of def per module binding: plain 3 / 2 / 2 / 1; function not self-naming 5 / 4 / 2 / 1; self-naming 5 / 5 / 4 / 4. Caption: each nesting of a ModuleExp inside another's definition multiplies its row's factor; module items inside `{ }` are lowered to plain Lets and only pay the Let's factor.",
+    "Three corners as three small panels, each with program, then dev result vs PR result: (1) `module F = fun x -> F(x) in 1`: Let binds F recursively -> FixF -> names_itself -> direct pass -> 'F unbound' error on both; commit 1 alone lost the error (red X struck through). (2) `module M : { let x : Int } = { let x = 1; let y = 2 } in M.x`: def hits the singleton-label lift; dev's direct pass returns raw `(x = {module source})` so M.x = source; the PR reads inner_for_source.elab_term so M.x = 1 (pinned by test). (3) `module F = fun x -> x in ...`: elaboration identical; only the ctx recorded inside the definition now lists F (editor-visible)."
+   ],
+   "review_points": [
+    "The equivalence rests on two facts: same inputs, and the info a node records equals the elab it returns. Check both in the Let's non-recursive branch (Statics.re:2079 vs dev 2762): same ctx, same expected type (p_syn.ty vs def_ana, by desugar_sig idempotence and meet(SynSwitch, T) = T), same term, same is_in_filter and probe_ids, different ancestors only. The second fact holds for paths ending in `add` (249-268). It does NOT hold for autolabel_singleton_tuple (310-358), so the PR description's 'add records exactly the elab_term it returns' should say 'every path that ends in add'. The singleton-label lift is the one known exception.",
+    "One-member-signature corner (a behavior change, kept): `module M : { let x : Int } = { let x = 1; let y = 2 } in M.x` now evaluates to 1 instead of raw module source. Alexander should confirm this is the intended runtime meaning of a too-wide module under a signature, given test_limitation_extra_member_multi (Test_Statics_Modules.re:382-387) treats it as a static error.",
+    "names_itself checks the shape of the Let's elaboration (Let(_, FixF, _)). That ties the ModuleExp case to where the Let case puts the FixF (Statics.re:2188-2230). If the Let later wraps the FixF in something else, the check silently turns false and self-naming errors disappear again; test_module_names_itself is the only guard. Consider an explicit signal instead. One exists: expanded_info.co_ctx contains the bound name when def mentions it (Statics.re:2235-2240), which is conservative and also fires for non-recursive self-reference.",
+    "The 'no info recorded' arm of the fallback is effectively unreachable. Every uexp_to_info_map call writes an InfoExp at its root's ids, and maps are rebuilt from empty each run (Statics.re:4350-4362). It is defensive, not a real path; the comment at 29c08fd8fa 2757-2763 suggests otherwise.",
+    "Semantics question for Alexander (Modules II): an expression-level `module F = fun x -> F(x) in 1` is an error (F unbound), but the same item inside a module, `{ module F = fun x -> F(x) }`, is lowered to a plain Let (ModuleHelpers.re:300-304). By reading, that one is analyzed and elaborated recursively with FixF and no error. The new test's comment 'modules are not recursive' states a rule only the ModuleExp path enforces. Decide which behavior is intended before pinning it.",
+    "The info for nodes inside a module definition now comes from the Let's pass, not the direct pass. Two editor-visible differences follow: ancestors gain a duplicated module id, matching the body (AutoProbePerform.re:77-93 already dedups this); and inside a function-valued module that does not name itself, the recorded ctx includes the module's own name, so completions or the inspector may offer F there. Neither changes elaboration. With a livelit inside the definition, the livelit's add_missing_info (Statics.re:1656-1657) no longer mixes infos from two passes.",
+    "Pass counts in the title: on today's dev, the Let's recursion probe (Statics.re:2070) runs for every let. So a plain module definition goes from 3 analyses to 2, not from 2 to 1. 'Once, not twice' is exact for the ModuleExp case's own extra pass, and for the whole binding only once #2603 lands. Self-naming modules still pay the full count (5 on dev and on the PR).",
+    "Test strength: test_module_names_itself uses inconsistent_typecheck, which passes if any static error exists anywhere (Test_Statics_Prelude.re:225-242). Pin the error to F's id and kind instead, e.g. an annotated-tree test or a check on the Var/Constructor info at F. Also add `module F : Int -> Int = fun x -> F(x) in 1` to cover the fallback's Asc arm (29c08fd8fa 2782-2786), likely the line codecov reports uncovered.",
+    "The PR description's evidence (`hazel analyze -W` byte-identical on 73 programs; modules.hz prints 6 Measured 'id not found' warnings before, 4 after) compares diagnostics, not the info map or elaborations. The 6->4 change is probably the removed pass's fresh-id infos (Measured.re:180-212 warns when a looked-up id has no layout); naming which two ids vanished would confirm it. For an executable statement of the equivalence, consider a test-only check that runs both the read-back and the direct pass over the module test corpus and compares the elaborations.",
+    "Merge readiness: 19 commits behind dev, textually clean (merge-tree exit 0), Statics/ModuleHelpers/Typ unchanged on dev. CI was green on 10-19 on the old base. dev's only language change since is Ascriptions.re (#2679). Updating the branch to re-run Full tests on top of today's dev is a cheap final check, given the new evaluator test. The PR also merges cleanly with #2603 (4aa493c05a) and composes semantically: #2603 still passes along the map of the pass whose elab the Let uses (m_probe).",
+    "Pre-existing, out of scope: the 'Override cls' block (Statics.re:2743-2756) is overwritten by the final add (cls recomputed from uexp.term, Exp.re:179), so it does nothing. Worth noting, not fixing in this PR."
+   ]
+  }
+ },
+ {
+  "angle": "perf",
+  "notes": {
+   "summary": "What the code does. Hazel type-checks `module M = def in body` by turning it into `let M = def in body`. The new let keeps the module binding's own id (Statics.re:2736-2742 at origin/dev). Once the let is analyzed, the ModuleExp case on dev analyzes `def` a second time, on its own (Statics.re:2757-2762). That second pass exists only to get `def`'s elaboration without the let's wrapping. The let's elaboration wraps `def` in a label alignment and a name (2184-2187), or in a fixpoint when the definition refers to itself (2189-2229). `ModuleHelpers.moduleexp_elab` puts the bare elaboration back in the let and strips the signature ascription from the pattern (ModuleHelpers.re:448-456). #2651 (\"a module binding analyzes its definition once, not twice\") skips that second pass. `add` records each node's info at the node's ids, and the info's `elab_term` is the very value `add` returns (Statics.re:249-268). So after the let's analysis, the info stored at `rep_id(def)` already holds the elaboration the second pass would rebuild. The PR reads it back with one `Id.Map.find_opt`, a balanced-tree lookup (29c08fd8fa Statics.re:2775-2780). It falls back to the old second pass when the let produced a fixpoint (`names_itself`, 2770-2774) or when no info was recorded (2781-2788). The architectural change is that the statics map, not a second traversal, now carries `def`'s elaboration to the ModuleExp case. Also, `def`'s subtree in the map is now last written by the let's pass. On dev the second pass overwrote it.\n\nHow much work it removes. The let on dev always runs a recursion probe over `def` and throws its map away (Statics.re:2070), then the real pass (2079). A module literal is never function-shaped (Exp.re:456), so it takes this non-recursive path. With the second pass, every module binding on dev costs 3 analyses of `def`. #2651 alone brings that to 2, and #2603 (\"a let is analyzed once unless it refers to itself\") alone also brings it to 2. Together they bring it to 1. The PR's word \"twice\" is true where #2603 is already in place, as on the livelits branches the measurements came from. The multipliers stack with nesting, but only some nesting goes through this code. A nested module written as an item inside braces (`module Inner = {...}`, no `in`) is a ModuleMod, which is lowered to a plain let (ModuleHelpers.re:300-304) and never reaches the ModuleExp case. That kind costs ×2 per level on dev because of the let's probe, which is #2603's fix, not this PR's. #2651's doubling compounds as 2^depth (3^depth on dev with the probe) only when a `module … in` expression sits inside another module binding's definition. No corpus program does that: dev's only module program, `docs/reference/modules.hz`, nests only by items. A third multiplier also applies to module bindings. An expression checked against a one-field labeled product is analyzed once without a type first (Statics.re:2778-2789), and the auto-label path then analyzes it twice more (313, 337). By my reading, a module under a one-member signature that has an extra member is analyzed 4 times per pass. That gives modules.hz:165-168 3×4×2 = 24 analyses of its member `1` on dev, which matches the 24 that #2689 reports for modules.hz. After #2603 and #2651 it is 1×4×1 = 4.\n\nMeasurements. On dev the effect is small and inside the noise. On a made-up module of 800 functions, statics is about 0.13 s of 6 s, and whole-command times overlap (6.06 and 6.74 s before, 5.26 and 6.05 s after, two runs each). Most of that time goes to `MakeTerm.from_zip_for_sem`, a separate lead. The real payoff showed on the livelits branch (#2635). There a profile of *Shirt and Pants* put 1.79 s of 4.2 s of statics in the second pass, against 2.06 s in the let's pass. CLI statics went from 6.7 to 4.3 s, against 4.1 s for the same slide with the module flattened into top-level lets, so the fix removes the module's whole overhead. *Shoes and Hair* went from 8.8 to 5.8 s. These were two runs each, within 0.3 s of each other. There is no browser number for this fix on its own.\n\nWhere it sits. #2651 is the smallest open performance PR against dev (+55/−5, 3 files, CI green at 29c08fd8fa). It touches only the ModuleExp case and merges cleanly with #2603: #2689's merge of the two, ea45d5342a, has no conflict hunks. #2689 (draft: \"statics analyzes each expression within a budget\") is the CI guard for both fixes, but it merged #2651 at e3013b0360, without the self-naming fallback. #2597 and #2635 also carry only e3013b0360's version. Alexander's open Modules II stack (#2493 to #2510) keeps the second pass, with `~coercible=true` from part 2 on. Whichever lands second needs a one-line merge in the fallback, as the livelits branch already has. Its gain on dev grows as module programs arrive: module bindings appear in 1 corpus file on dev, 4 at the top of Modules II and 13 on the livelits branch.",
+   "facts": [
+    {
+     "claim": "ModuleExp is checked by building `Let(pat, def, body)` that carries the ModuleExp's own rep id (IdTagged.fast_copy) and analyzing it with the same ana.",
+     "ref": "src/language/statics/Statics.re:2736-2742 (origin/dev)"
+    },
+    {
+     "claim": "On dev, after the let's analysis, `def` is analyzed again directly, against the Asc pattern's type or syn, and the resulting map is threaded on, so this pass is the last to write infos for def's subtree.",
+     "ref": "src/language/statics/Statics.re:2757-2762 (origin/dev)"
+    },
+    {
+     "claim": "The second pass is used only to supply `def_elab_direct`, which moduleexp_elab puts in place of the let's definition, with the signature ascription stripped from the pattern; a non-Let expanded elab ignores it.",
+     "ref": "src/language/statics/ModuleHelpers.re:448-456; Statics.re:2763-2764 (origin/dev)"
+    },
+    {
+     "claim": "What the let wraps around def's elaboration: align_exp_if_needed plus add_name in the ordinary case, or a FixF with a fresh-deterministic inner id when the definition is recursive and refers to its binder.",
+     "ref": "src/language/statics/Statics.re:2182-2230 (origin/dev)"
+    },
+    {
+     "claim": "`add` builds the Info.exp with `elab_term` set to the elab it returns, and records it at IdTagged.ids(user_term). This is the invariant the read-back relies on.",
+     "ref": "src/language/statics/Statics.re:249-268 (origin/dev)"
+    },
+    {
+     "claim": "The statics map is Id.Map.t(Info.t), an OCaml Map over UUIDs (balanced tree, O(log n) lookup). add_info is last-writer-wins via Id.Map.add.",
+     "ref": "src/language/statics/StaticsBase.re:4-10; src/util/Id.re:136-137 (origin/dev)"
+    },
+    {
+     "claim": "The PR reads def's elaboration back from the InfoExp at Exp.rep_id(def) unless the let's elaboration is `Let(_, FixF(_), _)`. Otherwise it falls back to the old direct pass.",
+     "ref": "src/language/statics/Statics.re:2770-2789 (29c08fd8fa)"
+    },
+    {
+     "claim": "On dev the Let case always runs a recursion probe over def and discards its map, then the real pass (non-recursive). The recursive path runs probe + three passes (2091, 2103, 2121).",
+     "ref": "src/language/statics/Statics.re:2070, 2079, 2091-2121 (origin/dev)"
+    },
+    {
+     "claim": "A module literal is never function-shaped: get_num_of_functions returns None for Module and ModuleExp. So a module binding's let takes the non-recursive path: probe + real = 2 analyses on dev, plus the direct pass = 3.",
+     "ref": "src/language/term/Exp.re:407-458 (Module at 456) (origin/dev)"
+    },
+    {
+     "claim": "#2603's let-once commit makes the probe lazy and skips it for non-function-shaped definitions, so a module literal gets one let pass. It does not touch the ModuleExp case.",
+     "ref": "commit 4eec302a50 (PR #2603), Statics.re Let case hunk at dev 2054-2087"
+    },
+    {
+     "claim": "A nested module written inside braces without `in` is a ModuleMod item (Mod sort, shards module/=), lowered by wrap_item to a plain Let. It never reaches the ModuleExp case, so #2651's doubling does not compound through item-form nesting.",
+     "ref": "src/haz3lcore/lang/Form.re:303-304; src/language/grammar/FormId.re:258-259; src/haz3lcore/lang/MakeTerm.re:1638-1640; src/language/statics/ModuleHelpers.re:300-304 (origin/dev)"
+    },
+    {
+     "claim": "On dev only one corpus program uses module bindings, and its nested modules are item-form (Outer/Inner at 64-65, Db at 77).",
+     "ref": "hazel-programs/docs/reference/modules.hz:64-65 (origin/dev)"
+    },
+    {
+     "claim": "Against a one-field labeled product, an expression is first analyzed in synthesis mode, then again by default_case, or by autolabel_singleton_tuple, which analyzes a fresh copy (313) and the wrapped tuple (336-343, itself pre-passed). By my reading that is 4 analyses in the autolabel case.",
+     "ref": "src/language/statics/Statics.re:2778-2791, 310-359 (origin/dev)"
+    },
+    {
+     "claim": "autolabel_singleton_tuple returns `(l = original_expression)`, where original_expression is an unelaborated fresh copy of the source, but it records the copy's own analysis (inner_for_source) at the def's ids. This is why dev's direct pass made M.x evaluate to module source, and why the read-back gives (x=1, y=2).",
+     "ref": "src/language/statics/Statics.re:312, 329-334, 356-357 (origin/dev); test/evaluator/Test_Evaluator_Modules.re:90-96 (29c08fd8fa)"
+    },
+    {
+     "claim": "modules.hz contains exactly the second corner: a one-member signature with an extra member. By the counts above its member `1` is analyzed 3 (probe, real, direct) × 4 (singleton autolabel) × 2 (member let probe+real) = 24 times on dev, matching #2689's report of 24 for modules.hz. After #2603 + #2651: 4.",
+     "ref": "hazel-programs/docs/reference/modules.hz:165-168 (origin/dev); PR #2689 description"
+    },
+    {
+     "claim": "A module name is a Var or Asc(Var, desugar_sig(typ)) pattern, so a signature reaches the let as the pattern's type (p_syn.ty) and the direct pass as def_ana.",
+     "ref": "src/language/statics/ModuleHelpers.re:51-60 (origin/dev)"
+    },
+    {
+     "claim": "The self-naming test (`module F = fun x -> F(x) in 1` must be inconsistent) is the only test that reaches the fallback.",
+     "ref": "test/statics/Test_Statics_Modules.re:409-414, 689 (29c08fd8fa)"
+    },
+    {
+     "claim": "Measured on dev (PR description): 800-function module, statics about 0.13 s of 6 s with the fix. Whole command 6.06/6.74 s before vs 5.26/6.05 s after, two runs each, overlapping. Output of `hazel analyze -W` byte-identical on 73 programs except Measured.WARNING lines (6 before, 4 after on modules.hz).",
+     "ref": "PR #2651 description, 'Checked on dev'"
+    },
+    {
+     "claim": "Measured on #2635 (livelits × modular editors), Shirt and Pants profile: 2.06 s in the let's analysis and 1.79 s in the direct pass, of 4.2 s statics. CLI statics 6.7 → 4.3 s (module fix) → 2.8 s (with the livelit-definition fix too); Shoes and Hair 8.8 → 5.8 → 4.5 s; same slide with the module flattened: 4.1 s. CLI wall clock minus 1.5 s startup, two runs, within 0.3 s.",
+     "ref": "issue #2609 comment 6003186820 (finding 7)"
+    },
+    {
+     "claim": "Browser check for finding 7 was Polygons, which has no module: 33.7 → 33.1 s mean of 3, at the noise edge. No browser figure exists for #2651 alone.",
+     "ref": "issue #2609 comment 6003186820"
+    },
+    {
+     "claim": "The livelits branches carry the first version only: read-back with no names_itself guard (fallback with ~coercible=true).",
+     "ref": "origin/integration/livelits-splicerefs-full Statics.re:4317-4328; origin/integration/livelits-modular-editors Statics.re:4321-4332"
+    },
+    {
+     "claim": "#2689 (draft, pass budgets) merges #2603 (48f8e44a91) and #2651 at e3013b0360 (ea45d5342a, no conflict hunks), not 29c08fd8fa. Its test pins one extra visit for `module M = { let a = 1; let b = a + 1 } in M.b`.",
+     "ref": "origin/ci/statics-passes-dev test/Test_StaticsPasses.re:163-178"
+    },
+    {
+     "claim": "#2689's counter is keyed by Exp.rep_id at entry to uexp_to_info_map. The ModuleExp node and its expanded Let share that id, so the binding node counts 2: that is the 'one extra visit'. The test comment attributes it to the module literal.",
+     "ref": "src/language/statics/Statics.re:2737-2741 (origin/dev); #2689 diff to Statics.re (pass_counts)"
+    },
+    {
+     "claim": "Alexander's Modules II stack keeps the direct pass. From part 2 it is `go(~ana=def_ana, ~coercible=true, def, m)`, and the let's passes there also use ~coercible=true.",
+     "ref": "origin/modules-ii/9-stdlib-modules Statics.re:2973-2974, 2278-2333; origin/modules-ii/1-sig-types Statics.re:2817"
+    },
+    {
+     "claim": "Of the open dev perf PRs, only #2603, #2608, #2675, #2689-#2691 touch Statics.re, and none touch the ModuleExp hunk. #2675 changes the let's co_ctx under requires_fixf; names_itself checks for FixF, not co_ctx, so it is unaffected.",
+     "ref": "PR file lists; #2675 hunk at Statics.re:2232-2240 (origin/dev)"
+    },
+    {
+     "claim": "CI at 29c08fd8fa: Fast checks and Full tests succeeded (2026-10-19). The branch is 19 dev commits behind, none touching Statics.re or ModuleHelpers.re, so origin/dev line numbers match the PR's base.",
+     "ref": "check-runs for 29c08fd8fa; git log 34f9605ddf..origin/dev -- src/language/statics"
+    },
+    {
+     "claim": "Module-binding programs in hazel-programs: 1 file on dev, 4 at the top of Modules II, 13 on the livelits branch, so #2651's effect on dev's corpus grows as those land.",
+     "ref": "git grep '^\\s*module [A-Za-z_]+' on origin/dev, origin/modules-ii/9-stdlib-modules, origin/integration/livelits-splicerefs-full"
+    }
+   ],
+   "representations": [
+    {
+     "name": "StaticsBase.Map.t (the statics map)",
+     "defined_at": "src/language/statics/StaticsBase.re:4-10 (origin/dev)",
+     "what": "Id.Map.t(Info.t): per-id info for every analyzed node, last writer wins",
+     "produced_by": "add (Statics.re:268) and add_info calls throughout uexp_to_info_map",
+     "consumed_by": "the PR's read-back (Statics.re:2776 at 29c08fd8fa), the editor (cursor info, errors), EvalInfo/worker requests"
+    },
+    {
+     "name": "Info.exp.elab_term",
+     "defined_at": "src/language/statics/Statics.re:249-267 (origin/dev), record built in add",
+     "what": "the elaboration of that node, the same value add returns",
+     "produced_by": "add, at the end of each uexp_to_info_map case; except autolabel_singleton_tuple, which records the inner copy's info (Statics.re:357)",
+     "consumed_by": "ModuleExp read-back as def_elab_direct (29c08fd8fa Statics.re:2777-2780)"
+    },
+    {
+     "name": "expanded (the module binding as a let)",
+     "defined_at": "src/language/statics/Statics.re:2736-2741 (origin/dev)",
+     "what": "Let(mpat_to_pat(mp), def, body) carrying the ModuleExp's own rep id",
+     "produced_by": "ModuleExp case",
+     "consumed_by": "Let case (Statics.re:2023-2245), which analyzes def (probe + real on dev) and body once"
+    },
+    {
+     "name": "expanded_elab",
+     "defined_at": "src/language/statics/Statics.re:2182-2230 (origin/dev)",
+     "what": "the let's elaboration: Let(p_elab, align_exp_if_needed(def_elab) |> add_name, body_elab), or Let(p_elab, FixF(p_elab, def_elab', None), body_elab) when recursive and self-referencing",
+     "produced_by": "Let case",
+     "consumed_by": "names_itself (29c08fd8fa Statics.re:2770-2774) and ModuleHelpers.moduleexp_elab"
+    },
+    {
+     "name": "names_itself",
+     "defined_at": "src/language/statics/Statics.re:2770-2774 (29c08fd8fa)",
+     "what": "bool: the let wrapped def in a fixpoint, so def named the module and the recorded info has no unbound-name error",
+     "produced_by": "pattern match on expanded_elab.term",
+     "consumed_by": "the guard on the read-back; true means run the old direct pass"
+    },
+    {
+     "name": "def_elab_direct",
+     "defined_at": "src/language/statics/Statics.re:2762 (origin/dev); 2775-2789 (29c08fd8fa)",
+     "what": "def's elaboration without the let's wrapping",
+     "produced_by": "dev: a full second go(~ana=def_ana, def). PR: info.elab_term at rep_id(def), or the fallback go",
+     "consumed_by": "ModuleHelpers.moduleexp_elab (ModuleHelpers.re:448-456)"
+    },
+    {
+     "name": "moduleexp_elab",
+     "defined_at": "src/language/statics/ModuleHelpers.re:448-456 (origin/dev)",
+     "what": "Let(strip_module_sig_pats_in_pat(p_elab), def_elab_direct, body_elab): the module's full value, not narrowed to its signature",
+     "produced_by": "ModuleExp case",
+     "consumed_by": "ModuleExp's add (Statics.re:2765-2772 dev / 2792-2799 PR), and from there the evaluator"
+    },
+    {
+     "name": "lowered (module literal expansion)",
+     "defined_at": "src/language/statics/ModuleHelpers.re:286-337 (origin/dev)",
+     "what": "the items of { ... } folded into nested Let/TyAlias ending in a labeled tuple of exports; ModuleMod items become plain Lets",
+     "produced_by": "ModuleHelpers.lower, called from the Module case (Statics.re:2701)",
+     "consumed_by": "Module case's go(lowered.expanded) (Statics.re:2702), so every member let pays the let's own pass count"
+    },
+    {
+     "name": "def_rec_probe (the let's recursion probe)",
+     "defined_at": "src/language/statics/Statics.re:2070 (origin/dev)",
+     "what": "a full analysis of def in the pattern's ctx whose map is thrown away; its type feeds is_recursive",
+     "produced_by": "Let case, always on dev; lazy and skipped for non-function-shaped defs under #2603",
+     "consumed_by": "is_recursive (Statics.re:2071-2076)"
+    },
+    {
+     "name": "autolabel elaborated_exp / inner_for_source",
+     "defined_at": "src/language/statics/Statics.re:310-359 (origin/dev)",
+     "what": "returned elab (l = unelaborated copy) vs the info recorded at the source ids (the copy's own analysis against the field type)",
+     "produced_by": "the one-field labeled product path (Statics.re:2778-2789)",
+     "consumed_by": "dev: the direct pass's def_elab_direct (hence M.x = source). PR: the read-back sees inner_for_source"
+    },
+    {
+     "name": "Statics.pass_counts (PR #2689, not on dev)",
+     "defined_at": "origin/ci/statics-passes-dev, Statics.re (pass_counts ref, keyed by Exp.rep_id at entry)",
+     "what": "Hashtbl: analyses per expression id",
+     "produced_by": "uexp_to_info_map entry when enabled",
+     "consumed_by": "`hazel analyze --count-passes`, test/Test_StaticsPasses.re budgets"
+    }
+   ],
+   "diagram_ideas": [
+    "Before/after flow of the ModuleExp case. Left column 'dev': box `module M = def in body` -> arrow 'expand, same id (2736-2742)' -> box `let M = def in body` -> two stacked boxes inside it: 'probe go(def), map discarded (2070)' and 'real go(def), writes InfoExp at rep_id(def) (2079)' -> box 'body once (2152)' -> box 'expanded_elab = Let(p, align(def_elab)|>add_name, body)'. A red arrow from the ModuleExp box: 'go(def) again, whole module (2762)' -> box 'def_elab_direct' -> box 'moduleexp_elab (ModuleHelpers 448-456)'. Right column 'PR': same let boxes; from a cylinder 'statics map (Id.Map)' a green arrow 'find_opt(rep_id(def)).elab_term (2775-2780)' -> 'def_elab_direct'. A dashed grey arrow labeled 'expanded_elab is Let(_, FixF) -> names_itself' -> 'fallback go(def) (2787)'.",
+    "Pass-count ladder for one member expression, a 4x2 grid. Rows: 'module M = { let a = 1 } in …' and 'module M : {let x : Int} = { let x = 1; let y = 2 } in …' (modules.hz:165). Columns: dev / +#2651 / +#2603 / both. Cells: row 1: 3x2=6, 2x2=4, 2x1=2, 1x1=1. Row 2: 3x4x2=24, 2x4x2=16, 2x4x1=8, 1x4x1=4. Each cell shows the factors colour-coded: binding passes (probe, real, direct), one-field signature (x4), member let (probe+real). Footnote: derived from the code; #2689 measured 24 on dev for modules.hz.",
+    "Two kinds of nesting, side by side. Left tree 'item form': box `module Outer = {` -> child `module Inner = {` (label 'ModuleMod -> plain Let, ModuleHelpers 300-304') -> leaf `let v = true`. Edge labels per level: 'dev x2 (let probe) / #2603 x1'. Only the root edge has '#2651: x3 -> x2'. Right tree 'expression form': `module A = (` -> `module B = {...} in B` (label 'ModuleExp inside a definition') -> leaf. Edge labels per level: 'dev x3, #2651 or #2603 x2, both x1'. Bottom caption: 'corpus: only the left shape occurs'.",
+    "Shirt and Pants statics timeline (CLI, seconds): three horizontal bars on one axis. 'before' 6.7 split into 'let pass 2.06' and 'direct pass 1.79' (profile of 4.2 s, scaled) plus 'rest'. 'module fix' 4.3. 'both fixes' 2.8. A vertical dashed line at 4.1 labeled 'module flattened into top-level lets'. A side note: 'dev, 800-function module: 6.06/6.74 vs 5.26/6.05 s, noise'.",
+    "Open perf PR landscape as swim lanes: Statics (#2603 let-once, #2651 module-once, #2689 pass budgets [draft]); Parse/load (#2610, #2614, stacked); Worker transport (#2606, #2608, #2652, #2691 [draft]); Evaluator (#2661 type hash, #2681, merged #2679); Incremental (#2673, #2675, #2700, #2690 [draft]); Editor (#2671, #2672, merged #2602); CI budgets (#2678, #2697). Arrows: #2689 -> needs #2603 and #2651 (and carries e3013b0360, not 29c08fd8fa); #2651 <-> #2603 'independent, merge cleanly (ea45d5342a)'; Modules II stack #2493->#2510 -> 'same ModuleExp hunk; fallback needs ~coercible=true'; #2597/#2635 -> 'port 29c08fd8fa'."
+   ],
+   "review_points": [
+    "On dev alone the change is 3 analyses of def to 2, not 2 to 1. The let's discarded probe (Statics.re:2070) is the other extra pass, and #2603 removes it. The description's 'twice what it should' is true only with #2603. Say so, or merge them as a pair.",
+    "The 2^depth story applies to a `module … in` inside another module binding's definition. Item-form nesting (`module Inner = {...}` inside braces) never reaches the ModuleExp case (ModuleHelpers.re:300-304). Its per-level x2 on dev is the let probe, which is #2603's fix. No corpus program nests the expression form, so #2651's measured win is a constant factor per binding: large when one module holds most of a program (livelits), small on dev.",
+    "Evidence quality: the dev timing overlaps (two runs each), and the PR says so. The headline numbers (1.79 s of 4.2 s; 6.7 to 4.3 s) come from #2635, which carries #2603 and per-item statics. There is no browser measurement of this fix alone. The flattened-module baseline (4.1 s) is the strongest argument that the fix removes the whole module overhead.",
+    "The read-back rests on 'add records the elab_term it returns' (Statics.re:249-268). Check the known exceptions: (a) the FixF case, handled by names_itself; (b) autolabel_singleton_tuple records a different info than it returns (Statics.re:356-357). That is the one-member-signature corner, whose new behaviour is kept and pinned; (c) a Tuple def is rearranged by the let before analysis (Statics.re:2054-2069), so the read-back elab is the rearranged one where dev's direct pass was not. Is that reachable for a module binding?",
+    "Under #2603's probe reuse, a function-valued module definition (`module F = fun x -> …`) is recorded from the probe, which ran with F in scope (p_syn.ctx). Before #2651, the direct pass overwrote those infos. Together, completion and hover inside the definition may see F at its synthesized type. The elaboration is unaffected. Worth one check with both merged.",
+    "Port 29c08fd8fa (the names_itself fallback) to #2597 and #2635. They have the unguarded read-back (livelits-splicerefs-full Statics.re:4317-4328, livelits-modular-editors 4321-4332). Also redo #2689's merge, which took e3013b0360 (ea45d5342a). All three are Matthew's branches.",
+    "For Alexander: Modules II part 2 onward keeps the direct pass with ~coercible=true (modules-ii/9 Statics.re:2973-2974). Whichever lands second must keep the read-back and add ~coercible=true to the fallback, as the livelits branch does. Confirm that under sealing at coercion sites, the let's pass (also ~coercible=true, 2278-2333, ana p_syn.ty) records the same def elaboration the direct pass returned. If the let instead inserts the seal outside def's own elab, the read-back is not exact there.",
+    "No test in #2651 fails if the second pass comes back. Its tests cover only the two corners. #2689's 'a module definition: its members once (#2651)' is the regression guard. It is draft and waits on both PRs. Consider landing that test case with #2651 or right after.",
+    "#2689's 'one extra visit' is the binding node, which the ModuleExp and its expanded let share via fast_copy (Statics.re:2737-2741). The test comment calls it the module literal. Minor, but it matters when someone later reads the budget.",
+    "The PR's 'Measured.WARNING … 6 before and 4 after' on modules.hz is unexplained. Likely candidates are ids minted by dev's direct pass, such as autolabel's fresh copies at Statics.re:312 and 332, on the one-member signatures at modules.hz:103-168. A reviewer may ask which two ids went away.",
+    "Next re-analysis of the same kind, outside this PR: the one-field labeled product path (Statics.re:2778-2789) runs a synthesis pre-pass and, when auto-labelling, two more analyses. It is not among #2689's three known x3 multipliers, yet it is the x4 that remains on modules.hz:165 after both fixes. It deserves a --count-passes run and a finding in #2609.",
+    "Merge mechanics: CI is green at 29c08fd8fa. The branch is 19 commits behind dev, with no changes to Statics.re or ModuleHelpers.re. #2603 and #2651 merge without conflict, and #2675's co_ctx change under requires_fixf does not affect names_itself, which looks for the FixF, not the co_ctx."
+   ]
+  }
+ }
+]

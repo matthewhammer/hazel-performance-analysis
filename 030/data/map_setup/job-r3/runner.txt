@@ -1,0 +1,3 @@
+r3:
+Model name:                              INTEL(R) XEON(R) PLATINUM 8573C
+v22.23.3

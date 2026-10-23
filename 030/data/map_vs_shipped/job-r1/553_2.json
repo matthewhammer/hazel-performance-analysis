@@ -1,0 +1,82 @@
+[
+ {
+  "n": 3,
+  "cells": 9,
+  "map_setup": 2.88,
+  "passed": 0.6616,
+  "map": 0.4394,
+  "passed_handle": 0.5968
+ },
+ {
+  "n": 4,
+  "cells": 16,
+  "map_setup": 5.11,
+  "passed": 0.9487,
+  "map": 0.5716,
+  "passed_handle": 0.8777
+ },
+ {
+  "n": 6,
+  "cells": 36,
+  "map_setup": 10.34,
+  "passed": 2.2649,
+  "map": 0.6313,
+  "passed_handle": 1.2871
+ },
+ {
+  "n": 8,
+  "cells": 64,
+  "map_setup": 17.96,
+  "passed": 3.2704,
+  "map": 0.6087,
+  "passed_handle": 2.4566
+ },
+ {
+  "n": 12,
+  "cells": 144,
+  "map_setup": 39.87,
+  "passed": 6.7748,
+  "map": 0.849,
+  "passed_handle": 4.5204
+ },
+ {
+  "n": 16,
+  "cells": 256,
+  "map_setup": 71.41,
+  "passed": 11.7604,
+  "map": 0.678,
+  "passed_handle": 8.5629
+ },
+ {
+  "n": 24,
+  "cells": 576,
+  "map_setup": 172.82,
+  "passed": 27.7976,
+  "map": 0.9677,
+  "passed_handle": 19.7971
+ },
+ {
+  "n": 32,
+  "cells": 1024,
+  "map_setup": 341.2,
+  "passed": 47.7773,
+  "map": 0.8153,
+  "passed_handle": 44.1516
+ },
+ {
+  "n": 48,
+  "cells": 2304,
+  "map_setup": 763.44,
+  "passed": 117.8386,
+  "map": 1.1683,
+  "passed_handle": 82.6543
+ },
+ {
+  "n": 64,
+  "cells": 4096,
+  "map_setup": 1359.27,
+  "passed": 201.9016,
+  "map": 0.8325,
+  "passed_handle": 150.329
+ }
+]

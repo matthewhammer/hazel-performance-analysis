@@ -1,0 +1,26 @@
+[
+ {
+  "n": 16,
+  "cells": 256,
+  "map_setup": 82.47,
+  "passed": 12.9708,
+  "map": 0.723,
+  "passed_handle": 9.0287
+ },
+ {
+  "n": 32,
+  "cells": 1024,
+  "map_setup": 291.71,
+  "passed": 52.726,
+  "map": 0.8541,
+  "passed_handle": 40.2594
+ },
+ {
+  "n": 64,
+  "cells": 4096,
+  "map_setup": 1313.53,
+  "passed": 235.2859,
+  "map": 1.0029,
+  "passed_handle": 157.0665
+ }
+]

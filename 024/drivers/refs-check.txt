@@ -1,0 +1,200 @@
+962a7cb009 modules.md:5-5 | Hazel's module system provides ML-style module syntax as a **syntactic gloss over labeled  || Hazel's module system provides ML-style module syntax as a *
+962a7cb009 modules.md:261-264 | Expansion happens in two places: || 2. **Elaborator** (`Elaborator.re`): Permanent expansion for
+b02ce6dab5 modules.md:82-90 | ### Sealing || the signature's members. Sub-module members may themselves b
+b02ce6dab5 modules.md:496-497 | `ModuleExp(mpat, def, body)` is checked as `Let(pat, def, body)` and || elaborates to that `Let`. `Dot(e, x)` on a signature-typed `
+962a7cb009 AutoProbePerform.re:81-93 | let rec dedup_adjacent = (ids: list(Id.t)): list(Id.t) => || let ancestors = dedup_adjacent(Info.ancestors_of(info));
+962a7cb009 Editor.re:13-32 | module Model = { || };
+962a7cb009 Editor.re:146-184 | let update = || };
+962a7cb009 Editor.re:173-174 | let+ zipper = || Perform.go(~settings, ~statics=old_statics, ~syntax, a, stat
+962a7cb009 Editor.re:186-230 | let calculate = || let zipper =
+962a7cb009 TyDiCtx.re:28-39 | let bound_variables = (ty_expect: Typ.t, ctx: Ctx.t): list(TyDiSuggestion.t) => || );
+962a7cb009 TyDiCtx.re:192-201 | let suggest_variable = (ci: Info.t): list(TyDiSuggestion.t) => { || @ bound_qualified_aps(ana, ctx)
+962a7cb009 CachedStatics.re:4-13 | [@deriving (show({with_path: false}), sexp, yojson)] || };
+962a7cb009 CachedStatics.re:99-135 | let init_from_term = || };
+962a7cb009 CachedStatics.re:188-226 | let init = || };
+b5eaa33031 DefStatics.re:3-10 | /* whole-program statics per top-level item (body replaced by a hole) || changed, so an edit's bookkeeping is proportional to the edi
+962a7cb009 MakeTerm.re:290-306 | /* Register the wrapped term under every id and build its annotation || };
+962a7cb009 MakeTerm.re:1997-2013 | let from_zip_for_sem_with_completion = (z: Zipper.t, ~root: Sort.t) => { || };
+962a7cb009 Base.re:3-28 | [@deriving (show({with_path: false}), sexp, yojson, eq)] || and projector = ProjectorCore.t(piece);
+962a7cb009 ZipperBase.re:13-20 | [@deriving (show({with_path: false}), sexp, yojson, eq)] || };
+962a7cb009 Indicated.re:228-236 | let ci_of = || | Some({piece, _}) => Id.Map.find_opt(Piece.id(piece), info_
+962a7cb009 DHExp.re:11-11 | include Exp; || include Exp;
+962a7cb009 Dynamics.re:50-55 | [@deriving (show({with_path: false}), sexp, yojson)] || };
+962a7cb009 EvalInfo.re:18-29 | [@deriving (show({with_path: false}), sexp, yojson)] || };
+962a7cb009 EvalInfo.re:56-74 | let of_info_map = || };
+962a7cb009 IncrEval.re:313-353 | let reuse_check = || };
+962a7cb009 IncrEval.re:326-341 | let* info = EvalInfo.find_opt(id, eval_info); || );
+962a7cb009 Transition.re:1024-1058 | | Dot(d1, d2) => || };
+962a7cb009 Transition.re:1024-1087 | | Dot(d1, d2) => || };
+962a7cb009 Transition.re:1024-1086 | | Dot(d1, d2) => || | _ => Indet
+962a7cb009 Unboxing.re:184-217 | /* Forms that are the wrong type of value - these cases indicate an error */ || | TypFun => IndetMatch
+962a7cb009 Unboxing.re:185-217 | | ( || | TypFun => IndetMatch
+962a7cb009 CoCtx.re:30-53 | [@deriving (show({with_path: false}), sexp, yojson)] || };
+962a7cb009 CoCtx.re:43-53 | let mk = (ctx_before: Ctx.t, ctx_after, co_ctx: t): t => { || };
+962a7cb009 ConstructorStaticsHelpers.re:46-67 | let syn_marks_ctr = || };
+962a7cb009 ConstructorStaticsHelpers.re:61-64 | | None => ( || )
+962a7cb009 Ctx.re:37-57 | type entry = || };
+a81e3188fd Elaborator.re:518-524 | | ModuleExp(mp, def, body) => || Let(pat', def', body') |> rewrap;
+962a7cb009 Info.re:35-53 | type exp = { || };
+962a7cb009 LabeledTupleHelpers.re:49-75 | | _ => || }
+962a7cb009 LabeledTupleHelpers.re:108-110 | let align_exp_if_needed = (ctx: Ctx.t, expected_ty: Typ.t, exp: Exp.t): Exp.t => || ? exp : align_exp(ctx, expected_ty, exp);
+b02ce6dab5 LabeledTupleHelpers.re:77-77 | | _ => exp || | _ => exp
+b02ce6dab5 LabeledTupleHelpers.re:104-104 | | _ => true || | _ => true
+111775a60c ModuleHelpers.re:47-56 | let rec mpat_to_pat = (mp: MPat.t): Pat.t => || };
+111775a60c ModuleHelpers.re:265-271 | | ModuleMod(mp, def) => || )
+962a7cb009 ModuleHelpers.re:51-60 | let rec mpat_to_pat = (mp: MPat.t): Pat.t => || };
+962a7cb009 ModuleHelpers.re:162-171 | let labeled_tuple_exp = (exports: list(value_export)): Exp.t => { || };
+962a7cb009 ModuleHelpers.re:286-337 | let wrap_item = || };
+962a7cb009 ModuleHelpers.re:300-304 | | ModuleMod(mp, def) => || )
+962a7cb009 ModuleHelpers.re:364-371 | and strip_module_sig_pats_in_pat = (pat: Pat.t): Pat.t => { || };
+962a7cb009 ModuleHelpers.re:413-439 | let module_actual_type = || };
+962a7cb009 ModuleHelpers.re:442-445 | let module_elab = (~module_exp_id: Id.t, expanded_elab: Exp.t): Exp.t => || |> restore_module_body_id(~id=module_exp_id);
+962a7cb009 ModuleHelpers.re:447-456 | /* Rebuild ModuleExp elaboration with direct def elaboration preserved. */ || };
+962a7cb009 ModuleHelpers.re:448-456 | let moduleexp_elab = (~def_elab_direct: Exp.t, expanded_elab: Exp.t): Exp.t => { || };
+b02ce6dab5 ModuleHelpers.re:268-274 | | ModuleMod(mp, def) => || )
+b02ce6dab5 ModuleHelpers.re:642-651 | | Let(p, def, body) => || ModLet(strip_synthetic_asc(mpat_to_pat(mp), p), def)
+b02ce6dab5 ModuleHelpers.re:671-681 | /* Rebuild ModuleExp elaboration with direct def elaboration preserved. The || };
+be90bf4b21 ModuleHelpers.re:617-627 | /* Rebuild ModuleExp elaboration with direct def elaboration preserved. The || };
+c4bae23739 ModuleHelpers.re:47-56 | let rec mpat_to_pat = (mp: MPat.t): Pat.t => || };
+111775a60c Statics.re:2765-2815 | | Module(items) => || );
+111775a60c Statics.re:2848-2852 | let def_ana = || };
+111775a60c Statics.re:2853-2854 | let (_, def_elab_direct, m) = || go(~ana=def_ana, ~coercible=true, def, m);
+111775a60c Statics.re:3747-3761 | | Asc(p, ann) => || );
+29c08fd8fa Statics.re:2024-2039 | let is_recursive = (ctx, p, def, syn: Typ.t) => { || };
+29c08fd8fa Statics.re:2070-2076 | let (def_rec_probe, _, _) = go(~ctx=p_syn.ctx, ~ana=p_syn.ty, def, m); || let is_rec = is_recursive(ctx, p, def, rec_check_ty);
+29c08fd8fa Statics.re:2090-2123 | } else { || };
+29c08fd8fa Statics.re:2172-2181 | let requires_fixf = || );
+29c08fd8fa Statics.re:2172-2187 | let requires_fixf = || (Let(p_elab, def_elab, body_elab) |> rewrap, m);
+29c08fd8fa Statics.re:2202-2206 | let fixf = || );
+29c08fd8fa Statics.re:2229-2229 | (Let(p_elab, fixf, body_elab) |> rewrap, m); || (Let(p_elab, fixf, body_elab) |> rewrap, m);
+29c08fd8fa Statics.re:2757-2763 | /* The definition's own elaboration, without what the Let wraps it || recorded, and for the one case below. */
+29c08fd8fa Statics.re:2764-2769 | /* Unless the definition names the module itself: the Let then || reports the name as unbound. */
+29c08fd8fa Statics.re:2764-2789 | /* Unless the definition names the module itself: the Let then || };
+29c08fd8fa Statics.re:2764-2774 | /* Unless the definition names the module itself: the Let then || };
+29c08fd8fa Statics.re:2770-2789 | let names_itself = || };
+29c08fd8fa Statics.re:2770-2774 | let names_itself = || };
+29c08fd8fa Statics.re:2775-2780 | let (def_elab_direct, m) = || )
+29c08fd8fa Statics.re:2775-2789 | let (def_elab_direct, m) = || };
+29c08fd8fa Statics.re:2781-2788 | | _ => || (elab, m);
+29c08fd8fa Statics.re:2784-2784 | | Asc(_, typ) => typ || | Asc(_, typ) => typ
+29c08fd8fa Statics.re:2790-2791 | let moduleexp_elab = || ModuleHelpers.moduleexp_elab(~def_elab_direct, expanded_elab
+4aa493c05a Statics.re:2070-2089 | /* Passes MULTIPLY with let nesting, since each re-analyzes the whole || is_rec, and so the elaboration (requires_fixf below), is unc
+4aa493c05a Statics.re:2079-2089 | - A function-shaped one gets the recursion probe, in the pattern's || is_rec, and so the elaboration (requires_fixf below), is unc
+4aa493c05a Statics.re:2108-2119 | let shadows = || };
+4aa493c05a Statics.re:2113-2162 | let reuse_probe = || );
+4aa493c05a Statics.re:2135-2139 | /* The recursive path's first pass had exactly the probe's inputs, || let def_base = def_rec_probe;
+962a7cb009 Statics.re:191-201 | and uexp_to_info_map = || : (Info.exp, Exp.t, Map.t) => {
+962a7cb009 Statics.re:204-269 | let add = || };
+962a7cb009 Statics.re:268-268 | (info, elab_term, add_info(IdTagged.ids(user_term), InfoExp(info), m)); || (info, elab_term, add_info(IdTagged.ids(user_term), InfoExp(
+962a7cb009 Statics.re:270-270 | let ancestors_inclusive = [Exp.rep_id(uexp)] @ ancestors; || let ancestors_inclusive = [Exp.rep_id(uexp)] @ ancestors;
+962a7cb009 Statics.re:310-359 | let autolabel_singleton_tuple = (uexp: Exp.t, inner_ty, l, m) => { || };
+962a7cb009 Statics.re:310-358 | let autolabel_singleton_tuple = (uexp: Exp.t, inner_ty, l, m) => { || (info, elaborated_exp, m);
+962a7cb009 Statics.re:312-321 | let original_expression = Exp.fresh(term); || );
+962a7cb009 Statics.re:329-334 | let elaborated_exp = || );
+962a7cb009 Statics.re:356-357 | let m = add_info(IdTagged.ids(elaborated_exp), InfoExp(info), m); || let m = add_info(IdTagged.ids(uexp), InfoExp(inner_for_sourc
+962a7cb009 Statics.re:357-357 | let m = add_info(IdTagged.ids(uexp), InfoExp(inner_for_source), m); || let m = add_info(IdTagged.ids(uexp), InfoExp(inner_for_sourc
+962a7cb009 Statics.re:691-705 | | Var(name) => || );
+962a7cb009 Statics.re:1117-1132 | let tuple_elab = || };
+962a7cb009 Statics.re:1278-1420 | | Dot(e1, e2) => || };
+962a7cb009 Statics.re:1561-1597 | | Constructor(ctr, ty) => || (info, elab_term, m);
+962a7cb009 Statics.re:1561-1565 | | Constructor(ctr, ty) => || VARIABLE binding (a module: `module M = … in M.x`). Construc
+962a7cb009 Statics.re:1598-1606 | | None => || );
+962a7cb009 Statics.re:1705-1718 | let fn_ana = || let (fn, fn_elab, m) = go(~ana=fn_ana, fn, m);
+962a7cb009 Statics.re:2023-2248 | | Let(p, def, body) => || );
+962a7cb009 Statics.re:2024-2039 | let is_recursive = (ctx, p, def, syn: Typ.t) => { || };
+962a7cb009 Statics.re:2054-2069 | let (def_term, def_rewrap) = Exp.unwrap(def); || };
+962a7cb009 Statics.re:2070-2070 | let (def_rec_probe, _, _) = go(~ctx=p_syn.ctx, ~ana=p_syn.ty, def, m); || let (def_rec_probe, _, _) = go(~ctx=p_syn.ctx, ~ana=p_syn.ty
+962a7cb009 Statics.re:2076-2076 | let is_rec = is_recursive(ctx, p, def, rec_check_ty); || let is_rec = is_recursive(ctx, p, def, rec_check_ty);
+962a7cb009 Statics.re:2079-2079 | let (def, def_elab, m) = go(~ana=p_syn.ty, def, m); || let (def, def_elab, m) = go(~ana=p_syn.ty, def, m);
+962a7cb009 Statics.re:2090-2122 | } else { || (def, def_elab, def_ctx, m, ty_p_ana);
+962a7cb009 Statics.re:2091-2102 | let (def_base, _, _) = go(~ctx=p_syn.ctx, ~ana=p_syn.ty, def, m); || let def_ctx = p_ana'.ctx;
+962a7cb009 Statics.re:2121-2121 | let (def, def_elab, m) = go(~ctx=def_ctx, ~ana, def, m); || let (def, def_elab, m) = go(~ctx=def_ctx, ~ana, def, m);
+962a7cb009 Statics.re:2124-2151 | /* Inject module type exports into body context */ || };
+962a7cb009 Statics.re:2152-2155 | let (body, body_elab, m) = go(~ctx=p_ana_ctx, ~ana, body, m); || go_pat(~is_synswitch=false, ~co_ctx=body.co_ctx, ~ana=ty_p_a
+962a7cb009 Statics.re:2172-2230 | let requires_fixf = || };
+962a7cb009 Statics.re:2172-2181 | let requires_fixf = || );
+962a7cb009 Statics.re:2182-2187 | let (elab_term, m) = || (Let(p_elab, def_elab, body_elab) |> rewrap, m);
+962a7cb009 Statics.re:2188-2230 | } else { || };
+962a7cb009 Statics.re:2200-2206 | let fun_id = Exp.rep_id(def_elab); || );
+962a7cb009 Statics.re:2207-2228 | /* The InfoExp at fun_id was written when `go` traversed the || };
+962a7cb009 Statics.re:2216-2228 | let m = || };
+962a7cb009 Statics.re:2231-2240 | add( || ]),
+962a7cb009 Statics.re:2693-2724 | | Module(items) => || );
+962a7cb009 Statics.re:2725-2772 | | ModuleExp(mp, def, body) => || );
+962a7cb009 Statics.re:2728-2735 | let (_, _, m) = || );
+962a7cb009 Statics.re:2736-2741 | let pat = ModuleHelpers.mpat_to_pat(mp); || );
+962a7cb009 Statics.re:2737-2741 | let expanded = || );
+962a7cb009 Statics.re:2742-2742 | let (expanded_info, expanded_elab, m) = go(~ana, expanded, m); || let (expanded_info, expanded_elab, m) = go(~ana, expanded, m
+962a7cb009 Statics.re:2743-2756 | /* Override cls to show "Module binding" */ || };
+962a7cb009 Statics.re:2757-2762 | let def_ana = || let (_, def_elab_direct, m) = go(~ana=def_ana, def, m);
+962a7cb009 Statics.re:2757-2764 | let def_ana = || ModuleHelpers.moduleexp_elab(~def_elab_direct, expanded_elab
+962a7cb009 Statics.re:2759-2759 | | Asc(_, typ) => typ || | Asc(_, typ) => typ
+962a7cb009 Statics.re:2762-2762 | let (_, def_elab_direct, m) = go(~ana=def_ana, def, m); || let (_, def_elab_direct, m) = go(~ana=def_ana, def, m);
+962a7cb009 Statics.re:2763-2764 | let moduleexp_elab = || ModuleHelpers.moduleexp_elab(~def_elab_direct, expanded_elab
+962a7cb009 Statics.re:2763-2772 | let moduleexp_elab = || );
+962a7cb009 Statics.re:2765-2765 | add( || add(
+962a7cb009 Statics.re:2776-2791 | // This is for lifting single values into a singleton labeled tuple when the label is not  || };
+962a7cb009 Statics.re:2778-2789 | switch (Typ.weak_head_normalize(ctx, ana).term) { || };
+962a7cb009 Statics.re:2778-2791 | switch (Typ.weak_head_normalize(ctx, ana).term) { || };
+962a7cb009 Statics.re:3164-3193 | | Var(name) => || );
+962a7cb009 Statics.re:4350-4381 | let mk = || );
+962a7cb009 Statics.re:4354-4362 | let (_, elab, m) = || );
+b02ce6dab5 Statics.re:2241-2256 | let is_recursive = (ctx, p, def, syn: Typ.t) => { || };
+b02ce6dab5 Statics.re:2284-2284 | let is_rec = is_recursive(ctx, p, def, rec_check_ty); || let is_rec = is_recursive(ctx, p, def, rec_check_ty);
+b02ce6dab5 Statics.re:2287-2288 | let (def, def_elab, m) = || go(~ana=p_syn.ty, ~coercible=true, def, m);
+b02ce6dab5 Statics.re:2925-2925 | Module(ModuleHelpers.refold_module_elab(items, expanded_elab)) || Module(ModuleHelpers.refold_module_elab(items, expanded_elab
+b02ce6dab5 Statics.re:2968-2976 | let def_ana = || ModuleHelpers.moduleexp_elab(~def_elab_direct, expanded_elab
+b02ce6dab5 Statics.re:2973-2974 | let (_, def_elab_direct, m) = || go(~ana=def_ana, ~coercible=true, def, m);
+be90bf4b21 Statics.re:2152-2155 | /* The definition is coerced to the binder's annotation: every analysis || go(~ctx=p_syn.ctx, ~ana=p_syn.ty, ~coercible=true, def, m);
+be90bf4b21 Statics.re:2164-2165 | let (def, def_elab, m) = || go(~ana=p_syn.ty, ~coercible=true, def, m);
+be90bf4b21 Statics.re:2177-2178 | let (def_base, _, _) = || go(~ctx=p_syn.ctx, ~ana=p_syn.ty, ~coercible=true, def, m);
+be90bf4b21 Statics.re:2190-2191 | let (def_base2, _, _) = || go(~ctx=def_ctx, ~ana=p_syn.ty, ~coercible=true, def, m);
+be90bf4b21 Statics.re:2209-2210 | let (def, def_elab, m) = || go(~ctx=def_ctx, ~ana, ~coercible=true, def, m);
+be90bf4b21 Statics.re:2233-2242 | let requires_fixf = || );
+be90bf4b21 Statics.re:2833-2834 | let (_, def_elab_direct, m) = || go(~ana=def_ana, ~coercible=true, def, m);
+c4bae23739 Statics.re:3710-3725 | | Asc(p, ann) => || };
+962a7cb009 StaticsBase.re:4-11 | module Map = { || ids |> List.fold_left((m, id) => Id.Map.add(id, info, m), m)
+962a7cb009 StaticsBase.re:10-11 | let add_info = (ids: list(Id.t), info: Info.t, m: t): t => || ids |> List.fold_left((m, id) => Id.Map.add(id, info, m), m)
+962a7cb009 StaticsBase.re:46-53 | let refs_in = (m: t, id: Id.t): Binding.s => || };
+962a7cb009 StaticsBase.re:263-263 | let syn = Unknown(SynSwitch) |> Typ.temp; || let syn = Unknown(SynSwitch) |> Typ.temp;
+962a7cb009 StaticsBase.re:268-277 | let fixed_typ = (ctx: Ctx.t, ana: Typ.t, elab_syn_ty: Typ.t): Typ.t => || };
+be90bf4b21 StaticsBase.re:265-271 | /* The relation the subsumption step checks between the expectation and the || ? Typ.coercion(ctx, ~from=syn, ~to_=ana) : Typ.meet(ctx, ana
+962a7cb009 Exp.re:407-460 | let rec get_num_of_functions = (e: t) => || };
+962a7cb009 Exp.re:544-551 | let add_name = (name: option(string), exp: t): t => { || };
+b02ce6dab5 Exp.re:456-456 | | Module(_) || | Module(_)
+962a7cb009 IdTagged.re:158-164 | let unwrap = (x: t('a)) => ( || );
+962a7cb009 IdTagged.re:165-185 | let rep_id = ({annotation: {ids, _}, _}: Annotated.t('a, IdTag.t)) => || let ids = ({annotation: {ids, _}, _}: t('a)) => ids;
+962a7cb009 IdTagged.re:175-183 | let fast_copy = (id, {term, annotation}: t('a)): t('a) => { || };
+b02ce6dab5 Pat.re:298-306 | let rec of_mpat = (mp: MPat.t): t => || };
+111775a60c Typ.re:675-738 | let rec weak_head_normalize = (~rec_counter=0, ctx: Ctx.t, ty: t): t => || };
+111775a60c Typ.re:675-739 | let rec weak_head_normalize = (~rec_counter=0, ctx: Ctx.t, ty: t): t => || }
+111775a60c Typ.re:737-737 | | _ => ty || | _ => ty
+962a7cb009 Typ.re:481-500 | | Var(x) => || |> Option.value(~default=Unknown(Internal) |> rewrap);
+962a7cb009 Typ.re:615-657 | let rec desugar_sig = (ctx: Ctx.t, ty: t): t => { || };
+962a7cb009 Typ.re:615-646 | let rec desugar_sig = (ctx: Ctx.t, ty: t): t => { || };
+be90bf4b21 Typ.re:629-690 | let rec weak_head_normalize = (~rec_counter=0, ctx: Ctx.t, ty: t): t => || };
+962a7cb009 Main.re:73-110 | /* This function is split into two phases, update and calculate. || );
+962a7cb009 CodeEditable.re:343-343 | Keyboard.handle_key_event(k) |> Option.map(x => Update.Perform(x)); || Keyboard.handle_key_event(k) |> Option.map(x => Update.Perfo
+962a7cb009 CodeWithStatics.re:93-141 | /* Debounce statics computation during rapid typing. Only one mode is || };
+962a7cb009 CodeWithStatics.re:104-140 | let consume = (~is_edited, ~schedule_refresh: unit => unit): StaticsMode.t => { || };
+962a7cb009 CodeWithStatics.re:188-188 | PerfMetrics.time_statics(() => || PerfMetrics.time_statics(() =>
+962a7cb009 CodeWithStatics.re:200-204 | let needs_refresh = || && statics_mode != StaticsMode.Defer;
+962a7cb009 EvalResult.re:250-293 | // Check whether settings / elab / targets have changed || ProgramResult.awaiting_worker_ack;
+962a7cb009 EvalResult.re:270-293 | let eval_info_map = || ProgramResult.awaiting_worker_ack;
+962a7cb009 WorkerClient.re:5-11 | /* Warm-worker ack timeout. Must exceed a typical eval slice so a busy || let eval_timeout_ms = 20000; // Evaluation timeout in ms
+962a7cb009 WorkerServer.re:7-89 | module Request = { || };
+962a7cb009 WorkerServer.re:271-271 | let slice_step_budget = 5000; || let slice_step_budget = 5000;
+962a7cb009 WorkerServer.re:294-304 | /* Incremental reuse pays for itself only past a certain program size: || >= incremental_min_statics;
+962a7cb009 EvalRequest.re:6-41 | let request = || );
+962a7cb009 Test_Elaboration.re:386-399 | let singleton_labeled_tuple_elaborates_labels = () => || );
+29c08fd8fa Test_Evaluator_Modules.re:86-96 | /* A module ascribed a one-member signature, with a member more: an error || });
+962a7cb009 Test_Evaluator_Modules.re:123-129 | let test_module_keyword_sig_annotated = || });
+c4bae23739 Test_Evaluator_Modules.re:196-202 | let test_sealing_drops_extras = || });
+29c08fd8fa Test_Evaluator_Prelude.re:24-27 | let evaluate = unevaluated => { || };
+29c08fd8fa Test_Evaluator_Prelude.re:126-140 | let parse_and_evaluate_test = || );
+111775a60c Test_Statics_Modules.re:1657-1662 | /* Module keyword with prod annotation is rejected */ || );
+29c08fd8fa Test_Statics_Modules.re:406-413 | /* A module definition that names its own module: modules are not || );
+29c08fd8fa Test_Statics_Modules.re:409-413 | let test_module_names_itself = || );
+962a7cb009 Test_Statics_Modules.re:373-387 | /* Sec 22-24: Precise width matching required (limitation). || );
+29c08fd8fa Test_Statics_Prelude.re:142-151 | let errors = (map: Statics.Map.t): list((Id.t, list(Mark.t))) => || );
+29c08fd8fa Test_Statics_Prelude.re:225-242 | let inconsistent_typecheck = (name, exp) => { || };

@@ -103,7 +103,92 @@ h2:hover .copyanchor, h3:hover .copyanchor, .lh:hover .copyanchor, .copyanchor:f
 </style>
 </head>
 <body><main>
-<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>28<b>)</b></code> · reference · started 2026-10-22 · <span class="wip">work in progress</span></p>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>28<b>)</b></code> · reference · started 2026-10-22, revised 2026-10-23 · <span class="wip">work in progress</span></p>
+<!-- listen: begin -->
+<style>
+  .listen { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 6px 0 10px; font: 13px system-ui, sans-serif; color: var(--muted, GrayText); }
+  .listen[hidden] { display: none; }
+  .listen button { font: inherit; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--ink, CanvasText); cursor: pointer; }
+  .listen button[aria-pressed="true"] { border-color: var(--accent, #6d28d9); color: var(--accent, #6d28d9); }
+  .listen select { font: inherit; max-width: 16em; border-radius: 6px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--ink, CanvasText); }
+  .listen input[type=range] { width: 8em; vertical-align: middle; accent-color: var(--accent, #6d28d9); }
+  .listen .speed { min-width: 3.2em; display: inline-block; font-variant-numeric: tabular-nums; }
+  .listen-now { outline: 2px solid color-mix(in srgb, var(--accent, #6d28d9) 55%, transparent); outline-offset: 3px; border-radius: 4px;
+    background: color-mix(in srgb, var(--accent, #6d28d9) 8%, transparent); }
+  @media print { .listen { display: none; } }
+</style>
+<div class="listen" hidden role="group" aria-label="Listen to this report">
+  <button type="button" class="listen-play" aria-pressed="false">🔊 Listen</button>
+  <button type="button" class="listen-stop">⏹ Stop</button>
+  <label>speed <input type="range" class="listen-rate" min="0.5" max="2" step="0.1" value="1"> <span class="speed">1.0×</span></label>
+  <select class="listen-voice" aria-label="voice"></select>
+  <span class="listen-time"></span>
+</div>
+<script>
+/* (^ticket(573)) Listen: the report read aloud by this browser's own voices; nothing leaves the page. */
+// (once the whole page is parsed: this runs where the bar is, near the top, before the report's sections exist)
+document.addEventListener("DOMContentLoaded", () => {
+  const S = window.speechSynthesis, bar = document.querySelector(".listen");
+  if (!S || !bar || typeof SpeechSynthesisUtterance === "undefined") return;
+  bar.hidden = false;
+  const main = document.querySelector("main") || document.body;
+  const play = bar.querySelector(".listen-play"), stop = bar.querySelector(".listen-stop"), rate = bar.querySelector(".listen-rate"),
+        speed = bar.querySelector(".speed"), voiceSel = bar.querySelector(".listen-voice"), timeEl = bar.querySelector(".listen-time");
+  const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) { return null; } };
+  // the blocks to read, in order: prose only, each once (a point holding paragraphs is read as its paragraphs)
+  const SKIP = "table, pre, svg, script, style, .listen, .theme-toggle, details:not([open]), [aria-hidden=true], button, nav, #report-data";
+  const blocks = [...main.querySelectorAll("h1, .sub, h2, h3, h4, p, li, blockquote, figcaption, summary")]
+    .filter(el => !el.closest(SKIP) && !el.querySelector("p, li, blockquote") && !el.matches(".series"));
+  const textOf = el => { const c = el.cloneNode(true); c.querySelectorAll(".anchor, .copyanchor, button, sup").forEach(x => x.remove()); return c.textContent.replace(/\s+/g, " ").trim(); };
+  const texts = blocks.map(textOf), words = texts.reduce((n, t) => n + (t ? t.split(" ").length : 0), 0);
+  const WPM = 160;
+  let i = 0, playing = false, voices = [];
+  const r = () => +rate.value;
+  const showTime = () => {
+    speed.textContent = r().toFixed(1) + "×";
+    const left = texts.slice(playing || i ? i : 0).reduce((n, t) => n + (t ? t.split(" ").length : 0), 0);
+    const min = Math.max(1, Math.round(left / (WPM * r())));
+    timeEl.textContent = (i && left < words ? "about " + min + " min left" : "about " + min + " min to listen") + " at " + r().toFixed(1) + "×";
+  };
+  const fill = () => {
+    voices = S.getVoices().filter(v => !document.documentElement.lang || v.lang.slice(0, 2) === document.documentElement.lang.slice(0, 2) || v.lang.startsWith("en"));
+    const want = store("listen-voice");
+    voiceSel.replaceChildren(...voices.map(v => { const o = document.createElement("option"); o.value = v.name; o.textContent = v.name + (v.localService ? "" : " (online)"); return o; }));
+    voiceSel.hidden = !voices.length;
+    if (want && voices.some(v => v.name === want)) voiceSel.value = want;
+    else { const d = voices.find(v => v.default) || voices[0]; if (d) voiceSel.value = d.name; }
+  };
+  fill(); if ("onvoiceschanged" in S) S.onvoiceschanged = fill;
+  const saved = parseFloat(store("listen-rate")); if (saved >= 0.5 && saved <= 2) rate.value = saved;
+  const mark = el => { document.querySelectorAll(".listen-now").forEach(x => x.classList.remove("listen-now")); if (el) { el.classList.add("listen-now"); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); } };
+  // one block at a time (a long utterance is cut short in some browsers); the next when it ends
+  const speak = () => {
+    while (i < blocks.length && !texts[i]) i++;
+    if (i >= blocks.length) { end(); return; }
+    const u = new SpeechSynthesisUtterance(texts[i]), v = voices.find(v => v.name === voiceSel.value);
+    if (v) { u.voice = v; u.lang = v.lang; }
+    u.rate = r();
+    u.onend = () => { if (!playing) return; i++; showTime(); speak(); };
+    u.onerror = e => { if (e.error === "interrupted" || e.error === "canceled") return; i++; if (playing) speak(); };
+    mark(blocks[i]); S.speak(u);
+  };
+  const end = () => { playing = false; S.cancel(); i = 0; mark(null); play.textContent = "🔊 Listen"; play.setAttribute("aria-pressed", "false"); showTime(); };
+  play.onclick = () => {
+    if (playing && !S.paused) { S.pause(); play.textContent = "▶ Resume"; return; }
+    if (playing && S.paused) { S.resume(); play.textContent = "⏸ Pause"; return; }
+    playing = true; play.textContent = "⏸ Pause"; play.setAttribute("aria-pressed", "true"); S.cancel(); speak();
+  };
+  stop.onclick = end;
+  // a new speed or voice takes effect from the block being read, said again from its start
+  const again = () => { if (playing) { S.cancel(); setTimeout(speak, 0); } };
+  rate.oninput = () => { store("listen-rate", rate.value); showTime(); };
+  rate.onchange = again;
+  voiceSel.onchange = () => { store("listen-voice", voiceSel.value); again(); };
+  addEventListener("pagehide", () => S.cancel());
+  showTime();
+});
+</script>
+<!-- listen: end -->
 <h1>Hazel and Fumola, Side by Side</h1>
 <p class="sub">Matthew, while the game's World rule was being written in Fumola for <a href="../027/"><code class="ref"><b>^report(</b>27<b>)</b></code></a> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-542"><code class="ref"><b>^ticket(</b>542<b>)</b></code></a>): <q>would it be helpful to compare a document comparing the syntax of Hazel vs Fumola, to make translations easier next time?</q> This is that document (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-543"><code class="ref"><b>^ticket(</b>543<b>)</b></code></a>). Every Fumola line in it was run on Fumola's wasm build (<code>667a34d</code>); it grows as more of the rules are translated.</p>
 
@@ -117,7 +202,19 @@ end</pre></td><td><pre class="code">switch (e) {
 }</pre></td><td>Fumola: <code>;</code> between cases. A pattern <code>#X</code> does not match a value <code>#X(payload)</code>.</td></tr><tr><td>An option</td><td><pre class="code">Some(x) / None (declared constructors)</pre></td><td><pre class="code">?x / null</pre></td><td>Fumola: <code>case (?x) { ... }; case null { ... }</code>.</td></tr><tr><td>A list literal, and joining</td><td><pre class="code">[1, 2] @ [3]</pre></td><td><pre class="code">[1, 2] # [3]</pre></td><td>Fumola's are arrays: <code>xs[i]</code>, <code>xs.size()</code>, <code>for (x in xs.vals()) { ... }</code>.</td></tr><tr><td>A list, taken apart</td><td><pre class="code">case xs | [] =&gt; ... | x :: rest =&gt; ... end</pre></td><td><pre class="code">(by index, or a loop)</pre></td><td>Fumola has no cons pattern on arrays.</td></tr><tr><td>If</td><td><pre class="code">if c then a else b</pre></td><td><pre class="code">if (c) { a } else { b }</pre></td><td></td></tr><tr><td>And, or, not</td><td><pre class="code">a &amp;&amp; b, a || b, !a</pre></td><td><pre class="code">a and b, a or b, not a</pre></td><td></td></tr><tr><td>Text: equal, join</td><td><pre class="code">a == b, a ++ b</pre></td><td><pre class="code">a == b, a # b</pre></td><td>Fumola's <code>!=</code> on text is inverted: see the traps.</td></tr><tr><td>Numbers</td><td><pre class="code">Int; 0 - 1 for minus one; Float ops &lt;., +.</pre></td><td><pre class="code">Nat and Int; 5 - 7 is -2 (an Int)</pre></td><td>Fumola keeps Nat and Int apart: see the traps.</td></tr><tr><td>A map</td><td><pre class="code">(none: a list of pairs, walked)</pre></td><td><pre class="code">HashMap.new(), HashMap.put(m, k, v) gives (m2, old), HashMap.get(m, k) gives ?v</pre></td><td>Fumola's is persistent (a hash trie, im_rc): put returns a new map. Any value is a key, a tuple too.</td></tr><tr><td>A comment</td><td><pre class="code"># words #</pre></td><td><pre class="code">// words, or /* words */</pre></td><td>Hazel's closes with <code>#</code>: an unclosed one swallows code.</td></tr></table></div>
 
 <h2 id="traps">Traps, found translating<a class="anchor" href="#traps" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="traps" title="copy this section's address">copy link</button></h2>
-<ul><li><b>Text <code>!=</code> is inverted.</b> <code>"a" != "b"</code> is <code>false</code> and <code>"a" != "a"</code> is <code>true</code> (run on the wasm build; the <code>Neq</code> arm for text in <code>crates/fumola_semantics/src/lib/vm_ops.rs</code>). Write <code>not (a == b)</code>, or <code>(a == b) == false</code>.</li><li><b>No text patterns.</b> <code>case "E"</code> never matches (patterns take Unit, Null and Nat literals only). Test text with <code>==</code> in an <code>if</code>.</li><li><b>Nat and Int apart.</b> A Nat minus a larger Nat is an Int; Int + Nat is a type error; <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code> between them are missing (only <code>&lt;</code> mixes); <code>Int(4) == Nat(4)</code> is false, and they are different map keys. Keep coordinates Nat, and check an edge before stepping off it (the World rule's <code>step</code>).</li><li><b>No escapes in text.</b> A literal's quotes are stripped, nothing more: no <code>\"</code> or <code>\\</code> inside.</li><li><b>No Float comparison.</b> Fumola's <code>&lt;</code> has no Float case (found porting the Trap room, whose random wiring compares draws with 0.5). <a href="https://github.com/matthewhammer/kids-choice-games/pull/4">matthewhammer/kids-choice-games#4</a> passes the draws as Nats in millionths instead: exact at the threshold, but the rule's globals no longer match Hazel's shape.</li><li><b>A tuple payload, twice parenthesised.</b> <code>#GoSquare((c, r, back, #Done))</code>: the outer pair is the application, the inner the tuple.</li></ul>
+<p>Found writing the game's rules in Fumola, then each run again and read in Fumola's source (revised 2026-10-23, <a href="https://matthewhammer.org/hazel/dashboard/#ticket-571"><code class="ref"><b>^ticket(</b>571<b>)</b></code></a>): one bug, gaps where a case is missing, and one that turned out not to be a trap.</p>
+<div class="scroll"><table class="side"><tr><th>trap</th><th>kind</th><th>what it does</th><th>proposed fix</th></tr><tr><td><b>Text <code>!=</code> is inverted.</b></td><td>bug</td><td><code>"a" != "b"</code> is <code>false</code>, <code>"a" != "a"</code> is <code>true</code>. The text arm of <code>Neq</code> in <code>relop</code> (<code>crates/fumola_semantics/src/lib/vm_ops.rs</code>) says <code>t1 == t2</code>. Until fixed: <code>not (a == b)</code>.</td><td>One line: <code>t1 != t2</code>, and a test of <code>!=</code> for every kind of value.</td></tr><tr><td><b>Literal patterns match only <code>()</code>, <code>null</code> and Nats.</b></td><td>missing</td><td><code>case "E"</code> never matches, and neither do <code>case true</code>, <code>case (-1)</code> or <code>case 0.5</code>: the grammar takes any literal in a pattern, but <code>pattern_matches</code> (<code>vm_match.rs</code>) has arms only for Unit, Null and Nat, so the rest fall through to no match, silently. Until fixed: test with <code>==</code> in an <code>if</code>.</td><td>An arm for every literal: Text, Bool, Char, Int (a negative literal is <code>UnOpLiteral</code>), and Float by value; a pattern of a kind that can never match its value an error, not a quiet miss.</td></tr><tr><td><b>Nat and Int mix in some places and not others.</b></td><td>missing, and one silent</td><td><code>-</code> mixes them (a Nat minus a larger Nat is an Int, as it should be), but <code>+</code>, <code>*</code>, <code>/</code> and <code>%</code> do not, and <code>Int + Nat</code> is worse than an error: it falls to <code>try_symbolic_binop</code> and comes back as the unevaluated expression <code>-2 + 1</code>. <code>&lt;</code> mixes them; <code>&lt;=</code>, <code>&gt;</code> and <code>&gt;=</code> are not implemented. <code>Int(4) == Nat(4)</code> is <code>false</code>, and they are different map keys.</td><td>One rule for whole numbers: a result of 0 or more is always a Nat, below 0 always an Int (as <code>-</code> already does), for every operation; arithmetic and all six comparisons defined for every pair; so <code>==</code> and a map's keys agree by value. A symbolic result only when an operand is symbolic.</td></tr><tr><td><b>No Float comparison.</b></td><td>missing</td><td><code>0.25 &lt; 0.5</code> stops: <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code> and <code>&gt;=</code> have no Float arm. Found porting the Trap room, whose random wiring compares draws with 0.5; <a href="https://github.com/matthewhammer/kids-choice-games/pull/4">matthewhammer/kids-choice-games#4</a> passes the draws as Nats in millionths instead, so the rule's globals no longer match Hazel's.</td><td>The four comparisons on Floats, and between a Float and a Nat or an Int (as <code>+</code> already mixes Float and Nat); then the game's draws go back to Floats.</td></tr><tr><td><b>No order on text.</b></td><td>missing</td><td><code>"a" &lt; "b"</code> stops. A map keyed by text (a lever's id) wants it; Hazel has <code>string_compare</code>.</td><td>The four comparisons on Text, by code point, as Rust compares strings.</td></tr><tr><td><b>No escapes in text.</b></td><td>missing</td><td>The lexer accepts a backslash and the character after it, but the literal keeps both: <code>"a\"b"</code> is the text <code>a\"b</code>, and <code>"a\nb"</code> has a backslash and an n.</td><td>Escapes read when the literal is: <code>\"</code>, <code>\\</code>, <code>\n</code>, <code>\t</code>, <code>\u{...}</code>; and written back by the printer, so a printed text reads in again.</td></tr><tr><td><b><s>A tuple payload, twice parenthesised.</s> Not a trap.</b></td><td>corrected</td><td>Run again on 2026-10-23: <code>#G(1, 2)</code>, <code>#G(1, 2, #D)</code> and the pattern <code>#G(a, b)</code> all work with single parentheses, and the double ones give the same value. The draft of 2026-10-22 was wrong here.</td><td>None; the game's literal writer may drop its extra parentheses.</td></tr></table></div>
+
+<h2 id="fixes">Proposed fixes<a class="anchor" href="#fixes" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="fixes" title="copy this section's address">copy link</button></h2>
+<p>Scripting the game three ways, its own JS, Hazel and Fumola (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-566"><code class="ref"><b>^ticket(</b>566<b>)</b></code></a>), puts the same rule in each language, and tests hold them equal (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-567"><code class="ref"><b>^ticket(</b>567<b>)</b></code></a>). Each trap above made the Fumola rule say something less directly than the Hazel one does, so the fixes are for Fumola, on one branch of Adapton/fumola with a test for each:</p>
+<ol>
+<li><b>The bug first:</b> text <code>!=</code>. A test of <code>!=</code> beside <code>==</code> for every kind of value, so no arm can disagree with its opposite again.</li>
+<li><b>Patterns:</b> every literal kind matches its value; a literal of the wrong kind for its value is an error, not a pattern that silently never matches.</li>
+<li><b>Whole numbers:</b> one representation per number (0 and up a Nat, below 0 an Int), so equality, map keys and printing all agree; every arithmetic operation and comparison defined for every pair. The silent unevaluated <code>Int + Nat</code> becomes either a number or an error, never an expression, unless an operand really is symbolic.</li>
+<li><b>Order:</b> <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code> on Floats (mixed with whole numbers too) and on Text.</li>
+<li><b>Text escapes,</b> read and printed.</li>
+</ol>
+<p>Then the game's Fumola rules say it plainly: draws as Floats compared with 0.5, directions matched as text in a <code>switch</code>, <code>!=</code> where Hazel has it, and the CI's three-way check (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-567"><code class="ref"><b>^ticket(</b>567<b>)</b></code></a>) still green.</p>
 
 <h2 id="boundary">Across the JS boundary<a class="anchor" href="#boundary" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="boundary" title="copy this section's address">copy link</button></h2>
 <div class="scroll"><table><tr><th></th><th>Hazel (its JS library, <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a>)</th><th>Fumola (its wasm build)</th></tr><tr><td>What a page loads</td><td>hazel-lib.js (2.8 MB), window.Hazel</td><td>fumola_wasm.js and fumola_wasm_bg.wasm (6.3 MB), initSync or init</td></tr><tr><td>A program</td><td>Hazel.run(text) gives {errors, value}</td><td>fumola_create() an instance; fumola_eval_top(id, text) gives a JSON string</td></tr><tr><td>Keeping a function</td><td>the value back is a JS function</td><td>top-level bindings persist in the instance; call by name in a later text</td></tr><tr><td>Arguments</td><td>JS values, converted (of_js): arrays to lists, objects to records, {tag, value} to constructors</td><td>source text only: the call written out, its arguments as literals</td></tr><tr><td>The answer</td><td>a JS value (to_js): records to objects, constructors to {tag, value}</td><td>JSON: {tag, value}, with variants as {tag: &quot;Variant&quot;, value: {name, value}}, numbers as strings</td></tr><tr><td>Counting work</td><td>times only</td><td>every answer carries counts.step</td></tr></table></div>
@@ -194,6 +291,192 @@ func world_list(g, e) {
   code.ref b { font-weight: 800; }
 </style>
 <!-- refs: end -->
+<!-- ref-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .ref-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
+  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
+    vertical-align: 1px; background: #6e7781; }
+  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
+  .rc-state.done { background: #8250df; }
+</style>
+<script>
+/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
+   ticket from the work dashboard's data (its area, its status, its first
+   line), carried by the dashboard's own pages and read live from the
+   published data anywhere else; a report from its own page, live (its
+   title, date and opening). Once per page load each. */
+(() => {
+  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
+  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
+  /* the dashboard itself carries its tickets (made with the page, changed
+     with it); any other page asks the published data */
+  const EMBED = null;
+  let data = EMBED ? Promise.resolve(EMBED) : null;
+  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
+  const pages = new Map();
+  const loadReport = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
+      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
+      let p = h1 && h1.nextElementSibling;
+      while (p && p.tagName !== "P") p = p.nextElementSibling;
+      const label = (doc.querySelector(".series") || {}).textContent || "";
+      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
+               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
+    }).catch(() => null));
+    return pages.get(url);
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
+  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
+  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
+  const ticketCard = (n, d) => {
+    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
+    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
+    const q = (d.queue || []).indexOf(n);
+    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
+      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
+      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
+    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
+      `<div class="rc-title">${esc(lead(t.text))}</div>` +
+      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
+      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
+  };
+  const reportCard = (n, r) => r
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
+      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
+    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
+    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = (a, ref) => {
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
+      card.hidden = false; place(a);
+      let html;
+      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
+      else html = reportCard(ref.n, await loadReport(a.href));
+      if (over !== a) return;
+      card.innerHTML = html; place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- ref-cards: end -->
+<!-- pr-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-base { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: 1px; }
+  .pr-base.dev { background: #dafbe1; color: #116329; } .pr-base.other { background: #fff1c2; color: #7a4b00; }
+  @media (prefers-color-scheme: dark) { .pr-base.dev { background: #12361f; color: #6fdd8b; } .pr-base.other { background: #3d2e00; color: #f2cc60; } }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, the branch a PR targets (dev or not: the distinction that
+   matters, ^ticket(478)), author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2711": {"author": "matthewhammer", "comments": 0, "created": "2026-10-20T17:35:02Z", "kind": "pull", "state": "draft", "title": "Hazel as a JS library: analyze and run programs from any page", "updated": "2026-10-21T03:54:48Z", "base": "dev"}, "matthewhammer/kids-choice-games#4": {"author": "matthewhammer", "comments": 0, "created": "2026-10-22T19:00:07Z", "kind": "pull", "state": "draft", "title": "Dress Up: room rules in Fumola (wasm), beside Hazel and plain JS (^ticket(542))", "updated": "2026-10-22T19:11:02Z", "base": "hazel-logic-531"}}, BUILT = "2026-10-23";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
+  const ask = (key, kind) => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#"), pull = kind === "pull";
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/${pull ? "pulls" : "issues"}/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: pull || j.pull_request ? "pull" : "issues", base: j.base && j.base.ref,
+                      state: j.merged_at || (j.pull_request && j.pull_request.merged_at) ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const baseChip = d => !d.base ? "" : d.base === "dev"
+    ? `<span class="pr-base dev" title="this PR merges into dev">into dev</span>`
+    : `<span class="pr-base other" title="this PR merges into ${esc(d.base)}, not dev">into ${esc(d.base)}, not dev</span>`;
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span>${baseChip(d)}</div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[3];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key, m[2]);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
 
 <!-- theme: begin -->
 <style>
@@ -368,6 +651,60 @@ func world_list(g, e) {
    ]
   },
   {
+   "section": "Traps, found translating",
+   "section_id": "traps",
+   "columns": [
+    "trap",
+    "kind",
+    "what it does",
+    "proposed fix"
+   ],
+   "rows": [
+    [
+     "Text != is inverted.",
+     "bug",
+     "\"a\" != \"b\" is false, \"a\" != \"a\" is true. The text arm of Neq in relop (crates/fumola_semantics/src/lib/vm_ops.rs) says t1 == t2. Until fixed: not (a == b).",
+     "One line: t1 != t2, and a test of != for every kind of value."
+    ],
+    [
+     "Literal patterns match only (), null and Nats.",
+     "missing",
+     "case \"E\" never matches, and neither do case true, case (-1) or case 0.5: the grammar takes any literal in a pattern, but pattern_matches (vm_match.rs) has arms only for Unit, Null and Nat, so the rest fall through to no match, silently. Until fixed: test with == in an if.",
+     "An arm for every literal: Text, Bool, Char, Int (a negative literal is UnOpLiteral), and Float by value; a pattern of a kind that can never match its value an error, not a quiet miss."
+    ],
+    [
+     "Nat and Int mix in some places and not others.",
+     "missing, and one silent",
+     "- mixes them (a Nat minus a larger Nat is an Int, as it should be), but +, *, / and % do not, and Int + Nat is worse than an error: it falls to try_symbolic_binop and comes back as the unevaluated expression -2 + 1. < mixes them; <=, > and >= are not implemented. Int(4) == Nat(4) is false, and they are different map keys.",
+     "One rule for whole numbers: a result of 0 or more is always a Nat, below 0 always an Int (as - already does), for every operation; arithmetic and all six comparisons defined for every pair; so == and a map's keys agree by value. A symbolic result only when an operand is symbolic."
+    ],
+    [
+     "No Float comparison.",
+     "missing",
+     "0.25 < 0.5 stops: <, <=, > and >= have no Float arm. Found porting the Trap room, whose random wiring compares draws with 0.5; matthewhammer/kids-choice-games#4 passes the draws as Nats in millionths instead, so the rule's globals no longer match Hazel's.",
+     "The four comparisons on Floats, and between a Float and a Nat or an Int (as + already mixes Float and Nat); then the game's draws go back to Floats."
+    ],
+    [
+     "No order on text.",
+     "missing",
+     "\"a\" < \"b\" stops. A map keyed by text (a lever's id) wants it; Hazel has string_compare.",
+     "The four comparisons on Text, by code point, as Rust compares strings."
+    ],
+    [
+     "No escapes in text.",
+     "missing",
+     "The lexer accepts a backslash and the character after it, but the literal keeps both: \"a\\\"b\" is the text a\\\"b, and \"a\\nb\" has a backslash and an n.",
+     "Escapes read when the literal is: \\\", \\\\, \\n, \\t, \\u{...}; and written back by the printer, so a printed text reads in again."
+    ],
+    [
+     "A tuple payload, twice parenthesised. Not a trap.",
+     "corrected",
+     "Run again on 2026-10-23: #G(1, 2), #G(1, 2, #D) and the pattern #G(a, b) all work with single parentheses, and the double ones give the same value. The draft of 2026-10-22 was wrong here.",
+     "None; the game's literal writer may drop its extra parentheses."
+    ]
+   ]
+  },
+  {
    "section": "Across the JS boundary",
    "section_id": "boundary",
    "columns": [
@@ -427,191 +764,4 @@ func world_list(g, e) {
   }));
 })();
 </script>
-<!-- pr-cards: begin -->
-<style>
-  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
-  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
-    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
-    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
-  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
-  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
-  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
-  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
-  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
-  .pr-base { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: 1px; }
-  .pr-base.dev { background: #dafbe1; color: #116329; } .pr-base.other { background: #fff1c2; color: #7a4b00; }
-  @media (prefers-color-scheme: dark) { .pr-base.dev { background: #12361f; color: #6fdd8b; } .pr-base.other { background: #3d2e00; color: #f2cc60; } }
-  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
-</style>
-<script>
-/* A card for each link to a GitHub PR or issue, on hover or focus: its
-   title, state, the branch a PR targets (dev or not: the distinction that
-   matters, ^ticket(478)), author, dates and comments, asked of GitHub live, once per
-   number per page load; if GitHub does not answer, what it said when the
-   page was built (tools/link_prs.py writes this block). */
-(() => {
-  const CACHED = {"hazelgrove/hazel#2711": {"author": "matthewhammer", "comments": 0, "created": "2026-10-20T17:35:02Z", "kind": "pull", "state": "draft", "title": "Hazel as a JS library: analyze and run programs from any page", "updated": "2026-10-21T03:54:48Z", "base": "dev"}, "matthewhammer/kids-choice-games#4": {"author": "matthewhammer", "comments": 0, "created": "2026-10-22T19:00:07Z", "kind": "pull", "state": "draft", "title": "Dress Up: room rules in Fumola (wasm), beside Hazel and plain JS (^ticket(542))", "updated": "2026-10-22T19:11:02Z", "base": "hazel-logic-531"}}, BUILT = "2026-10-22";
-  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
-  const asked = new Map();
-  /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
-  const ask = (key, kind) => {
-    if (!asked.has(key)) {
-      const [repo, n] = key.split("#"), pull = kind === "pull";
-      asked.set(key, fetch(`https://api.github.com/repos/${repo}/${pull ? "pulls" : "issues"}/${n}`)
-        .then(r => r.ok ? r.json() : Promise.reject(r.status))
-        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
-                      comments: j.comments, kind: pull || j.pull_request ? "pull" : "issues", base: j.base && j.base.ref,
-                      state: j.merged_at || (j.pull_request && j.pull_request.merged_at) ? "merged" : j.draft ? "draft" : j.state }))
-        .catch(() => null));
-    }
-    return asked.get(key);
-  };
-  const baseChip = d => !d.base ? "" : d.base === "dev"
-    ? `<span class="pr-base dev" title="this PR merges into dev">into dev</span>`
-    : `<span class="pr-base other" title="this PR merges into ${esc(d.base)}, not dev">into ${esc(d.base)}, not dev</span>`;
-  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-  const ago = iso => {
-    const s = (Date.now() - new Date(iso)) / 1000;
-    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
-      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
-    return "just now";
-  };
-  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const fill = (key, d, note) => {
-    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
-    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span>${baseChip(d)}</div>` +
-      `<div class="pr-title">${esc(d.title)}</div>` +
-      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
-      (note ? `<div class="pr-note">${note}</div>` : "");
-  };
-  let card = null, over = null, timer = null;
-  const place = a => {
-    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
-    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
-    const below = r.bottom + 6 + h < innerHeight;
-    card.style.left = (left + scrollX) + "px";
-    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
-  };
-  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
-  const show = a => {
-    const m = RX.exec(a.href);
-    if (!m) return;
-    const key = m[1] + "#" + m[3];
-    over = a; clearTimeout(timer);
-    timer = setTimeout(async () => {
-      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
-      const cached = CACHED[key];
-      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
-      card.hidden = false; place(a);
-      const d = await ask(key, m[2]);
-      if (over !== a) return;
-      card.innerHTML = d ? fill(key, d, "")
-        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
-        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
-      place(a);
-    }, 250);
-  };
-  const linkOf = t => t && t.closest && t.closest("a[href]");
-  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
-  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
-  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
-  document.addEventListener("focusout", hide);
-  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
-  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
-})();
-</script>
-<!-- pr-cards: end -->
-<!-- ref-cards: begin -->
-<style>
-  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
-  .ref-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
-    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
-    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
-  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
-  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
-  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
-  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
-  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
-    vertical-align: 1px; background: #6e7781; }
-  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
-  .rc-state.done { background: #8250df; }
-</style>
-<script>
-/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
-   ticket from the work dashboard's data (its area, its status, its first
-   line), carried by the dashboard's own pages and read live from the
-   published data anywhere else; a report from its own page, live (its
-   title, date and opening). Once per page load each. */
-(() => {
-  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
-  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
-  /* the dashboard itself carries its tickets (made with the page, changed
-     with it); any other page asks the published data */
-  const EMBED = null;
-  let data = EMBED ? Promise.resolve(EMBED) : null;
-  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
-  const pages = new Map();
-  const loadReport = url => {
-    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
-      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
-      let p = h1 && h1.nextElementSibling;
-      while (p && p.tagName !== "P") p = p.nextElementSibling;
-      const label = (doc.querySelector(".series") || {}).textContent || "";
-      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
-               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
-    }).catch(() => null));
-    return pages.get(url);
-  };
-  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
-  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
-  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
-  const ticketCard = (n, d) => {
-    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
-    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
-    const q = (d.queue || []).indexOf(n);
-    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
-      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
-      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
-    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
-      `<div class="rc-title">${esc(lead(t.text))}</div>` +
-      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
-      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
-  };
-  const reportCard = (n, r) => r
-    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
-      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
-    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
-  let card = null, over = null, timer = null;
-  const place = a => {
-    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
-    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
-    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
-  };
-  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
-  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
-  const show = (a, ref) => {
-    over = a; clearTimeout(timer);
-    timer = setTimeout(async () => {
-      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
-      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
-      card.hidden = false; place(a);
-      let html;
-      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
-      else html = reportCard(ref.n, await loadReport(a.href));
-      if (over !== a) return;
-      card.innerHTML = html; place(a);
-    }, 250);
-  };
-  const linkOf = t => t && t.closest && t.closest("a[href]");
-  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
-  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
-  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
-  document.addEventListener("focusout", hide);
-  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
-  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
-})();
-</script>
-<!-- ref-cards: end -->
-
 </body></html>

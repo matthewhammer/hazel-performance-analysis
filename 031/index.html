@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<!-- theme: head begin -->
+<script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<!-- theme: head end -->
+<!-- nav: begin --><meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script><!-- nav: end -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reviews Still Open</title>
+<meta name="description" content="What reviewers have said on Matthew's open hazelgrove/hazel pull requests that has not been acted on yet: each piece of feedback, whether a later commit or reply answered it, and what is left.">
+<style>  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8; --accent2: #0e7490; --cx: #d6d1c6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1020px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 26px 0 6px; }
+  p, li { max-width: 76ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  .headline > p { margin: 6px 0; }
+  ol.ans { padding-left: 1.4em; margin: 8px 0; }
+  ol.ans > li { max-width: none; margin: 14px 0; }
+  ol.ans > li > .row { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: center; }
+  ol.ans > li p { margin: 0; }
+  figure.mini { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  figure.mini figcaption { font-size: 0.8em; margin-top: 4px; }
+  @media (max-width: 760px) { ol.ans > li > .row { grid-template-columns: minmax(0, 1fr); } figure.mini { max-width: 340px; } }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  a.cl { text-decoration: none; } a.cl:hover code { text-decoration: underline; }
+  sup.at { font-size: 0.68em; color: var(--muted); margin-left: 2px; font-weight: 600; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure.fig { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 18px 0; }
+  .figscroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 80ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre.code { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto;
+             font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 6px 0 4px; }
+  pre.code .rm { color: var(--bad); } pre.code .ad { color: var(--good); } pre.code .cm { color: var(--muted); }
+  .codepair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .codepair { grid-template-columns: minmax(0, 1fr); } }
+  .codepair h4 { margin: 6px 0 0; font-size: 0.95em; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .callout { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent2); border-radius: 6px; padding: 8px 14px; margin: 14px 0; }
+  .callout.warn { border-left-color: var(--warn); }
+  section.q { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 6px 16px 10px; margin: 20px 0; }
+  section.q h3 { margin: 10px 0 6px; line-height: 1.4; }
+  section.q h3 .qn { color: var(--accent); margin-right: 6px; }
+  .tags { margin: 2px 0 8px; }
+  .tag { display: inline-block; font-size: 0.78em; font-weight: 600; padding: 1px 9px; border-radius: 999px; margin: 0 6px 4px 0; border: 1px solid; }
+  .tag.ans { color: var(--good); border-color: var(--good); background: color-mix(in srgb, var(--good) 10%, transparent); }
+  .tag.now { color: var(--accent2); border-color: var(--accent2); background: color-mix(in srgb, var(--accent2) 10%, transparent); }
+  .tag.cyrus { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .tag.block { color: var(--warn); border-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+  .tag.open { color: var(--muted); border-color: var(--line); }
+  .answer { background: color-mix(in srgb, var(--good) 9%, var(--paper)); border: 1px solid color-mix(in srgb, var(--good) 45%, var(--line)); border-radius: 6px; padding: 8px 12px; margin: 8px 0; max-width: 80ch; }
+  .after { max-width: 80ch; }
+  ul.ev { padding-left: 1.2em; } ul.ev li { margin: 5px 0; max-width: 84ch; }
+  ul.ev .refs { color: var(--muted); font-size: 0.92em; }
+  ol.opts li { margin: 6px 0; max-width: 82ch; }
+  .optnote { display: inline-block; font-size: 0.8em; font-weight: 600; color: var(--accent); margin-left: 4px; }
+  .optnote.out { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  button.copylink { margin-left: 8px; font: 600 12px system-ui, sans-serif; padding: 1px 8px; border: 1px solid var(--line);
+    border-radius: 999px; background: var(--bg); color: var(--muted); cursor: pointer; vertical-align: 2px; }
+  button.copylink:hover { color: var(--ink); border-color: var(--muted); }
+  button.copylink.done { color: var(--good); border-color: var(--good); }
+  input.copyfield { display: block; width: 100%; max-width: 640px; margin: 4px 0; font: 13px ui-monospace, monospace;
+    background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }
+  .cyrus { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 4px 16px; }
+  .cyrus li { margin: 8px 0; }
+  details.ev summary { cursor: pointer; color: var(--link); }
+  .wip { color: var(--warn); font-weight: 600; }
+
+.item { border-left: 4px solid var(--line); padding: 4px 12px; margin: 10px 0; } .item.open { border-left-color: var(--warn); } .item.unclear { border-left-color: var(--accent); } .item.answered { border-left-color: var(--good); }
+.item blockquote { margin: 4px 0; padding: 4px 10px; background: var(--paper); border-radius: 6px; white-space: pre-wrap; font-size: 0.92em; }
+.item .meta, .item .ev, .item .left { margin: 3px 0; font-size: 0.9em; }
+</style><style id="anchors-css">
+h2 .anchor, h3 .anchor, .lh .anchor { margin-left: 8px; color: var(--muted); text-decoration: none; font-weight: 400; opacity: 0.35; }
+h2:hover .anchor, h3:hover .anchor, .lh:hover .anchor, .anchor:focus { opacity: 1; }
+.copyanchor { margin-left: 6px; font: 400 0.62em system-ui, sans-serif; vertical-align: middle; padding: 1px 6px; border-radius: 6px;
+  border: 1px solid var(--line); background: var(--paper); color: var(--muted); cursor: pointer; opacity: 0.45; }
+h2:hover .copyanchor, h3:hover .copyanchor, .lh:hover .copyanchor, .copyanchor:focus { opacity: 1; }
+.copyanchor.done { color: var(--good); border-color: var(--good); opacity: 1; }
+:target { scroll-margin-top: 12px; }
+</style>
+</head>
+<body><main>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>31<b>)</b></code> · reviews · 2026-10-23 · <span class="wip">work in progress</span></p>
+<!-- listen: begin -->
+<style>
+  .listen { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 6px 0 10px; font: 13px system-ui, sans-serif; color: var(--muted, GrayText); }
+  .listen[hidden] { display: none; }
+  .listen button { font: inherit; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--ink, CanvasText); cursor: pointer; }
+  .listen button[aria-pressed="true"] { border-color: var(--accent, #6d28d9); color: var(--accent, #6d28d9); }
+  .listen select { font: inherit; max-width: 16em; border-radius: 6px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--ink, CanvasText); }
+  .listen input[type=range] { width: 8em; vertical-align: middle; accent-color: var(--accent, #6d28d9); }
+  .listen .speed { min-width: 3.2em; display: inline-block; font-variant-numeric: tabular-nums; }
+  .listen-now { outline: 2px solid color-mix(in srgb, var(--accent, #6d28d9) 55%, transparent); outline-offset: 3px; border-radius: 4px;
+    background: color-mix(in srgb, var(--accent, #6d28d9) 8%, transparent); }
+  @media print { .listen { display: none; } }
+</style>
+<div class="listen" hidden role="group" aria-label="Listen to this report">
+  <button type="button" class="listen-play" aria-pressed="false">🔊 Listen</button>
+  <button type="button" class="listen-stop">⏹ Stop</button>
+  <label>speed <input type="range" class="listen-rate" min="0.5" max="2" step="0.1" value="1"> <span class="speed">1.0×</span></label>
+  <select class="listen-voice" aria-label="voice"></select>
+  <span class="listen-time"></span>
+</div>
+<script>
+/* (^ticket(573)) Listen: the report read aloud by this browser's own voices; nothing leaves the page. */
+// (once the whole page is parsed: this runs where the bar is, near the top, before the report's sections exist)
+document.addEventListener("DOMContentLoaded", () => {
+  const S = window.speechSynthesis, bar = document.querySelector(".listen");
+  if (!S || !bar || typeof SpeechSynthesisUtterance === "undefined") return;
+  bar.hidden = false;
+  const main = document.querySelector("main") || document.body;
+  const play = bar.querySelector(".listen-play"), stop = bar.querySelector(".listen-stop"), rate = bar.querySelector(".listen-rate"),
+        speed = bar.querySelector(".speed"), voiceSel = bar.querySelector(".listen-voice"), timeEl = bar.querySelector(".listen-time");
+  const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) { return null; } };
+  // the blocks to read, in order: prose only, each once (a point holding paragraphs is read as its paragraphs)
+  const SKIP = "table, pre, svg, script, style, .listen, .theme-toggle, details:not([open]), [aria-hidden=true], button, nav, #report-data";
+  const blocks = [...main.querySelectorAll("h1, .sub, h2, h3, h4, p, li, blockquote, figcaption, summary")]
+    .filter(el => !el.closest(SKIP) && !el.querySelector("p, li, blockquote") && !el.matches(".series"));
+  const textOf = el => { const c = el.cloneNode(true); c.querySelectorAll(".anchor, .copyanchor, button, sup").forEach(x => x.remove()); return c.textContent.replace(/\s+/g, " ").trim(); };
+  const texts = blocks.map(textOf), words = texts.reduce((n, t) => n + (t ? t.split(" ").length : 0), 0);
+  const WPM = 160;
+  let i = 0, playing = false, voices = [];
+  const r = () => +rate.value;
+  const showTime = () => {
+    speed.textContent = r().toFixed(1) + "×";
+    const left = texts.slice(playing || i ? i : 0).reduce((n, t) => n + (t ? t.split(" ").length : 0), 0);
+    const min = Math.max(1, Math.round(left / (WPM * r())));
+    timeEl.textContent = (i && left < words ? "about " + min + " min left" : "about " + min + " min to listen") + " at " + r().toFixed(1) + "×";
+  };
+  const fill = () => {
+    voices = S.getVoices().filter(v => !document.documentElement.lang || v.lang.slice(0, 2) === document.documentElement.lang.slice(0, 2) || v.lang.startsWith("en"));
+    const want = store("listen-voice");
+    voiceSel.replaceChildren(...voices.map(v => { const o = document.createElement("option"); o.value = v.name; o.textContent = v.name + (v.localService ? "" : " (online)"); return o; }));
+    voiceSel.hidden = !voices.length;
+    if (want && voices.some(v => v.name === want)) voiceSel.value = want;
+    else { const d = voices.find(v => v.default) || voices[0]; if (d) voiceSel.value = d.name; }
+  };
+  fill(); if ("onvoiceschanged" in S) S.onvoiceschanged = fill;
+  const saved = parseFloat(store("listen-rate")); if (saved >= 0.5 && saved <= 2) rate.value = saved;
+  const mark = el => { document.querySelectorAll(".listen-now").forEach(x => x.classList.remove("listen-now")); if (el) { el.classList.add("listen-now"); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); } };
+  // one block at a time (a long utterance is cut short in some browsers); the next when it ends
+  const speak = () => {
+    while (i < blocks.length && !texts[i]) i++;
+    if (i >= blocks.length) { end(); return; }
+    const u = new SpeechSynthesisUtterance(texts[i]), v = voices.find(v => v.name === voiceSel.value);
+    if (v) { u.voice = v; u.lang = v.lang; }
+    u.rate = r();
+    u.onend = () => { if (!playing) return; i++; showTime(); speak(); };
+    u.onerror = e => { if (e.error === "interrupted" || e.error === "canceled") return; i++; if (playing) speak(); };
+    mark(blocks[i]); S.speak(u);
+  };
+  const end = () => { playing = false; S.cancel(); i = 0; mark(null); play.textContent = "🔊 Listen"; play.setAttribute("aria-pressed", "false"); showTime(); };
+  play.onclick = () => {
+    if (playing && !S.paused) { S.pause(); play.textContent = "▶ Resume"; return; }
+    if (playing && S.paused) { S.resume(); play.textContent = "⏸ Pause"; return; }
+    playing = true; play.textContent = "⏸ Pause"; play.setAttribute("aria-pressed", "true"); S.cancel(); speak();
+  };
+  stop.onclick = end;
+  // a new speed or voice takes effect from the block being read, said again from its start
+  const again = () => { if (playing) { S.cancel(); setTimeout(speak, 0); } };
+  rate.oninput = () => { store("listen-rate", rate.value); showTime(); };
+  rate.onchange = again;
+  voiceSel.onchange = () => { store("listen-voice", voiceSel.value); again(); };
+  addEventListener("pagehide", () => S.cancel());
+  showTime();
+});
+</script>
+<!-- listen: end -->
+
+<h1>Reviews Still Open</h1>
+<p class="sub">Matthew: <q>look at our open PRs on hazel, find new reviews we haven't integrated yet. Create a report for each one, or a combined one --- with subsections.</q> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-572"><code class="ref"><b>^ticket(</b>572<b>)</b></code></a>)</p>
+<div class="headline"><p><b>Short answers.</b></p><ol class="ans">
+<li><b>11 pieces of feedback are open</b> across 4 pull requests: <a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a>, <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a>, <a href="https://github.com/hazelgrove/hazel/pull/2613">#2613</a>, <a href="https://github.com/hazelgrove/hazel/pull/2583">#2583</a>; 3 more are unclear (the evidence below says why).</li>
+<li><b>5 of Matthew's open pull requests have feedback from someone else;</b> 31 have none.</li>
+<li><b><a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a> (Elaborations without whitespace): Alexander's "changes requested" of 10-21 has no reply and no commit after it.</b> He measured secondary (whitespace and comments) still surviving in elaborations across the docs corpus, about 13.5% of the marshaled size, mostly through <code>Typ.normalize</code>; he offers two fixes, asks for a test over every node kind in the corpus, and four comments on lines are untouched.</li>
+<li><b><a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a> (A module's definition analyzed once): newest, today 11:34.</b> Andrew answered "yes" (a module defined as a function should be an error), and Alexander asks to either make the non-recursive analysis check it is a module, or give modules their own case apart from lets. Also unclear there: the <code>names_itself</code> thread, whose promised prototype is now draft <a href="https://github.com/hazelgrove/hazel/pull/2717">#2717</a> (a module binding as a non-recursive let), which <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a> does not mention.</li>
+<li><b><a href="https://github.com/hazelgrove/hazel/pull/2583">#2583</a> (Deep links) and <a href="https://github.com/hazelgrove/hazel/pull/2613">#2613</a> (Colors): "changes requested" reviews still standing though the work is in.</b> <a href="https://github.com/hazelgrove/hazel/pull/2583">#2583</a>'s rework landed in 077a68f9f8 (10-20), unannounced on the PR and not re-reviewed; one question, "Do we want to support tutorial sharing?", has no reply. <a href="https://github.com/hazelgrove/hazel/pull/2613">#2613</a>'s blocking point was fixed (28fcabfffc), but its question to Andrew (keep the focused breadcrumb's light green pill?) has no answer.</li>
+<li><b><a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a> (A value known to have a type is not walked again): a thought, not a request.</b> Alexander: "I'm still thinking about this. I feel like at a certain point we're getting back towards the cast calculus"; Matthew's later comment does not take it up.</li>
+</ol></div>
+<h2 id="summary">Pull request by pull request<a class="anchor" href="#summary" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="summary" title="copy this section's address">copy link</button></h2>
+<div class="scroll"><table><tr><th>PR</th><th>title</th><th>reviewers</th><th>open</th><th>unclear</th><th>answered</th></tr><tr><td><a href="#pr-2608">#2608</a></td><td>Leave the source&#x27;s whitespace and comments out of elaborations</td><td>7h3kk1d</td><td class=n>5</td><td class=n>0</td><td class=n>0</td></tr><tr><td><a href="#pr-2651">#2651</a></td><td>Statics: a module binding analyzes its definition once, not twice</td><td>7h3kk1d, disconcision</td><td class=n>3</td><td class=n>1</td><td class=n>5</td></tr><tr><td><a href="#pr-2613">#2613</a></td><td>Colors: every var() a stylesheet reads is one the theme defines</td><td>7h3kk1d</td><td class=n>2</td><td class=n>0</td><td class=n>1</td></tr><tr><td><a href="#pr-2583">#2583</a></td><td>Deep links: the URL can say which slide, which panel, and where the cursor is</td><td>7h3kk1d</td><td class=n>1</td><td class=n>1</td><td class=n>14</td></tr><tr><td><a href="#pr-2681">#2681</a></td><td>A value known to have a type is not walked again for it</td><td>7h3kk1d</td><td class=n>0</td><td class=n>1</td><td class=n>0</td></tr></table></div>
+<h2 id="pr-2608"><a href="https://github.com/hazelgrove/hazel/pull/2608">#2608</a>: Leave the source&#x27;s whitespace and comments out of elaborations<a class="anchor" href="#pr-2608" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="pr-2608" title="copy this section's address">copy link</button></h2><p class="note"><code>elab-no-secondary</code> into <code>dev</code> · last commit 2026-09-30 · reviewers: 7h3kk1d · <b>5 open</b>, 0 unclear, 0 answered</p><div class="item open"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-21 · <code>src/language/term/IdTagged.re</code>:193 · <a href="https://github.com/hazelgrove/hazel/pull/2608#discussion_r4340989886">on GitHub</a></p><blockquote>I don&#x27;t think we want the elaboration specific terminology in here.</blockquote><p class="ev"><b>open:</b> No commit since 66f789d916 (2026-09-30) and no reply; IdTagged.re still defines unwrap_elab at the PR head.</p><p class="left"><b>Left to do:</b> Replace unwrap_elab with unwrap(strip_secondary(x)) and keep elaboration wording out of IdTagged.</p></div><div class="item open"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-21 · <code>src/language/term/IdTagged.re</code>:193 · <a href="https://github.com/hazelgrove/hazel/pull/2608#discussion_r4341033887">on GitHub</a></p><blockquote>🤖 `unwrap_elab` is `unwrap` with the secondary cleared, so it can be written as `unwrap(strip_secondary(x))`. That way `IdTagged` keeps only `strip_secondary`, which is named for what it does. The two call sites in `Statics` become `Exp.unwrap(IdTagged.strip_secondary(uexp))` and `Pat.unwrap(IdTagged.strip_secondary(upat))`, and any explanation about elaborations can go there.</blockquote><p class="ev"><b>open:</b> Same thread; no commit or reply after it.</p><p class="left"><b>Left to do:</b> Make the two Statics call sites Exp.unwrap(IdTagged.strip_secondary(...)) / Pat.unwrap(...).</p></div><div class="item open"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-21 · <code>test/Test_ElabSize.re</code>:3 · <a href="https://github.com/hazelgrove/hazel/pull/2608#discussion_r4341060156">on GitHub</a></p><blockquote>🤖 This header says why the change was made (&quot;they were about a third of each program sent to the eval worker&quot;). That history belongs in the PR description. The test name already says what is being checked, so I would drop the header, or keep only the first clause.</blockquote><p class="ev"><b>open:</b> No commit or reply after it.</p><p class="left"><b>Left to do:</b> Drop or shorten the history-style header of test/Test_ElabSize.re.</p></div><div class="item open"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-21 · <code>test/Test_ElabSize.re</code>:1 · <a href="https://github.com/hazelgrove/hazel/pull/2608#discussion_r4341062668">on GitHub</a></p><blockquote>🤖 This is a statics test, so I would move it into `test/statics/`. `Test_Statics_Properties.re` already has a check of the same kind over elaborations (`elab_ids_outside_user_term`), and `Test_Statics_Prelude.re` has a `statics` helper this test could use instead of its own parsing. The group name `ElabSize` also does not fit, since the test checks that no secondary is left and does not measure size.</blockquote><p class="ev"><b>open:</b> No commit or reply after it.</p><p class="left"><b>Left to do:</b> Move the test into test/statics/, reuse the statics helper, and rename the ElabSize group.</p></div><div class="item open"><p class="meta"><b>7h3kk1d</b>, review · CHANGES_REQUESTED, 2026-10-21 · <a href="https://github.com/hazelgrove/hazel/pull/2608#pullrequestreview-5605026687">on GitHub</a></p><blockquote>🤖 I checked that nothing reads an elaboration&#x27;s secondary. The only reader is `wrap_with_secondary` in `PreserveExact` mode, and `FastParse` is the only caller that sets that mode. Incremental reuse compares terms with `fast_equal` and `lexeme_trace`, neither of which looks at secondary, so reuse doesn&#x27;t change either. The inline comments are small. The main issue is below.
+
+### Some nodes still keep their secondary
+
+The test checks that no expression or pattern keeps secondary, but its program is only a `let` and some arithmetic. I ran a temporary probe over the 72 programs in `hazel-programs/docs/reference` and `docs/b2t2`. It counted elaborated nodes of every kind that still carry seconda …</blockquote><p class="ev"><b>open:</b> CHANGES_REQUESTED, never dismissed or followed by APPROVED; no commit since 2026-09-30 and no reply from matthewhammer.</p><p class="left"><b>Left to do:</b> Strip secondary on the remaining paths (Typ.normalize, TypFun tpat, TupLabel labels, builtin apps, helpers) or once at the worker boundary, and test every node kind over the docs corpus.</p></div><h2 id="pr-2651"><a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a>: Statics: a module binding analyzes its definition once, not twice<a class="anchor" href="#pr-2651" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="pr-2651" title="copy this section's address">copy link</button></h2><p class="note"><code>statics-module-def-once</code> into <code>dev</code> · last commit 2026-10-21 · reviewers: 7h3kk1d, disconcision · <b>3 open</b>, 1 unclear, 5 answered</p><div class="item open"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-21 · <code>test/statics/Test_Statics_Modules.re</code>:411 · <a href="https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340431274">on GitHub</a></p><blockquote>@disconcision idk if you first added the module keyword but should this be an error defining a module to be a function?</blockquote><p class="ev"><b>open:</b> disconcision answered &quot;yes&quot; on 10-23 09:25, and 7h3kk1d then asked @matthewhammer (10-23 11:34) to either have the non-recursive let analysis also check it is a module, or add a separate case for modules. No reply or commit since.</p><p class="left"><b>Left to do:</b> Decide how a module bound to a function becomes a static error (in the non-recursive let analysis, or a separate module case) and implement it.</p></div><div class="item open"><p class="meta"><b>disconcision</b>, on a line, 2026-10-23 · <code>test/statics/Test_Statics_Modules.re</code>:411 · <a href="https://github.com/hazelgrove/hazel/pull/2651#discussion_r4358054703">on GitHub</a></p><blockquote>yes</blockquote><p class="ev"><b>open:</b> disconcision&#x27;s &quot;yes&quot; answers 7h3kk1d&#x27;s question whether defining a module to be a function should be an error; nothing on this PR implements it yet.</p><p class="left"><b>Left to do:</b> See the thread: the error is not implemented.</p></div><div class="item open"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-23 · <code>test/statics/Test_Statics_Modules.re</code>:411 · <a href="https://github.com/hazelgrove/hazel/pull/2651#discussion_r4359074795">on GitHub</a></p><blockquote>@matthewhammer with that context we either want to let analysis that we&#x27;re adding for non-recursive to also make sure it&#x27;s a module or we can consider just making a different case for modules from lets</blockquote><p class="ev"><b>open:</b> Latest comment on the PR (10-23 11:34); no reply or commit after it.</p><p class="left"><b>Left to do:</b> Same as the thread above: make a module bound to a function an error.</p></div><div class="item unclear"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-21 · <code>src/language/statics/Statics.re</code>:2764 · <a href="https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340695087">on GitHub</a></p><blockquote>🤖 `names_itself` also matches a fixpoint the user wrote. `module m = fix f -&gt; fun x -&gt; … f(x - 1) in m(3)` elaborates to `Let(_, FixF(…), _)` because `fix` itself elaborates to a `FixF`, so the read-back is skipped and the definition is analyzed twice. On modules-ii part 1 with this PR merged, a temporary print in this match fired for every `module … = fix …` I tried (four programs) and not for a `fix` inside a module body. The results match dev, so it&#x27;s only the speedup that&#x27;s lost. But the check doesn&#x27;t actually test what `names_itself` claims to.
+
+Telling the two apart from the elaboration&#x27;s shape is hard. &quot;Skip when the definition is a `fix`&quot; would also skip `module m = fix g -&gt; fun x -&gt; …</blockquote><p class="ev"><b>unclear:</b> matthewhammer replied 4340772054 that a prototype making a module binding non-recursive was in progress; it exists as draft PR <a href="https://github.com/hazelgrove/hazel/pull/2717">#2717</a> (a0a781effe &quot;A module binding is a non-recursive let, by an argument to the let&quot;, plus fix tests ea23dd4930), but <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a> itself still has names_itself and nothing on <a href="https://github.com/hazelgrove/hazel/pull/2651">#2651</a> points to <a href="https://github.com/hazelgrove/hazel/pull/2717">#2717</a>.</p><p class="left"><b>Left to do:</b> Mention <a href="https://github.com/hazelgrove/hazel/pull/2717">#2717</a> on the thread, or fold it into this PR.</p></div><details><summary>5 answered</summary><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-21 · <code>test/evaluator/Test_Evaluator_Modules.re</code>:99 · <a href="https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340426292">on GitHub</a></p><blockquote>This matches how labeled tuples work. I could see an argument to make incompatible signatures stuck but that&#x27;s not how much of hazel works so I&#x27;m fine with this. In the signature sealing pr I have it would make y private.</blockquote><p class="ev"><b>answered:</b> matthewhammer raised a singleton-label case in reply; 7h3kk1d chose &quot;Option 2: accept the stuck result&quot; (4340660934) and matthewhammer agreed (4340771544) that the test goes on Modules II part 1.</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-21 · <code>src/language/statics/Statics.re</code>:2769 · <a href="https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340479676">on GitHub</a></p><blockquote>🤖 Preference, not blocking: these two blocks read as the history of the PR rather than a description of the code.
+
+- The second block starts with &quot;Unless…&quot;, so it only makes sense as a continuation of the first. One decision ends up described in two stacked comments.
+- Both sit above `names_itself`, but the first is about the `def_elab_direct` lookup below it, hence &quot;the one case below&quot;.
+- Some of it belongs in the commit message: &quot;not analyzed a second time&quot;, &quot;every module binding cost twice what it should&quot;, &quot;as before&quot;. After merge there&#x27;s no second time and no before.
+- &quot;add records exactly the elab_term it returns&quot; doesn&#x27;t hold under `autolabel_singleton_tuple` (the singleton-label lifti …</blockquote><p class="ev"><b>answered:</b> fa3eef62ce &quot;Comments say what the code does, one per binding&quot;; matthewhammer replied 4340596675 &quot;Done in fa3eef62ce&quot;.</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-21 · <code>test/evaluator/Test_Evaluator_Modules.re</code>:99 · <a href="https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340660934">on GitHub</a></p><blockquote>🤖 Option 2: accept the stuck result. A bare value under a module signature should be stuck *and* a static error. modules-ii/1-sig-types already does both: signatures are `Typ.Sig` there, so the singleton-label lift never runs, and `module M : { let x : Int } = 5 in M.x` reports &quot;Expecting type { let x:Int } but got inconsistent type Int&quot; and evaluates to `(5:({ let x:Int })).x`, with or without this PR. On dev the missing error is temporary, so no special case is needed here.
+
+For the test you proposed for this program: either pin it as stuck with a note that the static error comes with Modules II part 1, or leave it out of this PR and add it on part 1, where it can assert both the stuck ter …</blockquote><p class="ev"><b>answered:</b> matthewhammer replied 4340771544: &quot;Agreed, option 2: no special case here. The test for this program goes on Modules II part 1&quot;. No pushback.</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-21 · <code>test/evaluator/Test_Evaluator_Modules.re</code>:90 · <a href="https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340723992">on GitHub</a></p><blockquote>🤖 My agent complained about this: the name says neither what makes the case special (a member the signature doesn&#x27;t declare) nor what&#x27;s asserted (the declared member&#x27;s value). Without the old comment&#x27;s comparison with dev, &quot;runs as itself&quot; doesn&#x27;t tell a reader much when it fails.
+
+```suggestion
+  test_case(&quot;Projecting a declared member of a module wider than its signature&quot;, `Quick, () =&gt; {
+```</blockquote><p class="ev"><b>answered:</b> b5a3e1d90a &quot;The evaluator test&#x27;s name says what it checks, as Alexander suggested&quot;; reply 4340770782 &quot;Applied in b5a3e1d90a&quot;.</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, comment, 2026-10-21 · <a href="https://github.com/hazelgrove/hazel/pull/2651#issuecomment-6324270079">on GitHub</a></p><blockquote>🤖 For the record, the 6 → 4 `Measured.WARNING: id … not found` lines on `docs/reference/modules.hz` in the description are a small improvement, not a change in output.
+
+`hazel analyze -W` at the PR base (`34f9605ddf`) and at `fa3eef62ce`, three runs each: always 6 and 4, and the rest of the output is byte-for-byte identical. A temporary print of each diagnostic whose id `Measured` can&#x27;t place shows what they are (id prefixes; the suffix is random per run):
+
+| id | error | base | PR |
+|---|---|---|---|
+| `4f52` | Expecting Int, got `x=Int, y=Int` in `{ let x = 1; let y = 2 }` | ✓ | ✓ |
+| `5a52` | Expecting `x=Int`, got `x=x=Int, y=Int` in `x={ … }` | ✓ | ✓ |
+| `6053` | same as `4f52` | ✓ | —  …</blockquote><p class="ev"><b>answered:</b> Informational (&quot;a small improvement, not a change in output&quot;); asks nothing of this PR. It flags, &quot;not for this PR&quot;, that the singleton-label lift records error infos at fresh ids as a separate dev issue; whether that was filed is unknown.</p></div></details><h2 id="pr-2613"><a href="https://github.com/hazelgrove/hazel/pull/2613">#2613</a>: Colors: every var() a stylesheet reads is one the theme defines<a class="anchor" href="#pr-2613" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="pr-2613" title="copy this section's address">copy link</button></h2><p class="note"><code>configuration-undefined-colors</code> into <code>dev</code> · last commit 2026-10-20 · reviewers: 7h3kk1d · <b>2 open</b>, 0 unclear, 1 answered</p><div class="item open"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-19 · <code>src/web/www/style.css</code>:402 · <a href="https://github.com/hazelgrove/hazel/pull/2613#discussion_r4317675563">on GitHub</a></p><blockquote>🤖 @disconcision this one is a visible change to the probe stack focus bar, so it&#x27;s your call. `--G5` was never defined on `dev`, so the focused breadcrumb has had no background: just green, underlined text. With this change it gets a light green pill (`--surface-success-soft`). The same goes for the `.unknown.focused` rule at line 434.
+
+To see it, probe the `x` in the body of `let f = fun x -&gt; x * 2 in f(1) + f(2)` (Cmd+E) and look at the `f` breadcrumb in the bar.
+
+How do you want it? Either drop the `background-color` line in both rules to keep today&#x27;s look, or keep the pill if that was the original intent.</blockquote><p class="ev"><b>open:</b> Addressed to @disconcision; no reply from him or matthewhammer. At head 8ca7a15634, style.css still has background-color: var(--surface-success-soft) on .breadcrumb-entry.focused.</p><p class="left"><b>Left to do:</b> Get Andrew&#x27;s call: keep the light green pill or drop background-color in both focused rules.</p></div><div class="item open"><p class="meta"><b>7h3kk1d</b>, review · CHANGES_REQUESTED, 2026-10-19 · <a href="https://github.com/hazelgrove/hazel/pull/2613#pullrequestreview-5576401290">on GitHub</a></p><blockquote>Great to have this done, sorry it took me so long to look at. The Label issue needs to be fixed and I&#x27;ll leave the stack focus background up to andrew. Other than that good to go.</blockquote><p class="ev"><b>open:</b> CHANGES_REQUESTED, never dismissed or followed by APPROVED. Its blocking item (Label) was fixed in 28fcabfffc on 10-20, but nothing on the PR says so, and the stack-focus question it defers to Andrew is unanswered.</p><p class="left"><b>Left to do:</b> Ask 7h3kk1d to re-review after 28fcabfffc, and settle the --G5 background with disconcision.</p></div><details><summary>1 answered</summary><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-10-19 · <code>src/web/www/style/cursor-inspector.css</code>:263 · <a href="https://github.com/hazelgrove/hazel/pull/2613#discussion_r4317625924">on GitHub</a></p><blockquote>🤖 `--surface-label` and `--token-label` are the same color in the theme (`theme-generated.css:199` and `:260`), so this rule draws the label header&#x27;s text on a band of its own color. To see it, put the cursor on a tuple label like `` `ink` `` in the color scheme slide. On dev the status bar reads &quot;LABEL / Tuple literal&quot;. On this branch&#x27;s preview it&#x27;s a solid teal bar with only the Γ and the `/` visible.
+
+Other sorts don&#x27;t hit this because the header reuses that sort&#x27;s pale `--shard-*` tint from the editor, and a label isn&#x27;t a sort, so it has no shard. Dropping the line keeps the header as it looks on dev and still removes the undefined name:
+
+```suggestion
+```</blockquote><p class="ev"><b>answered:</b> 28fcabfffc &quot;Drop the label header&#x27;s background, which drew its text on its own color&quot; removes exactly the suggested line from cursor-inspector.css (#cursor-inspector .ci-header.ok.Label).</p></div></details><h2 id="pr-2583"><a href="https://github.com/hazelgrove/hazel/pull/2583">#2583</a>: Deep links: the URL can say which slide, which panel, and where the cursor is<a class="anchor" href="#pr-2583" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="pr-2583" title="copy this section's address">copy link</button></h2><p class="note"><code>deep-links</code> into <code>dev</code> · last commit 2026-10-20 · reviewers: 7h3kk1d · <b>1 open</b>, 1 unclear, 14 answered</p><div class="item open"><p class="meta"><b>7h3kk1d</b>, review · CHANGES_REQUESTED, 2026-09-23 · <a href="https://github.com/hazelgrove/hazel/pull/2583#pullrequestreview-5291817275">on GitHub</a></p><blockquote>Feature works. Most feedback here is surface level but I think it deserves a once over before I approve. Biggest conceptual issue is we now have the scratch pad url encoding and this name-based documentation slide url encoding and they&#x27;re completely separate and neither work in tutorial or other modes. Outside of that tests would be nice but possibly not necessary.</blockquote><p class="ev"><b>open:</b> Never dismissed or followed by an APPROVED; reviewDecision is still CHANGES_REQUESTED. The rework 077a68f9f8 (10-20) postdates it, but no comment on the PR announces that commit and 7h3kk1d has not reviewed since.</p><p class="left"><b>Left to do:</b> Tell 7h3kk1d the rework landed in 077a68f9f8 and ask for a re-review (the PR&#x27;s requested reviewer is still cyrus-).</p></div><div class="item unclear"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/app/Page.re</code>:851 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083370132">on GitHub</a></p><blockquote>Do we want to support tutorial sharing?</blockquote><p class="ev"><b>unclear:</b> No direct reply on GitHub (the 10-15 reply links an external notes page). 077a68f9f8 says outside a documentation slide the copied link &quot;carries the editor&#x27;s text as a share&quot;, so tutorial mode gets a scratchpad snapshot, not a link into the tutorial; whether that settles the question is not stated.</p><p class="left"><b>Left to do:</b> Say on the thread whether tutorial links are out of scope or covered by the share fallback.</p></div><details><summary>14 answered</summary><div class="item answered"><p class="meta"><b>7h3kk1d</b>, comment, 2026-09-17 · <a href="https://github.com/hazelgrove/hazel/pull/2583#issuecomment-5720827353">on GitHub</a></p><blockquote>The selection in url seems useful. We already have a way to encode the slides contents into the url. I think doing it via name or via content have different semantics depending on the use case so it&#x27;s quite hard to think though who would want what/when. This is probably more useful than just screenshots though. If we ever switch to cloudflare and can afford per-build deploys I think it would be great to encode commit sha, selection, and slide content into a url as that&#x27;s actually reproducible.</blockquote><p class="ev"><b>answered:</b> matthewhammer replied 09-19 and 09-22 (pointer vs snapshot; merge now, refine later); 7h3kk1d moved on to a code review on 09-23 without pushing back on this point.</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/DeepLink.re</code>:14 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083123698">on GitHub</a></p><blockquote>This feels like I&#x27;m reading a poem or ancient translation of something</blockquote><p class="ev"><b>answered:</b> 077a68f9f8 message: &quot;Small ones: ... a short header&quot;; DeepLink.re now opens with a short plain header comment.</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/DeepLink.re</code>:44 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083172714">on GitHub</a></p><blockquote>I don&#x27;t think it&#x27;s very clear what `key` is supposed to be for. Based on the comment above it seems like slide names are fuzzy matched. Not sure if it&#x27;s just for that.</blockquote><p class="ev"><b>answered:</b> 077a68f9f8: &quot;key renamed loose_name&quot;, with a comment saying it compares names loosely.</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/DeepLink.re</code>:97 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083226658">on GitHub</a></p><blockquote>I think we have List.find_index as of ocaml 5.1</blockquote><p class="ev"><b>answered:</b> 077a68f9f8: &quot;List.find_index&quot;; DeepLink.re slide_index now uses List.find_index.</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/DeepLink.re</code>:91 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083240836">on GitHub</a></p><blockquote>In general nothing in this file is super testable. I would probably pass in the query param as an argument here or figure out some other way this can be tested without the browser.</blockquote><p class="ev"><b>answered:</b> 077a68f9f8: &quot;parse takes the query lookup, so parsing, the editor actions and the URL are tested without a browser (test/Test_DeepLink.re, 21 cases)&quot;.</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/DeepLink.re</code>:126 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083254422">on GitHub</a></p><blockquote>It&#x27;s not a big deal but I think this would be simpler if you just added the enumerate/show mapping here rather than having  to deal with aliases and the default show inside variant.</blockquote><p class="ev"><b>answered:</b> 077a68f9f8: &quot;The panel names are one switch beside the panel type (SidebarModel), and its inverse.&quot;</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/DeepLink.re</code>:133 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083262011">on GitHub</a></p><blockquote>panel request should be passed into this function</blockquote><p class="ev"><b>answered:</b> At 077a68f9f8 DeepLink.settings takes (request, settings) and reads request.panel.</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/DeepLink.re</code>:1 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083312295">on GitHub</a></p><blockquote>The PanelRequest type in this file is the best pattern for this. I think we&#x27;d benefit from a type that represents the entire `DeepLink` request. Then separate out the &quot;parsing&quot;/&quot;fetching&quot; from the browser&#x27;s query params from the logic that actually takes this and applies it to settings and the editor.
+
+Ideally I think we would have this somewhat subsume the scratchpad url encoding so there would be a variant that either points to an existing slide by name/index or a new scratchpad by contents. Then the selection/sidebar stuff works as described.</blockquote><p class="ev"><b>answered:</b> 077a68f9f8 adds DeepLink.request with target Documentation | Scratchpad; &quot;the ?name=&amp;share= encoding now goes through the same type, so ScratchMode no longer reads the URL&quot;.</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/DeepLink.re</code>:1 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083329442">on GitHub</a></p><blockquote>If we did this we should be able to test the validation/parsing logic, the editor actions, and the url generation all separately.</blockquote><p class="ev"><b>answered:</b> Same commit 077a68f9f8: parse, editor actions and to_params tested separately in test/Test_DeepLink.re, including parse(to_params(r)) == r.</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/DeepLink.re</code>:230 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083358551">on GitHub</a></p><blockquote>We could probably just define this function in Sidebar.re as a switch to override the default show for the panel key.</blockquote><p class="ev"><b>answered:</b> 077a68f9f8 puts the panel-name switch in src/web/app/sidebar/SidebarModel.re (not Sidebar.re, but the same idea).</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/app/globals/Globals.re</code>:141 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083407180">on GitHub</a></p><blockquote>I wonder if this should just be handled via an action in Main.re like the other actions are</blockquote><p class="ev"><b>answered:</b> 077a68f9f8: &quot;Main schedules FollowDeepLink(request) at startup, handled in Page ... instead of Globals.load reading the URL.&quot;</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/app/globals/Globals.re</code>:89 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083426061">on GitHub</a></p><blockquote>Not blocking, but I&#x27;m not sure `slide_name` belongs on `Globals`. It&#x27;s Documentation-mode state, derived per frame in `Page.main_view`, living on an app-wide record so that one editor feature can read it. (It&#x27;s also under `// State:` rather than `// Calculated:`.)
+
+An alternative: `CodeEditable` only knows the span, so it could raise a global action carrying just that, e.g. `inject_global(CopyDeepLink(span))`, and let the Page-level update, which already knows the mode, the slide and the sidebar, build the URL and write it to the clipboard. That keeps the logic where the data lives and leaves `Globals.Model.t` unchanged.
+
+It would also take care of `~linkable: bool`, which is currently `glob …</blockquote><p class="ev"><b>answered:</b> 077a68f9f8: &quot;slide_name leaves Globals: CodeEditable raises CopyDeepLink({position, text}) and the Page builds the link ... ~linkable leaves the context menu.&quot;</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, on a line, 2026-09-23 · <code>src/web/app/editors/code/CodeEditable.re</code>:687 · <a href="https://github.com/hazelgrove/hazel/pull/2583#discussion_r4083497211">on GitHub</a></p><blockquote>It&#x27;s not clear to me why we default select the enclosing term as opposed to just sharing the caret position. I&#x27;m not opposed to it just unclear why</blockquote><p class="ev"><b>answered:</b> 077a68f9f8: &quot;The copied position is the selection if there is one, else the caret (not the enclosing term).&quot;</p></div><div class="item answered"><p class="meta"><b>7h3kk1d</b>, comment, 2026-10-15 · <a href="https://github.com/hazelgrove/hazel/pull/2583#issuecomment-6197659505">on GitHub</a></p><blockquote>@matthewhammer I can&#x27;t easily comment on the draft page so just leaving stuff here. Lmk if you&#x27;d prefer something else.
+
+```reason
+type target =
+  | Slide(string)                   /* ?slide=   a documentation slide, by name: a pointer */
+  | Share(string, string);          /* ?name=&amp;share=   a scratchpad&#x27;s contents: a snapshot */
+```
+I think this would be better with constructors like `Documentation` and `Scratchpad`. Also maybe records instead of tuples for the stuff with multiple fields. Maybe the AI doesn&#x27;t care but my human :brain: can&#x27;t handle it.
+
+```reason
+type request = {
+  target: option(target),
+  panel: option(panel_request),     /* ?panel=  */
+  position: option(p …</blockquote><p class="ev"><b>answered:</b> 077a68f9f8 uses constructors Documentation(string) and Scratchpad({name, text}) and a place = {target, position} type so a position cannot exist without a target (&quot;A position only means something inside a target&quot;).</p></div></details><h2 id="pr-2681"><a href="https://github.com/hazelgrove/hazel/pull/2681">#2681</a>: A value known to have a type is not walked again for it<a class="anchor" href="#pr-2681" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="pr-2681" title="copy this section's address">copy link</button></h2><p class="note"><code>ascriptions-has-type</code> into <code>dev</code> · last commit 2026-10-20 · reviewers: 7h3kk1d · <b>0 open</b>, 1 unclear, 0 answered</p><div class="item unclear"><p class="meta"><b>7h3kk1d</b>, comment, 2026-10-19 · <a href="https://github.com/hazelgrove/hazel/pull/2681#issuecomment-6275892516">on GitHub</a></p><blockquote>I&#x27;m still thinking about this. I feel like at a certain point we&#x27;re getting back towards the cast calculus which might be much more maintainable with 🤖 help.</blockquote><p class="ev"><b>unclear:</b> Not a change request: the reviewer is undecided. matthewhammer&#x27;s later comment (10-22) proposes a depth-1 limit for perf but does not respond to the cast-calculus point, and there is no reviewer reply since.</p><p class="left"><b>Left to do:</b> A response to whether the has-type memo is drifting back towards a cast calculus, and a decision from 7h3kk1d.</p></div>
+<h2 id="method">How this was put together<a class="anchor" href="#method" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="method" title="copy this section's address">copy link</button></h2>
+<p>For each of Matthew's open pull requests on hazelgrove/hazel (2026-10-23), every review (with its body), every comment on a line and every comment, from anyone other than Matthew and the bots, read through GitHub's API; each judged against the commits after it (by committer date) and the replies: <i>answered</i> when a later commit or a reply plainly settles it, <i>open</i> when nothing does or the reply promised work not done, <i>unclear</i> otherwise, with the evidence for each. Pull requests with no feedback from others: <a href="https://github.com/hazelgrove/hazel/pull/2490">#2490</a>, <a href="https://github.com/hazelgrove/hazel/pull/2491">#2491</a>, <a href="https://github.com/hazelgrove/hazel/pull/2536">#2536</a>, <a href="https://github.com/hazelgrove/hazel/pull/2577">#2577</a>, <a href="https://github.com/hazelgrove/hazel/pull/2592">#2592</a>, <a href="https://github.com/hazelgrove/hazel/pull/2597">#2597</a>, <a href="https://github.com/hazelgrove/hazel/pull/2603">#2603</a>, <a href="https://github.com/hazelgrove/hazel/pull/2605">#2605</a>, <a href="https://github.com/hazelgrove/hazel/pull/2606">#2606</a>, <a href="https://github.com/hazelgrove/hazel/pull/2610">#2610</a>, <a href="https://github.com/hazelgrove/hazel/pull/2614">#2614</a>, <a href="https://github.com/hazelgrove/hazel/pull/2616">#2616</a>, <a href="https://github.com/hazelgrove/hazel/pull/2635">#2635</a>, <a href="https://github.com/hazelgrove/hazel/pull/2650">#2650</a>, <a href="https://github.com/hazelgrove/hazel/pull/2652">#2652</a>, <a href="https://github.com/hazelgrove/hazel/pull/2661">#2661</a>, <a href="https://github.com/hazelgrove/hazel/pull/2671">#2671</a>, <a href="https://github.com/hazelgrove/hazel/pull/2672">#2672</a>, <a href="https://github.com/hazelgrove/hazel/pull/2673">#2673</a>, <a href="https://github.com/hazelgrove/hazel/pull/2675">#2675</a>, <a href="https://github.com/hazelgrove/hazel/pull/2676">#2676</a>, <a href="https://github.com/hazelgrove/hazel/pull/2678">#2678</a>, <a href="https://github.com/hazelgrove/hazel/pull/2689">#2689</a>, <a href="https://github.com/hazelgrove/hazel/pull/2690">#2690</a>, <a href="https://github.com/hazelgrove/hazel/pull/2691">#2691</a>, <a href="https://github.com/hazelgrove/hazel/pull/2697">#2697</a>, <a href="https://github.com/hazelgrove/hazel/pull/2698">#2698</a>, <a href="https://github.com/hazelgrove/hazel/pull/2700">#2700</a>, <a href="https://github.com/hazelgrove/hazel/pull/2711">#2711</a>, <a href="https://github.com/hazelgrove/hazel/pull/2717">#2717</a>, <a href="https://github.com/hazelgrove/hazel/pull/2719">#2719</a>. The data is <code>031/data/pr-reviews.json</code>.</p>
+
+<!-- data-line: begin -->
+<h2 id="data">The data<a class="anchor" href="#data" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="data" title="copy this section's address">copy link</button></h2>
+<ul>
+  <li><b>The numbers, for programs too:</b> every table in this report, and what its numbers measure, is also in this page as JSON, in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset. The same, with any raw files that survive, is in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/031/data"><code>031/data/</code></a>.</li>
+</ul>
+<!-- data-line: end -->
+
+</main><!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
+<!-- ref-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .ref-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
+  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
+    vertical-align: 1px; background: #6e7781; }
+  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
+  .rc-state.done { background: #8250df; }
+</style>
+<script>
+/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
+   ticket from the work dashboard's data (its area, its status, its first
+   line), carried by the dashboard's own pages and read live from the
+   published data anywhere else; a report from its own page, live (its
+   title, date and opening). Once per page load each. */
+(() => {
+  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
+  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
+  /* the dashboard itself carries its tickets (made with the page, changed
+     with it); any other page asks the published data */
+  const EMBED = null;
+  let data = EMBED ? Promise.resolve(EMBED) : null;
+  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
+  const pages = new Map();
+  const loadReport = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
+      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
+      let p = h1 && h1.nextElementSibling;
+      while (p && p.tagName !== "P") p = p.nextElementSibling;
+      const label = (doc.querySelector(".series") || {}).textContent || "";
+      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
+               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
+    }).catch(() => null));
+    return pages.get(url);
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
+  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
+  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
+  const ticketCard = (n, d) => {
+    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
+    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
+    const q = (d.queue || []).indexOf(n);
+    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
+      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
+      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
+    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
+      `<div class="rc-title">${esc(lead(t.text))}</div>` +
+      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
+      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
+  };
+  const reportCard = (n, r) => r
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
+      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
+    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
+    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = (a, ref) => {
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
+      card.hidden = false; place(a);
+      let html;
+      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
+      else html = reportCard(ref.n, await loadReport(a.href));
+      if (over !== a) return;
+      card.innerHTML = html; place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- ref-cards: end -->
+<!-- pr-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-base { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: 1px; }
+  .pr-base.dev { background: #dafbe1; color: #116329; } .pr-base.other { background: #fff1c2; color: #7a4b00; }
+  @media (prefers-color-scheme: dark) { .pr-base.dev { background: #12361f; color: #6fdd8b; } .pr-base.other { background: #3d2e00; color: #f2cc60; } }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, the branch a PR targets (dev or not: the distinction that
+   matters, ^ticket(478)), author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"hazelgrove/hazel#2490": {"author": "matthewhammer", "comments": 5, "created": "2026-09-04T01:01:04Z", "kind": "pull", "state": "draft", "title": "SPIKE: compile the Hazel evaluator with wasm_of_ocaml and benchmark it", "updated": "2026-09-22T22:35:02Z", "base": "dev"}, "hazelgrove/hazel#2491": {"author": "matthewhammer", "comments": 2, "created": "2026-09-04T03:17:58Z", "kind": "pull", "state": "draft", "title": "docs: research-paper implementation status report", "updated": "2026-09-22T22:34:41Z", "base": "dev"}, "hazelgrove/hazel#2536": {"author": "matthewhammer", "comments": 3, "created": "2026-09-12T13:23:19Z", "kind": "pull", "state": "draft", "title": "non-`dev` (`integration/modules-livelits`): experimental language integrations", "updated": "2026-09-22T22:34:45Z", "base": "integration/modules-livelits"}, "hazelgrove/hazel#2577": {"author": "matthewhammer", "comments": 1, "created": "2026-09-16T17:00:19Z", "kind": "pull", "state": "draft", "title": "Serve the release web build from an Internet Computer canister", "updated": "2026-09-22T22:45:45Z", "base": "dev"}, "hazelgrove/hazel#2583": {"author": "matthewhammer", "comments": 9, "created": "2026-09-17T18:58:02Z", "kind": "pull", "state": "open", "title": "Deep links: the URL can say which slide, which panel, and where the cursor is", "updated": "2026-10-20T18:30:42Z", "base": "dev"}, "hazelgrove/hazel#2592": {"author": "matthewhammer", "comments": 1, "created": "2026-09-22T23:47:10Z", "kind": "pull", "state": "draft", "title": "Report each error once, not once per wrapper", "updated": "2026-09-23T00:03:16Z", "base": "dev"}, "hazelgrove/hazel#2597": {"author": "matthewhammer", "comments": 3, "created": "2026-09-23T15:18:28Z", "kind": "pull", "state": "open", "title": "User-Defined Livelits, as in PLDI '21, and beyond.", "updated": "2026-10-20T19:29:04Z", "base": "integration/livelits-splicerefs"}, "hazelgrove/hazel#2603": {"author": "matthewhammer", "comments": 1, "created": "2026-09-26T21:10:09Z", "kind": "pull", "state": "open", "title": "Statics: a let is analyzed once unless it refers to itself, plus three smaller speedups", "updated": "2026-09-26T21:30:11Z", "base": "dev"}, "hazelgrove/hazel#2605": {"author": "matthewhammer", "comments": 1, "created": "2026-09-27T20:37:31Z", "kind": "pull", "state": "open", "title": "Substitution: a let's definition sees the outer binding, not its own", "updated": "2026-09-27T20:56:06Z", "base": "dev"}, "hazelgrove/hazel#2606": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T01:00:47Z", "kind": "pull", "state": "open", "title": "Keep the incremental cache in the eval worker", "updated": "2026-09-30T19:18:48Z", "base": "dev"}, "hazelgrove/hazel#2608": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T12:03:57Z", "kind": "pull", "state": "open", "title": "Leave the source's whitespace and comments out of elaborations", "updated": "2026-10-21T19:43:30Z", "base": "dev"}, "hazelgrove/hazel#2610": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T15:18:03Z", "kind": "pull", "state": "open", "title": "Parse the load fallback with the segmented parser, projectors kept", "updated": "2026-10-20T20:30:28Z", "base": "dev"}, "hazelgrove/hazel#2613": {"author": "matthewhammer", "comments": 0, "created": "2026-09-28T19:43:54Z", "kind": "pull", "state": "open", "title": "Colors: every var() a stylesheet reads is one the theme defines", "updated": "2026-10-20T17:51:28Z", "base": "dev"}, "hazelgrove/hazel#2614": {"author": "matthewhammer", "comments": 1, "created": "2026-09-28T22:58:00Z", "kind": "pull", "state": "open", "title": "Load text about 2.5× faster: whole tokens, one re-grout", "updated": "2026-09-29T18:40:33Z", "base": "dev"}, "hazelgrove/hazel#2616": {"author": "matthewhammer", "comments": 3, "created": "2026-09-29T11:54:59Z", "kind": "pull", "state": "open", "title": "non-`dev` (`integration/livelits-splicerefs-full`): Remote refs: splices a Fumola instance reads and writes", "updated": "2026-10-04T13:57:58Z", "base": "integration/livelits-splicerefs-full"}, "hazelgrove/hazel#2635": {"author": "matthewhammer", "comments": 3, "created": "2026-10-01T22:50:14Z", "kind": "pull", "state": "draft", "title": "Livelits × modular editors: merge #2469 into the livelits branch", "updated": "2026-10-21T20:18:06Z", "base": "integration/livelits-splicerefs-full"}, "hazelgrove/hazel#2650": {"author": "matthewhammer", "comments": 0, "created": "2026-10-04T13:57:50Z", "kind": "pull", "state": "open", "title": "non-`dev` (`integration/livelits-modular-editors`): Hazel's state and Fumola instances on an Internet Computer canister", "updated": "2026-10-20T19:15:02Z", "base": "integration/livelits-modular-editors"}, "hazelgrove/hazel#2651": {"author": "matthewhammer", "comments": 3, "created": "2026-10-05T22:34:31Z", "kind": "pull", "state": "open", "title": "Statics: a module binding analyzes its definition once, not twice", "updated": "2026-10-23T11:34:43Z", "base": "dev"}, "hazelgrove/hazel#2652": {"author": "matthewhammer", "comments": 1, "created": "2026-10-06T00:19:52Z", "kind": "pull", "state": "open", "title": "Eval worker in Firefox: start it at load, and do not time out a reply that is queued", "updated": "2026-10-06T00:46:51Z", "base": "dev"}, "hazelgrove/hazel#2661": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T01:18:55Z", "kind": "pull", "state": "open", "title": "Types get a Merkle hash; the evaluator asks is_consistent once per pair", "updated": "2026-10-20T20:31:49Z", "base": "dev"}, "hazelgrove/hazel#2671": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T13:59:41Z", "kind": "pull", "state": "open", "title": "MapPiece keeps unchanged pieces as the same objects", "updated": "2026-10-10T14:25:32Z", "base": "dev"}, "hazelgrove/hazel#2672": {"author": "matthewhammer", "comments": 0, "created": "2026-10-10T16:32:57Z", "kind": "pull", "state": "open", "title": "Measuring the font no longer scrolls the editor to the caret", "updated": "2026-10-10T16:32:57Z", "base": "dev"}, "hazelgrove/hazel#2673": {"author": "matthewhammer", "comments": 1, "created": "2026-10-10T17:19:02Z", "kind": "pull", "state": "open", "title": "Incremental evaluation recognizes an unchanged expression by its Merkle hash", "updated": "2026-10-20T20:32:20Z", "base": "dev"}, "hazelgrove/hazel#2675": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T13:05:13Z", "kind": "pull", "state": "open", "title": "Incremental evaluation reuses expressions around a recursive let", "updated": "2026-10-19T21:05:38Z", "base": "dev"}, "hazelgrove/hazel#2676": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T16:11:08Z", "kind": "pull", "state": "open", "title": "The cursor inspector can show a long type whole, on several lines", "updated": "2026-10-19T17:06:40Z", "base": "dev"}, "hazelgrove/hazel#2678": {"author": "matthewhammer", "comments": 1, "created": "2026-10-12T17:06:58Z", "kind": "pull", "state": "open", "title": "CI fails when an evaluation does more work than its budget", "updated": "2026-10-21T04:17:20Z", "base": "dev"}, "hazelgrove/hazel#2681": {"author": "matthewhammer", "comments": 3, "created": "2026-10-13T13:04:35Z", "kind": "pull", "state": "open", "title": "A value known to have a type is not walked again for it", "updated": "2026-10-22T15:31:32Z", "base": "dev"}, "hazelgrove/hazel#2689": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:20Z", "kind": "pull", "state": "draft", "title": "Test: statics analyzes each expression within a budget", "updated": "2026-10-17T03:28:12Z", "base": "dev"}, "hazelgrove/hazel#2690": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:23Z", "kind": "pull", "state": "draft", "title": "Test: a re-run beside a library with recursive members stays within its step budget", "updated": "2026-10-21T04:16:34Z", "base": "dev"}, "hazelgrove/hazel#2691": {"author": "matthewhammer", "comments": 1, "created": "2026-10-17T03:12:25Z", "kind": "pull", "state": "draft", "title": "Test: what the eval worker sends and gets back stays within a byte budget", "updated": "2026-10-17T03:29:32Z", "base": "dev"}, "hazelgrove/hazel#2697": {"author": "matthewhammer", "comments": 1, "created": "2026-10-19T15:36:02Z", "kind": "pull", "state": "draft", "title": "Test: the nodes an evaluation builds, held to budgets beside its steps", "updated": "2026-10-19T15:54:17Z", "base": "dev"}, "hazelgrove/hazel#2698": {"author": "matthewhammer", "comments": 1, "created": "2026-10-19T16:07:08Z", "kind": "pull", "state": "draft", "title": "non-`dev` (`cursor-inspector-full-types`): Gamma can show a long type whole, on several lines", "updated": "2026-10-19T17:24:01Z", "base": "cursor-inspector-full-types"}, "hazelgrove/hazel#2700": {"author": "matthewhammer", "comments": 1, "created": "2026-10-19T20:02:11Z", "kind": "pull", "state": "open", "title": "Test: incremental evaluation agrees with evaluation from scratch, on recursive lets and over the slide corpus", "updated": "2026-10-20T19:33:51Z", "base": "dev"}, "hazelgrove/hazel#2711": {"author": "matthewhammer", "comments": 0, "created": "2026-10-20T17:35:02Z", "kind": "pull", "state": "draft", "title": "Hazel as a JS library: analyze and run programs from any page", "updated": "2026-10-21T03:54:48Z", "base": "dev"}, "hazelgrove/hazel#2717": {"author": "matthewhammer", "comments": 1, "created": "2026-10-21T20:31:11Z", "kind": "pull", "state": "draft", "title": "Statics: a module binding is a non-recursive let", "updated": "2026-10-21T20:49:37Z", "base": "dev"}, "hazelgrove/hazel#2719": {"author": "matthewhammer", "comments": 1, "created": "2026-10-21T21:38:03Z", "kind": "pull", "state": "draft", "title": "Hazel in another page's frame, and a program of named modules (stacked on #2711)", "updated": "2026-10-21T22:03:19Z", "base": "js-library"}}, BUILT = "2026-10-23";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
+  const ask = (key, kind) => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#"), pull = kind === "pull";
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/${pull ? "pulls" : "issues"}/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: pull || j.pull_request ? "pull" : "issues", base: j.base && j.base.ref,
+                      state: j.merged_at || (j.pull_request && j.pull_request.merged_at) ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const baseChip = d => !d.base ? "" : d.base === "dev"
+    ? `<span class="pr-base dev" title="this PR merges into dev">into dev</span>`
+    : `<span class="pr-base other" title="this PR merges into ${esc(d.base)}, not dev">into ${esc(d.base)}, not dev</span>`;
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span>${baseChip(d)}</div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[3];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key, m[2]);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
+<!-- theme: begin -->
+<style>
+  .theme-toggle { position: fixed; top: 10px; right: 10px; z-index: 30; font: 13px system-ui, sans-serif; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--muted, GrayText);
+    cursor: pointer; opacity: 0.85; }
+  .theme-toggle:hover { opacity: 1; color: var(--ink, CanvasText); }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+/* The theme switch: Auto (the system's choice), Light, Dark; remembered for this site. */
+(() => {
+  const order = ["auto", "light", "dark"], label = { auto: "◐ auto", light: "☀ light", dark: "☾ dark" };
+  const get = () => { try { return localStorage.getItem("theme") || "auto"; } catch (_) { return "auto"; } };
+  const apply = m => m === "auto" ? document.documentElement.removeAttribute("data-theme")
+                                  : document.documentElement.setAttribute("data-theme", m);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "theme-toggle";
+  const show = () => { const m = get(); b.textContent = label[m] || label.auto;
+    b.title = "Theme: " + m + ". Click for " + order[(order.indexOf(m) + 1) % 3] + "; remembered on this site."; };
+  b.addEventListener("click", () => {
+    const m = order[(order.indexOf(get()) + 1) % 3];
+    try { m === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", m); } catch (_) {}
+    apply(m); show();
+  });
+  window.addEventListener("storage", e => { if (e.key === "theme") { apply(get()); show(); } });
+  show(); document.body.append(b);
+})();
+</script>
+<!-- theme: end -->
+<!-- report-data: begin -->
+<script type="application/json" id="report-data">
+{
+ "report": 31,
+ "title": "Reviews Still Open",
+ "date": "2026-10-23",
+ "kind": "reviews",
+ "status": "work in progress",
+ "question": "Matthew: look at our open PRs on hazel, find new reviews we have not integrated yet (^ticket(572)).",
+ "files": [
+  "data/meta.json",
+  "data/pr-reviews.json",
+  "data/tables.json"
+ ],
+ "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
+ "tables": [
+  {
+   "section": "Pull request by pull request",
+   "section_id": "summary",
+   "columns": [
+    "PR",
+    "title",
+    "reviewers",
+    "open",
+    "unclear",
+    "answered"
+   ],
+   "rows": [
+    [
+     "#2608",
+     "Leave the source's whitespace and comments out of elaborations",
+     "7h3kk1d",
+     "5",
+     "0",
+     "0"
+    ],
+    [
+     "#2651",
+     "Statics: a module binding analyzes its definition once, not twice",
+     "7h3kk1d, disconcision",
+     "3",
+     "1",
+     "5"
+    ],
+    [
+     "#2613",
+     "Colors: every var() a stylesheet reads is one the theme defines",
+     "7h3kk1d",
+     "2",
+     "0",
+     "1"
+    ],
+    [
+     "#2583",
+     "Deep links: the URL can say which slide, which panel, and where the cursor is",
+     "7h3kk1d",
+     "1",
+     "1",
+     "14"
+    ],
+    [
+     "#2681",
+     "A value known to have a type is not walked again for it",
+     "7h3kk1d",
+     "0",
+     "1",
+     "0"
+    ]
+   ]
+  }
+ ],
+ "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/031/data"
+}
+</script>
+<!-- report-data: end -->
+<!-- anchors (tools/add_anchors.py) -->
+<script id="anchors-js">
+/* each section's "copy link": its public address, whichever copy of the page this is (tools/add_anchors.py) */
+(() => {
+  const n = (location.pathname.match(/(\d{3})\/?(index\.html)?$/) || [])[1];
+  const base = n ? "https://matthewhammer.org/hazel/reports/" + n + "/" : location.origin + location.pathname;
+  document.querySelectorAll(".copyanchor").forEach(b => b.addEventListener("click", async () => {
+    const url = base + "#" + b.dataset.id;
+    try { await navigator.clipboard.writeText(url); b.textContent = "copied"; b.classList.add("done"); }
+    catch (e) { prompt("this section's address", url); }
+    setTimeout(() => { b.textContent = "copy link"; b.classList.remove("done"); }, 1500);
+  }));
+})();
+</script>
+</body></html>

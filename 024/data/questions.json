@@ -1,0 +1,527 @@
+{
+ "note": "The five questions for Alexander as handed to the writer, each with its checks (premise: does the code say what it assumes; need: does anything on record already answer it), unchanged; plus 'status' and 'answer' from the review of 2026-10-21 (Alexander's answers relayed by Matthew, paraphrased). The page tightens the wording. 'corrections_2026_10_21' lists what changed after the review moved to the PR's own comments; the question, context, evidence and options above it are still as handed to the writer. 'answers_since' lists what Alexander and Matthew said after the review moved on (in conversation, relayed by Matthew, or on #2651, linked), and the follow-up PR, hazelgrove/hazel#2717, paraphrased; 'answer_source' says where the review-day answer came from.",
+ "questions": [
+  {
+   "slug": "one-member-signature-lift",
+   "question": "Alexander, on dev should `module M : { let x : Int } = 5 in M.x` keep evaluating to 5? If so, #2651 must not read back the bare analysis whenever statics lifted the definition into a one-member signature: either it skips the read-back there, or autolabel_singleton_tuple first records what it returns. Either way it gives up the new result that its evaluator test pins for `module M : { let x : Int } = { let x = 1; let y = 2 } in M.x`.",
+   "context": "On dev a one-member signature desugars to a one-field labeled product. A definition whose own synthesized type has a different shape (and is not unknown) is lifted into it by autolabel_singleton_tuple. That function records the bare definition's analysis (against the field type) at the definition's ids, but returns `(x = def)` wrapped around the raw, unelaborated source. Dev's second, direct pass used that returned tuple, so as we read the code `module M : { let x : Int } = 5 in M.x` gives 5 with no static error. The extra-member module is a static error on dev, the kind dev's tests call a limitation, and M.x evaluated to its raw source. #2651 reads back the recorded bare analysis instead. The extra-member module now gives M.x = 1, which the PR keeps and pins with a test named 'runs as itself'. For the bare value, though, M becomes 5 and M.x gets stuck, because projecting a label out of an Int is indeterminate (traced in the code, not run). From part 1 (#2493, first-class signature types) on, a signature stays a Sig type and is never lifted this way, and your stack seals the extra-member module to `{ let x = 1 }`. So this question is about dev only, until your stack lands.",
+   "evidence": [
+    {
+     "claim": "After a synthesis pass, every expression analyzed against a type that weak-head-normalizes to a one-field labeled product goes through autolabel_singleton_tuple. The exceptions are a synthesized type that is a one-field product with that same label, and a synthesized type that is unknown.",
+     "ref": "src/language/statics/Statics.re:2778-2791 (dev 962a7cb009)"
+    },
+    {
+     "claim": "autolabel_singleton_tuple analyzes a fresh copy against the field type and returns the surface tuple `(l = e)` around the raw source (lines 312-321, 329-334, 358). It writes the lifted info and then the bare info under the same ids (lines 356, 357; rewrap keeps the ids), so the info left at the definition's id is the bare analysis. What it records and what it returns differ.",
+     "ref": "src/language/statics/Statics.re:310-358 (dev 962a7cb009)"
+    },
+    {
+     "claim": "mpat_to_pat desugars the signature `{ let x : Int }` to the one-field product (x=Int). That product is def_ana for the direct pass, and the pattern type the let analyzes def against.",
+     "ref": "src/language/statics/ModuleHelpers.re:51-60; src/language/term/Typ.re:615-646; src/language/statics/Statics.re:2079 (dev 962a7cb009)"
+    },
+    {
+     "claim": "Dev's direct pass analyzes def against that product, so the term it hands to moduleexp_elab is (x = 5), or (x = raw module) for the extra-member case.",
+     "ref": "src/language/statics/Statics.re:2757-2764 (dev 962a7cb009)"
+    },
+    {
+     "claim": "#2651 takes elab_term from the InfoExp at rep_id(def). On this path that is the bare inner analysis: 5, or the module's own elaboration without the label.",
+     "ref": "src/language/statics/Statics.re:2775-2780 (PR 29c08fd8fa)"
+    },
+    {
+     "claim": "moduleexp_elab strips the binder's signature, so nothing wraps or seals the definition again at runtime.",
+     "ref": "src/language/statics/ModuleHelpers.re:447-456, 364-371 (dev 962a7cb009)"
+    },
+    {
+     "claim": "When Dot meets an Int (a value of the wrong form: not a tuple, and not a list, which Dot maps over), unboxing gives IndetMatch and the step is Indet, so M.x stays stuck.",
+     "ref": "src/language/dynamics/transition/Transition.re:1024-1087; src/language/dynamics/transition/Unboxing.re:184-217 (dev 962a7cb009)"
+    },
+    {
+     "claim": "The lift is intended for plain lets: `let x : (l=String) = \"a\" in x` elaborates to (l=\"a\").",
+     "ref": "test/Test_Elaboration.re:386-399 (dev 962a7cb009)"
+    },
+    {
+     "claim": "Dev's statics tests call an extra member a limitation that 'should pass with full modules'. It is an error only because modules desugar to products.",
+     "ref": "test/statics/Test_Statics_Modules.re:373-387 (dev 962a7cb009)"
+    },
+    {
+     "claim": "The new test asserts M.x = 1. Its comment says the program is 'an error in statics' that 'still runs, and the module is the module', and its name says it 'runs as itself'.",
+     "ref": "test/evaluator/Test_Evaluator_Modules.re:86-96 (PR 29c08fd8fa)"
+    },
+    {
+     "claim": "The PR description says that on dev M.x evaluates to the module's unelaborated source, and that with #2651 M evaluates to (x=1, y=2): 'Kept, since the new result looks like the right one'. It does not mention a non-module definition.",
+     "ref": "PR #2651 description (read 2026-10-21)"
+    },
+    {
+     "claim": "From part 1 on, mpat_to_pat keeps the raw signature (no desugar_sig), and weak_head_normalize has no Sig case, so a Sig is never treated as a one-field product and the lift does not reach a signature-ascribed module. Part 3 also rejects a product annotation on a module.",
+     "ref": "src/language/statics/ModuleHelpers.re:47-56 (modules-ii/1-sig-types c4bae23739 and modules-ii/3-abstract-types 111775a60c); src/language/term/Typ.re:675-738 and test/statics/Test_Statics_Modules.re:1657-1662 (modules-ii/3-abstract-types, #2495 head 111775a60c)"
+    },
+    {
+     "claim": "In part 1, `module M : { let x : Int } = { let x = 1; let y = 2 } in M` evaluates to `{ let x = 1 }`.",
+     "ref": "test/evaluator/Test_Evaluator_Modules.re:196-202 (modules-ii/1-sig-types, #2493 head c4bae23739)"
+    },
+    {
+     "claim": "Your docs make `module M : S = e` a coercion site where extra members are sealed away and the runtime value keeps only the signature's members.",
+     "ref": "docs/modules.md:82-90 (modules-ii/9-stdlib-modules, #2510 head b02ce6dab5)"
+    }
+   ],
+   "options": [
+    "Recommended: yes, keep dev's results. Skip the read-back when the lift ran. The narrow test is whether the info recorded at def's id was analyzed against the field type rather than def_ana. The simpler, slightly costlier test is whether def_ana is a one-field labeled product. Either way, #2651 then changes neither of the two results the review found, and none we know of. Replace its new evaluator test with `module M : { let x : Int } = 5 in M.x` giving 5, and take the 'runs as itself' claim out of the test and the PR description. The stuck result was traced in the code, not run, so first run that one program with the CLI at dev and at the PR head.",
+    "No: dev does not need to support a module bound to a non-module value, since Modules II makes it a type error, so #2651 can merge as it is. Keep only the assertion `M.x = 1`, which holds on dev with #2651 and on your stack. Reword the test's name and comment, and the PR description, to say only what holds on both: M.x is the member, not the module's raw source; dev still reports a type error there (the module's type against the field type Int, not one that names the extra member) and does not seal; Modules II seals.",
+    "Fix the cause in a separate PR: make what autolabel_singleton_tuple records at the definition's ids agree with what it returns. Today it records the bare analysis and returns the lift around the raw source. #2651 would then need no special case. The extra-member module would stop running as its raw source on dev, though M.x would then be the whole elaborated module, not 1."
+   ],
+   "blocks_merge": true,
+   "checked": {
+    "premise": "The central trace holds. I checked it line by line at dev 962a7cb009 and at the PR head 29c08fd8fa. On dev, mpat_to_pat runs desugar_sig and turns `{ let x : Int }` into the product (x=Int) (ModuleHelpers.re:51-60, Typ.re:615-646). The lift switch is at Statics.re:2778-2791. autolabel_singleton_tuple analyzes a fresh copy of the definition against the field type (Statics.re:312-321) and returns the surface tuple `rewrap(Tuple([TupLabel(l, original_expression)]))` (Statics.re:329-334, 358). Because `rewrap` keeps the annotation (IdTagged.re:158-164), lines 356 and 357 write to the same ids, so the bare info is the one left at the definition's id.\n\nThe Let analyzes the definition against p_syn.ty, which is the desugared product (Statics.re:2079, 3659-3664). Nothing writes at the definition's id after that. The PR then reads elab_term at rep_id(def) (PR Statics.re:2775-2780); names_itself is false here. moduleexp_elab removes the Asc around the binder (ModuleHelpers.re:447-456, 364-371). M in `M.x` elaborates to Var (Statics.re:1582-1597), and Dot's elaboration is plain (Statics.re:1342). So on the PR, `module M : { let x : Int } = 5 in M.x` becomes Let(M, 5, Dot(M, x)). Unboxing an Atom for LabeledTupleProjection falls into the wrong-form case and gives IndetMatch (Unboxing.re:185-217), so Transition.re:1083 returns Indet. On dev the direct pass gives (x=5), and that projects to 5 (Unboxing.re:95-97, Transition.re:1033-1056).\n\nThese also check out: the tests (Test_Elaboration.re:386-399, Test_Statics_Modules.re:373-387 at dev; Test_Evaluator_Modules.re:86-96 at the PR), the PR description, part 1's mpat_to_pat without desugar_sig (ModuleHelpers.re:47-56 at c4bae23739 and 111775a60c; no desugar_sig anywhere in either), the sealing test (c4bae23739 Test_Evaluator_Modules.re:196-202), part 3's prod-annotation rejection (111775a60c Test_Statics_Modules.re:1657-1662) and docs/modules.md:82-90 at b02ce6dab5.\n\nCorrections:\n(1) The lift skips a definition whose synthesized type is unknown (Statics.re:2787), so \"another shape\" needs that exception.\n(2) Dot does not get stuck on every non-tuple. A list literal unboxes and is mapped over (Unboxing.re:100, Transition.re:1071-1080). The claim should say an Int, or a value of the wrong form.\n(3) In part 3, weak_head_normalize's fall-through `| _ => ty`, which shows there is no Sig case, is at Typ.re:737. The range should be 675-738, not 675-715.\n(4) The direct pass's use by moduleexp_elab is at Statics.re:2763-2764, so the reference becomes 2757-2764.\n(5) Option 2's \"dev still reports the extra member\" is imprecise. On dev the error left at the definition is the module's type (x=Int, y=Int) against the field type Int: the bare info is the module analyzed against Int (Statics.re:313-321, 357, 225-229). Nothing names y.\n(6) Option 1's \"#2651 then changes no program's result\" is a universal claim nobody has checked. It is softened to the two results the review found.\n(7) \"has to skip its read-back\" ignores option 3, which fixes autolabel instead. Either way the pinned M.x = 1 is lost: under option 3, M.x would be the whole elaborated module. The question now says this.",
+    "need": "Nothing else answers it, but the draft asks the wrong half. Nothing already answers what dev should run here. #2651 has no comments, reviews or review comments apart from codecov (gh api pulls/2651/reviews, pulls/2651/comments and issues/2651/comments, read 2026-10-21). No dev test binds a module to a non-module value. The descriptions of #2493 (first-class signature types), #2494 (sealing at coercion sites) and #2495 (abstract type members) describe only the stack, which makes a signature something other than a labeled tuple. So the question needs Alexander, but it should be asked differently, for three reasons.\n\n(1) The code already settles the bare-value half. Asking \"should it keep giving 5?\" invites draft option 2, \"merge as it is\", and that is not an acceptable answer:\n- #2651 leaves statics unchanged. So `module M : { let x : Int } = 5 in M.x` still passes with M : (x=Int) and no error, yet at runtime it gets stuck (traced, not run).\n- Written with `let`, the same program still gives 5. The Let case puts the lifted elaboration of def into the let (src/language/statics/Statics.re:2079 and 2182-2187 at dev 962a7cb009, https://github.com/hazelgrove/hazel/blob/962a7cb0091cad9a115f82f92433c4d6499f7135/src/language/statics/Statics.re#L2182-L2187), and the PR does not touch it.\n- Dev's docs say the two forms are the same: `ModuleExp(mpat, def, body)` \"expands to `Let(pat, def, body)` during statics\" (docs/modules.md:126 at dev, https://github.com/hazelgrove/hazel/blob/962a7cb0091cad9a115f82f92433c4d6499f7135/docs/modules.md#L126).\n- So the lift has to come back at module bindings whatever Alexander says. What is left for him is whether the extra-member module's new result, M.x = 1, is worth keeping. That result came only from dropping the lift.\n\n(2) \"Has to skip its read-back\" is not the only fix. When the lift ran, #2651 could instead wrap the read-back elaboration in the label, `(x = elab)`. That keeps the whole saving and still gives 5. Either fix loses M.x = 1. Keeping 1 safely cannot be done by special-casing a module literal: `module M : { let x : { let a : Int } } = { let a = 1 } in M.x.a` is a module literal that the lift handles with no static error, and #2651 gets it stuck too (traced). Keeping 1 would need \"read back the bare definition only when the lift's inner analysis failed\".\n\n(3) Draft option 3 overstates two things.\n- The bare record is deliberate. autolabel_singleton_tuple's later write of the bare info over the source ids is there for the cursor inspector and tests, as its comment says (Statics.re:322-323 and 357 at dev, https://github.com/hazelgrove/hazel/blob/962a7cb0091cad9a115f82f92433c4d6499f7135/src/language/statics/Statics.re#L322-L357). It was added in 2711faccd3b (Cyrus, 2026-04-25), not in Alexander's original lift. Recording the lifted info there instead would change the cursor.\n- The 'runs as itself' test would fail under option 3 too. M.x would become the module, raw or elaborated, not 1.\n- The real dev defect in that function is a different one: it returns `(l = raw source)` instead of `(l = elaboration)` (Statics.re:329-334). A raw Module that reaches dynamics is Indet (src/language/dynamics/transition/Transition.re:1314-1317 and Unboxing.re:250-253 at dev). That is why dev's extra-member M.x is unevaluated source, and why the nested example above gets stuck on dev as well (traced).\n\nI re-checked the draft's other evidence at the stated commits and it holds: Statics.re:2778-2791, 310-358 and 2757-2762; ModuleHelpers.re:51-60, 447-456 and 364-371; Typ.re:615-646; Transition.re:1024-1087; Unboxing.re:184-217; Test_Elaboration.re:386-399; Test_Statics_Modules.re:373-387 (all at dev 962a7cb009); PR Statics.re:2775-2789 and Test_Evaluator_Modules.re:86-96 (29c08fd8fa); the stack's ModuleHelpers.re:47-56 (c4bae23739, 111775a60c), Test_Statics_Modules.re:1657-1662 (111775a60c), Test_Evaluator_Modules.re:196-202 (c4bae23739) and docs/modules.md:82-90 (b02ce6dab5). Two small corrections:\n- The lift does not fire when def's own type is unknown (Statics.re:2787).\n- weak_head_normalize at 111775a60c spans Typ.re:675-738, not 675-715.\n\nStatics.re is unchanged between the PR's merge base 34f9605ddf and dev 962a7cb009; only Ascriptions.re differs in statics, transition and term. So dev line numbers also hold at the PR head above line 2757."
+   },
+   "status": [
+    "answered"
+   ],
+   "answer_2026_10_21": "Answered, Alexander, 2026-10-21: dev's result for the module with an extra member (its unelaborated source) is a bug, which comes from the auto-labelling of one-member tuples; that program should evaluate to 1, or be stuck. So #2651's 1 is a correct result: the behaviour change fixes a dev bug, and the PR's test pins the fix.",
+   "blocks_merge_now": false,
+   "corrections_2026_10_21": [
+    "The bare-value program was run with the CLI at dev 962a7cb009 and at 29c08fd8fa: 5 on dev, a stuck '5 .x' with #2651, no static errors either way (Matthew's comment on #2651, https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340596357). It replaces 'traced in the code, not run'.",
+    "fa3eef62ce reworded the test's comment (Test_Evaluator_Modules.re:86-88 at fa3eef62ce: M.x is the member, 1, as a labeled tuple's projection gives), and b5a3e1d90a renamed the test 'Projecting a declared member of a module wider than its signature', as Alexander suggested.",
+    "Alexander, on #2651 (18:48Z, https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340660934): accept the stuck result; a bare value under a module signature should be stuck and a static error, which Modules II part 1 already gives. He offered either place for its test, pinned as stuck in #2651 with a note or on part 1; putting it on part 1 was Matthew's decision (19:00Z, https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340771544).",
+    "Six programs were later run with the CLI built at dev 962a7cb009 and at 29c08fd8fa (the page's #runs); the bare value's stuck '5 .x' and the extra-member module's 1 (raw source on dev, the same 3 static errors at both) among them.",
+    "Status: settled. The extra-member result is a fix (the review); the bare value's stuck result is accepted, option 2 (https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340660934), its test to go on Modules II part 1 (Matthew's decision, https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340771544). Option 2's note on the page now reads 'chosen by Alexander'."
+   ],
+   "answers_since": [
+    {
+     "by": "Alexander",
+     "where": "https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340426292",
+     "paraphrase": "On the evaluator test: fine; it matches how labeled tuples work. One could argue for making incompatible signatures stuck, but much of Hazel does not work that way; his signature-sealing PR would make y private."
+    },
+    {
+     "by": "Alexander",
+     "where": "https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340660934",
+     "replying_to": "https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340596357",
+     "paraphrase": "On the bare value, module M : { let x : Int } = 5 in M.x: option 2, accept the stuck result. A bare value under a module signature should be stuck and a static error. Modules II part 1 (modules-ii/1-sig-types) already does both, with or without #2651: signatures are Typ.Sig there, so the singleton-label lift never runs; it reports \"Expecting type { let x:Int } but got inconsistent type Int\" and evaluates to (5:({ let x:Int })).x. On dev the missing error is temporary, so #2651 needs no special case."
+    },
+    {
+     "by": "Matthew (decision)",
+     "where": "https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340771544",
+     "paraphrase": "Agreed, option 2: the test for the bare-value program goes on Modules II part 1, not in #2651."
+    },
+    {
+     "by": "Matthew",
+     "where": "https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340770782",
+     "paraphrase": "Alexander's name for the evaluator test (https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340723992), 'Projecting a declared member of a module wider than its signature', applied in b5a3e1d90a, pushed at Matthew's word."
+    }
+   ],
+   "answer_source": "in the review, relayed by Matthew; later answers on #2651 (answers_since)"
+  },
+  {
+   "slug": "merge-order-with-modules-ii",
+   "question": "Alexander, can #2651 merge into dev ahead of your Modules II stack, with the one-line conflict in parts 2 to 9 resolved by keeping its read-back and adding `~coercible=true` to its fallback? That resolution is right only if, on your branches, the let's recorded analysis of the definition is the same analysis as the direct pass it replaces.",
+   "context": "On dev, `module M = def in body` is checked as `let M = def in body`, and ModuleExp then analyzes def a second time, directly, only to get its elaboration. #2651 (a module binding analyzes its definition once) reads that elaboration back from the info the let recorded at def's id and keeps the direct pass only as a fallback. Your #2494 (part 2, sealing at explicit coercion sites) changed that same direct-pass line to pass `~coercible=true`, so #2651 conflicts on exactly that line with each of parts 2 to 9, while it merges cleanly into dev, part 1 and #2603 (a let is analyzed once unless it refers to itself). As we read your branches, both passes check def against the same type with the same flag: from part 2 every analysis of a let's definition is a coercion site, and from part 1 the binder keeps its raw signature. Two other differences look harmless there. First, the let's recursive path has the module's name in scope, which matters only when def uses it, and then the let builds a fixpoint and #2651 falls back. Second, the read-back is what was recorded at def's id, not what the analysis returned; the two differ only when the expected type is a one-member labeled tuple, which is what a one-member signature desugars to on dev (the one result #2651 changes there, with a test) but not on your branches, where a signature stays a signature type. You would know whether sealing or abstract type members make the two passes differ anywhere else.",
+   "evidence": [
+    {
+     "claim": "On dev, after checking the expanded let, the ModuleExp case analyzes the definition again, directly, to get def_elab_direct.",
+     "ref": "src/language/statics/Statics.re:2757-2762 (dev 962a7cb009)"
+    },
+    {
+     "claim": "#2651 reads def_elab_direct from the InfoExp the let recorded at Exp.rep_id(def). It falls back to the direct analysis, as on dev (no ~coercible exists there), when the let's elaboration is `Let(_, FixF(_), _)` or no InfoExp was recorded.",
+     "ref": "src/language/statics/Statics.re:2770-2789 (PR 29c08fd8fa)"
+    },
+    {
+     "claim": "Part 2 changed the direct analysis to `go(~ana=def_ana, ~coercible=true, def, m)`. The same line is still there in part 3 and at the top of the stack in part 9.",
+     "ref": "src/language/statics/Statics.re:2833-2834 (modules-ii/2-width-subtyping, #2494 head be90bf4b21); :2853-2854 (modules-ii/3-abstract-types, #2495 head 111775a60c); :2973-2974 (modules-ii/9-stdlib-modules, #2510 head b02ce6dab5)"
+    },
+    {
+     "claim": "In part 2 the let passes ~coercible=true in all five analyses of the definition (the recursion probe, the non-recursive pass, and the recursive path's three passes), under the comment that every analysis of it is a coercion site.",
+     "ref": "src/language/statics/Statics.re:2152-2155, 2164-2165, 2177-2178, 2190-2191, 2209-2210 (modules-ii/2-width-subtyping, be90bf4b21)"
+    },
+    {
+     "claim": "`coercible` switches the expected-type check from a meet to Typ.coercion, which seals a wider module.",
+     "ref": "src/language/statics/StaticsBase.re:265-271 (modules-ii/2-width-subtyping, be90bf4b21)"
+    },
+    {
+     "claim": "#2494's description says that `Asc`, `Let` (all analyses of the definition), `ModuleExp` and `Ap` set ~coercible on their operand.",
+     "ref": "PR #2494 description (read 2026-10-21)"
+    },
+    {
+     "claim": "From part 1 on, mpat_to_pat keeps the raw signature (later as Pat.of_mpat), and the pattern Asc case reports that annotation as its type. So the let's expected type for def is the same annotation the direct pass takes as def_ana.",
+     "ref": "src/language/statics/ModuleHelpers.re:47-56 (modules-ii/1-sig-types c4bae23739 and modules-ii/3-abstract-types 111775a60c); src/language/term/Pat.re:298-306 (b02ce6dab5); src/language/statics/Statics.re:3710-3725 (c4bae23739), 3747-3761 and 2848-2852 (111775a60c)"
+    },
+    {
+     "claim": "The let wraps def in a fixpoint only when it took the recursive path and def or the binder's annotation mentions the bound name (references from the body are filtered out). Otherwise a function-shaped def is read back from the recursive pass, where the name is in scope but unused.",
+     "ref": "src/language/statics/Statics.re:2233-2242 (modules-ii/2-width-subtyping, be90bf4b21); src/language/statics/CoCtx.re:43-53 (dev 962a7cb009)"
+    },
+    {
+     "claim": "When the expected type is a one-member labeled tuple, the analysis records the inner analysis at the user's ids but returns the user's term wrapped as a one-field tuple. So what is recorded at def's id and what `go` returns can differ.",
+     "ref": "src/language/statics/Statics.re:310-359 (356-358 for the record and the return), 2776-2791 (dev 962a7cb009)"
+    },
+    {
+     "claim": "On dev a module signature is desugared to a labeled tuple, so a one-member signature takes that path. #2651's second commit names this as the one result it changes, and a new test checks that such a module runs as itself.",
+     "ref": "src/language/statics/ModuleHelpers.re:51-60 and src/language/term/Typ.re:615-646 (dev 962a7cb009); test/evaluator/Test_Evaluator_Modules.re:86-96 (PR 29c08fd8fa)"
+    },
+    {
+     "claim": "On the Modules II branches a signature is a Sig type, which weak_head_normalize returns unchanged, so a signature ascription does not take the one-member-tuple path.",
+     "ref": "src/language/term/Typ.re:629-690 (modules-ii/2-width-subtyping, be90bf4b21)"
+    },
+    {
+     "claim": "Part 2's moduleexp_elab keeps the binder's signature ascription, which is what seals at runtime, and still swaps def_elab_direct in for the let's definition.",
+     "ref": "src/language/statics/ModuleHelpers.re:617-627 (modules-ii/2-width-subtyping, be90bf4b21)"
+    },
+    {
+     "claim": "A three-way merge of 29c08fd8fa with each part (merge base 34f9605ddf; every part contains dev 962a7cb009) gives exactly one conflict, in Statics.re on that line, for each of parts 2 to 9, and none for part 1. It also merges cleanly with dev and with #2603's head 4aa493c05a (merge base 6a816c4b29).",
+     "ref": "git merge-tree --write-tree of 29c08fd8fa with origin/modules-ii/<part>, origin/dev and 4aa493c05a (run 2026-10-21; no ref, index or worktree touched)"
+    },
+    {
+     "claim": "Separately, #2603 conflicts with every part, 1 to 9: TyDiCtx.re, Ctx.re and StaticsBase.re, plus Statics.re from part 2 on. That belongs to #2603's review, not #2651's.",
+     "ref": "git merge-tree --write-tree of 4aa493c05a with each of origin/modules-ii/1..9 (run 2026-10-21)"
+    },
+    {
+     "claim": "No one has reviewed or commented on #2651 yet. The only comment is the codecov report, and the checks are green.",
+     "ref": "gh api repos/hazelgrove/hazel/pulls/2651/reviews, /pulls/2651/comments, /issues/2651/comments, /commits/29c08fd8fa/check-runs (read 2026-10-21)"
+    }
+   ],
+   "options": [
+    "Recommended: merge #2651 into dev now. When your stack next rebases, keep the read-back and add `~coercible=true` to the fallback's `go` call in parts 2 to 9. Matthew can send you the resolved hunk.",
+    "Merge parts 1 to 3, or the whole stack, first. Matthew then rebases #2651 onto it with `~coercible=true` in the fallback and reruns the Statics.Modules and Evaluator.Modules groups there.",
+    "Merge #2651 now. If ModuleExp on your stack can use the let's elaboration as is (see the def_elab_direct question), remove the direct pass there altogether, so the conflict resolves by deleting both sides.",
+    "Hold #2651 until you have decided whether ModuleExp keeps def_elab_direct in Modules II."
+   ],
+   "blocks_merge": true,
+   "checked": {
+    "premise": "The question stands, and its central code claims check out. Five things needed fixing. Branch heads were re-read today (Alexander's parts were all committed 2026-10-21 11:16): part 1 c4bae23739 (#2493), part 2 be90bf4b21 (#2494), part 3 111775a60c (#2495), part 9 b02ce6dab5 (#2510), #2603 4aa493c05a.\n\nHOLDS:\n- Dev's second analysis is at src/language/statics/Statics.re:2757-2762 (dev 962a7cb009). def_ana is at 2757-2761 and the `go(~ana=def_ana, def, m)` call at 2762.\n- The PR's read-back and fallback are at Statics.re:2770-2789 (PR 29c08fd8fa). `names_itself` (the let's elaboration is `Let(_, FixF, _)`) is at 2770-2774, the find_opt at Exp.rep_id(def) at 2776-2780, and the fallback `go(~ana=def_ana, def, m)` at 2787. Nothing at the PR head mentions coercible.\n- The `go(~ana=def_ana, ~coercible=true, def, m)` call is at 2833-2834 in part 2, 2853-2854 in part 3 and 2973-2974 in part 9.\n- In part 2, StaticsBase.re:265-271 has `subsume`: Typ.coercion when coercible, Typ.meet otherwise.\n- mpat_to_pat keeps the raw `typ` at ModuleHelpers.re:47-56 in parts 1 and 3. Parts 8 and 9 alias it to Pat.of_mpat (Pat.re:298-306 at b02ce6dab5), which does the same.\n- The pattern Asc case reports `ann.user_term` at Statics.re:3747-3761 in part 3 and 3710-3725 in part 1. def_ana is at 2848-2852 in part 3.\n- In part 2, moduleexp_elab is at ModuleHelpers.re:617-627.\n- merge-tree with base 34f9605ddf gives exactly one hunk in each of parts 2 to 9. It is that line, with ours `go(~ana=def_ana, ~coercible=true, def, m)` and theirs empty. Part 1, dev and #2603 merge cleanly.\n- #2651 has 0 reviews and 0 review comments. The only issue comment is codecov[bot]. Fast checks, Full tests and the codecov checks succeeded.\n\nCORRECTED:\n1. #2603 conflicts with all nine parts, not only parts 1 to 3. TyDiCtx.re, Ctx.re and StaticsBase.re conflict in every part, and Statics.re does too from part 2 on (merge-tree of 4aa493c05a with each of parts 1-9).\n2. #2603's merge base with 29c08fd8fa is 6a816c4b29 (an older dev), not 34f9605ddf. The merge is clean with either base. For every part the merge base is 34f9605ddf, since each part contains dev 962a7cb009. Also, `merge-tree --write-tree` writes objects to the object store, so the accurate wording is \"no ref, index or worktree touched\", not \"nothing written\".\n3. \"The one remaining difference, the let's recursive path with the name in scope, is already covered by the fallback\" was imprecise. The fallback fires only when the let built a fixpoint. In part 2, requires_fixf is at Statics.re:2233-2242: it needs is_rec, and def's co_ctx or the binder's annotation must mention the bound name. Body references are filtered out by CoCtx.mk (CoCtx.re:43-53, dev). So a function-shaped def that does not use the name is read back from the recursive pass, where the name is in scope but unused, which is harmless.\n4. A second difference was missing: the read-back is what `add` recorded at def's ids, which is not always what `go` returned. When the expected type is a one-member labeled tuple, autolabel_singleton_tuple runs (dev Statics.re:310-359, dispatched at 2776-2791). It records the inner analysis at the user's ids (356-357) but returns the user's term wrapped as a one-field tuple (358). On dev a one-member signature desugars to exactly that type (Typ.re:615-646, applied in ModuleHelpers.re:51-60). That is the one result #2651 changes on dev. The second commit's message describes it, and test/evaluator/Test_Evaluator_Modules.re:86-96 (PR) tests it. On Alexander's branches a signature stays a Sig type, which weak_head_normalize returns unchanged (Typ.re:629-690, `| _ => ty` at 689, part 2), so a signature ascription should not take that path.\n5. Smaller points. Part 2's let passes ~coercible=true in all five analyses of def: Statics.re:2155, 2165, 2178, 2191 and 2210. #2494's description also lists `Asc` among the constructs that set the flag.",
+    "need": "The question does need Alexander. Merge order against his stack is his call, and nothing on record settles it. #2651 has no reviews and no review comments; its only comment is the codecov report, and all checks pass at 29c08fd8fa. Neither the #2493, #2494 or #2495 descriptions nor their comments or reviews mention #2651, def_elab_direct or a merge order. The only signal is Cyrus approving part 1 (#2493) on 2026-09-16, \"favor getting this in soon\".\n\nEvery evidence ref checks out at its named commit:\n- dev Statics.re:2757-2762\n- PR Statics.re:2770-2789\n- the direct-pass line in each part: be90bf4b21:2833-2834, 111775a60c:2853-2854, b02ce6dab5:2973-2974\n- part 2's Let passes: be90bf4b21:2152-2155, 2164-2165, 2209-2210 (also 2177-2178 and 2190-2191)\n- be90bf4b21 StaticsBase.re:265-271\n- ModuleHelpers.re:47-56 (c4bae23739 and 111775a60c) and be90bf4b21 ModuleHelpers.re:617-627\n- 111775a60c Statics.re:3747-3761 and 2848-2852\n\nAll parts are on dev 962a7cb009. The read-only legacy `git merge-tree 34f9605ddf origin/modules-ii/<part> 29c08fd8fa` finds exactly one Statics.re conflict, at that line, in each of parts 2 to 9, and none for part 1, dev or #2603's head 4aa493c05a.\n\nIt is corrected for five reasons:\n1. **Context too long.** It runs about nine sentences against a limit of 2 to 5.\n2. **The recursive-path claim is imprecise.** The fallback covers only the case where the let built a fixpoint. That happens when def uses the name (requires_fixf, be90bf4b21 Statics.re:2233-2242 and 2290; CoCtx.mk drops the pattern's own names, dev CoCtx.re:43-53). Otherwise the let's recursive pass has the name in scope but unused, so it still matches.\n3. **\"Same analysis\" is the wrong condition.** What the read-back needs is that the elaboration recorded at def's id equals the one the pass returned. One path breaks that on dev and on every part: the singleton-label lifting. autolabel_singleton_tuple returns `(x = def)` but records only def's own elaboration at def's ids (dev Statics.re:310-358, call at 2778-2790; b02ce6dab5:315-363 and 3000). That is why #2651's one-member-signature corner changed on dev. On Alexander's branches a signature is not a labeled tuple, so only a module binder annotated with a one-label tuple type reaches it.\n4. **#2603's conflict evidence is understated.** #2603 conflicts with all nine parts (TyDiCtx.re, Ctx.re and StaticsBase.re, plus Statics.re from part 2), not only parts 1 to 3. It is clean against dev.\n5. **Option 3 was not self-contained.** It pointed to another question.\n\nA separate finding for Matthew, not for Alexander (from reading the code, not run): by point 3, `module M : (x = Int) = 1 in M.x` should now bind M to `1`, where dev binds it to `(x = 1)`. On dev, `module M : { let x : Int } = 1` should behave the same way, since mpat_to_pat desugars the signature to `(x = Int)` (dev ModuleHelpers.re:51-60). `let M : (x = Int) = 1` still gets the lifting. So the PR's comment \"add records exactly the elab_term it returns\" is false on that one path."
+   },
+   "status": [
+    "answered"
+   ],
+   "answer_2026_10_21": "Answered, Alexander, 2026-10-21: #2651 does not conflict with Modules II in substance. He had not yet looked at #2603.",
+   "blocks_merge_now": false,
+   "corrections_2026_10_21": [
+    "Alexander reviewed #2651 on GitHub from 18:24Z on 2026-10-21, so 'no one has reviewed or commented yet' no longer holds; none of his comments raises a conflict with Modules II. Matthew's top-level comment (18:42Z, https://github.com/hazelgrove/hazel/pull/2651#issuecomment-6323754242) states the ~coercible=true resolution.",
+    "The answer came in conversation, relayed by Matthew; the git merge-tree check and the part-2 link (Statics.re:2155-2210 at be90bf4b21) are on the page."
+   ],
+   "answers_since": [
+    {
+     "by": "Alexander",
+     "where": "in conversation, relayed by Matthew",
+     "paraphrase": "He sees no conflict with Modules II, and has not looked at #2603 yet."
+    },
+    {
+     "by": "check",
+     "where": "git merge-tree",
+     "paraphrase": "#2651 is clean against part 1; against each of parts 2 to 9 there is one conflicting hunk in Statics.re (part 2 changed the direct pass to go(~ana=def_ana, ~coercible=true, def, m), and #2651 moves that call into its fallback). On part 2 the let also analyzes the definition with ~coercible=true (https://github.com/hazelgrove/hazel/blob/be90bf4b217609cb3c0e22429715cdd436162cf6/src/language/statics/Statics.re#L2155-L2210), so the read-back reads the same analysis; the resolution is to add ~coercible=true to the fallback's go. One line to resolve, nothing in substance. Stated in Matthew's comment, https://github.com/hazelgrove/hazel/pull/2651#issuecomment-6323754242."
+    }
+   ],
+   "answer_source": "in conversation, relayed by Matthew"
+  },
+  {
+   "slug": "are-module-bindings-recursive",
+   "question": "Alexander, are module bindings meant never to be recursive, items inside `{ ... }` included, and if so, would you rather the module expansion tell the let that it is not recursive than have ModuleExp spot self-reference from the fixpoint in the let's elaboration, as #2651 now does?",
+   "context": "A module binding `module F = def in body` is checked as `let F = def in body`. The let treats a definition that is one function of arrow-like type as possibly recursive: it analyzes def with F in scope, and wraps it in a fixpoint (FixF) only if def uses F. On dev, `module F = fun x -> F(x) in 1` is an error only because ModuleExp then analyzed def a second time in the outer scope, where `F` is a free constructor; that pass's infos, with no F in scope, were also what the editor saw inside def. #2651 (a module binding analyzes its definition once) keeps the let's infos and reruns the old pass only when the let's elaboration is `Let(_, FixF, _)` (or def has no recorded info), so that error stays; but inside a function-valued module that does not name itself, the ctx at the caret now contains F, so completion offers F wherever its type fits, and picking it brings back the error. #2603 (a let analyzed once) accepts a related editor-visible difference for lets, but there the binder was already in scope inside its own function on dev, and only its type there changes (to ? when unannotated). Meanwhile a `module F = ...` item inside `{ ... }` is lowered to a plain let with no such pass, so by our reading it is recursive with no error, on dev and all through the Modules II stack, and no test or doc anywhere binds a module to a function.",
+   "evidence": [
+    {
+     "claim": "is_recursive looks only at the shape of the code: one bound variable and one function of arrow-like type count as recursive, whether or not the name is used.",
+     "ref": "src/language/statics/Statics.re:2024-2039, 2076 (dev 962a7cb009)"
+    },
+    {
+     "claim": "On the recursive path the let analyzes def in def_ctx, where the bound name is in scope at def's synthesized type, and records those infos.",
+     "ref": "src/language/statics/Statics.re:2090-2122 (dev 962a7cb009)"
+    },
+    {
+     "claim": "A fixpoint is used only when def (or the pattern's types) uses the bound name; the body's uses are dropped by CoCtx.mk. The let then removes the name from the co_ctx of def's info, so that info cannot show the self-reference.",
+     "ref": "src/language/statics/Statics.re:2172-2181, 2200-2206, 2216-2228; src/language/statics/CoCtx.re:43-53 (dev 962a7cb009)"
+    },
+    {
+     "claim": "The let's own co_ctx still contains the name when def uses it, because it unions the unpatched def.co_ctx. A check on expanded_info.co_ctx would therefore also work as a signal.",
+     "ref": "src/language/statics/Statics.re:2231-2240 (dev 962a7cb009)"
+    },
+    {
+     "claim": "Dev's direct pass analyzed def in the outer ctx after the let and overwrote def's infos. There `F` is not a variable, so it elaborates as a constructor with a FreeConstructor mark, and that is the error the fallback still reports.",
+     "ref": "src/language/statics/Statics.re:2757-2762, 1598-1606; src/language/statics/ConstructorStaticsHelpers.re:61-64 (dev 962a7cb009)"
+    },
+    {
+     "claim": "#2651's signal is the shape of the let's elaboration; the direct pass also runs when def has no recorded InfoExp. Its new test's comment says 'modules are not recursive'.",
+     "ref": "src/language/statics/Statics.re:2770-2774, 2775-2789; test/statics/Test_Statics_Modules.re:406-413 (PR 29c08fd8fa)"
+    },
+    {
+     "claim": "ModuleExp's elaboration replaces the let's def with the direct (dev) or read-back (#2651) elaboration, so a FixF the let built is dropped either way.",
+     "ref": "src/language/statics/ModuleHelpers.re:448-456 (dev 962a7cb009); src/language/statics/Statics.re:2764-2769, 2790-2791 (PR 29c08fd8fa)"
+    },
+    {
+     "claim": "Completion offers the ctx variables, at the Info under the caret, whose type is consistent with the expected type.",
+     "ref": "src/haz3lcore/TyDi/TyDiCtx.re:28-39, 192-201 (dev 962a7cb009)"
+    },
+    {
+     "claim": "A `module F = def` item inside a module body is lowered to a plain Let with no fallback, on dev and on every Modules II part; the item's elaboration keeps the let's FixF.",
+     "ref": "src/language/statics/ModuleHelpers.re:300-304, 442-445 (dev 962a7cb009); :265-271 (modules-ii/3-abstract-types, 111775a60c); :268-274, 642-651 (modules-ii/9-stdlib-modules, b02ce6dab5)"
+    },
+    {
+     "claim": "#2603 keeps the probe analysis for a function that does not mention its binders and whose binders shadow nothing, with the binder in scope at its synthesized type, and calls that an accepted editor-visible difference. On dev the binder was already in scope there, at def_base.ty.",
+     "ref": "src/language/statics/Statics.re:2079-2089, 2108-2119 (#2603 head 4aa493c05a); src/language/statics/Statics.re:2091-2102, 2121 (dev 962a7cb009)"
+    },
+    {
+     "claim": "The only module bound to a function anywhere in the tree is #2651's self-naming test, and part 9 has none.",
+     "ref": "git grep -nE 'module +[A-Za-z_][A-Za-z_0-9]* *(:[^=]*)?= *\\(?(fun\\b|\\\\)' over the whole tree at 29c08fd8fa and b02ce6dab5 (run 2026-10-21)"
+    },
+    {
+     "claim": "#2493 (Modules II part 1) lists 'No mutually recursive modules' among its limitations and says nothing about a module binding that names itself.",
+     "ref": "PR #2493 description (read 2026-10-21)"
+    }
+   ],
+   "options": [
+    "Recommended: never recursive, at either level, as in OCaml without `module rec`. Merge #2651 with the FixF check now, then follow up with a 'not recursive' flag on the let, set by both ModuleExp and the item lowering. With it the let skips the recursion probe and passes and analyzes def once, in the outer scope, so the error and the editor's ctx both come out right, and names_itself and the fallback go away.",
+    "Keep the FixF shape check as the long-term signal, and add a comment where the let builds its FixF saying that ModuleExp depends on that shape.",
+    "Use the module's own name in expanded_info.co_ctx as the signal instead. It also fires when def uses an outer binding of the same name, which then only costs the old extra pass.",
+    "Recursive like `let`, at both levels: #2651's fallback and its new statics test go away, and ModuleExp's elaboration must take the let's FixF (dev's direct pass and #2651's read-back both drop it), so the module can call itself at runtime.",
+    "Keep dev's split for now (not recursive as an expression, recursive as an item) and decide in a later Modules II part."
+   ],
+   "blocks_merge": false,
+   "checked": {
+    "premise": "Almost all of it checks out at dev 962a7cb009 and PR head 29c08fd8fa, and every cited line range points where it says. I fetched first. The merge base is 34f9605ddf, and Statics.re, TyDi and test/statics are unchanged between it and dev. So the PR's lines are the dev lines plus its own hunk.\n\nWhat holds:\n- is_recursive only looks at the shape of the code (Statics.re:2024-2039, 2076; Exp.re:407 and Pat.re:159 at dev).\n- The recursive path keeps the infos from analyzing def in def_ctx, where the name is in scope (2090-2122).\n- requires_fixf looks only at def.co_ctx and pat_typ_refs. CoCtx.mk drops the body's uses of the name (2172-2181; CoCtx.re:43-53). The info at fun_id is patched in m (2216-2228).\n- The let's own co_ctx is built from the unpatched def.co_ctx (2235-2240).\n- Dev's direct pass runs go in the outer ctx after the let and overwrites the infos (2757-2762; StaticsBase.re:10-11 add_info is Id.Map.add). There F falls to Constructor elaboration with a FreeConstructor mark (1598-1606; ConstructorStaticsHelpers.re:61-64).\n- The PR's check is at Statics.re:2770-2774, and its test is at Test_Statics_Modules.re:406-413.\n- ModuleMod items are lowered to a plain Let at dev ModuleHelpers.re:300-304, 111775a60c:265-271 and b02ce6dab5:268-274. All nine modules-ii heads lower the same way. Item elaborations keep the FixF: dev module_elab is at ModuleHelpers.re:442-445, and part 9's refold_module_elab is at b02ce6dab5 ModuleHelpers.re:642-651.\n- #2603 is open with head 4aa493c05a, and its lines 2079-2089 and 2113-2119 say what the draft quotes.\n- #2493's limitations include \"No mutually recursive modules\" and nothing about a module that names itself.\n- A grep of the whole tree finds only #2651's test binding a module to a function. The draft's regex also matched b02ce6dab5 test/Test_Editing.re:3059, which binds a let to `1`, not a module to a function.\n\nWhat needed fixing:\n1. \"#2603 accepts the same difference\" is too strong. On dev, a let-bound function already has its binder in scope inside it: the final pass runs in def_ctx, with the binder at def_base.ty (Statics.re:2091-2102, 2121). #2603 changes only the type it has there (? when unannotated), and only when the binders shadow nothing (#2603 2079-2089, 2108-2119). #2651, by contrast, puts F in scope where dev had none.\n2. The fallback also runs when def has no recorded InfoExp (PR 2775-2789), not only when the elaboration has the FixF shape.\n3. Completion offers only ctx variables whose type is consistent with the expected type (TyDiCtx.re:28-39, 196-197).\n4. The free constructor is `F`, not `F(x)`.\n5. Option 4 said a module binding \"keeps its fixpoint\". It has none to keep: dev's moduleexp_elab swaps in the direct elaboration (ModuleHelpers.re:448-456), and #2651's read-back also drops the FixF (its own comment, PR 2764-2769). ModuleExp would have to take the FixF from the let's elaboration.\n6. Option 1's \"analyzed once\" needs the flag to skip the recursion probe too. Dev runs that probe for every let (Statics.re:2070).\n\nThe context is also cut down to five sentences, as the schema asks.",
+    "need": "Only Alexander can answer this, but the draft needs four changes before it goes to him.\n\n**Nothing written down answers it.**\n- PR #2651 (a module binding analyzes its definition once) has no comments, reviews or review comments. Only codecov has commented (read 2026-10-21).\n- The Modules II PR descriptions do not cover a module that names itself. #2493 (first-class signatures) lists only \"No mutually recursive modules\". Nothing in #2494, #2495, #2498, #2500, #2501, #2503, #2508 or #2510 covers it, nor in their conversations: the one \"recursive\" in #2498 is about a cyclic type alias.\n- No test or doc binds a module to a function, apart from #2651's own test.\n- The written record and the code disagree:\n  - The keyword's ExplainThis entry calls a module binding \"equivalent to a let definition\" (src/web/app/explainthis/data/ModuleKeywordExp.re:23, dev 962a7cb009). dev's docs/modules.md:126 says it \"expands to Let\", and part 9's docs/modules.md:496 (b02ce6dab5) says it is \"checked as Let ... and elaborates to that Let\".\n  - The code makes the expression form non-recursive. The direct pass (Statics.re:2757-2762, dev) is a static error. moduleexp_elab (ModuleHelpers.re:447-456, dev) swaps the let's definition, FixF included, for the direct elaboration, so at runtime there is no fixpoint either.\n- History shows the behaviour was never chosen:\n  - When the keyword landed, it was analyzed only as a let, with no static error (131f508825, Andrew Blinn, Statics.re:1545-1570). Its elaborator built a plain Let with no fixpoint (Elaborator.re:508-514 at 131f508825).\n  - The direct pass arrived with Matt Keenan's elaborator removal (cc620bbbdc), as a port of that case.\n\n**What the draft gets wrong or leaves out.**\n1. It says \"#2603 (a let analyzed once) accepts the same difference for lets\". That overstates it.\n   - On dev, a let's recursive path already analyzes the definition in def_ctx, with the binder in scope (Statics.re:2102-2121, dev).\n   - #2603 changes only the binder's type there, to the synthesized one (Statics.re:2079-2089 and 2151-2162 at 4aa493c05a).\n   - #2651 makes F appear in scope at all, where dev's editor never saw it.\n2. It omits the runtime half: dev's split holds at runtime too, not only in what gets reported.\n   - The expression form drops the FixF (ModuleHelpers.re:447-456; Statics.re:2763-2764, dev).\n   - An item keeps it. module_elab, through strip_module_sig_pats, leaves a FixF alone (ModuleHelpers.re:341-363, 442-445; Statics.re:2712-2716, dev).\n3. The context was about nine sentences; the field allows 2 to 5.\n4. Two options needed fixing:\n   - Option 1: the flag must go only on `module` items, not `let` items, because let members must stay recursive.\n   - Option 4: making module bindings recursive also needs moduleexp_elab to keep the let's FixF.\n\nI re-checked every line number in the draft's evidence at the commit it names.\n\n**Does not block the merge.** #2651 keeps dev's error, and keeps dev's elaboration for a module that names itself. The only new difference is in the editor."
+   },
+   "status": [
+    "answered for now",
+    "for Cyrus"
+   ],
+   "answer_2026_10_21": "Answered for now, Alexander, 2026-10-21: whether modules should be recursive is not settled. For now it is fine for them not to be recursive by default, since recursion has a number of known correctness problems; whether they should be is a question for Cyrus. On the signal: Modules II has none for this, and he did not write the original module keyword; as things stand a module binding is a let that is not recursive. His suggestion is an argument on the let analysis saying whether to check the recursive case, so that a module binding is never analyzed recursively.",
+   "blocks_merge_now": false,
+   "corrections_2026_10_21": [
+    "The expanded_info.co_ctx signal works only without #2675 (incremental evaluation reuses expressions around a recursive let), open, which changes the let's co_ctx at that add to 'requires_fixf ? CoCtx.mk(ctx, p_ana.ctx, def.co_ctx) : def.co_ctx' (Statics.re:2244 at 1e5207494a), dropping the bound name under a fixpoint.",
+    "Alexander, on #2651 (18:52Z): names_itself also matches a fixpoint the user wrote (module m = fix f -> ...), which then takes the old second pass, with dev's results; the signal belongs in the let analysis. Matthew (19:00Z): a prototype of that argument was in progress; it is now the draft follow-up hazelgrove/hazel#2717 (Statics: a module binding is a non-recursive let), opened 20:31Z.",
+    "Alexander's answer on the module keyword (non-recursive, capitalized name, otherwise a let) and his finding that names_itself matches a user-written fix (https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340695087) are on the page, in the answer block, #guard, #review and What next; the let-analysis argument, a prototype then (https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340772054), is now the draft follow-up hazelgrove/hazel#2717 (Statics: a module binding is a non-recursive let) (https://github.com/hazelgrove/hazel/pull/2717).",
+    "Alexander's second fix program, module m = fix g -> fun x -> ... m(x - 1): building #2717 found that on #2651 the let's own analysis already reports m unbound. Exp.get_num_of_functions returns None for a FixF, so is_recursive is false and the let is not recursive there; the fallback then reports the same mark again, at the same id. With names_itself made to skip a fix, the pinned Free(\"m\") test still passes; what the skip keeps is the recursion probe, two analyses per module instead of one."
+   ],
+   "answers_since": [
+    {
+     "by": "Alexander",
+     "where": "in conversation, relayed by Matthew (his own agent's reading, which matches ours)",
+     "paraphrase": "The module keyword makes the binding non-recursive and allows a capitalized name; otherwise it is a let. #2651 keeps both."
+    },
+    {
+     "by": "Alexander",
+     "where": "https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340431274",
+     "paraphrase": "Asked, addressing @disconcision (Andrew Blinn) on the self-naming test, whether defining a module to be a function should be an error. With the questions for Cyrus."
+    },
+    {
+     "by": "Alexander",
+     "where": "https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340695087",
+     "paraphrase": "names_itself also matches a fixpoint the user wrote: module m = fix f -> fun x -> ... f(x - 1) in m(3) elaborates to Let(_, FixF(...), _), because fix elaborates to a FixF, so the read-back is skipped and the definition analyzed twice (a temporary print on Modules II part 1 with #2651 fired for all four module ... = fix ... programs he tried, not for a fix inside a module body). Results match dev; only the speed-up is lost, but the check does not test what names_itself claims to. Shape cannot easily tell the cases apart: skipping any fix would also skip module m = fix g -> fun x -> ... m(x - 1), which, he wrote, currently gets its unbound-m error from the fallback (on #2651 the let's own analysis reports it as well, as building #2717 found: see corrections_2026_10_21). So the signal belongs in the let analysis: an argument that makes a module binding non-recursive; no shape check, no fallback, fix still how a module binds a recursive function. Can be a follow-up to keep #2651 small. Depends on the answer to https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340431274: if binding a module to a function becomes a static error, names_itself could go."
+    },
+    {
+     "by": "Matthew",
+     "where": "https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340772054",
+     "paraphrase": "Agreed: the signal belongs in the let analysis. A prototype was in progress on a local branch (a module binding is never analyzed recursively; names_itself and its fallback are gone; the self-naming test is pinned to its mark), its tests to include both fix programs; whether it would go into #2651 or a follow-up was to be decided when it was done."
+    },
+    {
+     "by": "Matthew",
+     "where": "https://github.com/hazelgrove/hazel/pull/2717",
+     "paraphrase": "The prototype as a draft follow-up, hazelgrove/hazel#2717 (Statics: a module binding is a non-recursive let), opened 2026-10-21 20:31Z against dev on #2651's head b5a3e1d90a: a module binding is a non-recursive let, by an argument to the let; names_itself and its fallback are gone; a module's definition is analyzed once; Alexander's two fix programs are tests (the first runs to 6 with no errors, the second reports m unbound at the inner m)."
+    }
+   ],
+   "answer_source": "in the review, relayed by Matthew; later answers on #2651 (answers_since)"
+  },
+  {
+   "slug": "def-elab-direct-on-modules-ii",
+   "question": "Alexander, on your stack does ModuleExp still need its separate analysis and elaboration of the definition (def_elab_direct, which moduleexp_elab swaps in for the let's), or could a module binding use the let's elaboration as is, as your docs/modules.md already says it does?",
+   "context": "moduleexp_elab builds the binding's runtime term from the let's elaboration, with def_elab_direct (from a second analysis of the definition in the outer context) in place of the let's definition, which drops what the let wraps around a definition: label alignment, the function's name, and, for a recursive function that refers to itself, a fixpoint. On dev, alignment is why the swap matters for a module literal: a module elaborates to a let-chain and a one-member signature is desugared to a one-field product, so the let would wrap the module as `(x = whole module)`, and `module M : { let x : Int } = { let x = 42 } in M.x` gives 42 only because of the swap. On your stack a signature stays a Sig type, which alignment leaves alone, a module literal elaborates to a Module value, the name touches only functions, and a module literal is never treated as recursive, so for a module literal the let's elaboration already is the direct one; what is left is a definition that is a function naming its own module (`module F = fun x -> F(x)`), where the let adds a fixpoint and, analyzing it recursively, does not report F as unbound, which #2651 (read the definition's elaboration back instead of analyzing it twice) handles by falling back to the direct pass and which a non-recursive module binder would remove. The direct pass is also not part of the modules design: it arrived in April 2026 with 'delete elaborator' (cc620bbbdc), and before that ModuleExp elaborated its definition from the info map with no second analysis, which is what #2651 goes back to.",
+   "evidence": [
+    {
+     "claim": "moduleexp_elab keeps the let's pattern (with its signature ascription stripped) and body, and puts def_elab_direct in place of the let's definition.",
+     "ref": "src/language/statics/ModuleHelpers.re:447-456 (dev 962a7cb009)"
+    },
+    {
+     "claim": "ModuleExp analyzes the definition a second time, in the outer context, against the binder's annotation, and swaps the result in.",
+     "ref": "src/language/statics/Statics.re:2757-2764 (dev 962a7cb009)"
+    },
+    {
+     "claim": "The let wraps its definition's elaboration in label alignment plus the function's name, and, when the binding is recursive and refers to itself, also in a fixpoint.",
+     "ref": "src/language/statics/Statics.re:2172-2230 (dev 962a7cb009)"
+    },
+    {
+     "claim": "On dev a module binder's signature annotation is desugared to a labeled product.",
+     "ref": "src/language/statics/ModuleHelpers.re:51-60; src/language/term/Typ.re:615-657 (dev 962a7cb009)"
+    },
+    {
+     "claim": "Against a one-field labeled product, alignment wraps any elaboration that is not already a tuple, such as a module's let-chain, into (x = e).",
+     "ref": "src/language/statics/LabeledTupleHelpers.re:49-75, 108-110 (dev 962a7cb009)"
+    },
+    {
+     "claim": "Dev's test that depends on the swap: `module M : { let x : Int } = { let x = 42 } in M.x` evaluates to 42.",
+     "ref": "test/evaluator/Test_Evaluator_Modules.re:123-129 (dev 962a7cb009)"
+    },
+    {
+     "claim": "add_name changes only Fun and TypFun.",
+     "ref": "src/language/term/Exp.re:544-551 (dev 962a7cb009)"
+    },
+    {
+     "claim": "A let is treated as recursive only when its definition is a function or a tuple of functions; get_num_of_functions returns None for a Module literal, on dev and on your stack.",
+     "ref": "src/language/statics/Statics.re:2024-2039, 2076 and src/language/term/Exp.re:407-460, Module at 456 (dev 962a7cb009); src/language/statics/Statics.re:2241-2256, 2284 and src/language/term/Exp.re:456 (modules-ii/9-stdlib-modules, b02ce6dab5)"
+    },
+    {
+     "claim": "#2651 keeps the direct pass for a definition that names its own module: there the let wraps a fixpoint and analyzes the name in scope, while the direct pass reports it unbound; its test is `module F = fun x -> F(x) in 1`.",
+     "ref": "src/language/statics/Statics.re:2764-2789 and test/statics/Test_Statics_Modules.re:409-413 (PR 29c08fd8fa)"
+    },
+    {
+     "claim": "On your stack a module literal elaborates to a Module value.",
+     "ref": "src/language/statics/Statics.re:2765-2815 (modules-ii/3-abstract-types, 111775a60c); src/language/statics/Statics.re:2925 (modules-ii/9-stdlib-modules, b02ce6dab5)"
+    },
+    {
+     "claim": "weak_head_normalize leaves a Sig as a Sig, through its fall-through case. LabeledTupleHelpers.re is unchanged from dev through part 9, and its alignment returns a term unchanged when the expected type is not a product. A product annotation on a module is rejected from part 3.",
+     "ref": "src/language/term/Typ.re:675-739, fall-through at 737, and test/statics/Test_Statics_Modules.re:1657-1662 (modules-ii/3-abstract-types, 111775a60c); src/language/statics/LabeledTupleHelpers.re:77, 104 (modules-ii/9-stdlib-modules, b02ce6dab5; git diff 34f9605ddf b02ce6dab5 and git diff 962a7cb009 b02ce6dab5 on that file are both empty)"
+    },
+    {
+     "claim": "Your docs say a ModuleExp is checked as Let(pat, def, body) and 'elaborates to that Let'.",
+     "ref": "docs/modules.md:496-497 (modules-ii/9-stdlib-modules, b02ce6dab5)"
+    },
+    {
+     "claim": "The code on your stack still analyzes the definition a second time (with the same ~coercible=true the let uses) and swaps it in, keeping the binder's signature for sealing.",
+     "ref": "src/language/statics/Statics.re:2968-2976 and 2287-2288; src/language/statics/ModuleHelpers.re:671-681 (modules-ii/9-stdlib-modules, b02ce6dab5)"
+    },
+    {
+     "claim": "Before 'delete elaborator' (cc620bbbdc, committed 2026-04-17), the separate Elaborator elaborated ModuleExp's definition from the info map, with no second analysis. def_elab_direct first appears in that commit.",
+     "ref": "src/language/statics/Elaborator.re:518-524 (a81e3188fd, parent of cc620bbbdc); git log -S def_elab_direct origin/dev -- src"
+    },
+    {
+     "claim": "The info at def's id is not always what the let's analysis returned: when a definition is auto-labeled into a one-field tuple, the analysis returns (x = the unelaborated term) but records the elaboration from before the label at the definition's id, which is why #2651's new one-member-signature test gives 1.",
+     "ref": "src/language/statics/Statics.re:310-359, overwrite at 357 (dev 962a7cb009); test/evaluator/Test_Evaluator_Modules.re:86-96 (PR 29c08fd8fa)"
+    }
+   ],
+   "options": [
+    "Recommended: nothing is left for a module literal, and for a function definition only the fixpoint and the unbound-name report (plus the harmless name). Once module binders are non-recursive, a follow-up on your stack removes def_elab_direct, the swap in moduleexp_elab and #2651's read-back, and #2651 is then a step needed only on dev.",
+    "It still guarantees something else on Modules II (please say what). #2651's read-back is then the long-term shape, and its contract should be written down next to moduleexp_elab: the info at def's id holds the definition's own elaboration, which is what the analysis returned, except when the definition was auto-labeled into a one-field tuple, where it holds the elaboration from before the label.",
+    "Not decided yet: merge #2651 either way and revisit when the stack lands."
+   ],
+   "blocks_merge": false,
+   "checked": {
+    "premise": "Most premises hold at the cited commits. I re-read every line number: dev 962a7cb009, PR head 29c08fd8fa, part 3 111775a60c, part 9 b02ce6dab5 and a81e3188fd. Part 9's merge base with dev is 962a7cb009 itself, so the stack sits on current dev. These are confirmed as stated:\n- moduleexp_elab: ModuleHelpers.re:447-456 at dev.\n- The let's wrapping: Statics.re:2182-2230 at dev.\n- The alignment code: LabeledTupleHelpers.re:49-75 and 108-110 at dev.\n- The dev test: Test_Evaluator_Modules.re:123-129.\n- add_name: Exp.re:544-551 at dev.\n- The Module value: Statics.re:2765-2815 at 111775a60c, and line 2925 at b02ce6dab5.\n- The test that rejects a product annotation: Test_Statics_Modules.re:1657-1662 at 111775a60c.\n- LabeledTupleHelpers.re:77 at b02ce6dab5. Its diff from 34f9605ddf and from dev is empty.\n- docs/modules.md:496-497 at b02ce6dab5.\n- The stack's second pass and swap: Statics.re:2968-2976 and ModuleHelpers.re:671-681 at b02ce6dab5. There the let passes the same ~coercible=true (Statics.re:2287-2288).\n- Elaborator.re:518-524 at a81e3188fd. git log -S puts the first def_elab_direct in cc620bbbdc (commit date 2026-04-17, author date 2026-04-03). At that commit the let already aligned its definition's elaboration (Statics.re:1909-1923 at cc620bbbdc).\n\nSome things needed fixing:\n\n(1) The context says \"for a module literal ... only the fixpoint is left\". For a module literal no fixpoint can happen. A let is recursive only when its definition is a function or a tuple of functions (Statics.re:2024-2039 and 2076 at dev). get_num_of_functions returns None for Module (Exp.re:456 at dev; same line at b02ce6dab5; the let's code at Statics.re:2241-2256 and 2284 there). On the stack, then, nothing is left for a module literal. The fixpoint arises only for a definition that is a function naming its own module, such as `module F = fun x -> F(x)`. There the direct pass also does a second job. It analyzes the definition in the outer context, so it reports F as unbound, which the recursive let does not. #2651's second commit falls back to the direct pass for exactly this case (Statics.re:2764-2789 at 29c08fd8fa; test at Test_Statics_Modules.re:409-413 at 29c08fd8fa).\n\n(2) The evidence says moduleexp_elab \"keeps the let's pattern\". On dev it strips the signature ascription from that pattern (ModuleHelpers.re:452). The stack's version keeps it, for sealing.\n\n(3) \"either alignment plus the name, or a fixpoint\" is not quite right. Both paths align and name the definition, and the recursive path also wraps it in a fixpoint (Statics.re:2172-2230 at dev).\n\n(4) weak_head_normalize runs from line 675 to 739 at 111775a60c, not 675-715. A Sig reaches the fall-through `| _ => ty` at line 737.\n\n(5) Option 2 states #2651's contract as \"the info at def's id holds the elaboration the let's analysis returned\". That is not always true on dev. When a definition is checked against a one-field labeled product it does not already have, autolabel_singleton_tuple returns (x = the unelaborated term). It records the elaboration from before the label at the definition's id (Statics.re:310-359 at dev, overwrite at line 357). That difference is why #2651's new test gives 1 instead of the whole unelaborated module (Test_Evaluator_Modules.re:86-96 at 29c08fd8fa).\n\nThe question itself still stands. I did not run anything. The claim that the dev test gives 42 only because of the swap comes from reading the code: alignment does not count a let-chain as aligned (LabeledTupleHelpers.re:102), and the Dot transition (Transition.re:1024-1058 at dev) would project the wrapped tuple.",
+    "need": "Only Alexander can answer this, so it stays a question for him, but it should be asked differently. Nothing on record answers it. PR #2651 has no reviews and no review comments, and its only issue comment is codecov's (checked via gh api pulls/2651/reviews, pulls/2651/comments and issues/2651/comments). The descriptions, comments and reviews of #2493, #2494 and #2495 never mention def_elab_direct or moduleexp_elab. The nearest they come is \"elaboration refolds the checked chain back into a Module\" (#2493) and \"ModuleExp ... set it [~coercible] on their operand\" (#2494). On his stack the code still swaps: Statics.re:2968-2976 and ModuleHelpers.re:671-681 at modules-ii/9-stdlib-modules b02ce6dab5. He kept the swap in part 1 (7750e65fbf, whose comment says the binder's ascription is what seals) and added ~coercible=true to the second analysis in part 2 (895b3f3afa). So whether the swap still protects anything is a design intent that only he can state.\n\nThe checks on the draft's refs:\n- Confirmed: ModuleHelpers.re:447-456, Statics.re:2182-2230, LabeledTupleHelpers.re:49-75 and 108-110, Test_Evaluator_Modules.re:123-129 and Exp.re:544-551, all at dev 962a7cb009.\n- Confirmed: Statics.re:2765-2815 and Test_Statics_Modules.re:1657-1662 at 111775a60c.\n- Confirmed at b02ce6dab5: Statics.re:2925; docs/modules.md:496-497; LabeledTupleHelpers.re:77 (the file is unchanged from 34f9605ddf, and dev's copy is identical too).\n- Confirmed: Elaborator.re:518-524 at a81e3188fd, the parent of cc620bbbdc. Its Let case, lines 296-340, did add_name and the fixpoint, and its ModuleExp case skipped both.\n- Confirmed: git log -S def_elab_direct puts its first appearance in cc620bbbdc (committed 2026-04-17).\n\nWhat to fix:\n(1) The Typ.re ref is off. At 111775a60c, weak_head_normalize has no Sig case. The catch-all that returns a Sig unchanged is `| _ => ty` at Typ.re:737, outside the cited 675-715. The ref should be 675-738. The line on the alignment side that matters is LabeledTupleHelpers.re:104 (is_aligned_exp returns true for a non-product, so align_exp_if_needed does nothing), alongside 77.\n(2) The draft leaves out the strongest code fact. On his own stack, a sub-module item `module Inner = def` is lowered to a plain Let (ModuleHelpers.re:268-274 at b02ce6dab5). Its definition is then taken from that Let's elaboration as is, wrappers included, with no second analysis and no swap (refold_module_elab, ModuleHelpers.re:640-653, ModuleMod at 650-651, b02ce6dab5). So the sharper question is why a top-level binding differs from a nested one.\n(3) The draft treats the fixpoint only as a matter of elaboration. The second analysis also does a second job: it writes its info at def's ids last, so it is what reports a self-naming module's name as unbound. #2651's second commit falls back to it for exactly that reason (Statics.re:2764-2789 at PR 29c08fd8fa; the test is Test_Statics_Modules.re:409-413 at 29c08fd8fa). A non-recursive module binder must therefore also produce that error.\n(4) A rebase note belongs in the options: on his stack, #2651's fallback would need his ~coercible=true."
+   },
+   "status": [
+    "answered"
+   ],
+   "answer_2026_10_21": "Answered, Alexander, 2026-10-21, to the question as first asked (is the definition's elaboration before the let wraps it exactly what moduleexp_elab is meant to take?): yes, as he understands it, and it comes from the old elaborator. Reading the definition back from the stored info is closer to the original design than dev's second pass, because the old elaborator also read the definition from the statics map.",
+   "blocks_merge_now": false,
+   "answers_since": [
+    {
+     "by": "Alexander",
+     "where": "in conversation, relayed by Matthew",
+     "paraphrase": "That is his understanding too, and it comes from the old elaborator. Reading the definition back from the stored info is closer to the original design than dev's second pass, because the old elaborator also read the definition from the statics map."
+    }
+   ],
+   "corrections_2026_10_21": [
+    "The answer came in conversation, relayed by Matthew. Run with the CLI, module M : { let x : Int } = { let x = 42 } in M.x gives 42 at dev and at 29c08fd8fa alike."
+   ],
+   "answer_source": "in conversation, relayed by Matthew"
+  },
+  {
+   "slug": "tests-to-pin",
+   "question": "Alexander, which of these module behaviours do you want pinned as tests in #2651 (a module binding analyzes its definition once): the self-naming error at its exact place, a function-valued module that does not name itself, and a module bound to a bare value under a one-member signature?",
+   "context": "#2651 (a module binding analyzes its definition once) adds one statics test, `module F = fun x -> F(x) in 1`, written with inconsistent_typecheck. That helper passes whenever the program has any static error at all, so the test would still pass if the error moved or changed kind; today the error is a FreeConstructor mark (\"Constructor is not defined\") on the F inside the definition, because a capitalized name parses as a constructor and the fallback analysis runs without F in scope. Three paths the PR changes have no test. The first is the read-back after the Let's recursive branch, which a module bound to a function takes even when it does not name itself, such as `module F = fun x -> x + 1 in F(2)` (expected 3). The second is a module bound to a non-module value under a one-member signature, `module M : { let x : Int } = 5 in M.x`, which gives 5 on dev but, as we read it, a stuck `5.x` under #2651 unless the PR adds a guard, because the info read back is the unlabeled 5 that the singleton-label lifting leaves at the definition's id; the third is the fallback's signature-ascribed arm, the one patch line Codecov marks as missed, and since these behaviours are yours to define we would rather pin the ones you consider part of the modules contract.",
+   "evidence": [
+    {
+     "claim": "The self-naming test is an inconsistent_typecheck case.",
+     "ref": "test/statics/Test_Statics_Modules.re:406-413 (PR 29c08fd8fa)"
+    },
+    {
+     "claim": "inconsistent_typecheck only checks that the list of static errors is not empty; that list is every info in the statics map that carries marks.",
+     "ref": "test/statics/Test_Statics_Prelude.re:142-151, 225-242 (PR 29c08fd8fa)"
+    },
+    {
+     "claim": "The error the fallback reports is the FreeConstructor mark at the use of F: Ap analyzes a constructor head against an arrow, syn_marks_ctr finds no constructor F, and the Constructor case finds no variable F in the outer context, because a capitalized name parses as a constructor.",
+     "ref": "src/language/statics/Statics.re:1561-1565, 1598-1606, 1705-1718 (dev 962a7cb009); src/language/statics/ConstructorStaticsHelpers.re:46-67 (dev 962a7cb009)"
+    },
+    {
+     "claim": "Under #2651 the self-naming case reaches the direct analysis only because the Let wrapped the definition in a FixF, which names_itself detects.",
+     "ref": "src/language/statics/Statics.re:2172-2181, 2202-2206, 2229, 2770-2789 (PR 29c08fd8fa)"
+    },
+    {
+     "claim": "A single variable bound to a function with an arrow type takes the Let's recursive branch, which analyzes the definition last with the name in scope; with no self-reference no FixF is built, so the read-back is used.",
+     "ref": "src/language/statics/Statics.re:2024-2039, 2070-2076, 2090-2123, 2172-2187, 2775-2780 (PR 29c08fd8fa)"
+    },
+    {
+     "claim": "On dev the direct analysis passes the signature, a one-field labeled product, as the expected type, and the singleton-label lifting returns the tuple (x=5).",
+     "ref": "src/language/statics/Statics.re:2757-2762, 2778-2789 (dev 962a7cb009); src/language/term/Typ.re:615-646 (dev 962a7cb009)"
+    },
+    {
+     "claim": "The lifting records the tuple's info at the definition's ids, then overwrites them with the unlabeled inner info, and returns the tuple; so the PR's read-back gets 5, not (x=5).",
+     "ref": "src/language/statics/Statics.re:310-358 (dev 962a7cb009 and PR 29c08fd8fa, identical)"
+    },
+    {
+     "claim": "Projecting a label from a non-tuple value such as 5 is indeterminate, so M.x is stuck.",
+     "ref": "src/language/dynamics/transition/Transition.re:1024-1086 (dev 962a7cb009); src/language/dynamics/transition/Unboxing.re:185-217 (dev 962a7cb009)"
+    },
+    {
+     "claim": "The PR's own evaluator test covers the same read-back for a module value with an extra member, not for a bare value.",
+     "ref": "test/evaluator/Test_Evaluator_Modules.re:86-96 (PR 29c08fd8fa)"
+    },
+    {
+     "claim": "The only module bound to a function anywhere in the tests is the self-naming one, and no test binds a module to a non-module value.",
+     "ref": "git grep -E 'module [A-Za-z_]+ *(:[^=]*)?= *(fun|[0-9])' over test/ and docs/ at PR 29c08fd8fa, plus broader greps for literal, parenthesized and multi-line right-hand sides (run 2026-10-21)"
+    },
+    {
+     "claim": "Codecov reports 87.5% patch coverage with one line missing; its line data marks only the fallback's signature-ascribed arm as missed, and that arm was hit on base.",
+     "ref": "src/language/statics/Statics.re:2784 (PR 29c08fd8fa), :2759 (dev 962a7cb009); codecov comment on PR #2651 and api.codecov.io compare/file for pull 2651 (read 2026-10-21)"
+    }
+   ],
+   "options": [
+    "Recommended: (1) pin the self-naming error to the FreeConstructor mark on F's use inside the definition; (2) add `module F = fun x -> x + 1 in F(2)`, expected 3, which covers the read-back after the recursive branch; (3) add `module M : { let x : Int } = 5 in M.x` with whatever result the one-member-signature question settles.",
+    "Only tighten the self-naming test now, and add the rest with Modules II.",
+    "Leave the tests as they are."
+   ],
+   "blocks_merge": false,
+   "checked": {
+    "premise": "Every factual claim checks out at dev 962a7cb009 and PR 29c08fd8fa. Statics.re is byte-identical between dev and the PR's merge base 34f9605ddf, and the PR changes only lines from 2754 on, so lines before that are the same at both commits. What we checked:\n\n(1) The test is an inconsistent_typecheck case: test/statics/Test_Statics_Modules.re:406-413 (PR).\n\n(2) inconsistent_typecheck checks only that the error list is not empty (neg(list) against []): test/statics/Test_Statics_Prelude.re:225-242 (PR). That list comes from `errors`, a fold over every info in the map that carries marks, at :142-151.\n\n(3) The fallback's error is FreeConstructor (\"Constructor is not defined\"). Ap analyzes a constructor head against Arrow(syn,syn) (Statics.re:1705-1718, dev). syn_marks_ctr returns [FreeConstructor] (ConstructorStaticsHelpers.re:46-67, dev). The Constructor case finds no variable F in the outer context and adds those marks (Statics.re:1561-1563, 1598-1606, dev). Nothing else in that program is marked.\n\n(4) The grep at the PR head returns only Test_Statics_Modules.re:412. Broader repo-wide greps (literals, parens, lowercase names, multi-line bindings, ModuleExp built directly in tests) find no other module bound to a function or to a non-module value. The only non-brace right-hand sides are aliases to modules (:575, :599, :607).\n\n(5) Codecov's comment reports 87.50% patch coverage, 1 line missing, in Statics.re.\n\n(6) `module F = fun x -> x + 1 in F(2)` does take the Let's recursive branch. One variable is bound to one function and the probe type is an arrow (Statics.re:2024-2039, 2070-2076, PR), so def is last analyzed at :2121. requires_fixf is false (:2172-2181), so names_itself is false and the read-back at :2777 is used.\n\n(7) The claim \"5 on dev, stuck under #2651\" holds by reading. On dev the direct analysis (Statics.re:2757-2762, dev) analyzes 5 against the one-field product made by desugar_sig (Typ.re:615-646, dev). The lifting at :2778-2789 (dev) then returns the tuple (x=5). Under the PR, autolabel_singleton_tuple overwrites the definition's ids with inner_for_source, whose elab_term is the unlabeled 5 (Statics.re:356-358, both commits; rewrap keeps the ids, IdTagged.re:158). So the read-back gives M = 5. Then Dot hits unbox(LabeledTupleProjection) on an Atom, which is IndetMatch, so the result is Indet (Transition.re:1024-1086, Unboxing.re:185-217, dev).\n\nWhat was imprecise:\n\n(a) The Codecov comment does not name the missed line. We read Codecov's line data from api.codecov.io compare/file for pull 2651 on 2026-10-21. It marks only Statics.re:2784 `| Asc(_, typ) => typ` (PR) as missed. The seven other patch lines (2772, 2773, 2776, 2777, 2781, 2785, 2788) are hit. The same arm was hit on base (dev 2759). The draft cited the whole fallback, 2781-2788, so the evidence now names 2784.\n\n(b) The draft gave no evidence for the recursive-path and one-member-signature claims, so we added it.\n\n(c) The context ran past 5 sentences, and #2651 had no short phrase, so we fixed both.",
+    "need": "Nothing already answers this, so it does need Alexander. But the draft bundles in one item that needs nobody, and its recommended answer would make an accident into the rule.\n\n**Where we looked.** PR #2651's conversation has no reviews, no review comments and only the Codecov bot comment. The descriptions of #2493, #2494 and #2495 (Modules II parts 1 to 3) say nothing about a module whose definition names itself. On recursion, #2493 lists only \"No mutually recursive modules\" under Known gaps. Neither docs/modules.md at dev nor the copy at the Modules II head 111775a60c says anything about it.\n\n**Item (2) needs nobody.** `module F = fun x -> x + 1 in F(2)` gives 3 under any reading. It is Matthew's coverage test for the read-back on the let's recursive path. The function-valued test makes `is_rec` true (Statics.re:2076, dev 962a7cb009); `requires_fixf` is false (2172-2181), so `names_itself` is false and the read-back at Statics.re:2775-2780 (PR 29c08fd8fa) runs. It should be added, not asked.\n\n**Item (1) pins an accident.** The let analyzes `fun x -> F(x)` recursively, with F in scope, and records no error (Statics.re:2090-2123, 2202-2206, dev). The error dev reports comes from the ModuleExp case's second analysis, which runs in the outer context without F (Statics.re:2757-2762, dev). That pass marks F's use as an unbound constructor (1561-1563, 1598-1606, dev) and overwrites what the let recorded. The same definition written as a module item, `{ module F = fun x -> F(x) }`, is lowered to a plain let with no second analysis (ModuleHelpers.re:300-304, dev), so as we read it, it is accepted as recursive. docs/modules.md:126 (dev) says a module binding expands to a let. So the real question for Alexander is whether self-naming is an error at all, and in which form. Which mark to freeze in a test follows from that.\n\n**Item (3) still holds, and needs one addition.** On dev the signature becomes the labeled tuple type `(x=Int)` (ModuleHelpers.re:57, dev), and 5 is lifted into `(x=5)` (Statics.re:2778-2788, dev). The lifting records the unlifted inner info at the definition's ids but returns the lifted tuple (Statics.re:324-334, 357-358, dev). So #2651's read-back gets 5, and `M.x` on 5 is indeterminate (Transition.re:1024-1087, PR). The question should add that #2493 already settles the Modules II answer: a signature is inconsistent with a labeled tuple type, so the program becomes a type error. Modules II also keeps the same second analysis, now with `~coercible=true` (Statics.re:2848-2856 at 111775a60c, the Modules II part 3 head), so whatever #2651 pins lands in code his stack rewrites.\n\n**Checked and correct.** `inconsistent_typecheck` only checks that some static error exists (Test_Statics_Prelude.re:225-242, PR). The test grep finds only the self-naming case. Codecov's line data (the compare/file API, read 2026-10-21) shows the one uncovered patch line is Statics.re:2784 (PR), `| Asc(_, typ) => typ`. It is reached only by a self-naming module that has a signature, so (1)'s answer covers it."
+   },
+   "status": [
+    "answered"
+   ],
+   "answer_2026_10_21": "Answered on #2651, 2026-10-21. The third, the bare value: Alexander offered to pin it as stuck here, with a note that the static error comes with Modules II part 1, or to leave it out of #2651 and add it on part 1, where it can assert both the stuck term and the error (his comment); Matthew chose part 1 (his reply). The first, the self-naming error: Matthew answered that the let-analysis prototype pins the test to its mark and that its tests would include Alexander's two fix programs (Matthew's reply). The prototype is now the draft follow-up #2717 (Statics: a module binding is a non-recursive let), and it does both: the self-naming test and its form under a signature each pin one FreeConstructor mark at the inner F; the first fix program runs to 6 with no errors, and the second has one mark, Free(\"m\"), at the inner m. It also has the second, module F = fun x -> x + 1 in F(2), as an evaluator test (3).",
+   "blocks_merge_now": false,
+   "corrections_2026_10_21": [
+    "The bare-value program's stuck '5 .x' was run with the CLI, not only read (Matthew's comment on #2651, https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340596357).",
+    "Alexander, on #2651 (18:48Z, https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340660934), gave two choices for the bare-value test: pin the program as stuck in #2651, with a note that the static error comes with Modules II part 1, or leave it out of #2651 and add it on part 1, where it can assert both the stuck term and the static error. Matthew chose part 1 (19:00Z, https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340771544).",
+    "Status: answered on #2651. (1) the self-naming error at its mark: in the draft follow-up hazelgrove/hazel#2717 (Statics: a module binding is a non-recursive let), for the plain and the ascribed form; (2) module F = fun x -> x + 1 in F(2), 3 at both when run: in #2717, as an evaluator test; (3) the bare value: on Modules II part 1, not in #2651."
+   ],
+   "answers_since": [
+    {
+     "by": "Alexander",
+     "where": "https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340660934",
+     "paraphrase": "For the bare-value program: either pin it as stuck here, with a note that the static error comes with Modules II part 1, or leave it out of #2651 and add it on part 1, where it can assert both the stuck term and the error."
+    },
+    {
+     "by": "Matthew (decision)",
+     "where": "https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340771544",
+     "paraphrase": "Part 1."
+    },
+    {
+     "by": "Matthew",
+     "where": "https://github.com/hazelgrove/hazel/pull/2651#discussion_r4340772054",
+     "paraphrase": "The let-analysis prototype pins the self-naming test to its mark; its tests will include Alexander's two fix programs."
+    },
+    {
+     "by": "Matthew",
+     "where": "https://github.com/hazelgrove/hazel/pull/2717",
+     "paraphrase": "In the draft follow-up hazelgrove/hazel#2717 (Statics: a module binding is a non-recursive let): the self-naming test and its ascribed form each pin one FreeConstructor(\"F\") mark at the inner F; module F = fun x -> x + 1 in F(2) is an evaluator test (3); the first fix program runs to 6 with no errors, and the second has exactly one mark, Free(\"m\"), at the inner m."
+    }
+   ],
+   "answer_source": "on #2651"
+  }
+ ],
+ "settled_by_the_code_or_the_conversation": [],
+ "for_cyrus": [
+  {
+   "id": "cyrus-recursive",
+   "question": "Should module bindings be recursive?",
+   "context": "Today module F = … as an expression is not (a self-reference is an error, and #2651 keeps it one), while a module F = … item inside { … } is lowered to a plain let and, by our reading, is. Alexander: for now it is fine for modules not to be recursive by default, since recursion has a number of known correctness problems (question 3)."
+  },
+  {
+   "id": "cyrus-non-module",
+   "question": "Should binding a module to something that is not a module be a static error?",
+   "context": "module F = fun x -> 1 in F(3) is accepted today. With a signature the case is settled: module M : { let x : Int } = 5 in M.x, accepted on dev, is already a static error, and stuck, on Modules II part 1, which Alexander accepted as the intended behaviour, dev's missing error being temporary (question 1). If a module bound to a function becomes an error too, neither a self-naming function nor a module … = fix … can reach #2651's guard, and names_itself could go (the guard). Alexander asked a form of this on #2651 on 2026-10-21 at 18:25Z, in a review comment on its self-naming test (Test_Statics_Modules.re:411): \"should this be an error defining a module to be a function?\" (his comment). He addressed it to @disconcision, Andrew Blinn, who wrote the module keyword (b0735de6d6 to 131f508825 are by disconcision, the account Andrew opened #2469 (Modular editors) from), so it can be answered there, by Andrew or Cyrus."
+  },
+  {
+   "id": "cyrus-keyword",
+   "question": "What should the module keyword add over let?",
+   "context": "Alexander had favoured plain let for module definitions; Cyrus wanted the keyword to do more. Today a module binding is checked as a let that is not recursive (Modules). By Alexander's reading (his agent's, in conversation, relayed by Matthew), which matches ours, the keyword makes the binding non-recursive and allows a capitalized name, and is otherwise a let; #2651 keeps both."
+  }
+ ],
+ "status_as_of": "2026-10-21 14:41 MDT: every question for Alexander answered (question 3 for now); none holds up the merge. The let-analysis argument is the draft follow-up hazelgrove/hazel#2717 (Statics: a module binding is a non-recursive let), opened 20:31Z (14:31 MDT) against dev, on #2651's head b5a3e1d90a."
+}

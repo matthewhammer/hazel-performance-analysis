@@ -1,0 +1,458 @@
+[
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 100,
+  "ms": 11.0724,
+  "reps": 60,
+  "steps": 2818,
+  "by_kind": {
+   "no step": 502,
+   "FunAp": 101,
+   "FixUnwrap": 100,
+   "VarLookup": 301,
+   "WrapClosure": 1,
+   "FixClosure": 1,
+   "evaluate": 1409,
+   "CompleteClosure": 101,
+   "": 302
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 1000,
+  "ms": 106.6963,
+  "reps": 23,
+  "steps": 28018,
+  "by_kind": {
+   "no step": 5002,
+   "FunAp": 1001,
+   "FixUnwrap": 1000,
+   "VarLookup": 3001,
+   "WrapClosure": 1,
+   "FixClosure": 1,
+   "evaluate": 14009,
+   "CompleteClosure": 1001,
+   "": 3002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 5000,
+  "ms": 650.11,
+  "reps": 5,
+  "steps": 140018,
+  "by_kind": {
+   "no step": 25002,
+   "FunAp": 5001,
+   "FixUnwrap": 5000,
+   "VarLookup": 15001,
+   "WrapClosure": 1,
+   "FixClosure": 1,
+   "evaluate": 70009,
+   "CompleteClosure": 5001,
+   "": 15002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "fib",
+  "n": 10,
+  "ms": 18.3797,
+  "reps": 60,
+  "steps": 5124,
+  "by_kind": {
+   "no step": 705,
+   "FunAp": 177,
+   "Ascription": 89,
+   "FixUnwrap": 176,
+   "VarLookup": 617,
+   "WrapClosure": 1,
+   "FixClosure": 2,
+   "evaluate": 2562,
+   "CompleteClosure": 177,
+   "": 618
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "fib",
+  "n": 13,
+  "ms": 76.3341,
+  "reps": 32,
+  "steps": 21828,
+  "by_kind": {
+   "no step": 3009,
+   "FunAp": 753,
+   "Ascription": 377,
+   "FixUnwrap": 752,
+   "VarLookup": 2633,
+   "WrapClosure": 1,
+   "FixClosure": 2,
+   "evaluate": 10914,
+   "CompleteClosure": 753,
+   "": 2634
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "fib",
+  "n": 16,
+  "ms": 336.4303,
+  "reps": 8,
+  "steps": 92588,
+  "by_kind": {
+   "no step": 12769,
+   "FunAp": 3193,
+   "Ascription": 1597,
+   "FixUnwrap": 3192,
+   "VarLookup": 11173,
+   "WrapClosure": 1,
+   "FixClosure": 2,
+   "evaluate": 46294,
+   "CompleteClosure": 3193,
+   "": 11174
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "sumbuild",
+  "n": 100,
+  "ms": 30.2113,
+  "reps": 60,
+  "steps": 6244,
+  "by_kind": {
+   "CaseApply": 101,
+   "no step": 804,
+   "FunAp": 203,
+   "Ascription": 100,
+   "FixUnwrap": 200,
+   "VarLookup": 903,
+   "ListCons": 100,
+   "WrapClosure": 3,
+   "FixClosure": 2,
+   "evaluate": 3122,
+   "CompleteClosure": 304,
+   "": 402
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "sumbuild",
+  "n": 1000,
+  "ms": 962.1323,
+  "reps": 5,
+  "steps": 62044,
+  "by_kind": {
+   "CaseApply": 1001,
+   "no step": 8004,
+   "FunAp": 2003,
+   "Ascription": 1000,
+   "FixUnwrap": 2000,
+   "VarLookup": 9003,
+   "ListCons": 1000,
+   "WrapClosure": 3,
+   "FixClosure": 2,
+   "evaluate": 31022,
+   "CompleteClosure": 3004,
+   "": 4002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "sumbuild",
+  "n": 3000,
+  "ms": 9307.3978,
+  "reps": 5,
+  "steps": 186044,
+  "by_kind": {
+   "CaseApply": 3001,
+   "no step": 24004,
+   "FunAp": 6003,
+   "Ascription": 3000,
+   "FixUnwrap": 6000,
+   "VarLookup": 27003,
+   "ListCons": 3000,
+   "WrapClosure": 3,
+   "FixClosure": 2,
+   "evaluate": 93022,
+   "CompleteClosure": 9004,
+   "": 12002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "mapinc",
+  "n": 100,
+  "ms": 45.9901,
+  "reps": 54,
+  "steps": 10264,
+  "by_kind": {
+   "CaseApply": 202,
+   "no step": 1306,
+   "FunAp": 404,
+   "Ascription": 100,
+   "FixUnwrap": 300,
+   "VarLookup": 1503,
+   "ListCons": 200,
+   "WrapClosure": 5,
+   "RemoveParens": 1,
+   "FixClosure": 3,
+   "evaluate": 5132,
+   "CompleteClosure": 606,
+   "": 502
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "mapinc",
+  "n": 1000,
+  "ms": 1158.5869,
+  "reps": 5,
+  "steps": 102064,
+  "by_kind": {
+   "CaseApply": 2002,
+   "no step": 13006,
+   "FunAp": 4004,
+   "Ascription": 1000,
+   "FixUnwrap": 3000,
+   "VarLookup": 15003,
+   "ListCons": 2000,
+   "WrapClosure": 5,
+   "RemoveParens": 1,
+   "FixClosure": 3,
+   "evaluate": 51032,
+   "CompleteClosure": 6006,
+   "": 5002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "mapinc",
+  "n": 3000,
+  "ms": 8973.1017,
+  "reps": 5,
+  "steps": 306064,
+  "by_kind": {
+   "CaseApply": 6002,
+   "no step": 39006,
+   "FunAp": 12004,
+   "Ascription": 3000,
+   "FixUnwrap": 9000,
+   "VarLookup": 45003,
+   "ListCons": 6000,
+   "WrapClosure": 5,
+   "RemoveParens": 1,
+   "FixClosure": 3,
+   "evaluate": 153032,
+   "CompleteClosure": 18006,
+   "": 15002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "skip",
+  "n": 100,
+  "ms": 0.124,
+  "reps": 60,
+  "steps": 10,
+  "by_kind": {
+   "no step": 1,
+   "FunAp": 1,
+   "VarLookup": 1,
+   "WrapClosure": 1,
+   "evaluate": 5,
+   "CompleteClosure": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "skip",
+  "n": 1000,
+  "ms": 0.5355,
+  "reps": 60,
+  "steps": 10,
+  "by_kind": {
+   "no step": 1,
+   "FunAp": 1,
+   "VarLookup": 1,
+   "WrapClosure": 1,
+   "evaluate": 5,
+   "CompleteClosure": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "skip",
+  "n": 3000,
+  "ms": 1.4797,
+  "reps": 60,
+  "steps": 10,
+  "by_kind": {
+   "no step": 1,
+   "FunAp": 1,
+   "VarLookup": 1,
+   "WrapClosure": 1,
+   "evaluate": 5,
+   "CompleteClosure": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_id",
+  "n": 100,
+  "ms": 0.0392,
+  "reps": 60,
+  "steps": 10,
+  "by_kind": {
+   "FunAp": 1,
+   "VarLookup": 2,
+   "WrapClosure": 1,
+   "evaluate": 5,
+   "CompleteClosure": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_id",
+  "n": 1000,
+  "ms": 0.0338,
+  "reps": 60,
+  "steps": 10,
+  "by_kind": {
+   "FunAp": 1,
+   "VarLookup": 2,
+   "WrapClosure": 1,
+   "evaluate": 5,
+   "CompleteClosure": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_id",
+  "n": 3000,
+  "ms": 0.0336,
+  "reps": 60,
+  "steps": 10,
+  "by_kind": {
+   "FunAp": 1,
+   "VarLookup": 2,
+   "WrapClosure": 1,
+   "evaluate": 5,
+   "CompleteClosure": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_ref",
+  "n": 100,
+  "ms": 0.2612,
+  "reps": 60,
+  "steps": 216,
+  "by_kind": {
+   "no step": 101,
+   "FunAp": 1,
+   "VarLookup": 2,
+   "WrapClosure": 1,
+   "evaluate": 108,
+   "CompleteClosure": 2,
+   "": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_ref",
+  "n": 1000,
+  "ms": 1.9315,
+  "reps": 60,
+  "steps": 2016,
+  "by_kind": {
+   "no step": 1001,
+   "FunAp": 1,
+   "VarLookup": 2,
+   "WrapClosure": 1,
+   "evaluate": 1008,
+   "CompleteClosure": 2,
+   "": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_ref",
+  "n": 3000,
+  "ms": 7.0098,
+  "reps": 60,
+  "steps": 6016,
+  "by_kind": {
+   "no step": 3001,
+   "FunAp": 1,
+   "VarLookup": 2,
+   "WrapClosure": 1,
+   "evaluate": 3008,
+   "CompleteClosure": 2,
+   "": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_walk",
+  "n": 100,
+  "ms": 8.6412,
+  "reps": 60,
+  "steps": 2624,
+  "by_kind": {
+   "CaseApply": 101,
+   "no step": 402,
+   "FunAp": 102,
+   "FixUnwrap": 100,
+   "VarLookup": 301,
+   "WrapClosure": 2,
+   "FixClosure": 1,
+   "evaluate": 1312,
+   "CompleteClosure": 203,
+   "": 100
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_walk",
+  "n": 1000,
+  "ms": 119.7698,
+  "reps": 21,
+  "steps": 26024,
+  "by_kind": {
+   "CaseApply": 1001,
+   "no step": 4002,
+   "FunAp": 1002,
+   "FixUnwrap": 1000,
+   "VarLookup": 3001,
+   "WrapClosure": 2,
+   "FixClosure": 1,
+   "evaluate": 13012,
+   "CompleteClosure": 2003,
+   "": 1000
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_walk",
+  "n": 3000,
+  "ms": 379.1978,
+  "reps": 7,
+  "steps": 78024,
+  "by_kind": {
+   "CaseApply": 3001,
+   "no step": 12002,
+   "FunAp": 3002,
+   "FixUnwrap": 3000,
+   "VarLookup": 9001,
+   "WrapClosure": 2,
+   "FixClosure": 1,
+   "evaluate": 39012,
+   "CompleteClosure": 6003,
+   "": 3000
+  }
+ }
+]

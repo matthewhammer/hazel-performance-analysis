@@ -67,9 +67,11 @@ def rewrite(text, linked, here, prefix):
 def run(path):
     src = open(path, encoding="utf-8").read()
     d = os.path.basename(os.path.dirname(os.path.abspath(path)))
-    here = int(d) if d.isdigit() else (1 if os.path.dirname(path) in ("", ".") else None)
-    # the series index sits beside the reports: series/ here, reports/ on the homepage
-    prefix = "" if d in ("series", "reports") else "../"
+    at_root = os.path.dirname(path) in ("", ".")
+    here = int(d) if d.isdigit() else None
+    # the series index sits beside the reports: the site's root here (since ^ticket(576); ^report(1) is 001/), reports/ on
+    # the homepage, and series/ redirects
+    prefix = "" if at_root or d in ("series", "reports") else "../"
     # chips become one text token each for the walk (see rewrite's back), except in <head>, scripts, styles and svg,
     # which the walk leaves alone: there they stay as they are
     body = CHIP.sub(lambda m: MARK.format(m.group(1), m.group(2)), src)

@@ -1,0 +1,1332 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<!-- theme: head begin -->
+<script>try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<!-- theme: head end -->
+<!-- nav: begin --><meta name="theme-support" content="data-theme"><script src="https://matthewhammer.org/nav/nav.js"></script><!-- nav: end -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Game Scripts in Hazel, Two Days In</title>
+<meta name="description" content="Since the 2026-10-21 meeting: Hazel as Messed Up Dress Up's script system. The rules run in Hazel and in Fumola beside the game's JS; a World move with the game's own map takes about a millisecond at every size, but only with library fixes the game's build does not have yet. Where the goal stands, and the plan.">
+<style>  :root {
+    --bg: #fbfaf7; --paper: #ffffff; --ink: #1f2328; --muted: #5b6470; --line: #e3e0d8;
+    --accent: #6d28d9; --good: #15803d; --warn: #b45309; --bad: #b91c1c; --link: #1d4ed8; --accent2: #0e7490; --cx: #d6d1c6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+      --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #15171a; --paper: #1d2024; --ink: #e8e6e3; --muted: #a2a9b3; --line: #33373d;
+    --accent: #c4b5fd; --good: #4ade80; --warn: #fbbf24; --bad: #f87171; --link: #93c5fd; --accent2: #67e8f9; --cx: #5d636b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.55 system-ui, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1020px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 2em; line-height: 1.2; margin: 0 0 6px; }
+  h2 { font-size: 1.35em; margin: 48px 0 10px; padding-top: 8px; border-top: 2px solid var(--line); }
+  h3 { font-size: 1.05em; margin: 26px 0 6px; }
+  p, li { max-width: 76ch; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .series { color: var(--muted); margin: 0 0 6px; font-size: 0.92em; }
+  .headline { background: var(--paper); border-left: 4px solid var(--accent); padding: 10px 14px; border-radius: 6px; }
+  .headline > p { margin: 6px 0; }
+  ol.ans { padding-left: 1.4em; margin: 8px 0; }
+  ol.ans > li { max-width: none; margin: 14px 0; }
+  ol.ans > li > .row { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: center; }
+  ol.ans > li p { margin: 0; }
+  figure.mini { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  figure.mini figcaption { font-size: 0.8em; margin-top: 4px; }
+  @media (max-width: 760px) { ol.ans > li > .row { grid-template-columns: minmax(0, 1fr); } figure.mini { max-width: 340px; } }
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  a code { color: var(--link); }
+  a.cl { text-decoration: none; } a.cl:hover code { text-decoration: underline; }
+  sup.at { font-size: 0.68em; color: var(--muted); margin-left: 2px; font-weight: 600; }
+  .good { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  figure.fig { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 18px 0; }
+  .figscroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  figcaption { color: var(--muted); font-size: 0.9em; margin-top: 6px; max-width: 80ch; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.92em; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code { font-size: 0.9em; background: color-mix(in srgb, var(--line) 50%, transparent); padding: 0 4px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre.code { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto;
+             font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 6px 0 4px; }
+  pre.code .rm { color: var(--bad); } pre.code .ad { color: var(--good); } pre.code .cm { color: var(--muted); }
+  .codepair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+  @media (max-width: 760px) { .codepair { grid-template-columns: minmax(0, 1fr); } }
+  .codepair h4 { margin: 6px 0 0; font-size: 0.95em; }
+  .note { color: var(--muted); font-size: 0.9em; }
+  .callout { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent2); border-radius: 6px; padding: 8px 14px; margin: 14px 0; }
+  .callout.warn { border-left-color: var(--warn); }
+  section.q { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 6px 16px 10px; margin: 20px 0; }
+  section.q h3 { margin: 10px 0 6px; line-height: 1.4; }
+  section.q h3 .qn { color: var(--accent); margin-right: 6px; }
+  .tags { margin: 2px 0 8px; }
+  .tag { display: inline-block; font-size: 0.78em; font-weight: 600; padding: 1px 9px; border-radius: 999px; margin: 0 6px 4px 0; border: 1px solid; }
+  .tag.ans { color: var(--good); border-color: var(--good); background: color-mix(in srgb, var(--good) 10%, transparent); }
+  .tag.now { color: var(--accent2); border-color: var(--accent2); background: color-mix(in srgb, var(--accent2) 10%, transparent); }
+  .tag.cyrus { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .tag.block { color: var(--warn); border-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+  .tag.open { color: var(--muted); border-color: var(--line); }
+  .answer { background: color-mix(in srgb, var(--good) 9%, var(--paper)); border: 1px solid color-mix(in srgb, var(--good) 45%, var(--line)); border-radius: 6px; padding: 8px 12px; margin: 8px 0; max-width: 80ch; }
+  .after { max-width: 80ch; }
+  ul.ev { padding-left: 1.2em; } ul.ev li { margin: 5px 0; max-width: 84ch; }
+  ul.ev .refs { color: var(--muted); font-size: 0.92em; }
+  ol.opts li { margin: 6px 0; max-width: 82ch; }
+  .optnote { display: inline-block; font-size: 0.8em; font-weight: 600; color: var(--accent); margin-left: 4px; }
+  .optnote.out { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  button.copylink { margin-left: 8px; font: 600 12px system-ui, sans-serif; padding: 1px 8px; border: 1px solid var(--line);
+    border-radius: 999px; background: var(--bg); color: var(--muted); cursor: pointer; vertical-align: 2px; }
+  button.copylink:hover { color: var(--ink); border-color: var(--muted); }
+  button.copylink.done { color: var(--good); border-color: var(--good); }
+  input.copyfield { display: block; width: 100%; max-width: 640px; margin: 4px 0; font: 13px ui-monospace, monospace;
+    background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 3px 6px; }
+  .cyrus { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 4px 16px; }
+  .cyrus li { margin: 8px 0; }
+  details.ev summary { cursor: pointer; color: var(--link); }
+  .wip { color: var(--warn); font-weight: 600; }
+
+svg.chart { width: 100%; height: auto; font: 12px system-ui, sans-serif; } svg .g { stroke: var(--line); } svg .t { fill: var(--muted); }
+svg .lim { stroke: var(--accent); stroke-dasharray: 4 3; stroke-width: 1.5; } svg .lt { fill: var(--accent); font-size: 11px; }
+svg .bar.good { fill: var(--good); } svg .bar.warn { fill: var(--warn); } svg .bar.bad { fill: var(--bad); opacity: 0.8; }
+.rulebox { border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; margin: 10px 0; background: var(--paper); }
+.rulebox.master { background: transparent; }
+.rulebox .rb-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; }
+.rulebox .chips { display: inline-flex; gap: 4px; }
+.rulebox .chips button { font: inherit; font-size: 0.85em; padding: 1px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg, transparent); color: var(--ink); cursor: pointer; }
+.rulebox .chips button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.rulebox pre.rule { white-space: pre; overflow: auto; max-height: 30em; font-size: 0.8em; margin: 6px 0 2px; }
+.tag { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; font-size: 0.8em; white-space: nowrap; }
+</style><style id="anchors-css">
+h2 .anchor, h3 .anchor, .lh .anchor { margin-left: 8px; color: var(--muted); text-decoration: none; font-weight: 400; opacity: 0.35; }
+h2:hover .anchor, h3:hover .anchor, .lh:hover .anchor, .anchor:focus { opacity: 1; }
+.copyanchor { margin-left: 6px; font: 400 0.62em system-ui, sans-serif; vertical-align: middle; padding: 1px 6px; border-radius: 6px;
+  border: 1px solid var(--line); background: var(--paper); color: var(--muted); cursor: pointer; opacity: 0.45; }
+h2:hover .copyanchor, h3:hover .copyanchor, .lh:hover .copyanchor, .copyanchor:focus { opacity: 1; }
+.copyanchor.done { color: var(--good); border-color: var(--good); opacity: 1; }
+:target { scroll-margin-top: 12px; }
+</style>
+</head>
+<body><main>
+<p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>30<b>)</b></code> · game scripts · 2026-10-23 · <span class="wip">work in progress</span> · about 8 minutes to read</p>
+<!-- listen: begin -->
+<style>
+  .listen { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 6px 0 10px; font: 13px system-ui, sans-serif; color: var(--muted, GrayText); }
+  .listen[hidden] { display: none; }
+  .listen button { font: inherit; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--ink, CanvasText); cursor: pointer; }
+  .listen button[aria-pressed="true"] { border-color: var(--accent, #6d28d9); color: var(--accent, #6d28d9); }
+  .listen select { font: inherit; max-width: 16em; border-radius: 6px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--ink, CanvasText); }
+  .listen input[type=range] { width: 8em; vertical-align: middle; accent-color: var(--accent, #6d28d9); }
+  .listen .speed { min-width: 3.2em; display: inline-block; font-variant-numeric: tabular-nums; }
+  .listen-now { outline: 2px solid color-mix(in srgb, var(--accent, #6d28d9) 55%, transparent); outline-offset: 3px; border-radius: 4px;
+    background: color-mix(in srgb, var(--accent, #6d28d9) 8%, transparent); }
+  @media print { .listen { display: none; } }
+</style>
+<div class="listen" hidden role="group" aria-label="Listen to this report">
+  <button type="button" class="listen-play" aria-pressed="false">🔊 Listen</button>
+  <button type="button" class="listen-stop">⏹ Stop</button>
+  <label>speed <input type="range" class="listen-rate" min="0.5" max="2" step="0.1" value="1"> <span class="speed">1.0×</span></label>
+  <select class="listen-voice" aria-label="voice"></select>
+  <span class="listen-time"></span>
+</div>
+<script>
+/* (^ticket(573)) Listen: the report read aloud by this browser's own voices; nothing leaves the page. */
+// (once the whole page is parsed: this runs where the bar is, near the top, before the report's sections exist)
+document.addEventListener("DOMContentLoaded", () => {
+  const S = window.speechSynthesis, bar = document.querySelector(".listen");
+  if (!S || !bar || typeof SpeechSynthesisUtterance === "undefined") return;
+  bar.hidden = false;
+  const main = document.querySelector("main") || document.body;
+  const play = bar.querySelector(".listen-play"), stop = bar.querySelector(".listen-stop"), rate = bar.querySelector(".listen-rate"),
+        speed = bar.querySelector(".speed"), voiceSel = bar.querySelector(".listen-voice"), timeEl = bar.querySelector(".listen-time");
+  const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) { return null; } };
+  // the blocks to read, in order: prose only, each once (a point holding paragraphs is read as its paragraphs)
+  const SKIP = "table, pre, svg, script, style, .listen, .theme-toggle, details:not([open]), [aria-hidden=true], button, nav, #report-data";
+  const blocks = [...main.querySelectorAll("h1, .sub, h2, h3, h4, p, li, blockquote, figcaption, summary")]
+    .filter(el => !el.closest(SKIP) && !el.querySelector("p, li, blockquote") && !el.matches(".series"));
+  const textOf = el => { const c = el.cloneNode(true); c.querySelectorAll(".anchor, .copyanchor, button, sup").forEach(x => x.remove()); return c.textContent.replace(/\s+/g, " ").trim(); };
+  const texts = blocks.map(textOf), words = texts.reduce((n, t) => n + (t ? t.split(" ").length : 0), 0);
+  const WPM = 160;
+  let i = 0, playing = false, voices = [];
+  const r = () => +rate.value;
+  const showTime = () => {
+    speed.textContent = r().toFixed(1) + "×";
+    const left = texts.slice(playing || i ? i : 0).reduce((n, t) => n + (t ? t.split(" ").length : 0), 0);
+    const min = Math.max(1, Math.round(left / (WPM * r())));
+    timeEl.textContent = (i && left < words ? "about " + min + " min left" : "about " + min + " min to listen") + " at " + r().toFixed(1) + "×";
+  };
+  const fill = () => {
+    voices = S.getVoices().filter(v => !document.documentElement.lang || v.lang.slice(0, 2) === document.documentElement.lang.slice(0, 2) || v.lang.startsWith("en"));
+    const want = store("listen-voice");
+    voiceSel.replaceChildren(...voices.map(v => { const o = document.createElement("option"); o.value = v.name; o.textContent = v.name + (v.localService ? "" : " (online)"); return o; }));
+    voiceSel.hidden = !voices.length;
+    if (want && voices.some(v => v.name === want)) voiceSel.value = want;
+    else { const d = voices.find(v => v.default) || voices[0]; if (d) voiceSel.value = d.name; }
+  };
+  fill(); if ("onvoiceschanged" in S) S.onvoiceschanged = fill;
+  const saved = parseFloat(store("listen-rate")); if (saved >= 0.5 && saved <= 2) rate.value = saved;
+  const mark = el => { document.querySelectorAll(".listen-now").forEach(x => x.classList.remove("listen-now")); if (el) { el.classList.add("listen-now"); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); } };
+  // one block at a time (a long utterance is cut short in some browsers); the next when it ends
+  const speak = () => {
+    while (i < blocks.length && !texts[i]) i++;
+    if (i >= blocks.length) { end(); return; }
+    const u = new SpeechSynthesisUtterance(texts[i]), v = voices.find(v => v.name === voiceSel.value);
+    if (v) { u.voice = v; u.lang = v.lang; }
+    u.rate = r();
+    u.onend = () => { if (!playing) return; i++; showTime(); speak(); };
+    u.onerror = e => { if (e.error === "interrupted" || e.error === "canceled") return; i++; if (playing) speak(); };
+    mark(blocks[i]); S.speak(u);
+  };
+  const end = () => { playing = false; S.cancel(); i = 0; mark(null); play.textContent = "🔊 Listen"; play.setAttribute("aria-pressed", "false"); showTime(); };
+  play.onclick = () => {
+    if (playing && !S.paused) { S.pause(); play.textContent = "▶ Resume"; return; }
+    if (playing && S.paused) { S.resume(); play.textContent = "⏸ Pause"; return; }
+    playing = true; play.textContent = "⏸ Pause"; play.setAttribute("aria-pressed", "true"); S.cancel(); speak();
+  };
+  stop.onclick = end;
+  // a new speed or voice takes effect from the block being read, said again from its start
+  const again = () => { if (playing) { S.cancel(); setTimeout(speak, 0); } };
+  rate.oninput = () => { store("listen-rate", rate.value); showTime(); };
+  rate.onchange = again;
+  voiceSel.onchange = () => { store("listen-voice", voiceSel.value); again(); };
+  addEventListener("pagehide", () => S.cancel());
+  showTime();
+});
+</script>
+<!-- listen: end -->
+<h1>Game Scripts in Hazel, Two Days In</h1>
+<p class="sub">Matthew: <q>a report about the last 2 days -- with an idea of where we are with our goals of game scripts in hazel, for MUDU.</q> The goal came out of his 2026-10-21 meeting with Cyrus Omar, who encouraged following the excitement: Hazel as a game script system, starting with Messed Up Dress Up (MUDU), as a general way to put Hazel code into a JS/HTML app's behavior. The two days since found some gaps in what the scripts can say, and mostly gaps in speed.</p>
+
+<div class="headline">
+<p><b>Short answers.</b></p>
+<ol class="ans">
+<li><b>The game's rules run in Hazel and in Fumola, beside its JS.</b> Five rooms (the trap room, the tree houses, placed levers, the world's ways, the castle) and a 📚 Common module, written in both languages, each checked against the game's own JS: on three open pull requests to the game, behind a page-wide switch.</li>
+<li><b>Fumola is fast enough now; Hazel is, on trial branches.</b> One World move at 64x64 (4,096 squares), on the same machines: Fumola with its HashMap 0.587 ms; Hazel with the game's own map 1.46 ms (2.5x). Both well inside a 60 fps frame (16.7 ms), and both flat from 3x3 to 64x64. Hazel's number needs this week's library fixes, which the library the game loads does not have, and the game holding the map. With the world passed in at every move, as the game calls its rules today, the move walks the whole world: 331 ms on the same build (Figure 1).</li>
+<li><b>Most of the two days went to Hazel's speed, and it paid.</b> Functions keep their closures across the JS boundary; list loops no longer re-type the whole list each time; a big value can cross once, as a handle; values skip the evaluator's five stages (14,009 passes for <code>count(1000)</code> become 9,007). Together, with a map, a World move went from 241 ms to 0.97 ms (Figure 2). All on trial branches, measured on GitHub, none in the game yet.</li>
+<li><b>What is left for Hazel is the cost of each pass.</b> Making the map, once a world, takes 1.5 to 2.1 s at 64x64 on GitHub's runners (2,136 ms against Fumola's 326 on the same ones): three walks of a list (two now) at Hazel's cost per evaluator pass, which pays for the editor's live features on every term (<a href="../029/"><code class="ref"><b>^report(</b>29<b>)</b></code></a>).</li>
+<li><b>Next: the three-way script boxes.</b> Each room's box a JS, Hazel or Fumola chip (the JS shown read-only, the game's own code; Hazel and Fumola to edit), a master chip, tests that keep the three equivalent, a tool for each script's overhead, and speed runs that hold each setting to a frame rate.</li>
+</ol>
+</div>
+
+<figure class="fig" id="fig-move"><svg class="chart" viewBox="0 0 760 214" role="img" aria-label="horizontal bars, log scale"><line x1="330.0" x2="330.0" y1="4" y2="192" class="g"/><text x="330.0" y="208" text-anchor="middle" class="t">0.1 ms</text><line x1="420.0" x2="420.0" y1="4" y2="192" class="g"/><text x="420.0" y="208" text-anchor="middle" class="t">1 ms</text><line x1="510.0" x2="510.0" y1="4" y2="192" class="g"/><text x="510.0" y="208" text-anchor="middle" class="t">10 ms</text><line x1="600.0" x2="600.0" y1="4" y2="192" class="g"/><text x="600.0" y="208" text-anchor="middle" class="t">100 ms</text><line x1="690.0" x2="690.0" y1="4" y2="192" class="g"/><text x="690.0" y="208" text-anchor="middle" class="t">1,000 ms</text><line x1="530.0" x2="530.0" y1="0" y2="192" class="lim"/><text x="534.0" y="12" class="lt">one frame at 60 fps (16.7 ms)</text><text x="322" y="30" text-anchor="end" class="t">Hazel, the world passed in (the rule as shipped)</text><rect x="330" y="18" width="316.8" height="16" rx="3" class="bar bad"><title>Hazel, the world passed in (the rule as shipped): 331 ms</title></rect><text x="651.8" y="30" class="t">331 ms</text><text x="322" y="60" text-anchor="end" class="t">Hazel, passed as a handle (Hazel.value)</text><rect x="330" y="48" width="303.4" height="16" rx="3" class="bar bad"><title>Hazel, passed as a handle (Hazel.value): 235 ms</title></rect><text x="638.4" y="60" class="t">235 ms</text><text x="322" y="90" text-anchor="end" class="t">Fumola, the world passed in as text</text><rect x="330" y="78" width="290.6" height="16" rx="3" class="bar bad"><title>Fumola, the world passed in as text: 169 ms</title></rect><text x="625.6" y="90" class="t">169 ms</text><text x="322" y="120" text-anchor="end" class="t">Fumola, held as a list</text><rect x="330" y="108" width="219.8" height="16" rx="3" class="bar warn"><title>Fumola, held as a list: 27.7 ms</title></rect><text x="554.8" y="120" class="t">27.7 ms</text><text x="322" y="150" text-anchor="end" class="t">Hazel, held in the game&#x27;s map (Common.squares)</text><rect x="330" y="138" width="104.7" height="16" rx="3" class="bar good"><title>Hazel, held in the game&#x27;s map (Common.squares): 1.46 ms</title></rect><text x="439.7" y="150" class="t">1.46 ms</text><text x="322" y="180" text-anchor="end" class="t">Fumola, held in a HashMap</text><rect x="330" y="168" width="69.2" height="16" rx="3" class="bar good"><title>Fumola, held in a HashMap: 0.587 ms</title></rect><text x="404.2" y="180" class="t">0.587 ms</text></svg><figcaption><b>Figure 1.</b> One World move (a way out walked through, mid-map, going east) on a 64x64 world, ms, log scale, against one 60 fps frame. Hazel on <code>trial/r25-553</code> (the best build with this week's fixes 547, 548 and 551), the rule texts from the game's branch <code>hazel-map-553</code>; Fumola's wasm from <code>667a34d</code>, <a href="../027/"><code class="ref"><b>^report(</b>27<b>)</b></code></a>'s driver. The same four GitHub runners for both, alternating, each side's better round, the median over the runners (run 39887272978).</figcaption></figure>
+
+<h2 id="goal">The goal, and where each piece is<a class="anchor" href="#goal" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="goal" title="copy this section's address">copy link</button></h2>
+<div class="scroll"><table><tr><th>the goal, piece by piece</th><th>where it is</th><th></th></tr>
+<tr><td>Hazel code in the game, one module per room plus 📚 Common</td><td>The 🧩 Scripting panel (<a href="https://github.com/matthewhammer/kids-choice-games/pull/1">matthewhammer/kids-choice-games#1</a>: the trap room's levers through <code>Hazel.runProgram</code>, the program shown in Hazel's tiles), then the five rooms' rules in Hazel (<a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>), each under <code>?logic=hazel</code>, checked against the JS.</td><td><span class="tag ans">built</span></td></tr>
+<tr><td>Fumola code in the game</td><td>The same rules in Fumola, wasm, pinned build (<a href="https://github.com/matthewhammer/kids-choice-games/pull/4">matthewhammer/kids-choice-games#4</a>), 20,653 cases agreeing with the Hazel rules in a node check.</td><td><span class="tag ans">built</span></td></tr>
+<tr><td>A JS / Hazel / Fumola chip on each code box; the JS read-only, the game's own code; a master chip, JS by default</td><td>Today a page-wide <code>?logic=</code> switch, Hazel and Fumola on separate PRs. <a href="https://matthewhammer.org/hazel/dashboard/#ticket-566"><code class="ref"><b>^ticket(</b>566<b>)</b></code></a>.</td><td><span class="tag ">planned</span></td></tr>
+<tr><td>The three equivalent, held by tests as the code changes</td><td>Node checks, Hazel against JS and Fumola against Hazel, in the two PRs; not all three in CI. <a href="https://matthewhammer.org/hazel/dashboard/#ticket-567"><code class="ref"><b>^ticket(</b>567<b>)</b></code></a>.</td><td><span class="tag block">in part</span></td></tr>
+<tr><td>A tool measuring each script's overhead over JS</td><td>The game records Hazel's compile time; the speed probes time rules. <a href="https://matthewhammer.org/hazel/dashboard/#ticket-568"><code class="ref"><b>^ticket(</b>568<b>)</b></code></a>.</td><td><span class="tag ">planned</span></td></tr>
+<tr><td>Speed-run standards: each setting a minimum fps where its scripts run</td><td><a href="https://matthewhammer.org/hazel/dashboard/#ticket-569"><code class="ref"><b>^ticket(</b>569<b>)</b></code></a>.</td><td><span class="tag ">planned</span></td></tr>
+<tr><td>Hazel fast enough for every room at 60 fps</td><td>Levers, trap doors, the castle: yes. The world's ways: not as the game calls them today, the world passed in at every move (a call walks the whole world: 331 ms at 64x64 even on the trial build); yes with this week's library fixes and the map held (1.46 ms). The fixes are on trial branches, not in the library build the game loads, and the game does not hold the map yet.</td><td><span class="tag block">waits</span></td></tr>
+<tr><td>Fumola fast enough</td><td>Yes: about a millisecond a call, flat with its HashMap (0.587 ms at 64x64).</td><td><span class="tag ans">built</span></td></tr>
+</table></div>
+
+<h2 id="built">What was built<a class="anchor" href="#built" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="built" title="copy this section's address">copy link</button></h2>
+<ul>
+<li><b>The 🧩 Scripting panel</b> (<a href="https://github.com/matthewhammer/kids-choice-games/pull/1">matthewhammer/kids-choice-games#1</a>): one editor per room that has logic, and 📚 Common, the bodies of the modules of one Hazel program; Hazel builds the program (<code>Hazel.runProgram</code>) and shows it in its own tiles, in a frame, with its error marks. A rule says what to do as data (<code>Cmd</code>: <code>Flip("lever_L", Done)</code>, <code>GoSquare(c, r, side, Done)</code>), and the game does it.</li>
+<li><b>The rooms' rules in Hazel</b> (<a href="https://github.com/matthewhammer/kids-choice-games/pull/2">matthewhammer/kids-choice-games#2</a>): the trap room's red and blue levers, the tree houses' trap doors, placed levers and trap doors, the world's ways, the castle's pits and ladders, under <code>?logic=hazel</code>, every decision checked against the JS in the game's browser checks. Its speed runs (<a href="../025/"><code class="ref"><b>^report(</b>25<b>)</b></code></a>): levers add 0.8 to 3.6 ms, a world way about 5.6 ms on the test map, a fall or a ladder hides behind the walk, and the program compiles in about 1.2 s at load.</li>
+<li><b>The same rules in Fumola</b> (<a href="https://github.com/matthewhammer/kids-choice-games/pull/4">matthewhammer/kids-choice-games#4</a>): wasm, a pinned build, a node check of 20,653 cases against the Hazel rules; a rule call about 1.1 to 1.4 ms against Hazel's 2.9 on one runner, and Fumola sets up in 4 ms where Hazel compiles in 514 (<a href="../027/"><code class="ref"><b>^report(</b>27<b>)</b></code></a>).</li>
+<li><b>The game's own map</b> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-553"><code class="ref"><b>^ticket(</b>553<b>)</b></code></a>, branch <code>hazel-map-553</code>): 📚 Common gains a balanced search tree of the world's squares (<code>squares</code>, <code>square</code>, <code>set_square</code>; put in order first when the game sends them in another), and 🗺️ World a rule that looks one square up (<code>with_squares</code>) beside the shipped one that walks the list. Checked in every run: on a world of random kinds and ways, its cells shuffled, the two agree for every square and all eight directions (392 cases).</li>
+</ul>
+
+<h2 id="rules">The rules, three ways<a class="anchor" href="#rules" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="rules" title="copy this section's address">copy link</button></h2>
+<p>Each room's rule as the game's 🧩 Scripting panel shows it (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-566"><code class="ref"><b>^ticket(</b>566<b>)</b></code></a>): the game's own JS (read only, the functions that run), and the same rule in Hazel and in Fumola, the ones a player can edit. A chip on each box picks the language; the one at the top picks for every box. All three answer the same for every case the game can give them: tools/hazelrules531.mjs (32,761 cases) and tools/fumola_rules_check.mjs (20,649) check it on every push (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-567"><code class="ref"><b>^ticket(</b>567<b>)</b></code></a>). Their vocabulary is sums, not text, as Languages of Play prescribes: directions, sides, wirings, square and room kinds. From matthewhammer/kids-choice-games, branch script-boxes-566 at 2f0e853ef3.</p>
+<div class="rulebox master"><div class="rb-head"><b>every box</b><span class="chips"><button type="button" data-eng="js" aria-pressed="false">JS</button><button type="button" data-eng="hazel" aria-pressed="true">🧩 Hazel</button><button type="button" data-eng="fumola" aria-pressed="false">🍄 Fumola</button></span></div></div>
+<div class="rulebox" id="rule-preamble"><div class="rb-head"><b>The program's start (Hazel): the sum types</b><span class="chips"><button type="button" data-eng="hazel" aria-pressed="true">🧩 Hazel</button></span></div><p class="note">Fumola needs none of this: its variants (<code>#N</code>, <code>#Waterfall</code>) are not declared. The kinds are generated from the game's own lists (<code>PLACES</code>, <code>ROOM_KINDS</code>).</p><pre class="code rule" data-eng="hazel">type Dir = + N + NE + E + SE + S + SW + W + NW in
+type Side = + L + R in
+type Wiring = + Normal + Reversed + Random in
+type Out = + Auto + OutOfCastle + Nowhere + ToRoom(Int) in
+type Place = + NoPlace + Emptyroom + Bubblespace + Bubbleroom + Imagination + Forest + Underwater + Deepsea + Beach + Sea + Witch + Cemetery + Lake + House + Farmyard + Treehouse + Treeroom + Treetop + Livingroom + Witchroom + Clearing + Healerroom + Fairyforest + Mountains + Waterfall + Campsite + Tent + Cave + Caveroom + Woodpath + Pasture + Crossing + Castle + Castleroom + Hut + Hutroom + Hutbed + Hutpotion + Hutcenter + Desert in
+type Room = + King + Greenhouse + Trap + Dungeon1 + Dungeon2 + Hallway + Catroom + Stable + Dining + Kitchen + Smithy + Spiral in
+type Exit = + ExitSide + ExitLong + ExitSpiral + ExitTrap + ExitLadder + ExitAll + ExitHall in
+type Cmd = + Done + Flip(Side, Cmd) + Say(String, Cmd) + SetPit(Int, Bool, Cmd) + DropBoulder(Int, Cmd) + LiftBoulder(Int, Cmd) + SetHatch(Int, Bool, Cmd) + OpenDoor(Int, Bool, Cmd) + DropRock(Int, Bool, Cmd) + Wait(Int, Cmd) + GoRoom(Int, Cmd) + GoSquare(Int, Int, Dir, Cmd) in
+type Event = + Pull(Side) + PullBoulder(Side) + PullHatch(Int) + PullThing(Int) + FallPit(Int) + WayOut(Int) + Way(Dir) in
+type Thing = (at = Int, uid = String, kind = String, on = Bool, works = [String], does = String, open = Bool, boulder = Bool) in
+type Cell = (col = Int, row = Int, kind = Place, ways = [Dir]) in
+type Globals = (lever_L = Bool, lever_R = Bool, wiring = Wiring, draws = [Float], pits_on = [Bool], covered = [Bool], hatch = Bool, things = [Thing], rooms = [Room], exits = [Exit], out = Out, at_col = Int, at_row = Int, cols = Int, rows = Int, cells = [Cell]) in</pre></div><div class="rulebox" id="rule-common"><div class="rb-head"><b>📚 Common</b><span class="chips"><button type="button" data-eng="js" aria-pressed="false">JS</button><button type="button" data-eng="hazel" aria-pressed="true">🧩 Hazel</button><button type="button" data-eng="fumola" aria-pressed="false">🍄 Fumola</button></span></div><pre class="code rule" data-eng="js" hidden>// The game&#x27;s JS has no common module: each room&#x27;s functions carry what they need.</pre><pre class="code rule" data-eng="hazel"># Sub-routines every room can use, as Common.wire and so on. #
+let flip2 = fun (a, b) : (Side, Side) -&gt; Flip(a, Flip(b, Done));
+# the i-th of a list of Bools, false past its end #
+let nth = fun (xs, i) : ([Bool], Int) -&gt; case xs | [] =&gt; false | x :: rest =&gt; if i == 0 then x else nth(rest, i - 1) end;
+# which lever works each pit, the left and the right: normal, reversed, or at random by the game&#x27;s two draws #
+let wire = fun (mode, draws) : (Wiring, [Float]) -&gt; case mode | Reversed =&gt; (R, L) | Random =&gt; (case draws | a :: b :: _ =&gt; (if a &lt;. 0.5 then L else R, if b &lt;. 0.5 then L else R) | _ =&gt; (L, R) end) | Normal =&gt; (L, R) end;
+# a red lever up? (true is up) #
+let up = fun (l, r, side) : (Bool, Bool, Side) -&gt; case side | L =&gt; l | R =&gt; r end;
+# each pit open: open when the lever working it is up #
+let pits_open = fun (l, r, w) : (Bool, Bool, (Side, Side)) -&gt; let (w0, w1) = w in (up(l, r, w0), up(l, r, w1));
+# a pit that changed from was to now: SetPit, else nothing #
+let pit_moves = fun (i, was, now, k) : (Int, Bool, Bool, Cmd) -&gt; if was == now then k else SetPit(i, now, k);
+let member = fun (s, xs) : (String, [String]) -&gt; case xs | [] =&gt; false | x :: rest =&gt; x == s || member(s, rest) end;
+# a way among a square&#x27;s ways #
+let has_way = fun (d, ds) : (Dir, [Dir]) -&gt; case ds | [] =&gt; false | x :: rest =&gt; x == d || has_way(d, rest) end;
+# where room kind k first is in a castle&#x27;s rooms, counting from 1; 0 when it is not there #
+let room_at = fun (rs, k) : ([Room], Room) -&gt; case rs | [] =&gt; 0 | x :: rest =&gt; if x == k then 1 else (let i = room_at(rest, k) in if i == 0 then 0 else i + 1) end;
+# the i-th room&#x27;s exits, counting from 1; none past the end #
+let exit_of = fun (xs, i) : ([Exit], Int) -&gt; case xs | [] =&gt; None | x :: rest =&gt; if i == 1 then Some(x) else exit_of(rest, i - 1) end;
+let rooms = fun rs : [Room] -&gt; case rs | [] =&gt; 0 | _ :: rest =&gt; 1 + rooms(rest) end;
+# the world&#x27;s eight directions: each one&#x27;s step across and down the map, and the way back #
+let dir = fun d : Dir -&gt; case d | N =&gt; (0, 0 - 1) | NE =&gt; (1, 0 - 1) | E =&gt; (1, 0) | SE =&gt; (1, 1) | S =&gt; (0, 1) | SW =&gt; (0 - 1, 1) | W =&gt; (0 - 1, 0) | NW =&gt; (0 - 1, 0 - 1) end;
+let opp = fun d : Dir -&gt; case d | N =&gt; S | NE =&gt; SW | E =&gt; W | SE =&gt; NW | S =&gt; N | SW =&gt; NE | W =&gt; E | NW =&gt; SE end</pre><pre class="code rule" data-eng="fumola" hidden>module Common {
+  // two levers flipped, one after the other
+  public func flip2(a, b) { #Flip(a, #Flip(b, #Done)) };
+  // the i-th of a list of Bools, false past its end
+  public func nth(xs, i) { if (i &lt; xs.size()) { xs[i] } else { false } };
+  // which lever works each pit, the left and the right: normal, reversed, or at random by the game&#x27;s two draws
+  public func wire(mode, draws) {
+    switch (mode) {
+      case (#Reversed) { (#R, #L) };
+      case (#Random) { if (draws.size() &lt; 2) { (#L, #R) } else { (if (draws[0] &lt; 0.5) { #L } else { #R }, if (draws[1] &lt; 0.5) { #L } else { #R }) } };
+      case _ { (#L, #R) }
+    }
+  };
+  // a red lever up? (true is up)
+  public func up(l, r, side) { switch (side) { case (#L) { l }; case _ { r } } };
+  // each pit open: open when the lever working it is up
+  public func pits_open(l, r, w) { let (w0, w1) = w; (up(l, r, w0), up(l, r, w1)) };
+  // a pit that changed from was to now: SetPit, else nothing
+  public func pit_moves(i, was, now, k) { if (was == now) { k } else { #SetPit(i, now, k) } };
+  public func member(s, xs) { var found = false; for (x in xs.vals()) { if (x == s) { found := true } }; found };
+  // a way among a square&#x27;s ways
+  public func has_way(d, ds) { var found = false; for (x in ds.vals()) { if (x == d) { found := true } }; found };
+  // where room kind k first is in a castle&#x27;s rooms, counting from 1; 0 when it is not there
+  public func room_at(rs, k) { var i = 0; var at = 0; for (x in rs.vals()) { i := i + 1; if (at == 0 and x == k) { at := i } }; at };
+  // the i-th room&#x27;s exits, counting from 1; null past the end
+  public func exit_of(xs, i) { if (i &gt;= 1 and i &lt;= xs.size()) { ?(xs[i - 1]) } else { null } };
+  public func rooms(rs) { rs.size() };
+  // the world&#x27;s eight directions: each one&#x27;s step across and down the map, and the way back
+  public func dir(d) {
+    switch (d) {
+      case (#N) { (0, -1) }; case (#NE) { (1, -1) }; case (#E) { (1, 0) }; case (#SE) { (1, 1) };
+      case (#S) { (0, 1) }; case (#SW) { (-1, 1) }; case (#W) { (-1, 0) }; case _ { (-1, -1) }
+    }
+  };
+  public func opp(d) {
+    switch (d) {
+      case (#N) { #S }; case (#NE) { #SW }; case (#E) { #W }; case (#SE) { #NW };
+      case (#S) { #N }; case (#SW) { #NE }; case (#W) { #E }; case _ { #SE }
+    }
+  }
+}</pre></div><div class="rulebox" id="rule-TrapRoom"><div class="rb-head"><b>🏰 the trap room, over the castle&#x27;s dungeons</b><span class="chips"><button type="button" data-eng="js" aria-pressed="false">JS</button><button type="button" data-eng="hazel" aria-pressed="true">🧩 Hazel</button><button type="button" data-eng="fumola" aria-pressed="false">🍄 Fumola</button></span></div><pre class="code rule" data-eng="js" hidden>// 26-drags-and-start.js: roomLeverPull
+function roomLeverPull(side) {
+  if (side[0] === &quot;B&quot;) return roomBoulderPull(side.slice(1));   // (ticket 323: a blue one)
+  if (side === &quot;H&quot;) return hatchLeverPull();   // (ticket 334: a tree room&#x27;s trap door&#x27;s)
+  if (scriptEvent(&quot;TrapRoom&quot;, { tag: &quot;Pull&quot;, value: side })) return;   // (ticket 482: 🧩 Scripting&#x27;s rule for the trap room, when it is on)
+  hzJs(&quot;Pull&quot;, () =&gt; roomLeverFlip(side));   // (ticket 531: timed as the rule is)
+}
+
+// 26-drags-and-start.js: roomLeverFlip
+function roomLeverFlip(side, lids = true) {
+  const B = state.background;
+  if (B.kind !== &quot;castleroom&quot;) return;
+  const K = castleOf(B), n = Math.max(1, Math.min(K.rooms.length, Math.round(B.castleRoom ?? 1))), key = leverKey(side, n, K.id);
+  const was = trapState(B, n, K.id).open;
+  B[key] = !leverDown(B, side, n, K.id);   // (ticket 307: never touched, it was down)
+  changed();
+  const up = !B[key], sd = side === &quot;L&quot; ? -1 : 1, T = trapState(B, n, K.id), now = T.open;
+  turnArm(`[data-lever=&quot;${side}&quot;] .lever-arm`, (up ? 1 : -1) * sd * LEVER_TILT, LEVER_TURN * 100 / T.speed.lever);   // (ticket 328: the room&#x27;s speeds)
+  if (!lids) return;
+  for (const j of [0, 1]) if (now[j] !== was[j]) lidSwing(`.pit-lid[data-pit-i=&quot;${j}&quot;]`, now[j], PIT_SWING * 100 / T.speed.lid);   // (ticket 307)
+  // (Matthew: &quot;opened by the red lever (trap door) while standing on it, and no falling sequence was triggered&quot;) a pit opened
+  // under the friend: in they fall, as walking onto it does, once its lid has swung most of the way
+  if (now.some((o, j) =&gt; o &amp;&amp; !was[j])) setTimeout(fallIfOverPit, 0.6 * PIT_SWING * 100 / T.speed.lid);
+}
+
+// 26-drags-and-start.js: roomBoulderPull
+function roomBoulderPull(side) {
+  if (scriptEvent(&quot;TrapRoom&quot;, { tag: &quot;PullBoulder&quot;, value: side })) return;   // (ticket 531: 🧩 TrapRoom&#x27;s rule, when it is on)
+  hzJs(&quot;PullBoulder&quot;, () =&gt; {
+    const B = state.background;
+    if (B.kind !== &quot;castleroom&quot;) return;
+    const K = castleOf(B), n = Math.max(1, Math.min(K.rooms.length, Math.round(B.castleRoom ?? 1)));
+    // (ticket 338) the pits this lever works: a fallen rock still on any, lifted away (each rising, and gone from the place&#x27;s
+    // things); else into each a new rock falls, which once landed is a placed rock, &quot;fallen N&quot;, dragged where one likes
+    const T0 = trapState(B, n, K.id), mine = [0, 1].filter(j =&gt; T0.wire[j] === side &amp;&amp; T0.on[j]), lift = mine.some(j =&gt; T0.covered[j]);
+    roomBoulderAct(side, mine, lift);
+  });
+}</pre><pre class="code rule" data-eng="hazel"># A red lever pulled: flip it, and each pit wired to it opens or shuts. #
+# A blue lever pulled: each of its pits gets a boulder, or loses one. #
+let on_event = fun (g, e) : (Globals, Event) -&gt;
+  let w = Common.wire(g.wiring, g.draws) in
+  let (w0, w1) = w in
+  case e
+  | Pull(side) =&gt;
+    let (was0, was1) = Common.pits_open(g.lever_L, g.lever_R, w) in
+    let l = if side == L then !g.lever_L else g.lever_L in
+    let r = if side == R then !g.lever_R else g.lever_R in
+    let (now0, now1) = Common.pits_open(l, r, w) in
+    Flip(side, Common.pit_moves(0, was0, now0, Common.pit_moves(1, was1, now1, Done)))
+  | PullBoulder(side) =&gt;
+    let mine0 = w0 == side &amp;&amp; Common.nth(g.pits_on, 0) in
+    let mine1 = w1 == side &amp;&amp; Common.nth(g.pits_on, 1) in
+    let lift = (mine0 &amp;&amp; Common.nth(g.covered, 0)) || (mine1 &amp;&amp; Common.nth(g.covered, 1)) in
+    let one = fun (i, mine, k) : (Int, Bool, Cmd) -&gt; if !mine then k else if lift then LiftBoulder(i, k) else DropBoulder(i, k) in
+    one(0, mine0, one(1, mine1, Done))
+  | _ =&gt; Done
+  end</pre><pre class="code rule" data-eng="fumola" hidden>module TrapRoom {
+  // a blue lever&#x27;s pit i: nothing if not its own, else its rock lifted or a rock dropped
+  func one(i, mine, lift, k) { if (not mine) { k } else if (lift) { #LiftBoulder(i, k) } else { #DropBoulder(i, k) } };
+  // A red lever pulled: flip it, and each pit wired to it opens or shuts.
+  // A blue lever pulled: each of its pits gets a boulder, or loses one.
+  public func on_event(g, e) {
+    let w = Common.wire(g.wiring, g.draws);
+    let (w0, w1) = w;
+    switch (e) {
+      case (#Pull(side)) {
+        let (was0, was1) = Common.pits_open(g.lever_L, g.lever_R, w);
+        let l = if (side == #L) { not g.lever_L } else { g.lever_L };
+        let r = if (side == #R) { not g.lever_R } else { g.lever_R };
+        let (now0, now1) = Common.pits_open(l, r, w);
+        #Flip(side, Common.pit_moves(0, was0, now0, Common.pit_moves(1, was1, now1, #Done)))
+      };
+      case (#PullBoulder(side)) {
+        let mine0 = (w0 == side) and Common.nth(g.pits_on, 0);
+        let mine1 = (w1 == side) and Common.nth(g.pits_on, 1);
+        let lift = (mine0 and Common.nth(g.covered, 0)) or (mine1 and Common.nth(g.covered, 1));
+        one(0, mine0, lift, one(1, mine1, lift, #Done))
+      };
+      case _ { #Done }
+    }
+  }
+}</pre></div><div class="rulebox" id="rule-TreeRoom"><div class="rb-head"><b>🌳 the tree houses&#x27; trap doors, and the round room&#x27;s at the top</b><span class="chips"><button type="button" data-eng="js" aria-pressed="false">JS</button><button type="button" data-eng="hazel" aria-pressed="true">🧩 Hazel</button><button type="button" data-eng="fumola" aria-pressed="false">🍄 Fumola</button></span></div><pre class="code rule" data-eng="js" hidden>// 26-drags-and-start.js: hatchLeverPull
+function hatchLeverPull() {
+  const B = state.background;
+  // (ticket 516: and the round room at the top of the tree&#x27;s, on its post)
+  if (B.kind !== &quot;treeroom&quot; &amp;&amp; B.kind !== &quot;treetop&quot;) return;
+  if (scriptEvent(&quot;TreeRoom&quot;, { tag: &quot;PullHatch&quot;, value: hatchHouse() })) return;   // (ticket 531: 🧩 TreeRoom&#x27;s rule, when it is on)
+  hzJs(&quot;PullHatch&quot;, () =&gt; hatchSet(!B[hatchKey()]));
+}
+
+// 26-drags-and-start.js: hatchSet
+function hatchSet(shut) {
+  const B = state.background, key = hatchKey();
+  B[key] = shut;
+  changed();
+  const open = !B[key];
+  turnArm(`[data-lever=&quot;H&quot;] .lever-arm`, (open ? 1 : -1) * LEVER_TILT);
+  lidSwing(`.pit-lid[data-pit-i=&quot;hatch&quot;]`, open);
+  if (open) setTimeout(() =&gt; { solidUnstick(200); changed(); }, 0);
+}</pre><pre class="code rule" data-eng="hazel"># A tree room&#x27;s trap-door lever, or the round room&#x27;s at the top (house 0): #
+# the trap door shuts if open, opens if shut. #
+let on_event = fun (g, e) : (Globals, Event) -&gt;
+  case e
+  | PullHatch(n) =&gt; SetHatch(n, !g.hatch, Done)
+  | _ =&gt; Done
+  end</pre><pre class="code rule" data-eng="fumola" hidden>module TreeRoom {
+  // A tree room&#x27;s trap-door lever, or the round room&#x27;s at the top (house 0):
+  // the trap door shuts if open, opens if shut.
+  public func on_event(g, e) {
+    switch (e) {
+      case (#PullHatch(n)) { #SetHatch(n, not g.hatch, #Done) };
+      case _ { #Done }
+    }
+  }
+}</pre></div><div class="rulebox" id="rule-Square"><div class="rb-head"><b>🎚️ placed levers and trap doors, in any square or room</b><span class="chips"><button type="button" data-eng="js" aria-pressed="false">JS</button><button type="button" data-eng="hazel" aria-pressed="true">🧩 Hazel</button><button type="button" data-eng="fumola" aria-pressed="false">🍄 Fumola</button></span></div><pre class="code rule" data-eng="js" hidden>// 26-drags-and-start.js: leverPull
+function leverPull(i) {
+  const T0 = (state.background.things || [])[i];
+  if (!T0 || T0.kind !== &quot;lever&quot;) return;
+  if (scriptEvent(&quot;Square&quot;, { tag: &quot;PullThing&quot;, value: i })) return;   // (ticket 531: 🧩 Square&#x27;s rule, when it is on)
+  hzJs(&quot;PullThing&quot;, () =&gt; {
+    const B = state.background, T = B.things[i], doors = [];
+    // (ticket 323: a boulder lever drops a boulder into each of its trap doors as it goes over, and lifts it out as it comes back)
+    for (const d of B.things.entries()) { const [j, t] = d;
+      if (t.kind !== &quot;trapdoor&quot; || !(T.works || []).includes(t.uid)) continue;
+      if (T.does === &quot;boulder&quot;) { if (!!t.boulder !== !T.on) doors.push([j, &quot;boulder&quot;, !T.on]); } else doors.push([j, &quot;open&quot;, !t.open]); }
+    leverPullApply(i, doors);
+  });
+}
+
+// 26-drags-and-start.js: leverPullApply
+function leverPullApply(i, doors) {
+  const B = state.background, T = (B.things || [])[i];
+  if (!T || T.kind !== &quot;lever&quot;) return;
+  T.on = !T.on;
+  const swung = [], dropped = [], seed = 1 + Math.floor(Math.random() * 999999);
+  for (const [j, what, v] of doors) { const d = B.things[j];
+    if (!d || d.kind !== &quot;trapdoor&quot;) continue;
+    if (what === &quot;boulder&quot;) { d.boulder = v; d.rock = T.rock || ROCK_TONES[0]; if (v) d.rockSeed = seed + j; dropped.push([j, v]); }
+    else { d.open = v; swung.push([j, v]); } }
+  changed();
+  turnArm(`[data-drag=&quot;thing:${i}&quot;] .lever-arm`, T.on ? LEVER_TILT : -LEVER_TILT);
+  for (const [j, open] of swung) lidSwing(`[data-drag=&quot;thing:${j}&quot;] .pit-lid`, open);   // (ticket 307)
+  // (a boulder lifted out is drawn no more once it has gone: drawn again, held, for its rising; ticket 323)
+  for (const [j, down] of dropped) if (down) boulderFall(`[data-drag=&quot;thing:${j}&quot;] [data-boulder]`, true, BOULDER_FALL, boulderHits, null, boulderFalling);
+  // (a placed boulder lever lifting its boulders: sparkles from the lever and from each trap door they leave)
+  if (T.does === &quot;boulder&quot; &amp;&amp; !T.on) { sparkleFrom(`[data-drag=&quot;thing:${i}&quot;] .lever-arm circle`, 14); for (const [j] of dropped) sparkleFrom(`[data-drag=&quot;thing:${j}&quot;]`, 22); }
+}</pre><pre class="code rule" data-eng="hazel"># A placed lever pulled: each trap door wired to it swings, #
+# or, a boulder lever, gets its rock or loses it. #
+let on_event = fun (g, e) : (Globals, Event) -&gt;
+  case e
+  | PullThing(i) =&gt;
+    let find = fun ts : [Thing] -&gt; case ts | [] =&gt; None | t :: rest =&gt; if t.at == i then Some(t) else find(rest) end in
+    let doors = fun (lever, ts) : (Thing, [Thing]) -&gt;
+      case ts
+      | [] =&gt; Done
+      | d :: rest =&gt;
+        let k = doors(lever, rest) in
+        if !(d.kind == &quot;trapdoor&quot; &amp;&amp; Common.member(d.uid, lever.works)) then k
+        else if lever.does == &quot;boulder&quot; then (if d.boulder == !lever.on then k else DropRock(d.at, !lever.on, k))
+        else OpenDoor(d.at, !d.open, k)
+      end in
+    (case find(g.things) | Some(t) =&gt; doors(t, g.things) | None =&gt; Done end)
+  | _ =&gt; Done
+  end</pre><pre class="code rule" data-eng="fumola" hidden>module Square {
+  // the first thing at place i, from the j-th on
+  func find(ts, j, i) { if (j == ts.size()) { null } else if (ts[j].at == i) { ?(ts[j]) } else { find(ts, j + 1, i) } };
+  // each trap door the lever works, from the j-th thing on, in order: it swings, or, a boulder lever, gets its rock or loses it
+  func doors(lever, ts, j) {
+    if (j == ts.size()) { #Done }
+    else {
+      let d = ts[j];
+      let k = doors(lever, ts, j + 1);
+      if (not (d.kind == &quot;trapdoor&quot; and Common.member(d.uid, lever.works))) { k }
+      else if (lever.does == &quot;boulder&quot;) { if (d.boulder == (not lever.on)) { k } else { #DropRock(d.at, not lever.on, k) } }
+      else { #OpenDoor(d.at, not d.open, k) }
+    }
+  };
+  // A placed lever pulled: each trap door wired to it swings,
+  // or, a boulder lever, gets its rock or loses it.
+  public func on_event(g, e) {
+    switch (e) {
+      case (#PullThing(i)) { switch (find(g.things, 0, i)) { case (?t) { doors(t, g.things, 0) }; case null { #Done } } };
+      case _ { #Done }
+    }
+  }
+}</pre></div><div class="rulebox" id="rule-World"><div class="rb-head"><b>🗺️ the world&#x27;s ways: which square a way out leads to</b><span class="chips"><button type="button" data-eng="js" aria-pressed="false">JS</button><button type="button" data-eng="hazel" aria-pressed="true">🧩 Hazel</button><button type="button" data-eng="fumola" aria-pressed="false">🍄 Fumola</button></span></div><pre class="code rule" data-eng="js" hidden>// 25-world.js: worldTarget
+function worldTarget(W, key, d) {
+  const cell = W &amp;&amp; W.cells[key], L = cell &amp;&amp; cell.links &amp;&amp; cell.links[d];
+  if (L) { const T = worldById(L.world), c = T &amp;&amp; T.cells[L.key]; return c ? { W: T, key: L.key, cell: c, link: true } : null; }
+  const m = worldMeets(W, key, d);
+  return m ? { W, key: m, cell: W.cells[m], link: false } : null;
+}
+
+// 25-world.js: worldMeets
+function worldMeets(W, key, d) {
+  const nb = worldNeighbour(W, key, d), other = W.cells[nb.key];
+  return !nb.off &amp;&amp; other &amp;&amp; worldWays(other).includes(WORLD_OPP[d]) ? nb.key : null;
+}</pre><pre class="code rule" data-eng="hazel"># Places with no way out on a side, whatever their ways say: the waterfall&#x27;s N, its cliff. #
+let no_way = fun (kind, d) : (Place, Dir) -&gt; kind == Waterfall &amp;&amp; d == N;
+let find = fun (cs, c, r) : ([Cell], Int, Int) -&gt; case cs | [] =&gt; None | x :: rest =&gt; if x.col == c &amp;&amp; x.row == r then Some(x) else find(rest, c, r) end;
+# A way out walked through: into the square beside it, coming in from the side facing back, #
+# if that square is on the map and has a way back; else nowhere. #
+let on_event = fun (g, e) : (Globals, Event) -&gt;
+  case e
+  | Way(d) =&gt;
+    let (dx, dy) = Common.dir(d) in
+    let c = g.at_col + dx in
+    let r = g.at_row + dy in
+    let back = Common.opp(d) in
+    if c &lt; 0 || r &lt; 0 || c &gt;= g.cols || r &gt;= g.rows then Done
+    else (case find(g.cells, c, r)
+      | Some(x) =&gt; if Common.has_way(back, x.ways) &amp;&amp; !no_way(x.kind, back) then GoSquare(c, r, back, Done) else Done
+      | None =&gt; Done
+      end)
+  | _ =&gt; Done
+  end</pre><pre class="code rule" data-eng="fumola" hidden>var world_held = HashMap.new();
+module World {
+  // Places with no way out on a side, whatever their ways say: the waterfall&#x27;s N, its cliff.
+  func no_way(kind, d) { kind == #Waterfall and d == #N };
+  // into square (c, r), come in from back, if it has a way back; else nowhere
+  func decide(x, back, c, r) { if (Common.has_way(back, x.ways) and not (no_way(x.kind, back))) { #GoSquare(c, r, back, #Done) } else { #Done } };
+  func find_at(cs, i, c, r) { if (i == cs.size()) { null } else { let x = cs[i]; if (x.col == c and x.row == r) { ?x } else { find_at(cs, i + 1, c, r) } } };
+  // the square a way leads to, if it is on the map: (c, r), or null
+  func step(ac, ar, d, cols, rows) {
+    let (dx, dy) = Common.dir(d);
+    let c = ac + dx;
+    let r = ar + dy;
+    if (c &lt; 0 or r &lt; 0 or c &gt;= cols or r &gt;= rows) { null } else { ?(c, r) }
+  };
+  // A way out walked through: into the square beside it, coming in from the side facing back,
+  // if that square is on the map and has a way back; else nowhere.
+  public func on_event(g, e) {
+    switch (e) {
+      case (#Way(d)) {
+        switch (step(g.at_col, g.at_row, d, g.cols, g.rows)) {
+          case (?(c, r)) { switch (find_at(g.cells, 0, c, r)) { case (?x) { decide(x, Common.opp(d), c, r) }; case null { #Done } } };
+          case null { #Done }
+        }
+      };
+      case _ { #Done }
+    }
+  };
+  // the same, the square found in the map held here
+  public func way(ac, ar, cols, rows, d) {
+    switch (step(ac, ar, d, cols, rows)) {
+      case (?(c, r)) { switch (HashMap.get(world_held, (c, r))) { case (?x) { decide(x, Common.opp(d), c, r) }; case null { #Done } } };
+      case null { #Done }
+    }
+  };
+  // the map held here made again from the game&#x27;s cells
+  public func hold(cells) {
+    var m = HashMap.new();
+    for (x in cells.vals()) { let (m2, _) = HashMap.put(m, (x.col, x.row), x); m := m2 };
+    world_held := m;
+    cells.size()
+  }
+}</pre></div><div class="rulebox" id="rule-Castle"><div class="rb-head"><b>🏰 the castle&#x27;s ways: where a pit drops you, and a dungeon&#x27;s ladder leads</b><span class="chips"><button type="button" data-eng="js" aria-pressed="false">JS</button><button type="button" data-eng="hazel" aria-pressed="true">🧩 Hazel</button><button type="button" data-eng="fumola" aria-pressed="false">🍄 Fumola</button></span></div><pre class="code rule" data-eng="js" hidden>// 13-castle-rooms-and-map.js: castleroomScene
+// in castleroomScene(), the lines that decide it:
+// where a trap room&#x27;s pits lead: the castle&#x27;s dungeons (the first, then the deep one)
+const d1 = K.rooms.indexOf(&quot;dungeon1&quot;) + 1, d2 = K.rooms.indexOf(&quot;dungeon2&quot;) + 1;
+const pits = [d1 || d2, d2 || d1];
+
+// 13-castle-rooms-and-map.js: wayOutOf
+function wayOutOf(K, n) {
+  const st = K.rooms[n - 1], S = ROOM_S_OUT.includes(ROOM_KINDS[st].exits);
+  // (ticket 233: nowhere only where the way out is toward us; a room changed to an arch&#x27;s or a ladder&#x27;s, the usual way)
+  const v = K.hall[n - 1].out === &quot;none&quot; &amp;&amp; !S ? &quot;auto&quot; : K.hall[n - 1].out;
+  if (v === &quot;auto&quot;) { const trapAt = K.rooms.indexOf(&quot;trap&quot;) + 1;
+    return ROOM_KINDS[st].exits === &quot;ladder&quot; &amp;&amp; trapAt &amp;&amp; trapAt !== n ? trapAt : n === 1 ? 0 : 1; }
+  if (v === &quot;out&quot;) return 0;
+  if (v === &quot;none&quot;) return null;   // (ticket 233: a way toward us may lead nowhere)
+  const r = Number(v); return r &gt;= 1 &amp;&amp; r &lt;= K.rooms.length ? r : null;
+}
+
+// 25-scripting.js: scriptGo
+function scriptGo(door) {
+  const B = state.background, pit = door.dataset.pit;
+  if (B.kind !== &quot;castleroom&quot; || (!pit &amp;&amp; door.dataset.to !== &quot;castle&quot; &amp;&amp; door.dataset.to !== &quot;castleroom&quot;)) return null;
+  if (!pit) { const K = castleOf(B); if (ROOM_KINDS[K.rooms[castleRoomNow(B, K) - 1]].exits !== &quot;ladder&quot;) return null; }
+  // (a pit, by its side: the left&#x27;s middle is left of the room&#x27;s; else a door, which in a dungeon is its ladder up)
+  const ev = pit ? { tag: &quot;FallPit&quot;, value: +pit.split(&quot; &quot;)[0] &lt; 0 ? 0 : 1 } : { tag: &quot;WayOut&quot;, value: castleRoomNow(B) };
+  if (!scriptEvent(&quot;Castle&quot;, ev)) { hzJs(ev.tag, () =&gt; door.dataset.room); return null; }
+  if (!scriptEvent.act) return null;   // (the rule stopped: the door&#x27;s own way, not counted as a mismatch)
+  const got = scriptEvent.act.got, r = got &amp;&amp; got.go, go = r == null || r &lt; 0 ? false : r === 0 ? { to: &quot;castle&quot;, room: undefined } : { to: &quot;castleroom&quot;, room: String(r) };
+  if ((go ? go.to : null) !== door.dataset.to || (go ? go.room : undefined) !== door.dataset.room) hzCounters().mismatch++;
+  return go;
+}</pre><pre class="code rule" data-eng="hazel"># Where room n&#x27;s way out leads: 0 out of the castle, a room, or -1 nowhere. #
+# out is its setting; Auto: a dungeon&#x27;s ladder up to the trap room, room 1 out, any other to room 1. #
+# Nowhere only where the way out is toward us (side doors, a long room&#x27;s, a spiral&#x27;s); elsewhere Auto. #
+let way_out = fun (rooms, exits, n, out) : ([Room], [Exit], Int, Out) -&gt;
+  let ex = Common.exit_of(exits, n) in
+  let toward_us = (case ex | Some(ExitSide) =&gt; true | Some(ExitLong) =&gt; true | Some(ExitSpiral) =&gt; true | _ =&gt; false end) in
+  let ladder = (case ex | Some(ExitLadder) =&gt; true | _ =&gt; false end) in
+  case (case out | Nowhere =&gt; (if toward_us then Nowhere else Auto) | o =&gt; o end)
+  | Auto =&gt; (let t = Common.room_at(rooms, Trap) in if ladder &amp;&amp; t &gt; 0 &amp;&amp; !(t == n) then t else if n == 1 then 0 else 1)
+  | OutOfCastle =&gt; 0
+  | Nowhere =&gt; 0 - 1
+  | ToRoom(r) =&gt; if r &gt;= 1 &amp;&amp; r &lt;= Common.rooms(rooms) then r else 0 - 1
+  end;
+# A trap room&#x27;s pit fallen into (0 the left, 1 the right): #
+# the first pit drops into the dungeon, the second into the deep dungeon; #
+# a castle with only one of them, both into that one. #
+let on_event = fun (g, e) : (Globals, Event) -&gt;
+  let d1 = Common.room_at(g.rooms, Dungeon1) in
+  let d2 = Common.room_at(g.rooms, Dungeon2) in
+  case e
+  | FallPit(i) =&gt;
+    let to = if i == 0 then (if d1 &gt; 0 then d1 else d2) else (if d2 &gt; 0 then d2 else d1) in
+    if to == 0 then Done else GoRoom(to, Done)
+  | WayOut(n) =&gt; GoRoom(way_out(g.rooms, g.exits, n, g.out), Done)
+  | _ =&gt; Done
+  end</pre><pre class="code rule" data-eng="fumola" hidden>module Castle {
+  // Where room n&#x27;s way out leads: 0 out of the castle, a room, or -1 nowhere.
+  // out is its setting; Auto: a dungeon&#x27;s ladder up to the trap room, room 1 out, any other to room 1.
+  // Nowhere only where the way out is toward us (side doors, a long room&#x27;s, a spiral&#x27;s); elsewhere Auto.
+  public func way_out(rooms, exits, n, out) {
+    let ex = Common.exit_of(exits, n);
+    let toward_us = ex == ?(#ExitSide) or ex == ?(#ExitLong) or ex == ?(#ExitSpiral);
+    let v = if (out == #Nowhere and not toward_us) { #Auto } else { out };
+    switch (v) {
+      case (#Auto) { let t = Common.room_at(rooms, #Trap); if (ex == ?(#ExitLadder) and t &gt; 0 and t != n) { t } else if (n == 1) { 0 } else { 1 } };
+      case (#OutOfCastle) { 0 };
+      case (#Nowhere) { -1 };
+      case (#ToRoom(r)) { if (r &gt;= 1 and r &lt;= Common.rooms(rooms)) { r } else { -1 } };
+      case _ { -1 }
+    }
+  };
+  // A trap room&#x27;s pit fallen into (0 the left, 1 the right):
+  // the first pit drops into the dungeon, the second into the deep dungeon;
+  // a castle with only one of them, both into that one.
+  public func on_event(g, e) {
+    let d1 = Common.room_at(g.rooms, #Dungeon1);
+    let d2 = Common.room_at(g.rooms, #Dungeon2);
+    switch (e) {
+      case (#FallPit(i)) {
+        let to = if (i == 0) { if (d1 &gt; 0) { d1 } else { d2 } } else { if (d2 &gt; 0) { d2 } else { d1 } };
+        if (to == 0) { #Done } else { #GoRoom(to, #Done) }
+      };
+      case (#WayOut(n)) { #GoRoom(way_out(g.rooms, g.exits, n, g.out), #Done) };
+      case _ { #Done }
+    }
+  }
+}</pre></div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const show = (box, eng) => {
+    if (!box.querySelector(`pre.rule[data-eng="${eng}"]`)) return;
+    box.querySelectorAll("pre.rule").forEach(p => p.hidden = p.dataset.eng !== eng);
+    box.querySelectorAll(".chips button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.eng === eng)));
+  };
+  document.querySelectorAll(".rulebox:not(.master)").forEach(box => box.querySelectorAll(".chips button").forEach(b => b.onclick = () => show(box, b.dataset.eng)));
+  document.querySelectorAll(".rulebox.master .chips button").forEach(b => b.onclick = () => {
+    document.querySelectorAll(".rulebox:not(.master)").forEach(box => show(box, b.dataset.eng));
+    document.querySelectorAll(".rulebox.master .chips button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  });
+});
+</script>
+
+<h2 id="lop">Languages of Play<a class="anchor" href="#lop" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="lop" title="copy this section's address">copy link</button></h2>
+<p><i>Languages of Play: Towards semantic foundations for game interfaces</i> (Chris Martens and Matthew A. Hammer, 2017, <a href="https://arxiv.org/abs/1703.05410">arXiv:1703.05410</a>) treats what a player can say to a game as a language of its own, a <i>player intent language</i>, and reads a game through programming-language theory, in the slogan "games as programming languages". Its running example is a small game of moving between rooms and taking things, under five interfaces (point-and-click, bird's-eye, WASD, command line, hypertext), and its Table 1 pairs each part of a language definition with a part of a game. The game's rules, written three ways, line up with that table closely:</p>
+<div class="scroll"><table><tr><th>the paper</th><th>its game concept</th><th>in Messed Up Dress Up's rules</th></tr>
+<tr><td>syntax</td><td>recognized player intents: <code>direction ::= north | south | east | west</code>, <code>intent ::= move⟨direction⟩ | collect</code></td><td>the <code>Event</code> sum: <code>Pull(Side)</code>, <code>PullBoulder(Side)</code>, <code>PullHatch(Int)</code>, <code>PullThing(Int)</code>, <code>FallPit(Int)</code>, <code>WayOut(Int)</code>, <code>Way(Dir)</code>, with <code>Dir = + N + NE + E + SE + S + SW + W + NW</code>. Taking a way out of a square, by whichever control, goes through one door handler (<code>worldWalk</code>) and reaches the rule as the one intent <code>Way(d)</code>, as the paper's five interfaces all end in <code>move⟨direction⟩</code>.</td></tr>
+<tr><td>operational semantics</td><td>game mechanics: a game step ⟨G₁; intent⟩ ⟶ ⟨G₂; resp⟩</td><td>a room's rule, <code>on_event : (Globals, Event) -> Cmd</code>: the state it is told (<code>Globals</code>) and the intent give a response as data, which the game then carries out (its new state). <code>Done</code> alone is the paper's failure, a way that leads nowhere; <code>GoSquare(c, r, side, Done)</code> its success.</td></tr>
+<tr><td>type system</td><td>contextual interface: only the intents that make sense in this state</td><td>the sums themselves: before them, a direction was any text, and a rule could be asked about <code>"up"</code> (the Fumola check had a case for it); now it cannot be said. The paper calls this the subtractive side of an interface's syntax. What is offered in a given state (a lever only where there is one) is still the game's JS, not a type.</td></tr>
+<tr><td>a completeness conjecture: every state and intent has a next state and a response</td><td>proved, in a PL, by cases</td><td>checked, not proved: on every push, every case the game can give each room (32,761 for Hazel, 20,649 for Fumola) has an answer, and the same answer in all three languages (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-567"><code class="ref"><b>^ticket(</b>567<b>)</b></code></a>).</td></tr>
+<tr><td>play traces as straight-line programs</td><td>a log of intents and responses, as structured terms</td><td>a response is already a little straight-line program, each command with the rest after it (<code>Flip(L, SetPit(0, true, Done))</code>), which the game runs in order; a log of <code>Event</code>s and <code>Cmd</code>s would be the paper's trace, not kept yet.</td></tr>
+<tr><td>player skills as general programs</td><td>players composing actions into their own programs (BOTS, Cube Composer)</td><td>the editable Hazel and Fumola boxes: a player (or M and N) can rewrite a room's rule in the game and play it at once, so the mechanics, not only the intents, become a language players write in.</td></tr>
+</table></div>
+<p><b>Where the game goes beyond the paper.</b> The paper's languages are mathematical definitions. Here the mechanics are programs in two real languages beside the JS that defines them, held equal by tests, so one game has three semantics for the same intent language, and the 🧩 panel lets a player see and change which one runs. It also gives the paper's link to Hazelnut (an editor whose edits keep a program meaningful, cited there as the model for editing languages) a concrete place: the Hazel boxes are shown in Hazel's own tiles.</p>
+<p><b>Where it does not yet.</b> The game's interfaces (keys, the on-screen controller, clicks) are not themselves written as languages, as the paper's five are; the game's state crosses into the rules as a record of text and numbers made by its JS, not as typed terms from the start; and Hazel's sums could not yet live in the 📚 Common module, where the game's vocabulary belongs, until <a href="https://github.com/hazelgrove/hazel/pull/2729">hazelgrove/hazel#2729</a> (a module's sum types usable after it), which came out of this.</p>
+<h2 id="speed">Speed: what was found, and fixed<a class="anchor" href="#speed" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="speed" title="copy this section's address">copy link</button></h2>
+<p>Why a Hazel rule cost about 40 ms on a 16x16 world when the JS took 0.003 (<a href="../025/"><code class="ref"><b>^report(</b>25<b>)</b></code></a>), why Fumola runs the same rule 2.4 to 10 times faster (<a href="../029/"><code class="ref"><b>^report(</b>29<b>)</b></code></a>), and the fixes, each on a trial branch built by GitHub:</p>
+<ul>
+<li><b>The boundary's floor</b> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-539"><code class="ref"><b>^ticket(</b>539<b>)</b></code></a>, branch <code>lib-floor</code>): a call's argument bound in the environment, not written into the call and stepped back into a value node by node.</li>
+<li><b>Closures kept whole</b> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-547"><code class="ref"><b>^ticket(</b>547<b>)</b></code></a>, real branch <code>lib-closures</code>, <a href="https://matthewhammer.org/hazel/dashboard/#ticket-558"><code class="ref"><b>^ticket(</b>558<b>)</b></code></a>): a function the library returns keeps its environment; it used to have its captured values written into its body, so a held list was evaluated again, part by part, at every call. One reference to a held list of 3,000: 77x faster. A CI test now holds it (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-552"><code class="ref"><b>^ticket(</b>552<b>)</b></code></a>: a call's evaluator passes are the same for a held list of 100 and of 10,000; without 547 the test fails).</li>
+<li><b>List loops linear</b> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-548"><code class="ref"><b>^ticket(</b>548<b>)</b></code></a>): a loop passing a growing list on pushed its type over every element each time, with a fresh id for each; building and summing 3,000 numbers, 8.9x faster.</li>
+<li><b>Handles</b> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-551"><code class="ref"><b>^ticket(</b>551<b>)</b></code></a>): <code>Hazel.value(x)</code> converts a JS value once; a call given the handle takes it as it is.</li>
+<li><b>A fast path for values</b> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-559"><code class="ref"><b>^ticket(</b>559<b>)</b></code></a>): with nothing probed, reused or published (the library's calls, a game's rules), a term already a value comes back at once instead of passing through the evaluator's five stages; the step count reads the same and the evaluator's tests pass unchanged. A third fewer passes on loops, about a tenth of their time:</li>
+</ul>
+<div class="scroll"><table><tr><th>program</th><th>n</th><th>passes</th><th>passes, fast path</th><th>time, fast path / without</th></tr><tr><td><code>count</code></td><td class=n>1,000</td><td class=n>14,009</td><td class=n>9,007</td><td class=n>0.92</td></tr><tr><td><code>fib</code></td><td class=n>16</td><td class=n>46,294</td><td class=n>33,525</td><td class=n>0.90</td></tr><tr><td><code>h_walk</code></td><td class=n>3,000</td><td class=n>39,012</td><td class=n>27,010</td><td class=n>0.98</td></tr><tr><td><code>h_ref</code></td><td class=n>3,000</td><td class=n>3,008</td><td class=n>7</td><td class=n>0.03</td></tr><tr><td><code>sumbuild</code></td><td class=n>3,000</td><td class=n>93,022</td><td class=n>72,019</td><td class=n>0.98</td></tr></table></div>
+<p class="note">Passes from the counter build and the fast path on it, exact; times from <code>trial/r25-best</code> and the same fast path on it, four GitHub runners, alternating, the median (run 39885788957). <code>h_ref</code> is a reference to a held list, on a build without 547: skipped whole now.</p>
+<figure class="fig" id="fig-fixes"><svg class="chart" viewBox="0 0 760 184" role="img" aria-label="horizontal bars, log scale"><line x1="330.0" x2="330.0" y1="4" y2="162" class="g"/><text x="330.0" y="178" text-anchor="middle" class="t">0.1 ms</text><line x1="420.0" x2="420.0" y1="4" y2="162" class="g"/><text x="420.0" y="178" text-anchor="middle" class="t">1 ms</text><line x1="510.0" x2="510.0" y1="4" y2="162" class="g"/><text x="510.0" y="178" text-anchor="middle" class="t">10 ms</text><line x1="600.0" x2="600.0" y1="4" y2="162" class="g"/><text x="600.0" y="178" text-anchor="middle" class="t">100 ms</text><line x1="690.0" x2="690.0" y1="4" y2="162" class="g"/><text x="690.0" y="178" text-anchor="middle" class="t">1,000 ms</text><line x1="530.0" x2="530.0" y1="0" y2="162" class="lim"/><text x="534.0" y="12" class="lt">60 fps frame</text><text x="322" y="30" text-anchor="end" class="t">passed in, report 27&#x27;s build (r25-best)</text><rect x="330" y="18" width="304.4" height="16" rx="3" class="bar bad"><title>passed in, report 27&#x27;s build (r25-best): 241 ms</title></rect><text x="639.4" y="30" class="t">241 ms</text><text x="322" y="60" text-anchor="end" class="t">held in the map, r25-best (no 547: re-walked)</text><rect x="330" y="48" width="317.3" height="16" rx="3" class="bar bad"><title>held in the map, r25-best (no 547: re-walked): 335 ms</title></rect><text x="652.3" y="60" class="t">335 ms</text><text x="322" y="90" text-anchor="end" class="t">passed in, with 547, 548, 551 (r25-553)</text><rect x="330" y="78" width="303.5" height="16" rx="3" class="bar bad"><title>passed in, with 547, 548, 551 (r25-553): 236 ms</title></rect><text x="638.5" y="90" class="t">236 ms</text><text x="322" y="120" text-anchor="end" class="t">passed as a handle (551)</text><rect x="330" y="108" width="291.2" height="16" rx="3" class="bar bad"><title>passed as a handle (551): 172 ms</title></rect><text x="626.2" y="120" class="t">172 ms</text><text x="322" y="150" text-anchor="end" class="t">held in the map, with 547, 548, 551</text><rect x="330" y="138" width="88.8" height="16" rx="3" class="bar good"><title>held in the map, with 547, 548, 551: 0.97 ms</title></rect><text x="423.8" y="150" class="t">0.97 ms</text></svg><figcaption><b>Figure 2.</b> Hazel's World move at 64x64, ms, log scale, as the fixes stack: <a href="../027/"><code class="ref"><b>^report(</b>27<b>)</b></code></a>'s build (<code>trial/r25-best</code>) and the same with 547, 548 and 551 (<code>trial/r25-553</code>), the world passed in, as a handle, and held in the game's map. Holding the map pays only with 547; without it, the map is re-walked at every call and is slower than the list. Four GitHub runners, alternating (run 39886598556).</figcaption></figure>
+
+<h3 id="vs-fumola">The map against Fumola's, by size<a class="anchor" href="#vs-fumola" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="vs-fumola" title="copy this section's address">copy link</button></h3>
+<div class="scroll"><table><tr><th>world (squares)</th><th>Hazel, passed</th><th>Hazel, map</th><th>Fumola, passed</th><th>Fumola, HashMap</th><th>Hazel, map's set-up</th><th>Fumola, set-up</th></tr><tr><td class=n>3x3 (9)</td><td class=n>1.25</td><td class=n>0.82</td><td class=n>1.23</td><td class=n>0.638</td><td class=n>4.18</td><td class=n>39.1</td></tr><tr><td class=n>4x4 (16)</td><td class=n>1.78</td><td class=n>1.06</td><td class=n>1.42</td><td class=n>0.601</td><td class=n>7.48</td><td class=n>25.7</td></tr><tr><td class=n>6x6 (36)</td><td class=n>3.9</td><td class=n>1.18</td><td class=n>2.23</td><td class=n>0.602</td><td class=n>17.2</td><td class=n>26.3</td></tr><tr><td class=n>8x8 (64)</td><td class=n>5.69</td><td class=n>1.15</td><td class=n>3.36</td><td class=n>0.603</td><td class=n>29.1</td><td class=n>28.5</td></tr><tr><td class=n>12x12 (144)</td><td class=n>11.6</td><td class=n>1.54</td><td class=n>6.32</td><td class=n>0.588</td><td class=n>67.2</td><td class=n>33.9</td></tr><tr><td class=n>16x16 (256)</td><td class=n>19.5</td><td class=n>1.23</td><td class=n>10.5</td><td class=n>0.593</td><td class=n>120</td><td class=n>41.5</td></tr><tr><td class=n>24x24 (576)</td><td class=n>43.9</td><td class=n>1.65</td><td class=n>22.2</td><td class=n>0.584</td><td class=n>277</td><td class=n>65.7</td></tr><tr><td class=n>32x32 (1,024)</td><td class=n>79.5</td><td class=n>1.34</td><td class=n>39.1</td><td class=n>0.595</td><td class=n>518</td><td class=n>94.1</td></tr><tr><td class=n>48x48 (2,304)</td><td class=n>182</td><td class=n>2.03</td><td class=n>89.6</td><td class=n>0.587</td><td class=n>1,180</td><td class=n>189</td></tr><tr><td class=n>64x64 (4,096)</td><td class=n>331</td><td class=n>1.46</td><td class=n>169</td><td class=n>0.587</td><td class=n>2,136</td><td class=n>326</td></tr></table></div>
+<p class="note">ms, the same runners for both (run 39887272978: AMD EPYC 7763 64-Core Processor; AMD EPYC 9V74 80-Core Processor).</p>
+<h3 id="setup">The map's set-up<a class="anchor" href="#setup" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="setup" title="copy this section's address">copy link</button></h3>
+<p>Once a world, 1,539 ms at 64x64 on the trial build, measured in parts: putting the squares in order and checking it (662), counting them (286), building the tree (927); bringing the cells over from JS is 77.7. Taking the type annotations off the map's helpers changes nothing (1,636). Each part is a walk of the list at Hazel's cost per pass, about 60 to 70 µs a square even for the count; doing the count in the same walk as the order check saved 15% (1,946 to 1,657 ms; runs 39888318843, 39890490518).</p>
+
+<h2 id="say">What the scripts can say<a class="anchor" href="#say" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="say" title="copy this section's address">copy link</button></h2>
+<ul>
+<li><b>Ordering strings:</b> a map keyed by a lever's id (a string) needs strings in order. Hazel has <code>string_compare</code>, returning <code>Ord</code> (<code>Lt</code>, <code>Eq</code>, <code>Gt</code>), since May (Alexander Bandukwala, <code>d5cd0a07a3</code>, beside <code>int_compare</code> and <code>float_compare</code>). Corrected here: our ticket had said Hazel had none, from a search of one list of builtins.</li>
+<li><b>Fumola's values from JS:</b> JSON read straight into Fumola values (<a href="https://github.com/Adapton/fumola/pull/148">Adapton/fumola#148</a>, merged), so a map passed in is no longer written out and parsed; and an answer more than about a thousand values deep no longer traps the wasm instance (<a href="https://github.com/Adapton/fumola/pull/150">Adapton/fumola#150</a>, open). Fumola has no float comparison the rules can use yet (the game's draws are passed as whole millionths).</li>
+</ul>
+
+<h2 id="next">What next<a class="anchor" href="#next" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="next" title="copy this section's address">copy link</button></h2>
+<ol>
+<li><b>The three-way script boxes</b> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-566"><code class="ref"><b>^ticket(</b>566<b>)</b></code></a>): one branch with the Hazel and the Fumola rules, a JS / Hazel / Fumola chip on each room's box (JS read-only: the source of the function that runs), editable Hazel and Fumola boxes, and a master chip at the top, JS by default.</li>
+<li><b>Equivalence in CI</b> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-567"><code class="ref"><b>^ticket(</b>567<b>)</b></code></a>): for every handler and event, the shipped Hazel and Fumola texts answer as the JS does, on generated worlds.</li>
+<li><b>A 🔬 tool for each script's overhead over JS</b> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-568"><code class="ref"><b>^ticket(</b>568<b>)</b></code></a>), per handler and per engine, live in the game.</li>
+<li><b>Speed standards per setting</b> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-569"><code class="ref"><b>^ticket(</b>569<b>)</b></code></a>): speed runs for JS, Hazel and Fumola that hold the rooms each controls to a minimum frame rate.</li>
+<li><b>The library fixes into the build the game loads:</b> 547 for real (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-558"><code class="ref"><b>^ticket(</b>558<b>)</b></code></a>), then 548, 551 and the fast path; until then Hazel's world ways miss the frame on big maps, and the game cannot hold the map.</li>
+<li><b>Hold the map in the game:</b> call <code>with_squares</code> once a world, not the list rule every way; then the placed levers' rule with its things in maps (by place, and by id with <code>string_compare</code>).</li>
+<li><b>Hazel's cost per pass</b> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-554"><code class="ref"><b>^ticket(</b>554<b>)</b></code></a>, for Cyrus and Matthew): what to do about a step paying for the editor around it; it is what the map's set-up, and every loop, still pays.</li>
+</ol>
+
+<h2 id="method">How this was put together<a class="anchor" href="#method" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="method" title="copy this section's address">copy link</button></h2>
+<p>From the work tickets of 2026-10-21 11:00 to 2026-10-23 07:00 and the reports they produced (<a href="../025/"><code class="ref"><b>^report(</b>25<b>)</b></code></a>, <a href="../027/"><code class="ref"><b>^report(</b>27<b>)</b></code></a>, <a href="../028/"><code class="ref"><b>^report(</b>28<b>)</b></code></a>, <a href="../029/"><code class="ref"><b>^report(</b>29<b>)</b></code></a>). The new measurements ran on GitHub's runners, never the laptop: library builds deployed by hazelgrove/hazel's own workflow (no compiling), timed in node 22 by drivers on orphan branches (<code>timing/553-map</code>, <code>timing/559-fastpath</code> in hazelgrove/hazel), four jobs each, the builds compared alternating on one runner, each side's better round, the median over the jobs. Every map run first checks the map rule against the shipped rule on a shuffled random world. Their rows are in <code>030/data/</code> (one folder per run, a folder per job), and are embedded in this page.</p>
+
+<!-- data-line: begin -->
+<h2 id="data">The data<a class="anchor" href="#data" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="data" title="copy this section's address">copy link</button></h2>
+<ul>
+  <li><b>The numbers, for programs too:</b> every table in this report, and what its numbers measure, is also in this page as JSON, in its <code>&lt;script type="application/json" id="report-data"&gt;</code> element, so a reader or an agent that fetches the page alone has the dataset. The same, with any raw files that survive, is in <a href="https://github.com/matthewhammer/hazel-performance-analysis/tree/main/030/data"><code>030/data/</code></a>.</li>
+</ul>
+<!-- data-line: end -->
+
+</main><!-- refs: begin -->
+<style>
+  code.ref { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; white-space: nowrap; }
+  code.ref b { font-weight: 800; }
+</style>
+<!-- refs: end -->
+<!-- ref-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .ref-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(400px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .ref-card .rc-head { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-title { font-weight: 600; margin: 3px 0 4px; }
+  .ref-card .rc-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .ref-card .rc-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .rc-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px;
+    vertical-align: 1px; background: #6e7781; }
+  .rc-state.current { background: #1f883d; } .rc-state.queued { background: #9a6700; } .rc-state.open { background: #0969da; }
+  .rc-state.done { background: #8250df; }
+</style>
+<script>
+/* A card for each ^ticket(N) and ^report(N) link, on hover or focus: a
+   ticket from the work dashboard's data (its area, its status, its first
+   line), carried by the dashboard's own pages and read live from the
+   published data anywhere else; a report from its own page, live (its
+   title, date and opening). Once per page load each. */
+(() => {
+  const PUBLIC = "https://matthewhammer.org/hazel-work-notes/dashboard-data/data.json";
+  const DATA = location.port === "8000" && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? "/data.json" : PUBLIC;
+  /* the dashboard itself carries its tickets (made with the page, changed
+     with it); any other page asks the published data */
+  const EMBED = null;
+  let data = EMBED ? Promise.resolve(EMBED) : null;
+  const loadData = () => data || (data = fetch(DATA, { cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject(r.status)).catch(() => null));
+  const pages = new Map();
+  const loadReport = url => {
+    if (!pages.has(url)) pages.set(url, fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(t => {
+      const doc = new DOMParser().parseFromString(t, "text/html"), h1 = doc.querySelector("h1");
+      let p = h1 && h1.nextElementSibling;
+      while (p && p.tagName !== "P") p = p.nextElementSibling;
+      const label = (doc.querySelector(".series") || {}).textContent || "";
+      return { title: h1 ? h1.textContent.trim() : doc.title, date: (label.match(/\d{4}-\d{2}-\d{2}/) || [""])[0],
+               lead: p ? p.textContent.replace(/\s+/g, " ").trim() : "" };
+    }).catch(() => null));
+    return pages.get(url);
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const cut = (t, n) => t.length <= n ? t : t.slice(0, n).replace(/\s+\S*$/, "") + "…";
+  const plain = h => new DOMParser().parseFromString("<div>" + (h || "") + "</div>", "text/html").body.textContent.replace(/\s+/g, " ").trim();
+  const lead = h => { const m = /^\s*<b>([\s\S]*?)<\/b>/.exec(h || ""); return m ? plain(m[1]) : cut(plain(h), 200); };
+  const ticketCard = (n, d) => {
+    const open = (d.tickets || []).find(t => t.id === n), closed = (d.closed_tickets || []).find(t => t.id === n), t = open || closed;
+    if (!t) return `<div class="rc-head">^ticket(${n})</div><div class="rc-note">Not on the dashboard.</div>`;
+    const q = (d.queue || []).indexOf(n);
+    const [cls, state] = closed ? ["done", `${t.status || "closed"}, ${t.closed || ""}`]
+      : d.current_ticket === n ? ["current", "current" + (d.current_waiting ? " · ✋❔ waiting on Matthew" : "")]
+      : q >= 0 ? ["queued", `queued, ${q + 1} in line`] : ["open", "open"];
+    return `<div class="rc-head">^ticket(${n}) · ${esc(t.area || "")}<span class="rc-state ${cls}">${esc(state)}</span></div>` +
+      `<div class="rc-title">${esc(lead(t.text))}</div>` +
+      `<div class="rc-meta">${t.added ? "added " + esc(t.added) + " · " : ""}from ${esc(plain(t.source || "") || "?")}</div>` +
+      (closed && t.outcome ? `<div class="rc-meta">${esc(cut(plain(t.outcome), 180))}</div>` : "");
+  };
+  const reportCard = (n, r) => r
+    ? `<div class="rc-head">^report(${n}) · Hazel reports${r.date ? " · " + esc(r.date) : ""}</div>` +
+      `<div class="rc-title">${esc(r.title)}</div>` + (r.lead ? `<div class="rc-meta">${esc(cut(r.lead, 240))}</div>` : "")
+    : `<div class="rc-head">^report(${n})</div><div class="rc-note">The report's page didn't load just now.</div>`;
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    card.style.left = (Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16)) + scrollX) + "px";
+    card.style.top = ((r.bottom + 6 + h < innerHeight ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const refOf = a => { const c = a.querySelector("code.ref"); const m = c && /^\^(ticket|report)\((\d+)\)$/.exec(c.textContent.trim()); return m && { kind: m[1], n: Number(m[2]) }; };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = (a, ref) => {
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "ref-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      card.innerHTML = `<div class="rc-head">^${ref.kind}(${ref.n})</div><div class="rc-note">loading…</div>`;
+      card.hidden = false; place(a);
+      let html;
+      if (ref.kind === "ticket") { const d = await loadData(); html = d ? ticketCard(ref.n, d) : `<div class="rc-head">^ticket(${ref.n})</div><div class="rc-note">The dashboard's data didn't load just now.</div>`; }
+      else html = reportCard(ref.n, await loadReport(a.href));
+      if (over !== a) return;
+      card.innerHTML = html; place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target), r = a && refOf(a); if (r && a !== over) show(a, r); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target), r = a && refOf(a); if (r) show(a, r); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- ref-cards: end -->
+<!-- pr-cards: begin -->
+<style>
+  /* above the nav bar (nav.js draws it at z-index 2147483000-2147483002), or a card on a link in it opens underneath */
+  .pr-card { position: absolute; z-index: 2147483003; width: max-content; max-width: min(380px, calc(100vw - 32px)); box-sizing: border-box;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line, #d0d7de); background: var(--paper, var(--bg, Canvas));
+    color: var(--ink, CanvasText); box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18); font: 13px/1.45 system-ui, sans-serif; pointer-events: none; }
+  .pr-card .pr-head { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-title { font-weight: 600; margin: 3px 0 4px; }
+  .pr-card .pr-meta { color: var(--muted, GrayText); font-size: 12px; }
+  .pr-card .pr-note { color: var(--muted, GrayText); font-size: 11px; margin-top: 5px; font-style: italic; }
+  .pr-state { display: inline-block; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #fff; margin-left: 6px; vertical-align: 1px; }
+  .pr-base { display: inline-block; padding: 0 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: 1px; }
+  .pr-base.dev { background: #dafbe1; color: #116329; } .pr-base.other { background: #fff1c2; color: #7a4b00; }
+  @media (prefers-color-scheme: dark) { .pr-base.dev { background: #12361f; color: #6fdd8b; } .pr-base.other { background: #3d2e00; color: #f2cc60; } }
+  .pr-state.open { background: #1f883d; } .pr-state.merged { background: #8250df; } .pr-state.closed { background: #cf222e; } .pr-state.draft { background: #6e7781; }
+</style>
+<script>
+/* A card for each link to a GitHub PR or issue, on hover or focus: its
+   title, state, the branch a PR targets (dev or not: the distinction that
+   matters, ^ticket(478)), author, dates and comments, asked of GitHub live, once per
+   number per page load; if GitHub does not answer, what it said when the
+   page was built (tools/link_prs.py writes this block). */
+(() => {
+  const CACHED = {"Adapton/fumola#148": {"author": "matthewhammer", "comments": 0, "created": "2026-10-22T21:42:29Z", "kind": "pull", "state": "merged", "title": "fumola_wasm: values in from JSON (fumola_define_json, fumola_eval_top_with)", "updated": "2026-10-22T21:56:42Z", "base": "main"}, "Adapton/fumola#150": {"author": "matthewhammer", "comments": 0, "created": "2026-10-23T01:37:03Z", "kind": "pull", "state": "open", "title": "Deep answers: written as JSON and dropped in a loop, so the instance survives them", "updated": "2026-10-23T01:37:03Z", "base": "main"}, "hazelgrove/hazel#2729": {"author": "matthewhammer", "comments": 1, "created": "2026-10-23T18:03:12Z", "kind": "pull", "state": "open", "title": "A module's sum types are usable after it: their names and constructors", "updated": "2026-10-23T18:29:02Z", "base": "dev"}, "matthewhammer/kids-choice-games#1": {"author": "matthewhammer", "comments": 0, "created": "2026-10-20T17:43:16Z", "kind": "pull", "state": "open", "title": "🧩 Scripting: the trap room's levers through a Hazel rule", "updated": "2026-10-22T02:33:40Z", "base": "main"}, "matthewhammer/kids-choice-games#2": {"author": "matthewhammer", "comments": 0, "created": "2026-10-22T04:23:36Z", "kind": "pull", "state": "draft", "title": "🧩 Experiment: the rooms' rules in Hazel, against plain JS (ticket 531)", "updated": "2026-10-22T08:10:33Z", "base": "scripting-panel"}, "matthewhammer/kids-choice-games#4": {"author": "matthewhammer", "comments": 0, "created": "2026-10-22T19:00:07Z", "kind": "pull", "state": "draft", "title": "Dress Up: room rules in Fumola (wasm), beside Hazel and plain JS (^ticket(542))", "updated": "2026-10-22T19:11:02Z", "base": "hazel-logic-531"}}, BUILT = "2026-10-23";
+  const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
+  const asked = new Map();
+  /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
+  const ask = (key, kind) => {
+    if (!asked.has(key)) {
+      const [repo, n] = key.split("#"), pull = kind === "pull";
+      asked.set(key, fetch(`https://api.github.com/repos/${repo}/${pull ? "pulls" : "issues"}/${n}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(j => ({ title: j.title, author: j.user && j.user.login, created: j.created_at, updated: j.updated_at,
+                      comments: j.comments, kind: pull || j.pull_request ? "pull" : "issues", base: j.base && j.base.ref,
+                      state: j.merged_at || (j.pull_request && j.pull_request.merged_at) ? "merged" : j.draft ? "draft" : j.state }))
+        .catch(() => null));
+    }
+    return asked.get(key);
+  };
+  const baseChip = d => !d.base ? "" : d.base === "dev"
+    ? `<span class="pr-base dev" title="this PR merges into dev">into dev</span>`
+    : `<span class="pr-base other" title="this PR merges into ${esc(d.base)}, not dev">into ${esc(d.base)}, not dev</span>`;
+  const day = iso => new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const ago = iso => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    for (const [u, k] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]])
+      if (s >= k) { const v = Math.floor(s / k); return `${v} ${u}${v === 1 ? "" : "s"} ago`; }
+    return "just now";
+  };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const fill = (key, d, note) => {
+    const [repo, n] = key.split("#"), what = d.kind === "pull" ? "Pull request" : "Issue";
+    return `<div class="pr-head">${esc(repo)} #${n} · ${what}<span class="pr-state ${esc(d.state)}">${esc(d.state)}</span>${baseChip(d)}</div>` +
+      `<div class="pr-title">${esc(d.title)}</div>` +
+      `<div class="pr-meta">by ${esc(d.author)} · opened ${day(d.created)} · updated ${ago(d.updated)} · ${d.comments} comment${d.comments === 1 ? "" : "s"}</div>` +
+      (note ? `<div class="pr-note">${note}</div>` : "");
+  };
+  let card = null, over = null, timer = null;
+  const place = a => {
+    const r = a.getBoundingClientRect(), w = card.offsetWidth, h = card.offsetHeight;
+    const left = Math.max(16, Math.min(r.left, document.documentElement.clientWidth - w - 16));
+    const below = r.bottom + 6 + h < innerHeight;
+    card.style.left = (left + scrollX) + "px";
+    card.style.top = ((below ? r.bottom + 6 : r.top - 6 - h) + scrollY) + "px";
+  };
+  const hide = () => { clearTimeout(timer); over = null; if (card) card.hidden = true; };
+  const show = a => {
+    const m = RX.exec(a.href);
+    if (!m) return;
+    const key = m[1] + "#" + m[3];
+    over = a; clearTimeout(timer);
+    timer = setTimeout(async () => {
+      if (!card) { card = document.createElement("div"); card.className = "pr-card"; card.setAttribute("role", "tooltip"); document.body.append(card); }
+      const cached = CACHED[key];
+      card.innerHTML = cached ? fill(key, cached, "asking GitHub…") : `<div class="pr-head">${esc(key)}</div><div class="pr-note">asking GitHub…</div>`;
+      card.hidden = false; place(a);
+      const d = await ask(key, m[2]);
+      if (over !== a) return;
+      card.innerHTML = d ? fill(key, d, "")
+        : cached ? fill(key, cached, `GitHub didn't answer just now (its limit is 60 lookups an hour per network): as of ${BUILT}`)
+        : `<div class="pr-head">${esc(key)}</div><div class="pr-note">GitHub didn't answer just now.</div>`;
+      place(a);
+    }, 250);
+  };
+  const linkOf = t => t && t.closest && t.closest("a[href]");
+  document.addEventListener("mouseover", e => { const a = linkOf(e.target); if (a && a !== over && RX.test(a.href)) show(a); });
+  document.addEventListener("mouseout", e => { const a = linkOf(e.target); if (a && a === over && !a.contains(e.relatedTarget)) hide(); });
+  document.addEventListener("focusin", e => { const a = linkOf(e.target); if (a && RX.test(a.href)) show(a); });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", () => { if (over && card && !card.hidden) place(over); }, { passive: true });
+})();
+</script>
+<!-- pr-cards: end -->
+
+<!-- steps: begin -->
+<style>
+  button.mint { margin-left: 4px; font: inherit; font-size: 0.75em; padding: 0 6px; border: 1px solid var(--line, #ccc);
+    border-radius: 4px; background: transparent; color: var(--muted, #666); cursor: pointer; vertical-align: 1px; }
+  button.mint:hover { color: inherit; }
+  button.mint.done { color: var(--good, #15803d); border-color: var(--good, #15803d); }
+  a.step-link { color: var(--muted, #666); text-decoration: none; font-size: 0.85em; margin-left: 4px; }
+  a.step-link:hover { text-decoration: underline; }
+  li:target { background: color-mix(in srgb, var(--good, #15803d) 12%, transparent); border-radius: 6px; }
+</style>
+<script>
+/* Each "What next" step: a link to it, and a button copying a request to
+   mint a ticket for it (to paste to Claude): the report, the step, its URL. */
+(() => {
+  const h = document.getElementById("next");
+  if (!h) return;
+  let list = h.nextElementSibling;
+  while (list && !/^(OL|UL)$/.test(list.tagName)) {
+    if (list.tagName === "H2") return;
+    list = list.nextElementSibling;
+  }
+  if (!list) return;
+  /* the report's number, from its label: ^report(13) (before 2026-10-14, "Issue 013") */
+  const label = (document.querySelector(".series") || document.body).textContent;
+  const m = label.match(/\^(?:report|issue)\((\d+)\)/) || label.match(/Issue (\d{3})/);
+  const report = m ? String(Number(m[1])) : "?";
+  const base = "http://matthewhammer.org/hazel/reports/" + report.padStart(3, "0") + "/";
+  [...list.children].filter(li => li.tagName === "LI").forEach((li, i) => {
+    const n = i + 1;
+    if (!li.id) li.id = "step-" + n;
+    const b = li.querySelector("b, strong");
+    const title = (b ? b.textContent : li.textContent).replace(/\s+/g, " ").trim().replace(/[:.,;]$/, "").slice(0, 160);
+    const url = base + "#" + li.id;
+    const text = "Mint a ticket for this step: Hazel reports, ^report(" + report +
+      "), What next, step " + n + ': "' + title + '". ' + url;
+    const a = document.createElement("a");
+    a.href = "#" + li.id; a.className = "step-link"; a.textContent = "#" + n; a.title = "A link to this step";
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "mint"; btn.textContent = "copy for a ticket";
+    btn.title = "Copies a request to mint a ticket for this step, to paste to Claude";
+    btn.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) {
+        const t = document.createElement("textarea"); t.value = text; document.body.append(t);
+        t.select(); document.execCommand("copy"); t.remove();
+      }
+      btn.textContent = "copied"; btn.classList.add("done");
+      setTimeout(() => { btn.textContent = "copy for a ticket"; btn.classList.remove("done"); }, 1500);
+    });
+    li.append(" ", a, " ", btn);
+  });
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+})();
+</script>
+<!-- steps: end -->
+<!-- theme: begin -->
+<style>
+  .theme-toggle { position: fixed; top: 10px; right: 10px; z-index: 30; font: 13px system-ui, sans-serif; padding: 3px 10px;
+    border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--muted, GrayText);
+    cursor: pointer; opacity: 0.85; }
+  .theme-toggle:hover { opacity: 1; color: var(--ink, CanvasText); }
+  @media print { .theme-toggle { display: none; } }
+</style>
+<script>
+/* The theme switch: Auto (the system's choice), Light, Dark; remembered for this site. */
+(() => {
+  const order = ["auto", "light", "dark"], label = { auto: "◐ auto", light: "☀ light", dark: "☾ dark" };
+  const get = () => { try { return localStorage.getItem("theme") || "auto"; } catch (_) { return "auto"; } };
+  const apply = m => m === "auto" ? document.documentElement.removeAttribute("data-theme")
+                                  : document.documentElement.setAttribute("data-theme", m);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "theme-toggle";
+  const show = () => { const m = get(); b.textContent = label[m] || label.auto;
+    b.title = "Theme: " + m + ". Click for " + order[(order.indexOf(m) + 1) % 3] + "; remembered on this site."; };
+  b.addEventListener("click", () => {
+    const m = order[(order.indexOf(get()) + 1) % 3];
+    try { m === "auto" ? localStorage.removeItem("theme") : localStorage.setItem("theme", m); } catch (_) {}
+    apply(m); show();
+  });
+  window.addEventListener("storage", e => { if (e.key === "theme") { apply(get()); show(); } });
+  show(); document.body.append(b);
+})();
+</script>
+<!-- theme: end -->
+<!-- report-data: begin -->
+<script type="application/json" id="report-data">
+{
+ "report": 30,
+ "title": "Game Scripts in Hazel, Two Days In",
+ "date": "2026-10-23",
+ "kind": "progress",
+ "status": "work in progress",
+ "question": "Matthew: a report about the last two days, with an idea of where we are with our goals of game scripts in Hazel, for MUDU (^ticket(570)).",
+ "builds": [
+  {
+   "what": "Hazel library, report 27's best",
+   "branch": "trial/r25-best",
+   "deploy": "b34d943d73"
+  },
+  {
+   "what": "Hazel library with 547, 548, 551",
+   "branch": "trial/r25-553",
+   "commit": "536de2125d",
+   "deploy": "debbc6e687"
+  },
+  {
+   "what": "Hazel counter build and fast path",
+   "branch": "trial/r25-stats, trial/r25-fastpath",
+   "deploys": "d657eefd3d, a8251779bb"
+  },
+  {
+   "what": "Hazel best build and fast path",
+   "branch": "trial/r25-best, trial/r25-fastpath-best",
+   "deploys": "b34d943d73, 61e4e4f2ff"
+  },
+  {
+   "what": "the game's rule texts",
+   "repo": "matthewhammer/kids-choice-games",
+   "branch": "hazel-map-553",
+   "commits": "dac7bc6, 6de982a"
+  },
+  {
+   "what": "Fumola wasm",
+   "repo": "Adapton/fumola",
+   "commit": "667a34d"
+  }
+ ],
+ "runs": {
+  "map_vs_shipped": "39886598556",
+  "map_vs_fumola": "39887272978",
+  "map_setup": "39888318843",
+  "map_setup_walks": "39890490518",
+  "fast_path": "39885788957"
+ },
+ "measures": "ms a call (median of a round's calls), each build's better round in a job, the median over four jobs; passes are evaluator calls through the stages, exact",
+ "tables_note": "Every table in the page, cell by cell, as printed (units in the column names or the cells); columns are the header row where the table has one.",
+ "tables": [
+  {
+   "section": "The goal, and where each piece is",
+   "section_id": "goal",
+   "columns": [
+    "the goal, piece by piece",
+    "where it is",
+    ""
+   ],
+   "rows": [
+    [
+     "Hazel code in the game, one module per room plus 📚 Common",
+     "The 🧩 Scripting panel (matthewhammer/kids-choice-games#1: the trap room's levers through Hazel.runProgram, the program shown in Hazel's tiles), then the five rooms' rules in Hazel (matthewhammer/kids-choice-games#2), each under ?logic=hazel, checked against the JS.",
+     "built"
+    ],
+    [
+     "Fumola code in the game",
+     "The same rules in Fumola, wasm, pinned build (matthewhammer/kids-choice-games#4), 20,653 cases agreeing with the Hazel rules in a node check.",
+     "built"
+    ],
+    [
+     "A JS / Hazel / Fumola chip on each code box; the JS read-only, the game's own code; a master chip, JS by default",
+     "Today a page-wide ?logic= switch, Hazel and Fumola on separate PRs. ^ticket(566).",
+     "planned"
+    ],
+    [
+     "The three equivalent, held by tests as the code changes",
+     "Node checks, Hazel against JS and Fumola against Hazel, in the two PRs; not all three in CI. ^ticket(567).",
+     "in part"
+    ],
+    [
+     "A tool measuring each script's overhead over JS",
+     "The game records Hazel's compile time; the speed probes time rules. ^ticket(568).",
+     "planned"
+    ],
+    [
+     "Speed-run standards: each setting a minimum fps where its scripts run",
+     "^ticket(569).",
+     "planned"
+    ],
+    [
+     "Hazel fast enough for every room at 60 fps",
+     "Levers, trap doors, the castle: yes. The world's ways: not as the game calls them today, the world passed in at every move (a call walks the whole world: 331 ms at 64x64 even on the trial build); yes with this week's library fixes and the map held (1.46 ms). The fixes are on trial branches, not in the library build the game loads, and the game does not hold the map yet.",
+     "waits"
+    ],
+    [
+     "Fumola fast enough",
+     "Yes: about a millisecond a call, flat with its HashMap (0.587 ms at 64x64).",
+     "built"
+    ]
+   ]
+  },
+  {
+   "section": "Languages of Play",
+   "section_id": "lop",
+   "columns": [
+    "the paper",
+    "its game concept",
+    "in Messed Up Dress Up's rules"
+   ],
+   "rows": [
+    [
+     "syntax",
+     "recognized player intents: direction ::= north | south | east | west, intent ::= move⟨direction⟩ | collect",
+     "the Event sum: Pull(Side), PullBoulder(Side), PullHatch(Int), PullThing(Int), FallPit(Int), WayOut(Int), Way(Dir), with Dir = + N + NE + E + SE + S + SW + W + NW. Taking a way out of a square, by whichever control, goes through one door handler (worldWalk) and reaches the rule as the one intent Way(d), as the paper's five interfaces all end in move⟨direction⟩."
+    ],
+    [
+     "operational semantics",
+     "game mechanics: a game step ⟨G₁; intent⟩ ⟶ ⟨G₂; resp⟩",
+     "a room's rule, on_event : (Globals, Event) -> Cmd: the state it is told (Globals) and the intent give a response as data, which the game then carries out (its new state). Done alone is the paper's failure, a way that leads nowhere; GoSquare(c, r, side, Done) its success."
+    ],
+    [
+     "type system",
+     "contextual interface: only the intents that make sense in this state",
+     "the sums themselves: before them, a direction was any text, and a rule could be asked about \"up\" (the Fumola check had a case for it); now it cannot be said. The paper calls this the subtractive side of an interface's syntax. What is offered in a given state (a lever only where there is one) is still the game's JS, not a type."
+    ],
+    [
+     "a completeness conjecture: every state and intent has a next state and a response",
+     "proved, in a PL, by cases",
+     "checked, not proved: on every push, every case the game can give each room (32,761 for Hazel, 20,649 for Fumola) has an answer, and the same answer in all three languages (^ticket(567))."
+    ],
+    [
+     "play traces as straight-line programs",
+     "a log of intents and responses, as structured terms",
+     "a response is already a little straight-line program, each command with the rest after it (Flip(L, SetPit(0, true, Done))), which the game runs in order; a log of Events and Cmds would be the paper's trace, not kept yet."
+    ],
+    [
+     "player skills as general programs",
+     "players composing actions into their own programs (BOTS, Cube Composer)",
+     "the editable Hazel and Fumola boxes: a player (or M and N) can rewrite a room's rule in the game and play it at once, so the mechanics, not only the intents, become a language players write in."
+    ]
+   ]
+  },
+  {
+   "section": "Speed: what was found, and fixed",
+   "section_id": "speed",
+   "columns": [
+    "program",
+    "n",
+    "passes",
+    "passes, fast path",
+    "time, fast path / without"
+   ],
+   "rows": [
+    [
+     "count",
+     "1,000",
+     "14,009",
+     "9,007",
+     "0.92"
+    ],
+    [
+     "fib",
+     "16",
+     "46,294",
+     "33,525",
+     "0.90"
+    ],
+    [
+     "h_walk",
+     "3,000",
+     "39,012",
+     "27,010",
+     "0.98"
+    ],
+    [
+     "h_ref",
+     "3,000",
+     "3,008",
+     "7",
+     "0.03"
+    ],
+    [
+     "sumbuild",
+     "3,000",
+     "93,022",
+     "72,019",
+     "0.98"
+    ]
+   ]
+  },
+  {
+   "section": "The map against Fumola's, by size",
+   "section_id": "vs-fumola",
+   "columns": [
+    "world (squares)",
+    "Hazel, passed",
+    "Hazel, map",
+    "Fumola, passed",
+    "Fumola, HashMap",
+    "Hazel, map's set-up",
+    "Fumola, set-up"
+   ],
+   "rows": [
+    [
+     "3x3 (9)",
+     "1.25",
+     "0.82",
+     "1.23",
+     "0.638",
+     "4.18",
+     "39.1"
+    ],
+    [
+     "4x4 (16)",
+     "1.78",
+     "1.06",
+     "1.42",
+     "0.601",
+     "7.48",
+     "25.7"
+    ],
+    [
+     "6x6 (36)",
+     "3.9",
+     "1.18",
+     "2.23",
+     "0.602",
+     "17.2",
+     "26.3"
+    ],
+    [
+     "8x8 (64)",
+     "5.69",
+     "1.15",
+     "3.36",
+     "0.603",
+     "29.1",
+     "28.5"
+    ],
+    [
+     "12x12 (144)",
+     "11.6",
+     "1.54",
+     "6.32",
+     "0.588",
+     "67.2",
+     "33.9"
+    ],
+    [
+     "16x16 (256)",
+     "19.5",
+     "1.23",
+     "10.5",
+     "0.593",
+     "120",
+     "41.5"
+    ],
+    [
+     "24x24 (576)",
+     "43.9",
+     "1.65",
+     "22.2",
+     "0.584",
+     "277",
+     "65.7"
+    ],
+    [
+     "32x32 (1,024)",
+     "79.5",
+     "1.34",
+     "39.1",
+     "0.595",
+     "518",
+     "94.1"
+    ],
+    [
+     "48x48 (2,304)",
+     "182",
+     "2.03",
+     "89.6",
+     "0.587",
+     "1,180",
+     "189"
+    ],
+    [
+     "64x64 (4,096)",
+     "331",
+     "1.46",
+     "169",
+     "0.587",
+     "2,136",
+     "326"
+    ]
+   ]
+  }
+ ],
+ "files": [
+  "data/fast_path",
+  "data/map_setup",
+  "data/map_setup_walks",
+  "data/map_vs_fumola",
+  "data/map_vs_shipped",
+  "data/meta.json",
+  "data/rules.json",
+  "data/tables.json"
+ ],
+ "files_on_github": "https://github.com/matthewhammer/hazel-performance-analysis/tree/main/030/data"
+}
+</script>
+<!-- report-data: end -->
+<!-- anchors (tools/add_anchors.py) -->
+<script id="anchors-js">
+/* each section's "copy link": its public address, whichever copy of the page this is (tools/add_anchors.py) */
+(() => {
+  const n = (location.pathname.match(/(\d{3})\/?(index\.html)?$/) || [])[1];
+  const base = n ? "https://matthewhammer.org/hazel/reports/" + n + "/" : location.origin + location.pathname;
+  document.querySelectorAll(".copyanchor").forEach(b => b.addEventListener("click", async () => {
+    const url = base + "#" + b.dataset.id;
+    try { await navigator.clipboard.writeText(url); b.textContent = "copied"; b.classList.add("done"); }
+    catch (e) { prompt("this section's address", url); }
+    setTimeout(() => { b.textContent = "copy link"; b.classList.remove("done"); }, 1500);
+  }));
+})();
+</script>
+</body></html>

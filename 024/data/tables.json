@@ -1,0 +1,251 @@
+[
+ {
+  "section": "The representations they share",
+  "section_id": "representations",
+  "columns": [
+   "Representation",
+   "Defined at (dev)",
+   "What it holds",
+   "Made by",
+   "Read by"
+  ],
+  "rows": [
+   [
+    "Segment, piece, tile",
+    "Base.re:3-28",
+    "the editor's source: tiles with ids and child segments, grout, whitespace, projectors",
+    "Perform.go edits",
+    "MakeTerm (both parses), the layout, printing"
+   ],
+   [
+    "Zipper",
+    "ZipperBase.re:13-20",
+    "the caret's place in the segment: selection, relatives, caret, probes",
+    "Perform.go Editor.re:173-174",
+    "CachedStatics (probe ids, the parse), the syntax cache, Indicated.ci_of Indicated.re:228-236"
+   ],
+   [
+    "Editor model",
+    "Editor.re:13-32",
+    "root sort, the zipper, and the syntax cache (layout, projector shapes)",
+    "Editor.Update.update and calculate",
+    "the code views"
+   ],
+   [
+    "Exp.t",
+    "TermBase.re:254-258; exp_t is Annotated.t(exp_term, 'a) Grammar.re:79, with the constructors of exp_term Grammar.re:27",
+    "one tree for user terms and elaborated terms (DHExp includes Exp, DHExp.re:11); each node carries its ids, as IdTagged.t IdTagged.re:114, and its first id is its rep id IdTagged.re:165-166",
+    "MakeTerm MakeTerm.re:290-306; statics' elaboration",
+    "statics, the evaluator, projectors"
+   ],
+   [
+    "Info map",
+    "StaticsBase.re:4-11",
+    "Id.Map from id to Info; the last write wins",
+    "add in the walk Statics.re:204-269",
+    "the eight readers of Figure 1"
+   ],
+   [
+    "Info.exp",
+    "Info.re:35-53",
+    "one expression's statics: context, expected type, type, marks, co-context, elaboration",
+    "add; the lift Statics.re:356-357; the FixF patch Statics.re:2216-2228",
+    "the readers above; elab_term also the ModuleExp case, with #2651 Statics.re:2775-2780PR"
+   ],
+   [
+    "Ctx",
+    "Ctx.re:37-57",
+    "variables, constructors, type aliases and livelits in scope, newest first",
+    "binders: patterns, TyAlias, the module alias Statics.re:2124-2151",
+    "variable lookup Statics.re:691-705, completion TyDiCtx.re:192-201"
+   ],
+   [
+    "CoCtx",
+    "CoCtx.re:30-53",
+    "each free variable's uses, with the type each use expects",
+    "variables; union and mk at binders",
+    "unused-variable warnings, requires_fixf Statics.re:2172-2181, probe targets StaticsBase.re:46-53"
+   ],
+   [
+    "CachedStatics",
+    "CachedStatics.re:4-13",
+    "term, elaborated program, info map, error and warning ids, probe targets",
+    "CachedStatics.init CachedStatics.re:188-226",
+    "the editor, EvalResult, Perform.go"
+   ],
+   [
+    "EvalInfo",
+    "EvalInfo.re:18-29",
+    "for each expression id: its elaboration, co-context and probe targets",
+    "of_info_map EvalInfo.re:56-74",
+    "the worker's reuse check IncrEval.re:313-353"
+   ],
+   [
+    "Worker request and messages",
+    "WorkerServer.re:7-89",
+    "{expr, eval_info_map, prev}; Ack, ReusePlan, Stream, Result",
+    "EvalResult.calculate EvalResult.re:270-293",
+    "the worker; the page through EvalRequest.re:6-41"
+   ],
+   [
+    "Dynamics",
+    "Dynamics.re:50-55",
+    "probe samples, test results and theorems, by id",
+    "the worker's evaluator state",
+    "probe views, the test panel, the syntax cache"
+   ]
+  ]
+ },
+ {
+  "section": "What it costs, by shape and by nesting",
+  "section_id": "cost",
+  "columns": [
+   "Definition",
+   "dev",
+   "#2651",
+   "#2603 alone",
+   "both",
+   "Where the passes are"
+  ],
+  "rows": [
+   [
+    "a module literal, module M = { … } in body",
+    "3",
+    "2",
+    "2",
+    "1",
+    "probe Statics.re:2070, real Statics.re:2079, direct Statics.re:2762"
+   ],
+   [
+    "a function that does not name the module, module F = fun x -> x + 1 in F(2)",
+    "5",
+    "4",
+    "2",
+    "1",
+    "probe, two dropped and a final pass Statics.re:2090-2122, direct"
+   ],
+   [
+    "a function that names it, module F = fun x -> F(x) in 1",
+    "5",
+    "5",
+    "4",
+    "4",
+    "as above; #2651 falls back Statics.re:2781-2788PR; #2603 reuses the probe as the first dropped pass Statics.re:2135-21392603 head"
+   ]
+  ]
+ },
+ {
+  "section": "What a reviewer checks",
+  "section_id": "review",
+  "columns": [
+   "What a reviewer checks",
+   "What the reading found",
+   "Where"
+  ],
+  "rows": [
+   [
+    "Is the read-back the same as the direct pass?",
+    "Yes, in the let's non-recursive branch, with one exception. There the let's real pass and dev's direct pass get the same context (the ModuleExp's), the same expected type (p_syn.ty is the signature already desugared by mpat_to_pat, met with syn; desugar_sig ignores its context and changes nothing the second time), the same term and the same flags; only the ancestors list differs. And the elaboration recorded is the one returned on every path that ends in add. The exception is the lift (next row).",
+    "Statics.re:2079, Statics.re:2757-2762, ModuleHelpers.re:51-60, Typ.re:615-657, StaticsBase.re:268-277, Statics.re:268"
+   ],
+   [
+    "Where does it not hold?",
+    "Under a one-member signature the definition is lifted: autolabel_singleton_tuple records the bare analysis but returns (x = raw source). The extra-member module now gives M.x = 1 (dev: its raw source; confirmed by running in ^report(21)); Alexander confirmed 1 is right. A plain value under that signature gives 5 on dev and gets stuck with #2651 (the runs); Alexander accepts that too, since Modules II part 1 makes it stuck and a static error (his comment; below).",
+    "Statics.re:310-358, Statics.re:2778-2791, Test_Evaluator_Modules.re:86-96PR"
+   ],
+   [
+    "A tuple literal under a product signature",
+    "The let rearranges a tuple definition to the pattern's labels before analyzing it, so the read-back is the rearranged tuple's elaboration where dev's direct pass analyzed the original. The tuple case rearranges its own elaboration the same way, so the result should match; a test would settle it.",
+    "Statics.re:2054-2069, Statics.re:1117-1132"
+   ],
+   [
+    "What does the editor see inside the definition now?",
+    "The let's records, not the direct pass's. Two differences, neither in the elaboration: the ancestors list has the ModuleExp's id twice, as the body's already did (auto-probes drop adjacent repeats); and inside a function-valued module that does not name itself, the recorded context contains the module's own name, so completion can offer F inside F, where using it is an error. Dev never showed F there. Alexander's flag (question 3) would remove it.",
+    "Statics.re:270, Statics.re:2737-2741, AutoProbePerform.re:81-93, Statics.re:2090-2122, TyDiCtx.re:28-39"
+   ],
+   [
+    "Can the fallback be reached?",
+    "The self-naming arm, yes: that is the second commit's case. The 'no record found' arm looks unreachable: every analysis ends in add at the term's ids, and the map starts empty each run. It is defensive. Codecov's one missed patch line is the fallback's signature arm, Asc(_, typ) => typ, reached by a module with a signature whose definition names the module, or is a fix the user wrote; module F : Int -> Int = fun x -> F(x) in 1 reaches it when run, and reports its error as dev does (the runs). The self-naming arm is also reached by a definition the user wrote with fix (Alexander's finding, next row).",
+    "Statics.re:2781-2788PR, Statics.re:2784PR, Statics.re:4354-4362"
+   ],
+   [
+    "Is the self-naming signal robust?",
+    "It reads the shape of the let's elaboration. If the let ever wraps its fixpoint differently, the check turns false silently and the error goes away again; only the one test would notice. A flag that tells the let not to try the recursive case (Alexander's suggestion, question 3) would not depend on the shape at all. Found since, by Alexander: the check is also not exact. It matches a fixpoint the user wrote, module m = fix f -> …, which then takes the old second pass: dev's results, without the speed-up (the guard). He and Matthew agree the signal belongs in the let analysis, and the draft follow-up #2717 (Statics: a module binding is a non-recursive let) puts it there: the module's let is told it is not recursive, so there is no shape to read and no names_itself (the guard, What next).",
+    "Statics.re:2770-2774PR, Statics.re:2188-2230, Alexander's comment"
+   ],
+   [
+    "The worker's view",
+    "Unchanged in the common case, and more consistent: the record at the definition's id and the elaboration spliced into the program are now the same value. The guard matters here too: without it, a self-naming definition's record would keep the let's patched co-context, which lacks the module's name, beside an elaboration that uses it, so the reuse check would not see changes to that name.",
+    "IncrEval.re:326-341, Statics.re:2207-2228"
+   ],
+   [
+    "How strong are the tests?",
+    "The statics test passes on any static error anywhere in the program, so it does not pin where the error is or what kind. Untested: a function-valued module that does not name itself (module F = fun x -> x + 1 in F(2), 3), the bare value under a one-member signature, and the fallback's signature arm; all three were run with the command-line tool instead (the runs). The bare value's test goes on Modules II part 1. The draft follow-up #2717 (Statics: a module binding is a non-recursive let) pins the self-naming test, and its form under a signature, to one FreeConstructor mark at the inner F, and adds module F = fun x -> x + 1 in F(2), 3, as an evaluator test (question 5). Evaluator tests run without EvalInfo or a previous run, so they never exercise reuse.",
+    "Test_Statics_Modules.re:406-413PR, Test_Statics_Prelude.re:225-242PR, Test_Evaluator_Prelude.re:24-27PR, Test_Evaluator_Prelude.re:126-140PR"
+   ],
+   [
+    "Is it ready to merge?",
+    "Into dev, yes: 19 commits behind, and merges cleanly; dev's only change under src/language since the base is Ascriptions.re (#2679 (an ascription pushed through a value gives the value back)). It merges cleanly with #2603's head too. Against Modules II, one line conflicts in parts 2 to 9, which Alexander called no conflict in substance (question 2). On GitHub, Alexander (7h3kk1d) reviewed it from 18:24Z: the extra-member result matches how labeled tuples work, and his sealing PR would make y private (comment); he asked @disconcision whether defining a module to be a function should be an error (comment); and a 🤖 comment found that the stacked comments read as the PR's history and that \"add records exactly the elab_term it returns\" does not hold under autolabel_singleton_tuple (comment). At 18:42Z Matthew replied with the bare-value program run with the command-line tool (comment), with \"Done in fa3eef62ce\" (comment), and with a top-level 🤖 comment on the merge order and the tests to add (comment). From 18:48Z Alexander chose to accept the bare value's stuck result, option 2: stuck and a static error is right, as Modules II part 1 already gives, so dev needs no special case (comment); found that names_itself also matches a fixpoint the user wrote, module m = fix f -> …, which then takes the old second pass, with dev's results (comment; the guard); and suggested a name for the evaluator test that says what makes the case special and what it asserts (comment). At 19:00Z, at Matthew's word, b5a3e1d90a applied the name (reply), and Matthew replied that the bare-value test goes on Modules II part 1 (reply) and that a prototype of the let-analysis argument was in progress (reply). At 19:08Z Alexander explained the description's 6 → 4 warnings (next row). At 20:31Z the prototype was opened as the draft follow-up #2717 (Statics: a module binding is a non-recursive let), which cross-references #2651. CI: Fast checks and Full tests passed at fa3eef62ce (run 39655086864, 18:59Z); at b5a3e1d90a they passed too, Full tests at 19:26Z (run 39657741479); codecov's comment, updated at 19:27Z, now compares against b5a3e1d and still finds the one missed patch line.",
+    "git merge-tree; GitHub's reviews, comments and checks (read 2026-10-21, 19:34Z; read again at 20:34Z: nothing new on #2651 but #2717's cross-reference)"
+   ],
+   [
+    "Is the output the same? (the description's 6 → 4 warnings)",
+    "The PR's description reports hazel analyze -W on all 73 hazel-programs byte for byte the same before and after, except Measured.WARNING: id … not found lines: 6 before and 4 after on docs/reference/modules.hz. Alexander settled which two went, and why (his comment). His three runs each at the base 34f9605ddf and at fa3eef62ce gave 6 and 4 every time, with the rest of the output byte for byte the same. The ids with no source position are minted by autolabel_singleton_tuple, which analyzes fresh terms and records infos with marks at their ids. module M : {let x : Int} = { let x = 1; let y = 2 } goes through the lift: at the base it went through twice, in the expanded let and in the direct pass, and left two copies of its errors in the map; now it leaves one. analyze sorts and dedups every info with marks, so the duplicates showed only as warnings. So the info map loses two orphaned duplicate errors: a small improvement, not a change in output.",
+    "#2651's description (read 2026-10-21), modules.hz:165base, Alexander's comment"
+   ],
+   [
+    "Pre-existing, not this PR",
+    "The class override at the ModuleExp's id is overwritten by the final add; docs/modules.md still describes the deleted Elaborator; and the lift returns raw source, so any term needing elaboration under a one-member labeled product reaches the evaluator unelaborated (dev's extra-member result is one case). And the lift records error infos at fresh ids with no source position, which is what those warnings were: a dev issue of its own, Alexander notes, not for this PR (his comment).",
+    "Statics.re:2743-2756, Statics.re:2765, modules.md:261-264, Statics.re:329-334"
+   ]
+  ]
+ },
+ {
+  "section": "Six programs, run with the command-line tool",
+  "section_id": "runs",
+  "columns": [
+   "Program",
+   "dev 962a7cb009",
+   "#2651 29c08fd8fa",
+   "The path it takes"
+  ],
+  "rows": [
+   [
+    "module M : { let x : Int } = 5 in M.x",
+    "5, no static errors",
+    "5 .x (stuck), no static errors",
+    "the one-member lift, with a bare value (the corner)"
+   ],
+   [
+    "module M : { let x : Int } = { let x = 1; let y = 2 } in M.x",
+    "{ let x = 1; let y = 2 } (the raw source), 3 static errors (\"Expecting type Int but got inconsistent type x=Int, y=Int\")",
+    "1, the same 3 errors",
+    "the one-member lift, with an extra member (the corner)"
+   ],
+   [
+    "module F = fun x -> F(x) in 1",
+    "runs to 1; 1 static error, \"Constructor is not defined\" at the inner F (1:21)",
+    "the same",
+    "the guard's fallback (the guard)"
+   ],
+   [
+    "module F = fun x -> x + 1 in F(2)",
+    "3, no static errors",
+    "3, no static errors",
+    "the read-back after the let's recursive path, untested in the PR (question 5)"
+   ],
+   [
+    "module M : { let x : Int } = { let x = 42 } in M.x",
+    "42, no static errors",
+    "42, no static errors",
+    "a module literal under a one-member signature, which on dev needs the swap of elaborations (question 4)"
+   ],
+   [
+    "module F : Int -> Int = fun x -> F(x) in 1",
+    "runs to 1; \"Constructor is not defined\" at the inner F (1:34)",
+    "the same",
+    "the fallback's signature arm, Codecov's one missed line (the checks)"
+   ]
+  ]
+ }
+]

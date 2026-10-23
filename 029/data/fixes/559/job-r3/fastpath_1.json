@@ -1,0 +1,485 @@
+[
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 100,
+  "ms": 10.4995,
+  "reps": 60,
+  "steps": 2718,
+  "by_kind": {
+   "FunAp": 101,
+   "FixUnwrap": 100,
+   "VarLookup": 301,
+   "WrapClosure": 1,
+   "FixClosure": 1,
+   "evaluate": 907,
+   "CompleteClosure": 101,
+   "fast path": 402,
+   "passes skipped": 502,
+   "": 302
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 1000,
+  "ms": 89.2488,
+  "reps": 27,
+  "steps": 27018,
+  "by_kind": {
+   "FunAp": 1001,
+   "FixUnwrap": 1000,
+   "VarLookup": 3001,
+   "WrapClosure": 1,
+   "FixClosure": 1,
+   "evaluate": 9007,
+   "CompleteClosure": 1001,
+   "fast path": 4002,
+   "passes skipped": 5002,
+   "": 3002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "count",
+  "n": 5000,
+  "ms": 495.5928,
+  "reps": 5,
+  "steps": 135018,
+  "by_kind": {
+   "FunAp": 5001,
+   "FixUnwrap": 5000,
+   "VarLookup": 15001,
+   "WrapClosure": 1,
+   "FixClosure": 1,
+   "evaluate": 45007,
+   "CompleteClosure": 5001,
+   "fast path": 20002,
+   "passes skipped": 25002,
+   "": 15002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "fib",
+  "n": 10,
+  "ms": 17.7314,
+  "reps": 60,
+  "steps": 4948,
+  "by_kind": {
+   "FunAp": 177,
+   "Ascription": 89,
+   "FixUnwrap": 176,
+   "VarLookup": 617,
+   "WrapClosure": 1,
+   "FixClosure": 2,
+   "evaluate": 1857,
+   "CompleteClosure": 177,
+   "fast path": 529,
+   "passes skipped": 705,
+   "": 618
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "fib",
+  "n": 13,
+  "ms": 70.608,
+  "reps": 34,
+  "steps": 21076,
+  "by_kind": {
+   "FunAp": 753,
+   "Ascription": 377,
+   "FixUnwrap": 752,
+   "VarLookup": 2633,
+   "WrapClosure": 1,
+   "FixClosure": 2,
+   "evaluate": 7905,
+   "CompleteClosure": 753,
+   "fast path": 2257,
+   "passes skipped": 3009,
+   "": 2634
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "fib",
+  "n": 16,
+  "ms": 315.5348,
+  "reps": 8,
+  "steps": 89396,
+  "by_kind": {
+   "FunAp": 3193,
+   "Ascription": 1597,
+   "FixUnwrap": 3192,
+   "VarLookup": 11173,
+   "WrapClosure": 1,
+   "FixClosure": 2,
+   "evaluate": 33525,
+   "CompleteClosure": 3193,
+   "fast path": 9577,
+   "passes skipped": 12769,
+   "": 11174
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "sumbuild",
+  "n": 100,
+  "ms": 28.2131,
+  "reps": 60,
+  "steps": 6044,
+  "by_kind": {
+   "CaseApply": 101,
+   "no step": 101,
+   "FunAp": 203,
+   "Ascription": 100,
+   "FixUnwrap": 200,
+   "VarLookup": 903,
+   "ListCons": 100,
+   "WrapClosure": 3,
+   "FixClosure": 2,
+   "evaluate": 2419,
+   "CompleteClosure": 304,
+   "fast path": 503,
+   "passes skipped": 703,
+   "": 402
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "sumbuild",
+  "n": 1000,
+  "ms": 890.0919,
+  "reps": 5,
+  "steps": 60044,
+  "by_kind": {
+   "CaseApply": 1001,
+   "no step": 1001,
+   "FunAp": 2003,
+   "Ascription": 1000,
+   "FixUnwrap": 2000,
+   "VarLookup": 9003,
+   "ListCons": 1000,
+   "WrapClosure": 3,
+   "FixClosure": 2,
+   "evaluate": 24019,
+   "CompleteClosure": 3004,
+   "fast path": 5003,
+   "passes skipped": 7003,
+   "": 4002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "sumbuild",
+  "n": 3000,
+  "ms": 7381.1721,
+  "reps": 5,
+  "steps": 180044,
+  "by_kind": {
+   "CaseApply": 3001,
+   "no step": 3001,
+   "FunAp": 6003,
+   "Ascription": 3000,
+   "FixUnwrap": 6000,
+   "VarLookup": 27003,
+   "ListCons": 3000,
+   "WrapClosure": 3,
+   "FixClosure": 2,
+   "evaluate": 72019,
+   "CompleteClosure": 9004,
+   "fast path": 15003,
+   "passes skipped": 21003,
+   "": 12002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "mapinc",
+  "n": 100,
+  "ms": 40.4673,
+  "reps": 60,
+  "steps": 9964,
+  "by_kind": {
+   "CaseApply": 202,
+   "no step": 202,
+   "FunAp": 404,
+   "Ascription": 100,
+   "FixUnwrap": 300,
+   "VarLookup": 1503,
+   "ListCons": 200,
+   "WrapClosure": 5,
+   "RemoveParens": 1,
+   "FixClosure": 3,
+   "evaluate": 4028,
+   "CompleteClosure": 606,
+   "fast path": 804,
+   "passes skipped": 1104,
+   "": 502
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "mapinc",
+  "n": 1000,
+  "ms": 1067.9854,
+  "reps": 5,
+  "steps": 99064,
+  "by_kind": {
+   "CaseApply": 2002,
+   "no step": 2002,
+   "FunAp": 4004,
+   "Ascription": 1000,
+   "FixUnwrap": 3000,
+   "VarLookup": 15003,
+   "ListCons": 2000,
+   "WrapClosure": 5,
+   "RemoveParens": 1,
+   "FixClosure": 3,
+   "evaluate": 40028,
+   "CompleteClosure": 6006,
+   "fast path": 8004,
+   "passes skipped": 11004,
+   "": 5002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "mapinc",
+  "n": 3000,
+  "ms": 7434.1881,
+  "reps": 5,
+  "steps": 297064,
+  "by_kind": {
+   "CaseApply": 6002,
+   "no step": 6002,
+   "FunAp": 12004,
+   "Ascription": 3000,
+   "FixUnwrap": 9000,
+   "VarLookup": 45003,
+   "ListCons": 6000,
+   "WrapClosure": 5,
+   "RemoveParens": 1,
+   "FixClosure": 3,
+   "evaluate": 120028,
+   "CompleteClosure": 18006,
+   "fast path": 24004,
+   "passes skipped": 33004,
+   "": 15002
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "skip",
+  "n": 100,
+  "ms": 0.1211,
+  "reps": 60,
+  "steps": 10,
+  "by_kind": {
+   "FunAp": 1,
+   "VarLookup": 1,
+   "WrapClosure": 1,
+   "evaluate": 4,
+   "CompleteClosure": 1,
+   "fast path": 1,
+   "passes skipped": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "skip",
+  "n": 1000,
+  "ms": 0.5066,
+  "reps": 60,
+  "steps": 10,
+  "by_kind": {
+   "FunAp": 1,
+   "VarLookup": 1,
+   "WrapClosure": 1,
+   "evaluate": 4,
+   "CompleteClosure": 1,
+   "fast path": 1,
+   "passes skipped": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "skip",
+  "n": 3000,
+  "ms": 1.4172,
+  "reps": 60,
+  "steps": 10,
+  "by_kind": {
+   "FunAp": 1,
+   "VarLookup": 1,
+   "WrapClosure": 1,
+   "evaluate": 4,
+   "CompleteClosure": 1,
+   "fast path": 1,
+   "passes skipped": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_id",
+  "n": 100,
+  "ms": 0.0445,
+  "reps": 60,
+  "steps": 10,
+  "by_kind": {
+   "FunAp": 1,
+   "VarLookup": 2,
+   "WrapClosure": 1,
+   "evaluate": 5,
+   "CompleteClosure": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_id",
+  "n": 1000,
+  "ms": 0.0336,
+  "reps": 60,
+  "steps": 10,
+  "by_kind": {
+   "FunAp": 1,
+   "VarLookup": 2,
+   "WrapClosure": 1,
+   "evaluate": 5,
+   "CompleteClosure": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_id",
+  "n": 3000,
+  "ms": 0.0336,
+  "reps": 60,
+  "steps": 10,
+  "by_kind": {
+   "FunAp": 1,
+   "VarLookup": 2,
+   "WrapClosure": 1,
+   "evaluate": 5,
+   "CompleteClosure": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_ref",
+  "n": 100,
+  "ms": 0.0701,
+  "reps": 60,
+  "steps": 116,
+  "by_kind": {
+   "FunAp": 1,
+   "VarLookup": 2,
+   "WrapClosure": 1,
+   "evaluate": 7,
+   "CompleteClosure": 2,
+   "fast path": 1,
+   "passes skipped": 101,
+   "": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_ref",
+  "n": 1000,
+  "ms": 0.0982,
+  "reps": 60,
+  "steps": 1016,
+  "by_kind": {
+   "FunAp": 1,
+   "VarLookup": 2,
+   "WrapClosure": 1,
+   "evaluate": 7,
+   "CompleteClosure": 2,
+   "fast path": 1,
+   "passes skipped": 1001,
+   "": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_ref",
+  "n": 3000,
+  "ms": 0.1689,
+  "reps": 60,
+  "steps": 3016,
+  "by_kind": {
+   "FunAp": 1,
+   "VarLookup": 2,
+   "WrapClosure": 1,
+   "evaluate": 7,
+   "CompleteClosure": 2,
+   "fast path": 1,
+   "passes skipped": 3001,
+   "": 1
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_walk",
+  "n": 100,
+  "ms": 7.4659,
+  "reps": 60,
+  "steps": 2424,
+  "by_kind": {
+   "CaseApply": 101,
+   "FunAp": 102,
+   "FixUnwrap": 100,
+   "VarLookup": 301,
+   "WrapClosure": 2,
+   "FixClosure": 1,
+   "evaluate": 910,
+   "CompleteClosure": 203,
+   "fast path": 202,
+   "passes skipped": 402,
+   "": 100
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_walk",
+  "n": 1000,
+  "ms": 101.592,
+  "reps": 24,
+  "steps": 24024,
+  "by_kind": {
+   "CaseApply": 1001,
+   "FunAp": 1002,
+   "FixUnwrap": 1000,
+   "VarLookup": 3001,
+   "WrapClosure": 2,
+   "FixClosure": 1,
+   "evaluate": 9010,
+   "CompleteClosure": 2003,
+   "fast path": 2002,
+   "passes skipped": 4002,
+   "": 1000
+  }
+ },
+ {
+  "sys": "hazel",
+  "k": "h_walk",
+  "n": 3000,
+  "ms": 333.1563,
+  "reps": 8,
+  "steps": 72024,
+  "by_kind": {
+   "CaseApply": 3001,
+   "FunAp": 3002,
+   "FixUnwrap": 3000,
+   "VarLookup": 9001,
+   "WrapClosure": 2,
+   "FixClosure": 1,
+   "evaluate": 27010,
+   "CompleteClosure": 6003,
+   "fast path": 6002,
+   "passes skipped": 12002,
+   "": 3000
+  }
+ }
+]

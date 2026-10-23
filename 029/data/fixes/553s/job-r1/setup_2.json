@@ -1,0 +1,44 @@
+[
+ {
+  "n": 16,
+  "cells": 256,
+  "annotated_squares": 70.59,
+  "annotated_in_order": 30.5,
+  "annotated_count": 11.3,
+  "annotated_take": 38.91,
+  "annotated_id": 4.32,
+  "unannotated_squares": 71.36,
+  "unannotated_in_order": 29.01,
+  "unannotated_count": 11.41,
+  "unannotated_take": 52.68,
+  "unannotated_id": 4.5
+ },
+ {
+  "n": 32,
+  "cells": 1024,
+  "annotated_squares": 283.1,
+  "annotated_in_order": 130.33,
+  "annotated_count": 56.11,
+  "annotated_take": 167.88,
+  "annotated_id": 13.88,
+  "unannotated_squares": 335.53,
+  "unannotated_in_order": 130.73,
+  "unannotated_count": 58.46,
+  "unannotated_take": 196.61,
+  "unannotated_id": 15.44
+ },
+ {
+  "n": 64,
+  "cells": 4096,
+  "annotated_squares": 1191.97,
+  "annotated_in_order": 535.17,
+  "annotated_count": 278.73,
+  "annotated_take": 726.43,
+  "annotated_id": 68.86,
+  "unannotated_squares": 1262.56,
+  "unannotated_in_order": 491.77,
+  "unannotated_count": 277.67,
+  "unannotated_take": 819.25,
+  "unannotated_id": 68.22
+ }
+]

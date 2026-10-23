@@ -12,12 +12,12 @@ import os, re, sys
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 page = os.path.expanduser(sys.argv[1] if len(sys.argv) > 1 else "~/matthewhammer.github.io/hazel/index.html")
-series = open(os.path.join(HERE, "series", "index.html")).read()
+series = open(os.path.join(HERE, "index.html")).read()   # (the series index, the site's root since ^ticket(576))
 
 cards = re.findall(r'<div class="num"><a href="(\d{3})/">.*?</a> · ([\d-]+)</div>\s*'
                    r'<div class="title"><a href="\d{3}/">(.*?)</a></div>', series, re.S)
 if not cards:
-    sys.exit("no report cards found in series/index.html")
+    sys.exit("no report cards found in the series index (index.html)")
 items = []
 for nnn, date, title in cards:
     n = int(nnn)

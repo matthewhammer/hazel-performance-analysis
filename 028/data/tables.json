@@ -126,6 +126,60 @@
   ]
  },
  {
+  "section": "Traps, found translating",
+  "section_id": "traps",
+  "columns": [
+   "trap",
+   "kind",
+   "what it does",
+   "proposed fix"
+  ],
+  "rows": [
+   [
+    "Text != is inverted.",
+    "bug",
+    "\"a\" != \"b\" is false, \"a\" != \"a\" is true. The text arm of Neq in relop (crates/fumola_semantics/src/lib/vm_ops.rs) says t1 == t2. Until fixed: not (a == b).",
+    "One line: t1 != t2, and a test of != for every kind of value."
+   ],
+   [
+    "Literal patterns match only (), null and Nats.",
+    "missing",
+    "case \"E\" never matches, and neither do case true, case (-1) or case 0.5: the grammar takes any literal in a pattern, but pattern_matches (vm_match.rs) has arms only for Unit, Null and Nat, so the rest fall through to no match, silently. Until fixed: test with == in an if.",
+    "An arm for every literal: Text, Bool, Char, Int (a negative literal is UnOpLiteral), and Float by value; a pattern of a kind that can never match its value an error, not a quiet miss."
+   ],
+   [
+    "Nat and Int mix in some places and not others.",
+    "missing, and one silent",
+    "- mixes them (a Nat minus a larger Nat is an Int, as it should be), but +, *, / and % do not, and Int + Nat is worse than an error: it falls to try_symbolic_binop and comes back as the unevaluated expression -2 + 1. < mixes them; <=, > and >= are not implemented. Int(4) == Nat(4) is false, and they are different map keys.",
+    "One rule for whole numbers: a result of 0 or more is always a Nat, below 0 always an Int (as - already does), for every operation; arithmetic and all six comparisons defined for every pair; so == and a map's keys agree by value. A symbolic result only when an operand is symbolic."
+   ],
+   [
+    "No Float comparison.",
+    "missing",
+    "0.25 < 0.5 stops: <, <=, > and >= have no Float arm. Found porting the Trap room, whose random wiring compares draws with 0.5; matthewhammer/kids-choice-games#4 passes the draws as Nats in millionths instead, so the rule's globals no longer match Hazel's.",
+    "The four comparisons on Floats, and between a Float and a Nat or an Int (as + already mixes Float and Nat); then the game's draws go back to Floats."
+   ],
+   [
+    "No order on text.",
+    "missing",
+    "\"a\" < \"b\" stops. A map keyed by text (a lever's id) wants it; Hazel has string_compare.",
+    "The four comparisons on Text, by code point, as Rust compares strings."
+   ],
+   [
+    "No escapes in text.",
+    "missing",
+    "The lexer accepts a backslash and the character after it, but the literal keeps both: \"a\\\"b\" is the text a\\\"b, and \"a\\nb\" has a backslash and an n.",
+    "Escapes read when the literal is: \\\", \\\\, \\n, \\t, \\u{...}; and written back by the printer, so a printed text reads in again."
+   ],
+   [
+    "A tuple payload, twice parenthesised. Not a trap.",
+    "corrected",
+    "Run again on 2026-10-23: #G(1, 2), #G(1, 2, #D) and the pattern #G(a, b) all work with single parentheses, and the double ones give the same value. The draft of 2026-10-22 was wrong here.",
+    "None; the game's literal writer may drop its extra parentheses."
+   ]
+  ]
+ },
+ {
   "section": "Across the JS boundary",
   "section_id": "boundary",
   "columns": [

@@ -111,6 +111,91 @@ h2:hover .copyanchor, h3:hover .copyanchor, .lh:hover .copyanchor, .copyanchor:f
 </head>
 <body><main>
 <p class="series"><a href="../">Hazel reports</a> · <code class="ref"><b>^report(</b>29<b>)</b></code> · performance · started 2026-10-22 · <span class="wip">work in progress</span> · about 10 minutes to read</p>
+<!-- listen: begin -->
+<style>
+  .listen { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 6px 0 10px; font: 13px system-ui, sans-serif; color: var(--muted, GrayText); }
+  .listen[hidden] { display: none; }
+  .listen button { font: inherit; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--ink, CanvasText); cursor: pointer; }
+  .listen button[aria-pressed="true"] { border-color: var(--accent, #6d28d9); color: var(--accent, #6d28d9); }
+  .listen select { font: inherit; max-width: 16em; border-radius: 6px; border: 1px solid var(--line, #ccc); background: var(--paper, Canvas); color: var(--ink, CanvasText); }
+  .listen input[type=range] { width: 8em; vertical-align: middle; accent-color: var(--accent, #6d28d9); }
+  .listen .speed { min-width: 3.2em; display: inline-block; font-variant-numeric: tabular-nums; }
+  .listen-now { outline: 2px solid color-mix(in srgb, var(--accent, #6d28d9) 55%, transparent); outline-offset: 3px; border-radius: 4px;
+    background: color-mix(in srgb, var(--accent, #6d28d9) 8%, transparent); }
+  @media print { .listen { display: none; } }
+</style>
+<div class="listen" hidden role="group" aria-label="Listen to this report">
+  <button type="button" class="listen-play" aria-pressed="false">🔊 Listen</button>
+  <button type="button" class="listen-stop">⏹ Stop</button>
+  <label>speed <input type="range" class="listen-rate" min="0.5" max="2" step="0.1" value="1"> <span class="speed">1.0×</span></label>
+  <select class="listen-voice" aria-label="voice"></select>
+  <span class="listen-time"></span>
+</div>
+<script>
+/* (^ticket(573)) Listen: the report read aloud by this browser's own voices; nothing leaves the page. */
+// (once the whole page is parsed: this runs where the bar is, near the top, before the report's sections exist)
+document.addEventListener("DOMContentLoaded", () => {
+  const S = window.speechSynthesis, bar = document.querySelector(".listen");
+  if (!S || !bar || typeof SpeechSynthesisUtterance === "undefined") return;
+  bar.hidden = false;
+  const main = document.querySelector("main") || document.body;
+  const play = bar.querySelector(".listen-play"), stop = bar.querySelector(".listen-stop"), rate = bar.querySelector(".listen-rate"),
+        speed = bar.querySelector(".speed"), voiceSel = bar.querySelector(".listen-voice"), timeEl = bar.querySelector(".listen-time");
+  const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (_) { return null; } };
+  // the blocks to read, in order: prose only, each once (a point holding paragraphs is read as its paragraphs)
+  const SKIP = "table, pre, svg, script, style, .listen, .theme-toggle, details:not([open]), [aria-hidden=true], button, nav, #report-data";
+  const blocks = [...main.querySelectorAll("h1, .sub, h2, h3, h4, p, li, blockquote, figcaption, summary")]
+    .filter(el => !el.closest(SKIP) && !el.querySelector("p, li, blockquote") && !el.matches(".series"));
+  const textOf = el => { const c = el.cloneNode(true); c.querySelectorAll(".anchor, .copyanchor, button, sup").forEach(x => x.remove()); return c.textContent.replace(/\s+/g, " ").trim(); };
+  const texts = blocks.map(textOf), words = texts.reduce((n, t) => n + (t ? t.split(" ").length : 0), 0);
+  const WPM = 160;
+  let i = 0, playing = false, voices = [];
+  const r = () => +rate.value;
+  const showTime = () => {
+    speed.textContent = r().toFixed(1) + "×";
+    const left = texts.slice(playing || i ? i : 0).reduce((n, t) => n + (t ? t.split(" ").length : 0), 0);
+    const min = Math.max(1, Math.round(left / (WPM * r())));
+    timeEl.textContent = (i && left < words ? "about " + min + " min left" : "about " + min + " min to listen") + " at " + r().toFixed(1) + "×";
+  };
+  const fill = () => {
+    voices = S.getVoices().filter(v => !document.documentElement.lang || v.lang.slice(0, 2) === document.documentElement.lang.slice(0, 2) || v.lang.startsWith("en"));
+    const want = store("listen-voice");
+    voiceSel.replaceChildren(...voices.map(v => { const o = document.createElement("option"); o.value = v.name; o.textContent = v.name + (v.localService ? "" : " (online)"); return o; }));
+    voiceSel.hidden = !voices.length;
+    if (want && voices.some(v => v.name === want)) voiceSel.value = want;
+    else { const d = voices.find(v => v.default) || voices[0]; if (d) voiceSel.value = d.name; }
+  };
+  fill(); if ("onvoiceschanged" in S) S.onvoiceschanged = fill;
+  const saved = parseFloat(store("listen-rate")); if (saved >= 0.5 && saved <= 2) rate.value = saved;
+  const mark = el => { document.querySelectorAll(".listen-now").forEach(x => x.classList.remove("listen-now")); if (el) { el.classList.add("listen-now"); el.scrollIntoView({ block: "nearest", behavior: "smooth" }); } };
+  // one block at a time (a long utterance is cut short in some browsers); the next when it ends
+  const speak = () => {
+    while (i < blocks.length && !texts[i]) i++;
+    if (i >= blocks.length) { end(); return; }
+    const u = new SpeechSynthesisUtterance(texts[i]), v = voices.find(v => v.name === voiceSel.value);
+    if (v) { u.voice = v; u.lang = v.lang; }
+    u.rate = r();
+    u.onend = () => { if (!playing) return; i++; showTime(); speak(); };
+    u.onerror = e => { if (e.error === "interrupted" || e.error === "canceled") return; i++; if (playing) speak(); };
+    mark(blocks[i]); S.speak(u);
+  };
+  const end = () => { playing = false; S.cancel(); i = 0; mark(null); play.textContent = "🔊 Listen"; play.setAttribute("aria-pressed", "false"); showTime(); };
+  play.onclick = () => {
+    if (playing && !S.paused) { S.pause(); play.textContent = "▶ Resume"; return; }
+    if (playing && S.paused) { S.resume(); play.textContent = "⏸ Pause"; return; }
+    playing = true; play.textContent = "⏸ Pause"; play.setAttribute("aria-pressed", "true"); S.cancel(); speak();
+  };
+  stop.onclick = end;
+  // a new speed or voice takes effect from the block being read, said again from its start
+  const again = () => { if (playing) { S.cancel(); setTimeout(speak, 0); } };
+  rate.oninput = () => { store("listen-rate", rate.value); showTime(); };
+  rate.onchange = again;
+  voiceSel.onchange = () => { store("listen-voice", voiceSel.value); again(); };
+  addEventListener("pagehide", () => S.cancel());
+  showTime();
+});
+</script>
+<!-- listen: end -->
 <h1>Where the Gap Comes From</h1>
 <p class="sub">Matthew, on <a href="../027/#fig-sizes"><code class="ref"><b>^report(</b>27<b>)</b></code>'s Figure 1</a>: <q>seems to say that Hazel and Fumola are less than 3x apart in this situation. How would you attribute the difference in performance? Is it Wasm vs JS -- or more than that? Both use a small-step evaluation system, for a language with purely-functional, higher order data. Let's draft a report WIP --- looking more into the contrast and how it shows up with actual analysis of each system, while running the same programs.</q> Eight small programs, written the same way in both languages, timed, step-counted and profiled (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-545"><code class="ref"><b>^ticket(</b>545<b>)</b></code></a>).</p>
 
@@ -255,6 +340,22 @@ h2:hover .copyanchor, h3:hover .copyanchor, .lh:hover .copyanchor, .copyanchor:f
 <h3 id="fix-world-held">The World rule, the world held<a class="anchor" href="#fix-world-held" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="fix-world-held" title="copy this section's address">copy link</button></h3><p><a href="../025/"><code class="ref"><b>^report(</b>25<b>)</b></code></a>'s held list (walked) and <a href="https://matthewhammer.org/hazel/dashboard/#ticket-540"><code class="ref"><b>^ticket(</b>540<b>)</b></code></a>'s balanced tree (looked up), each built once and held in a closure, ms a move, before and after <a href="https://matthewhammer.org/hazel/dashboard/#ticket-547"><code class="ref"><b>^ticket(</b>547<b>)</b></code></a>:</p><div class="scroll"><table><tr><th>map (cells)</th><th>held list, before</th><th>held list, after</th><th>tree, before</th><th>tree, after</th><th>neighbours passed</th></tr><tr><td class=n>8x8 (64)</td><td class=n>7.53</td><td class=n>5.71</td><td class=n>4.68</td><td class=n>1.72</td><td class=n>1.54</td></tr><tr><td class=n>16x16 (256)</td><td class=n>22</td><td class=n>16</td><td class=n>10.2</td><td class=n>1.22</td><td class=n>2.11</td></tr><tr><td class=n>32x32 (1,024)</td><td class=n>89.4</td><td class=n>61.7</td><td class=n>33.4</td><td class=n>1.41</td><td class=n>1.32</td></tr><tr><td class=n>64x64 (4,096)</td><td class=n>332</td><td class=n>262</td><td class=n>129</td><td class=n>1.19</td><td class=n>1.43</td></tr></table></div>
 <h3 id="fix-fumola-json">Fumola: values in as JSON<a class="anchor" href="#fix-fumola-json" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="fix-fumola-json" title="copy this section's address">copy link</button></h3><p>Fumola's wasm build took only source text, so a passed map was written out and parsed, then stepped back into a value, every call. <a href="https://github.com/Adapton/fumola/pull/148">Adapton/fumola#148</a> adds <code>fumola_define_json</code> and <code>fumola_eval_top_with</code>: JSON read straight into Fumola values and bound by name (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-555"><code class="ref"><b>^ticket(</b>555<b>)</b></code></a>). The World rule with the map passed, wasm in node on one of GitHub's runners, three rounds, <code>JSON.stringify</code> counted in, ms a call:</p><div class="scroll"><table><tr><th>map (cells)</th><th>as text</th><th>as JSON</th><th>faster</th><th>steps, text</th><th>steps, JSON</th><th>neighbours, text</th><th>neighbours, JSON</th></tr><tr><td class=n>3x3 (9)</td><td class=n>1.3</td><td class=n>0.827</td><td class=n><b>1.6x</b></td><td class=n>922</td><td class=n>750</td><td class=n>1.02</td><td class=n>0.773</td></tr><tr><td class=n>4x4 (16)</td><td class=n>1.43</td><td class=n>0.879</td><td class=n><b>1.6x</b></td><td class=n>1,404</td><td class=n>1,106</td><td class=n>1.1</td><td class=n>0.767</td></tr><tr><td class=n>8x8 (64)</td><td class=n>3.37</td><td class=n>1.44</td><td class=n><b>2.3x</b></td><td class=n>3,792</td><td class=n>2,630</td><td class=n>1.1</td><td class=n>0.78</td></tr><tr><td class=n>16x16 (256)</td><td class=n>10.5</td><td class=n>3.37</td><td class=n><b>3.1x</b></td><td class=n>13,080</td><td class=n>8,462</td><td class=n>1.07</td><td class=n>0.751</td></tr><tr><td class=n>32x32 (1,024)</td><td class=n>41.6</td><td class=n>12.6</td><td class=n><b>3.3x</b></td><td class=n>49,704</td><td class=n>31,262</td><td class=n>1.06</td><td class=n>0.754</td></tr><tr><td class=n>64x64 (4,096)</td><td class=n>183</td><td class=n>49.9</td><td class=n><b>3.7x</b></td><td class=n>195,144</td><td class=n>121,406</td><td class=n>1.08</td><td class=n>0.752</td></tr></table></div><p>What is left is the rule walking the list of cells; holding the world in a HashMap remains the way to a flat move (about 0.6 ms).</p>
 <h3 id="fix-world-passed">The World rule, the world passed<a class="anchor" href="#fix-world-passed" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="fix-world-passed" title="copy this section's address">copy link</button></h3><p>The map passed at every call, as JS (converted each time) and as a handle (converted once, <code>Hazel.value</code>), ms a call; <i>ignore</i> is a rule that does not look at it, so the boundary alone; <i>U</i> and <i>A</i> the unannotated and annotated finder:</p><div class="scroll"><table><tr><th>map (cells)</th><th>ignore, JS</th><th>ignore, handle</th><th>U, JS</th><th>U, handle</th><th>A, JS</th><th>A, handle</th><th>Hazel.value, once</th></tr><tr><td class=n>8x8 (64)</td><td class=n>0.382</td><td class=n>0.027</td><td class=n>8</td><td class=n>5.72</td><td class=n>6.94</td><td class=n>5.84</td><td class=n>2.57</td></tr><tr><td class=n>16x16 (256)</td><td class=n>1.6</td><td class=n>0.042</td><td class=n>22.1</td><td class=n>18.5</td><td class=n>24.1</td><td class=n>18.4</td><td class=n>2.53</td></tr><tr><td class=n>32x32 (1,024)</td><td class=n>10.1</td><td class=n>0.025</td><td class=n>90.8</td><td class=n>69.4</td><td class=n>92.3</td><td class=n>70.2</td><td class=n>11.3</td></tr><tr><td class=n>64x64 (4,096)</td><td class=n>48.9</td><td class=n>0.025</td><td class=n>409</td><td class=n>311</td><td class=n>408</td><td class=n>312</td><td class=n>47.3</td></tr></table></div>
+<h2 id="fixes-2">Second fixes, on trial branches<a class="anchor" href="#fixes-2" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="fixes-2" title="copy this section's address">copy link</button></h2>
+<p>Two more, measured on GitHub's runners, never the laptop: four jobs each, the two builds alternating on one runner, so a time is compared only with the other build on the same machine; the median over the jobs. Not PRs yet.</p>
+<h3 id="fix-fast-path">The evaluator's fast path for values<a class="anchor" href="#fix-fast-path" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="fix-fast-path" title="copy this section's address">copy link</button></h3>
+<p>Every term the evaluator visits goes through five stages before its rule, values included (<a href="#step-5">What next, step 5</a>). <code>trial/r25-fastpath</code> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-559"><code class="ref"><b>^ticket(</b>559<b>)</b></code></a>) returns a term already final at once, when nothing is probed, nothing reused and nothing published (the library's calls, an app's update; the editor always has statics, so it never takes this path): an atom, a constructor, a function's closure, or a list or tuple of these. The step count goes up by the passes the stages would have made, so it reads the same, and the evaluator's tests pass unchanged (CI green on both trial branches). Passes from the counter build and the fast path on it, exact; times from <code>trial/r25-best</code> and the same fast path on it (<code>trial/r25-fastpath-best</code>):</p>
+<div class="scroll"><table><tr><th>program</th><th>n</th><th>passes</th><th>passes, fast path</th><th>ms</th><th>ms, fast path</th><th>faster</th><th>noise</th></tr><tr><td><code>count</code></td><td class=n>100</td><td class=n>1,409</td><td class=n>907</td><td class=n>3.31</td><td class=n>2.91</td><td class=n><b>1.1x</b></td><td class=n>3%</td></tr><tr><td><code>count</code></td><td class=n>1,000</td><td class=n>14,009</td><td class=n>9,007</td><td class=n>39.2</td><td class=n>36.2</td><td class=n><b>1.1x</b></td><td class=n>2%</td></tr><tr><td><code>count</code></td><td class=n>5,000</td><td class=n>70,009</td><td class=n>45,007</td><td class=n>202</td><td class=n>189</td><td class=n><b>1.1x</b></td><td class=n>4%</td></tr><tr><td><code>fib</code></td><td class=n>10</td><td class=n>2,562</td><td class=n>1,857</td><td class=n>5.24</td><td class=n>4.71</td><td class=n><b>1.1x</b></td><td class=n>2%</td></tr><tr><td><code>fib</code></td><td class=n>13</td><td class=n>10,914</td><td class=n>7,905</td><td class=n>21.6</td><td class=n>19.7</td><td class=n><b>1.1x</b></td><td class=n>2%</td></tr><tr><td><code>fib</code></td><td class=n>16</td><td class=n>46,294</td><td class=n>33,525</td><td class=n>91.8</td><td class=n>83.3</td><td class=n><b>1.1x</b></td><td class=n>3%</td></tr><tr><td><code>sumbuild</code></td><td class=n>100</td><td class=n>3,122</td><td class=n>2,419</td><td class=n>13.7</td><td class=n>13.7</td><td class=n><b>1/1.0x</b></td><td class=n>2%</td></tr><tr><td><code>sumbuild</code></td><td class=n>1,000</td><td class=n>31,022</td><td class=n>24,019</td><td class=n>618</td><td class=n>600</td><td class=n><b>1.0x</b></td><td class=n>2%</td></tr><tr><td><code>sumbuild</code></td><td class=n>3,000</td><td class=n>93,022</td><td class=n>72,019</td><td class=n>5,184</td><td class=n>5,093</td><td class=n><b>1.0x</b></td><td class=n>1%</td></tr><tr><td><code>mapinc</code></td><td class=n>100</td><td class=n>5,132</td><td class=n>4,028</td><td class=n>20.8</td><td class=n>18.4</td><td class=n><b>1.1x</b></td><td class=n>4%</td></tr><tr><td><code>mapinc</code></td><td class=n>1,000</td><td class=n>51,032</td><td class=n>40,028</td><td class=n>694</td><td class=n>682</td><td class=n><b>1/1.0x</b></td><td class=n>2%</td></tr><tr><td><code>mapinc</code></td><td class=n>3,000</td><td class=n>153,032</td><td class=n>120,028</td><td class=n>5,371</td><td class=n>5,388</td><td class=n><b>1/1.0x</b></td><td class=n>3%</td></tr><tr><td><code>skip</code></td><td class=n>100</td><td class=n>5</td><td class=n>4</td><td class=n>0.091</td><td class=n>0.089</td><td class=n><b>1.0x</b></td><td class=n>2%</td></tr><tr><td><code>skip</code></td><td class=n>1,000</td><td class=n>5</td><td class=n>4</td><td class=n>0.421</td><td class=n>0.408</td><td class=n><b>1.0x</b></td><td class=n>3%</td></tr><tr><td><code>skip</code></td><td class=n>3,000</td><td class=n>5</td><td class=n>4</td><td class=n>1.18</td><td class=n>1.16</td><td class=n><b>1.0x</b></td><td class=n>5%</td></tr><tr><td><code>h_id</code></td><td class=n>100</td><td class=n>5</td><td class=n>5</td><td class=n>0.024</td><td class=n>0.027</td><td class=n><b>1/1.0x</b></td><td class=n>27%</td></tr><tr><td><code>h_id</code></td><td class=n>1,000</td><td class=n>5</td><td class=n>5</td><td class=n>0.019</td><td class=n>0.019</td><td class=n><b>1/1.0x</b></td><td class=n>3%</td></tr><tr><td><code>h_id</code></td><td class=n>3,000</td><td class=n>5</td><td class=n>5</td><td class=n>0.019</td><td class=n>0.018</td><td class=n><b>1/1.0x</b></td><td class=n>17%</td></tr><tr><td><code>h_ref</code></td><td class=n>100</td><td class=n>108</td><td class=n>7</td><td class=n>0.2</td><td class=n>0.035</td><td class=n><b>5.3x</b></td><td class=n>2%</td></tr><tr><td><code>h_ref</code></td><td class=n>1,000</td><td class=n>1,008</td><td class=n>7</td><td class=n>1.15</td><td class=n>0.04</td><td class=n><b>27x</b></td><td class=n>3%</td></tr><tr><td><code>h_ref</code></td><td class=n>3,000</td><td class=n>3,008</td><td class=n>7</td><td class=n>3.9</td><td class=n>0.122</td><td class=n><b>35x</b></td><td class=n>4%</td></tr><tr><td><code>h_walk</code></td><td class=n>100</td><td class=n>1,312</td><td class=n>910</td><td class=n>3.23</td><td class=n>2.82</td><td class=n><b>1.1x</b></td><td class=n>4%</td></tr><tr><td><code>h_walk</code></td><td class=n>1,000</td><td class=n>13,012</td><td class=n>9,010</td><td class=n>53.3</td><td class=n>52.3</td><td class=n><b>1.0x</b></td><td class=n>4%</td></tr><tr><td><code>h_walk</code></td><td class=n>3,000</td><td class=n>39,012</td><td class=n>27,010</td><td class=n>169</td><td class=n>163</td><td class=n><b>1.0x</b></td><td class=n>7%</td></tr></table></div>
+<p>A third fewer passes on a loop buys about a tenth of its time: the stages are only part of a pass's cost. The held list a function refers to (<code>h_ref</code>), written into its body as a literal by the library's finish, is now skipped whole: 7 passes at every size, without <a href="https://matthewhammer.org/hazel/dashboard/#ticket-547"><code class="ref"><b>^ticket(</b>547<b>)</b></code></a>. The long list loops do not move: their time is the re-typing <a href="https://matthewhammer.org/hazel/dashboard/#ticket-548"><code class="ref"><b>^ticket(</b>548<b>)</b></code></a> fixes. Noise is the timing build's own spread over its two rounds in a job. Runners: INTEL(R) XEON(R) PLATINUM 8573C v22.23.3; AMD EPYC 9V45 96-Core Processor v22.23.3; AMD EPYC 7763 64-Core Processor v22.23.3; AMD EPYC 7763 64-Core Processor v22.23.3.</p>
+<h3 id="fix-game-map">The game's own map<a class="anchor" href="#fix-game-map" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="fix-game-map" title="copy this section's address">copy link</button></h3>
+<p>The World rule with the world's squares held in a map, in the game's own rule texts: kids-choice-games' branch <code>hazel-map-553</code> (<a href="https://matthewhammer.org/hazel/dashboard/#ticket-553"><code class="ref"><b>^ticket(</b>553<b>)</b></code></a>) adds to 📚 Common a balanced search tree of the squares, ordered by row and column (<code>Common.squares</code>, <code>square</code>, <code>set_square</code>), and to 🗺️ World <code>with_squares(m)</code>, the same rule looking one square up instead of walking the list. Checked first in every run: on a world of random kinds and ways, its cells shuffled, the map rule and the shipped one agree for every square and all eight directions (392 cases). Library: <code>trial/r25-553</code>, <code>trial/r25-best</code> with 547, 548 and 551 together. ms a move, the map made once:</p>
+<div class="scroll"><table><tr><th>map (cells)</th><th>passed, best</th><th>passed</th><th>passed as a handle</th><th>map</th><th>map's set-up</th><th>map faster than passed</th></tr><tr><td class=n>3x3 (9)</td><td class=n>0.978</td><td class=n>0.809</td><td class=n>0.703</td><td class=n>0.529</td><td class=n>3.16</td><td class=n><b>1.5x</b></td></tr><tr><td class=n>4x4 (16)</td><td class=n>1.37</td><td class=n>1.17</td><td class=n>0.986</td><td class=n>0.71</td><td class=n>5.18</td><td class=n><b>1.6x</b></td></tr><tr><td class=n>6x6 (36)</td><td class=n>2.98</td><td class=n>2.63</td><td class=n>1.55</td><td class=n>0.768</td><td class=n>11.9</td><td class=n><b>3.4x</b></td></tr><tr><td class=n>8x8 (64)</td><td class=n>4.18</td><td class=n>3.84</td><td class=n>2.91</td><td class=n>0.748</td><td class=n>20.1</td><td class=n><b>5.0x</b></td></tr><tr><td class=n>12x12 (144)</td><td class=n>8.35</td><td class=n>7.84</td><td class=n>5.32</td><td class=n>1.03</td><td class=n>45.9</td><td class=n><b>7.5x</b></td></tr><tr><td class=n>16x16 (256)</td><td class=n>14.6</td><td class=n>13.5</td><td class=n>9.96</td><td class=n>0.822</td><td class=n>82.3</td><td class=n><b>16x</b></td></tr><tr><td class=n>24x24 (576)</td><td class=n>31.7</td><td class=n>31</td><td class=n>22.8</td><td class=n>1.09</td><td class=n>188</td><td class=n><b>28x</b></td></tr><tr><td class=n>32x32 (1,024)</td><td class=n>57.6</td><td class=n>55.3</td><td class=n>41.4</td><td class=n>0.871</td><td class=n>352</td><td class=n><b>63x</b></td></tr><tr><td class=n>48x48 (2,304)</td><td class=n>132</td><td class=n>132</td><td class=n>93.7</td><td class=n>1.37</td><td class=n>830</td><td class=n><b>95x</b></td></tr><tr><td class=n>64x64 (4,096)</td><td class=n>241</td><td class=n>236</td><td class=n>172</td><td class=n>0.97</td><td class=n>1,534</td><td class=n><b>244x</b></td></tr></table></div>
+<p>The map rule is flat, about a millisecond a move at every size: the goal <a href="https://matthewhammer.org/hazel/dashboard/#ticket-540"><code class="ref"><b>^ticket(</b>540<b>)</b></code></a> set. It needs 547: on <code>trial/r25-best</code> alone the held map is written into the closure and walked at every call, slower than passing the list. Making the map, once a world, is still about 1.5 s at 64x64. Runners: AMD EPYC 9V45 96-Core Processor v22.23.3; AMD EPYC 7763 64-Core Processor v22.23.3; AMD EPYC 9V45 96-Core Processor v22.23.3; AMD EPYC 9V74 80-Core Processor v22.23.3.</p>
+<p>Against Fumola's HashMap (<a href="../027/"><code class="ref"><b>^report(</b>27<b>)</b></code></a>'s driver, wasm built from <code>667a34d</code>), on the same runners, alternating, ms a move and the map's set-up:</p>
+<div class="scroll"><table><tr><th>map (cells)</th><th>Hazel, map</th><th>Fumola, HashMap</th><th>Hazel / Fumola</th><th>Hazel, set-up</th><th>Fumola, set-up</th></tr><tr><td class=n>3x3 (9)</td><td class=n>0.82</td><td class=n>0.638</td><td class=n>1.3x</td><td class=n>4.18</td><td class=n>39.1</td></tr><tr><td class=n>4x4 (16)</td><td class=n>1.06</td><td class=n>0.601</td><td class=n>1.8x</td><td class=n>7.48</td><td class=n>25.7</td></tr><tr><td class=n>6x6 (36)</td><td class=n>1.18</td><td class=n>0.602</td><td class=n>2.0x</td><td class=n>17.2</td><td class=n>26.3</td></tr><tr><td class=n>8x8 (64)</td><td class=n>1.15</td><td class=n>0.603</td><td class=n>1.9x</td><td class=n>29.1</td><td class=n>28.5</td></tr><tr><td class=n>12x12 (144)</td><td class=n>1.54</td><td class=n>0.588</td><td class=n>2.6x</td><td class=n>67.2</td><td class=n>33.9</td></tr><tr><td class=n>16x16 (256)</td><td class=n>1.23</td><td class=n>0.593</td><td class=n>2.1x</td><td class=n>120</td><td class=n>41.5</td></tr><tr><td class=n>24x24 (576)</td><td class=n>1.65</td><td class=n>0.584</td><td class=n>2.8x</td><td class=n>277</td><td class=n>65.7</td></tr><tr><td class=n>32x32 (1,024)</td><td class=n>1.34</td><td class=n>0.595</td><td class=n>2.3x</td><td class=n>518</td><td class=n>94.1</td></tr><tr><td class=n>48x48 (2,304)</td><td class=n>2.03</td><td class=n>0.587</td><td class=n>3.5x</td><td class=n>1,180</td><td class=n>189</td></tr><tr><td class=n>64x64 (4,096)</td><td class=n>1.46</td><td class=n>0.587</td><td class=n>2.5x</td><td class=n>2,136</td><td class=n>326</td></tr></table></div>
+<p>Both are flat; Hazel's lookup is within about 1.3x to 3.5x of Fumola's. Its set-up is not: about 6.5x at 64x64. Runners: AMD EPYC 9V74 80-Core Processor v22.23.3; AMD EPYC 9V74 80-Core Processor v22.23.3; AMD EPYC 7763 64-Core Processor v22.23.3; AMD EPYC 7763 64-Core Processor v22.23.3.</p>
+<p>Where Hazel's set-up goes: <code>Common.squares</code> whole, then each of its parts called alone (the order check, the count, the balanced build), and a call that ignores the cells (the conversion from JS alone), ms; then the whole with the map's helpers unannotated:</p>
+<div class="scroll"><table><tr><th>map (cells)</th><th>squares</th><th>order check</th><th>count</th><th>build</th><th>conversion</th><th>squares, unannotated</th></tr><tr><td class=n>16x16 (256)</td><td class=n>90.3</td><td class=n>37.1</td><td class=n>15.2</td><td class=n>50.4</td><td class=n>5.39</td><td class=n>91.2</td></tr><tr><td class=n>32x32 (1,024)</td><td class=n>377</td><td class=n>159</td><td class=n>67.8</td><td class=n>213</td><td class=n>18.3</td><td class=n>379</td></tr><tr><td class=n>64x64 (4,096)</td><td class=n>1,539</td><td class=n>662</td><td class=n>286</td><td class=n>927</td><td class=n>77.7</td><td class=n>1,636</td></tr></table></div>
+<p>Annotations make no difference here. Each part is a walk of the list at Hazel's cost per pass, about 60 to 70 µs a cell even for the bare count: the set-up is the per-pass cost three times over, not the map. Runners: AMD EPYC 9V45 96-Core Processor v22.23.3; INTEL(R) XEON(R) PLATINUM 8573C v22.23.3; INTEL(R) XEON(R) PLATINUM 8573C v22.23.3; AMD EPYC 9V74 80-Core Processor v22.23.3.</p>
 
 <h2 id="next">What next<a class="anchor" href="#next" aria-label="a link to this section">#</a><button type="button" class="copyanchor" data-id="next" title="copy this section's address">copy link</button></h2>
 <ol>
@@ -396,7 +497,7 @@ h2:hover .copyanchor, h3:hover .copyanchor, .lh:hover .copyanchor, .copyanchor:f
    number per page load; if GitHub does not answer, what it said when the
    page was built (tools/link_prs.py writes this block). */
 (() => {
-  const CACHED = {"Adapton/fumola#128": {"author": "matthewhammer", "comments": 2, "created": "2026-09-12T22:19:44Z", "kind": "pull", "state": "merged", "title": "do big { .. }: a region evaluated on the Rust stack", "updated": "2026-09-13T00:56:40Z", "base": "main"}, "Adapton/fumola#148": {"author": "matthewhammer", "comments": 0, "created": "2026-10-22T21:42:29Z", "kind": "pull", "state": "open", "title": "fumola_wasm: values in from JSON (fumola_define_json, fumola_eval_top_with)", "updated": "2026-10-22T21:53:46Z", "base": "main"}, "hazelgrove/hazel#2681": {"author": "matthewhammer", "comments": 3, "created": "2026-10-13T13:04:35Z", "kind": "pull", "state": "open", "title": "A value known to have a type is not walked again for it", "updated": "2026-10-22T15:31:32Z", "base": "dev"}}, BUILT = "2026-10-22";
+  const CACHED = {"Adapton/fumola#128": {"author": "matthewhammer", "comments": 2, "created": "2026-09-12T22:19:44Z", "kind": "pull", "state": "merged", "title": "do big { .. }: a region evaluated on the Rust stack", "updated": "2026-09-13T00:56:40Z", "base": "main"}, "Adapton/fumola#148": {"author": "matthewhammer", "comments": 0, "created": "2026-10-22T21:42:29Z", "kind": "pull", "state": "merged", "title": "fumola_wasm: values in from JSON (fumola_define_json, fumola_eval_top_with)", "updated": "2026-10-22T21:56:42Z", "base": "main"}, "hazelgrove/hazel#2681": {"author": "matthewhammer", "comments": 3, "created": "2026-10-13T13:04:35Z", "kind": "pull", "state": "open", "title": "A value known to have a type is not walked again for it", "updated": "2026-10-22T15:31:32Z", "base": "dev"}}, BUILT = "2026-10-22";
   const RX = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(pull|issues)\/(\d+)$/;
   const asked = new Map();
   /* a PR from the pulls endpoint, which has its base branch; an issue from the issues one */
@@ -1424,6 +1525,503 @@ h2:hover .copyanchor, h3:hover .copyanchor, .lh:hover .copyanchor, .copyanchor:f
      "408",
      "312",
      "47.3"
+    ]
+   ]
+  },
+  {
+   "section": "The evaluator's fast path for values",
+   "section_id": "fix-fast-path",
+   "columns": [
+    "program",
+    "n",
+    "passes",
+    "passes, fast path",
+    "ms",
+    "ms, fast path",
+    "faster",
+    "noise"
+   ],
+   "rows": [
+    [
+     "count",
+     "100",
+     "1,409",
+     "907",
+     "3.31",
+     "2.91",
+     "1.1x",
+     "3%"
+    ],
+    [
+     "count",
+     "1,000",
+     "14,009",
+     "9,007",
+     "39.2",
+     "36.2",
+     "1.1x",
+     "2%"
+    ],
+    [
+     "count",
+     "5,000",
+     "70,009",
+     "45,007",
+     "202",
+     "189",
+     "1.1x",
+     "4%"
+    ],
+    [
+     "fib",
+     "10",
+     "2,562",
+     "1,857",
+     "5.24",
+     "4.71",
+     "1.1x",
+     "2%"
+    ],
+    [
+     "fib",
+     "13",
+     "10,914",
+     "7,905",
+     "21.6",
+     "19.7",
+     "1.1x",
+     "2%"
+    ],
+    [
+     "fib",
+     "16",
+     "46,294",
+     "33,525",
+     "91.8",
+     "83.3",
+     "1.1x",
+     "3%"
+    ],
+    [
+     "sumbuild",
+     "100",
+     "3,122",
+     "2,419",
+     "13.7",
+     "13.7",
+     "1/1.0x",
+     "2%"
+    ],
+    [
+     "sumbuild",
+     "1,000",
+     "31,022",
+     "24,019",
+     "618",
+     "600",
+     "1.0x",
+     "2%"
+    ],
+    [
+     "sumbuild",
+     "3,000",
+     "93,022",
+     "72,019",
+     "5,184",
+     "5,093",
+     "1.0x",
+     "1%"
+    ],
+    [
+     "mapinc",
+     "100",
+     "5,132",
+     "4,028",
+     "20.8",
+     "18.4",
+     "1.1x",
+     "4%"
+    ],
+    [
+     "mapinc",
+     "1,000",
+     "51,032",
+     "40,028",
+     "694",
+     "682",
+     "1/1.0x",
+     "2%"
+    ],
+    [
+     "mapinc",
+     "3,000",
+     "153,032",
+     "120,028",
+     "5,371",
+     "5,388",
+     "1/1.0x",
+     "3%"
+    ],
+    [
+     "skip",
+     "100",
+     "5",
+     "4",
+     "0.091",
+     "0.089",
+     "1.0x",
+     "2%"
+    ],
+    [
+     "skip",
+     "1,000",
+     "5",
+     "4",
+     "0.421",
+     "0.408",
+     "1.0x",
+     "3%"
+    ],
+    [
+     "skip",
+     "3,000",
+     "5",
+     "4",
+     "1.18",
+     "1.16",
+     "1.0x",
+     "5%"
+    ],
+    [
+     "h_id",
+     "100",
+     "5",
+     "5",
+     "0.024",
+     "0.027",
+     "1/1.0x",
+     "27%"
+    ],
+    [
+     "h_id",
+     "1,000",
+     "5",
+     "5",
+     "0.019",
+     "0.019",
+     "1/1.0x",
+     "3%"
+    ],
+    [
+     "h_id",
+     "3,000",
+     "5",
+     "5",
+     "0.019",
+     "0.018",
+     "1/1.0x",
+     "17%"
+    ],
+    [
+     "h_ref",
+     "100",
+     "108",
+     "7",
+     "0.2",
+     "0.035",
+     "5.3x",
+     "2%"
+    ],
+    [
+     "h_ref",
+     "1,000",
+     "1,008",
+     "7",
+     "1.15",
+     "0.04",
+     "27x",
+     "3%"
+    ],
+    [
+     "h_ref",
+     "3,000",
+     "3,008",
+     "7",
+     "3.9",
+     "0.122",
+     "35x",
+     "4%"
+    ],
+    [
+     "h_walk",
+     "100",
+     "1,312",
+     "910",
+     "3.23",
+     "2.82",
+     "1.1x",
+     "4%"
+    ],
+    [
+     "h_walk",
+     "1,000",
+     "13,012",
+     "9,010",
+     "53.3",
+     "52.3",
+     "1.0x",
+     "4%"
+    ],
+    [
+     "h_walk",
+     "3,000",
+     "39,012",
+     "27,010",
+     "169",
+     "163",
+     "1.0x",
+     "7%"
+    ]
+   ]
+  },
+  {
+   "section": "The game's own map",
+   "section_id": "fix-game-map",
+   "columns": [
+    "map (cells)",
+    "passed, best",
+    "passed",
+    "passed as a handle",
+    "map",
+    "map's set-up",
+    "map faster than passed"
+   ],
+   "rows": [
+    [
+     "3x3 (9)",
+     "0.978",
+     "0.809",
+     "0.703",
+     "0.529",
+     "3.16",
+     "1.5x"
+    ],
+    [
+     "4x4 (16)",
+     "1.37",
+     "1.17",
+     "0.986",
+     "0.71",
+     "5.18",
+     "1.6x"
+    ],
+    [
+     "6x6 (36)",
+     "2.98",
+     "2.63",
+     "1.55",
+     "0.768",
+     "11.9",
+     "3.4x"
+    ],
+    [
+     "8x8 (64)",
+     "4.18",
+     "3.84",
+     "2.91",
+     "0.748",
+     "20.1",
+     "5.0x"
+    ],
+    [
+     "12x12 (144)",
+     "8.35",
+     "7.84",
+     "5.32",
+     "1.03",
+     "45.9",
+     "7.5x"
+    ],
+    [
+     "16x16 (256)",
+     "14.6",
+     "13.5",
+     "9.96",
+     "0.822",
+     "82.3",
+     "16x"
+    ],
+    [
+     "24x24 (576)",
+     "31.7",
+     "31",
+     "22.8",
+     "1.09",
+     "188",
+     "28x"
+    ],
+    [
+     "32x32 (1,024)",
+     "57.6",
+     "55.3",
+     "41.4",
+     "0.871",
+     "352",
+     "63x"
+    ],
+    [
+     "48x48 (2,304)",
+     "132",
+     "132",
+     "93.7",
+     "1.37",
+     "830",
+     "95x"
+    ],
+    [
+     "64x64 (4,096)",
+     "241",
+     "236",
+     "172",
+     "0.97",
+     "1,534",
+     "244x"
+    ]
+   ]
+  },
+  {
+   "section": "The game's own map",
+   "section_id": "fix-game-map",
+   "columns": [
+    "map (cells)",
+    "Hazel, map",
+    "Fumola, HashMap",
+    "Hazel / Fumola",
+    "Hazel, set-up",
+    "Fumola, set-up"
+   ],
+   "rows": [
+    [
+     "3x3 (9)",
+     "0.82",
+     "0.638",
+     "1.3x",
+     "4.18",
+     "39.1"
+    ],
+    [
+     "4x4 (16)",
+     "1.06",
+     "0.601",
+     "1.8x",
+     "7.48",
+     "25.7"
+    ],
+    [
+     "6x6 (36)",
+     "1.18",
+     "0.602",
+     "2.0x",
+     "17.2",
+     "26.3"
+    ],
+    [
+     "8x8 (64)",
+     "1.15",
+     "0.603",
+     "1.9x",
+     "29.1",
+     "28.5"
+    ],
+    [
+     "12x12 (144)",
+     "1.54",
+     "0.588",
+     "2.6x",
+     "67.2",
+     "33.9"
+    ],
+    [
+     "16x16 (256)",
+     "1.23",
+     "0.593",
+     "2.1x",
+     "120",
+     "41.5"
+    ],
+    [
+     "24x24 (576)",
+     "1.65",
+     "0.584",
+     "2.8x",
+     "277",
+     "65.7"
+    ],
+    [
+     "32x32 (1,024)",
+     "1.34",
+     "0.595",
+     "2.3x",
+     "518",
+     "94.1"
+    ],
+    [
+     "48x48 (2,304)",
+     "2.03",
+     "0.587",
+     "3.5x",
+     "1,180",
+     "189"
+    ],
+    [
+     "64x64 (4,096)",
+     "1.46",
+     "0.587",
+     "2.5x",
+     "2,136",
+     "326"
+    ]
+   ]
+  },
+  {
+   "section": "The game's own map",
+   "section_id": "fix-game-map",
+   "columns": [
+    "map (cells)",
+    "squares",
+    "order check",
+    "count",
+    "build",
+    "conversion",
+    "squares, unannotated"
+   ],
+   "rows": [
+    [
+     "16x16 (256)",
+     "90.3",
+     "37.1",
+     "15.2",
+     "50.4",
+     "5.39",
+     "91.2"
+    ],
+    [
+     "32x32 (1,024)",
+     "377",
+     "159",
+     "67.8",
+     "213",
+     "18.3",
+     "379"
+    ],
+    [
+     "64x64 (4,096)",
+     "1,539",
+     "662",
+     "286",
+     "927",
+     "77.7",
+     "1,636"
     ]
    ]
   }

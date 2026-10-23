@@ -7,5 +7,6 @@ python3 tools/report_refs.py 025/index.html
 python3 tools/link_prs.py 025/index.html
 python3 tools/add_steps.py 025/index.html
 python3 tools/add_theme.py 025/index.html
+python3 tools/add_listen.py 025/index.html
 python3 tools/report_data.py 025
 python3 tools/add_anchors.py 025/index.html

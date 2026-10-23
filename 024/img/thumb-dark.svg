@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-label="A module binding's definition: analyzed by the let and then again before #2651, by the let only after, its elaboration read back.">
+<style>.bad{fill:#b91c1c}.good{fill:#15803d}.acc{fill:#6d28d9}.muted{fill:#5b6470}.ink{fill:#1f2328}.box{fill:none;stroke:#5b6470;stroke-width:2}.sr{fill:none;stroke:#b91c1c;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.sg{fill:none;stroke:#15803d;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.sa{fill:none;stroke:#6d28d9;stroke-width:2.5;stroke-dasharray:4 4;stroke-linecap:round}.t{font:700 15px system-ui,sans-serif}.s{font:600 12px system-ui,sans-serif}.b{font:800 34px system-ui,sans-serif}.c{font:700 14px ui-monospace,monospace}.bad{fill:#f87171}.good{fill:#4ade80}.acc{fill:#c4b5fd}.muted{fill:#a2a9b3}.ink{fill:#e8e6e3}.box{fill:none;stroke:#a2a9b3;stroke-width:2}.sr{fill:none;stroke:#f87171;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.sg{fill:none;stroke:#4ade80;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.sa{fill:none;stroke:#c4b5fd;stroke-width:2.5;stroke-dasharray:4 4;stroke-linecap:round}
+</style>
+<text x="80" y="22" text-anchor="middle" class="t muted">before</text>
+<path d="M50 34 L66 92" class="sr"/><path d="M58 86 L66 94 L69 83" class="sr"/>
+<path d="M110 34 L94 92" class="sr"/><path d="M91 83 L94 94 L102 86" class="sr"/>
+<text x="38" y="62" text-anchor="end" class="s muted">let</text>
+<text x="122" y="62" class="s muted">again</text>
+<rect x="44" y="98" width="72" height="38" rx="8" class="box"/><text x="80" y="122" text-anchor="middle" class="c ink">def</text>
+<text x="80" y="172" text-anchor="middle" class="b bad">×2</text>
+<text x="240" y="22" text-anchor="middle" class="t muted">after</text>
+<path d="M226 34 L226 92" class="sg"/><path d="M219 84 L226 94 L233 84" class="sg"/>
+<path d="M254 96 C 262 70, 270 52, 262 36" class="sa"/>
+<text x="214" y="62" text-anchor="end" class="s muted">let</text>
+<text x="272" y="62" class="s acc">read</text><text x="272" y="76" class="s acc">back</text>
+<rect x="204" y="98" width="72" height="38" rx="8" class="box"/><text x="240" y="122" text-anchor="middle" class="c ink">def</text>
+<text x="240" y="172" text-anchor="middle" class="b good">×1</text>
+</svg>

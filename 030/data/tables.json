@@ -1,0 +1,247 @@
+[
+ {
+  "section": "The goal, and where each piece is",
+  "section_id": "goal",
+  "columns": [
+   "the goal, piece by piece",
+   "where it is",
+   ""
+  ],
+  "rows": [
+   [
+    "Hazel code in the game, one module per room plus 📚 Common",
+    "The 🧩 Scripting panel (matthewhammer/kids-choice-games#1: the trap room's levers through Hazel.runProgram, the program shown in Hazel's tiles), then the five rooms' rules in Hazel (matthewhammer/kids-choice-games#2), each under ?logic=hazel, checked against the JS.",
+    "built"
+   ],
+   [
+    "Fumola code in the game",
+    "The same rules in Fumola, wasm, pinned build (matthewhammer/kids-choice-games#4), 20,653 cases agreeing with the Hazel rules in a node check.",
+    "built"
+   ],
+   [
+    "A JS / Hazel / Fumola chip on each code box; the JS read-only, the game's own code; a master chip, JS by default",
+    "Today a page-wide ?logic= switch, Hazel and Fumola on separate PRs. ^ticket(566).",
+    "planned"
+   ],
+   [
+    "The three equivalent, held by tests as the code changes",
+    "Node checks, Hazel against JS and Fumola against Hazel, in the two PRs; not all three in CI. ^ticket(567).",
+    "in part"
+   ],
+   [
+    "A tool measuring each script's overhead over JS",
+    "The game records Hazel's compile time; the speed probes time rules. ^ticket(568).",
+    "planned"
+   ],
+   [
+    "Speed-run standards: each setting a minimum fps where its scripts run",
+    "^ticket(569).",
+    "planned"
+   ],
+   [
+    "Hazel fast enough for every room at 60 fps",
+    "Levers, trap doors, the castle: yes. The world's ways: not as the game calls them today, the world passed in at every move (a call walks the whole world: 331 ms at 64x64 even on the trial build); yes with this week's library fixes and the map held (1.46 ms). The fixes are on trial branches, not in the library build the game loads, and the game does not hold the map yet.",
+    "waits"
+   ],
+   [
+    "Fumola fast enough",
+    "Yes: about a millisecond a call, flat with its HashMap (0.587 ms at 64x64).",
+    "built"
+   ]
+  ]
+ },
+ {
+  "section": "Languages of Play",
+  "section_id": "lop",
+  "columns": [
+   "the paper",
+   "its game concept",
+   "in Messed Up Dress Up's rules"
+  ],
+  "rows": [
+   [
+    "syntax",
+    "recognized player intents: direction ::= north | south | east | west, intent ::= move⟨direction⟩ | collect",
+    "the Event sum: Pull(Side), PullBoulder(Side), PullHatch(Int), PullThing(Int), FallPit(Int), WayOut(Int), Way(Dir), with Dir = + N + NE + E + SE + S + SW + W + NW. Taking a way out of a square, by whichever control, goes through one door handler (worldWalk) and reaches the rule as the one intent Way(d), as the paper's five interfaces all end in move⟨direction⟩."
+   ],
+   [
+    "operational semantics",
+    "game mechanics: a game step ⟨G₁; intent⟩ ⟶ ⟨G₂; resp⟩",
+    "a room's rule, on_event : (Globals, Event) -> Cmd: the state it is told (Globals) and the intent give a response as data, which the game then carries out (its new state). Done alone is the paper's failure, a way that leads nowhere; GoSquare(c, r, side, Done) its success."
+   ],
+   [
+    "type system",
+    "contextual interface: only the intents that make sense in this state",
+    "the sums themselves: before them, a direction was any text, and a rule could be asked about \"up\" (the Fumola check had a case for it); now it cannot be said. The paper calls this the subtractive side of an interface's syntax. What is offered in a given state (a lever only where there is one) is still the game's JS, not a type."
+   ],
+   [
+    "a completeness conjecture: every state and intent has a next state and a response",
+    "proved, in a PL, by cases",
+    "checked, not proved: on every push, every case the game can give each room (32,761 for Hazel, 20,649 for Fumola) has an answer, and the same answer in all three languages (^ticket(567))."
+   ],
+   [
+    "play traces as straight-line programs",
+    "a log of intents and responses, as structured terms",
+    "a response is already a little straight-line program, each command with the rest after it (Flip(L, SetPit(0, true, Done))), which the game runs in order; a log of Events and Cmds would be the paper's trace, not kept yet."
+   ],
+   [
+    "player skills as general programs",
+    "players composing actions into their own programs (BOTS, Cube Composer)",
+    "the editable Hazel and Fumola boxes: a player (or M and N) can rewrite a room's rule in the game and play it at once, so the mechanics, not only the intents, become a language players write in."
+   ]
+  ]
+ },
+ {
+  "section": "Speed: what was found, and fixed",
+  "section_id": "speed",
+  "columns": [
+   "program",
+   "n",
+   "passes",
+   "passes, fast path",
+   "time, fast path / without"
+  ],
+  "rows": [
+   [
+    "count",
+    "1,000",
+    "14,009",
+    "9,007",
+    "0.92"
+   ],
+   [
+    "fib",
+    "16",
+    "46,294",
+    "33,525",
+    "0.90"
+   ],
+   [
+    "h_walk",
+    "3,000",
+    "39,012",
+    "27,010",
+    "0.98"
+   ],
+   [
+    "h_ref",
+    "3,000",
+    "3,008",
+    "7",
+    "0.03"
+   ],
+   [
+    "sumbuild",
+    "3,000",
+    "93,022",
+    "72,019",
+    "0.98"
+   ]
+  ]
+ },
+ {
+  "section": "The map against Fumola's, by size",
+  "section_id": "vs-fumola",
+  "columns": [
+   "world (squares)",
+   "Hazel, passed",
+   "Hazel, map",
+   "Fumola, passed",
+   "Fumola, HashMap",
+   "Hazel, map's set-up",
+   "Fumola, set-up"
+  ],
+  "rows": [
+   [
+    "3x3 (9)",
+    "1.25",
+    "0.82",
+    "1.23",
+    "0.638",
+    "4.18",
+    "39.1"
+   ],
+   [
+    "4x4 (16)",
+    "1.78",
+    "1.06",
+    "1.42",
+    "0.601",
+    "7.48",
+    "25.7"
+   ],
+   [
+    "6x6 (36)",
+    "3.9",
+    "1.18",
+    "2.23",
+    "0.602",
+    "17.2",
+    "26.3"
+   ],
+   [
+    "8x8 (64)",
+    "5.69",
+    "1.15",
+    "3.36",
+    "0.603",
+    "29.1",
+    "28.5"
+   ],
+   [
+    "12x12 (144)",
+    "11.6",
+    "1.54",
+    "6.32",
+    "0.588",
+    "67.2",
+    "33.9"
+   ],
+   [
+    "16x16 (256)",
+    "19.5",
+    "1.23",
+    "10.5",
+    "0.593",
+    "120",
+    "41.5"
+   ],
+   [
+    "24x24 (576)",
+    "43.9",
+    "1.65",
+    "22.2",
+    "0.584",
+    "277",
+    "65.7"
+   ],
+   [
+    "32x32 (1,024)",
+    "79.5",
+    "1.34",
+    "39.1",
+    "0.595",
+    "518",
+    "94.1"
+   ],
+   [
+    "48x48 (2,304)",
+    "182",
+    "2.03",
+    "89.6",
+    "0.587",
+    "1,180",
+    "189"
+   ],
+   [
+    "64x64 (4,096)",
+    "331",
+    "1.46",
+    "169",
+    "0.587",
+    "2,136",
+    "326"
+   ]
+  ]
+ }
+]

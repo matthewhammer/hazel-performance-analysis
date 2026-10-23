@@ -6,7 +6,7 @@ Reports on the [Hazel](https://hazel.org) work: most of them on making Hazel res
 
 | Report | |
 |---|---|
-| [001](index.html) | Why a slider isn't instant yet |
+| [001](001/) | Why a slider isn't instant yet |
 | [002](002/) | From a game to a slide deck: Messed Up Dress Up in Hazel |
 | [003](003/) | A day of requests from M and N |
 | [004](004/) | The witch and her woods, ported to Hazel |
@@ -26,7 +26,7 @@ The performance tracking issue is [hazelgrove/hazel#2609](https://github.com/haz
 
 ## What's here
 
-- `NNN/index.html`: a report, with its images in `NNN/img/`. `^report(1)` is the root `index.html`, since the series began as that one report.
-- `series/index.html`: the series' index, a card per report, as published. `series/NNN` link to the reports.
+- `NNN/index.html`: a report, with its images in `NNN/img/` (`^report(1)` too, in `001/`, since ^ticket(576); it began as the root page).
+- `index.html`: the series' index, a card per report, as published at https://matthewhammer.org/hazel/reports/ (the site's root, as there). `series/` redirects to it, and `series/NNN` link to the reports, for older links.
 - `patches/`: changes that were tried and not kept, each named for what it does. The reports give their numbers.
 - `agent-instructions.md`: how the series is written, for whoever writes the next report.
